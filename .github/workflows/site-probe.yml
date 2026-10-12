@@ -1,6 +1,8 @@
 # Fetches live public files of the main site from a GitHub runner (the agent
 # container cannot reach the site) and commits them under reference/live/ on
 # the branch that ran it, so a session can build against the real markup.
+# Run by hand only. A file the host's bot check withholds keeps its last copy,
+# so a bad run never deletes the reference CI builds from.
 # A real browser is used because the host answers plain HTTP clients with a
 # bot check. Reads the site only; the one write is that commit to this repo.
 name: Site probe
@@ -11,8 +13,6 @@ on:
       paths:
         description: Space-separated paths to fetch
         default: / /tools/ /contact/ /css/shared.css /js/shared.js
-  push:
-    paths: ['.github/workflows/site-probe.yml']
 
 permissions:
   contents: write
@@ -36,8 +36,6 @@ jobs:
           from playwright.sync_api import sync_playwright
           base, paths = os.environ['BASE'], os.environ['PATHS'].split()
           root = pathlib.Path('reference/live')
-          if root.exists():
-              import shutil; shutil.rmtree(root)
           def dest(p):
               rel = p.lstrip('/')
               if rel == '' or rel.endswith('/'):
@@ -47,7 +45,10 @@ jobs:
               b = pw.chromium.launch()
               ctx = b.new_context(user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36')
               page = ctx.new_page()
-              links = set()
+              # Links found before are kept alongside today's, so a page the
+              # bot check withheld does not drop its links from the list.
+              prev = root / 'LINKS.txt'
+              links = set(prev.read_text().split()) if prev.exists() else set()
               for p in paths:
                   out = dest(p); out.parent.mkdir(parents=True, exist_ok=True)
                   if out.suffix == '.html':
