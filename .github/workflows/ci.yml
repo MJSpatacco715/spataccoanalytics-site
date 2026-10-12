@@ -38,8 +38,11 @@ jobs:
       - name: Deploy script stays inside its lane
         run: bash tests/remote_deploy_test.sh
 
+      - name: Deploy key opens however the secrets were pasted
+        run: bash tests/ssh_key_test.sh
+
       - name: Lint
         run: |
           php -l capture/stub_api.php
           node --check capture/capture.mjs
-          bash -n scripts/remote_deploy.sh
+          bash -n scripts/remote_deploy.sh scripts/ssh_key.sh

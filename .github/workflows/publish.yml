@@ -122,21 +122,7 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
-        run: |
-          port=$(jq -r .ssh.port config/hosting.json)
-          HOST=$(jq -r .ssh.host config/hosting.json)
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          ssh-keygen -y -P "$DEPLOY_SSH_PASSPHRASE" -f ~/.ssh/deploy_key > /dev/null \
-            || { echo "DEPLOY_SSH_KEY is not a usable key, or the passphrase is wrong."; exit 1; }
-          # The host requires a passphrase on its keys and a workflow cannot
-          # type one, so strip it from this short-lived copy only.
-          ssh-keygen -p -P "$DEPLOY_SSH_PASSPHRASE" -N "" -f ~/.ssh/deploy_key > /dev/null
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            ssh-keyscan -p "$port" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null && exit 0
-            echo "keyscan attempt $attempt failed; retrying in 30s"; sleep 30
-          done
-          echo "Cannot reach the host after 10 tries."; exit 1
+        run: bash scripts/ssh_key.sh
 
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'

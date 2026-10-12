@@ -23,26 +23,15 @@ jobs:
   import:
     runs-on: ubuntu-latest
     steps:
+      # The ref this was started from (main, or a branch under test); the
+      # import itself is always committed on top of main.
       - uses: actions/checkout@v4
-        with:
-          ref: main
 
       - name: Set up the SSH key
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
-        run: |
-          [ -n "$DEPLOY_SSH_KEY" ] || { echo "The DEPLOY_SSH_KEY secret is not set."; exit 1; }
-          port=$(jq -r .ssh.port config/hosting.json)
-          HOST=$(jq -r .ssh.host config/hosting.json)
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-          ssh-keygen -p -P "$DEPLOY_SSH_PASSPHRASE" -N "" -f ~/.ssh/deploy_key > /dev/null
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            ssh-keyscan -p "$port" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null && exit 0
-            sleep 30
-          done
-          exit 1
+        run: bash scripts/ssh_key.sh
 
       - name: Pull the files
         run: |
@@ -80,7 +69,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           branch="import/live-site-$(date -u +%Y%m%d-%H%M)"
-          git switch -c "$branch"
+          git fetch --depth=1 origin main
+          git switch -c "$branch" FETCH_HEAD
           rm -rf site && mkdir -p site && cp -a incoming/. site/
           { echo "imported $(date -u +%Y-%m-%dT%H:%M:%SZ)"; cat take.txt; } > site/.imported
           git config user.name "github-actions[bot]"
