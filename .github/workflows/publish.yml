@@ -10,9 +10,9 @@
 # Sunday afternoon and evening and the Monday and Thursday night games.
 # GitHub may start scheduled runs late; nothing depends on exact timing.
 #
-# Secrets: DEPLOY_SSH_KEY, DEPLOY_SSH_PASSPHRASE, DEPLOY_SSH_HOST,
-# DEPLOY_SSH_USER (same account as the Saratoga deploy); SOURCE_REPO,
-# SOURCE_REPO_TOKEN (read-only), SOURCE_SITE_URL; COPY_DENYLIST.
+# Secrets: DEPLOY_SSH_KEY and DEPLOY_SSH_PASSPHRASE (the same key the
+# Saratoga deploy uses), SOURCE_REPO_TOKEN (read-only) and SOURCE_SITE_URL.
+# Everything else is plain configuration in config/hosting.json.
 name: Publish
 
 on:
@@ -46,10 +46,10 @@ jobs:
         id: gate
         env:
           KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
           SRC: ${{ secrets.SOURCE_REPO_TOKEN }}
+          SITE: ${{ secrets.SOURCE_SITE_URL }}
         run: |
-          if [ -z "$KEY" ] || [ -z "$HOST" ] || [ -z "$SRC" ]; then
+          if [ -z "$KEY" ] || [ -z "$SRC" ]; then
             echo "::notice::Deploy or source secrets are not set yet; skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
@@ -58,12 +58,19 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "source_repo=$(jq -r .source.repo config/hosting.json)" >> "$GITHUB_OUTPUT"
+          # The denylist for copy and screenshots: the committed words, plus the
+          # source site's own host name, which is never written into this repo.
+          host=$(printf '%s' "$SITE" | sed -E 's#^[a-z]+://##; s#[:/].*$##; s#^www\.##; s#\..*$##')
+          list=$(jq -r '.denylist | join(",")' config/hosting.json)
+          if [ -n "$host" ]; then echo "::add-mask::$host"; list="$list,$host"; fi
+          echo "COPY_DENYLIST=$list" >> "$GITHUB_ENV"
 
       - name: Check out the source platform (read-only)
         if: steps.gate.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
-          repository: ${{ secrets.SOURCE_REPO }}
+          repository: ${{ steps.gate.outputs.source_repo }}
           token: ${{ secrets.SOURCE_REPO_TOKEN }}
           path: source
           fetch-depth: 400
@@ -103,8 +110,6 @@ jobs:
 
       - name: Build
         if: steps.gate.outputs.skip != 'true'
-        env:
-          COPY_DENYLIST: ${{ secrets.COPY_DENYLIST }}
         run: |
           python scripts/build_site.py --site site --out dist
           python scripts/validate_showcase.py --html dist/tools/football
@@ -117,9 +122,9 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
-          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
         run: |
           port=$(jq -r .ssh.port config/hosting.json)
+          HOST=$(jq -r .ssh.host config/hosting.json)
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
           ssh-keygen -y -P "$DEPLOY_SSH_PASSPHRASE" -f ~/.ssh/deploy_key > /dev/null \
@@ -135,10 +140,9 @@ jobs:
 
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'
-        env:
-          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          USER: ${{ secrets.DEPLOY_SSH_USER }}
         run: |
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
           port=$(jq -r .ssh.port config/hosting.json)
           web=$(jq -r .paths.web_root config/hosting.json)
           priv=$(jq -r .paths.private config/hosting.json)
@@ -152,12 +156,11 @@ jobs:
 
       - name: Verify on the server
         if: steps.gate.outputs.skip != 'true'
-        env:
-          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          USER: ${{ secrets.DEPLOY_SSH_USER }}
         run: |
           # The host's bot check answers runners over HTTP, so check the files
           # where they are served from.
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
           port=$(jq -r .ssh.port config/hosting.json)
           web=$(jq -r .paths.web_root config/hosting.json)
           ssh -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" bash -s -- "$web" <<'REMOTE'

@@ -6,9 +6,10 @@ and the house rules for public copy.
   validate_showcase.py --html DIR          check generated pages under DIR too
 
 The schema covers shape. The rules cover what a schema cannot: no em or en
-dashes, no markup in plain-text fields, unique ids, and no terms from
-COPY_DENYLIST (comma-separated regular expressions kept in a repository
-secret, so the list of private names is not itself published).
+dashes, no markup in plain-text fields, unique ids, and no private names:
+the denylist in config/hosting.json, plus COPY_DENYLIST (comma-separated
+regular expressions) when the environment sets it, which is how Publish adds
+the source site's host name without writing it into this repository.
 """
 from __future__ import annotations
 
@@ -26,8 +27,9 @@ DASHES = ("\u2014", "\u2013")  # em dash, en dash
 
 
 def denylist() -> list[re.Pattern]:
-    raw = os.environ.get("COPY_DENYLIST", "")
-    return [re.compile(p.strip(), re.I) for p in raw.split(",") if p.strip()]
+    cfg = json.loads((ROOT / "config" / "hosting.json").read_text()).get("denylist", [])
+    extra = [p.strip() for p in os.environ.get("COPY_DENYLIST", "").split(",") if p.strip()]
+    return [re.compile(p, re.I) for p in dict.fromkeys(cfg + extra)]
 
 
 def strings(node, path="$"):
@@ -95,8 +97,6 @@ def main(argv: list[str]) -> int:
         bad += report(src, errs, f"{len(feed.get('tools', []))} tools")
     for d in html_dirs:
         bad += report(str(d), html_errors(d, deny), "pages")
-    if not deny:
-        print("note: COPY_DENYLIST is not set, so private-name checks were skipped")
     return 1 if bad else 0
 
 

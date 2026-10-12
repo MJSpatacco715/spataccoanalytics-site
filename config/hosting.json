@@ -1,7 +1,9 @@
 {
-  "_note": "Plain configuration only. The SSH host, user, key and passphrase, and the source platform's repository, token and address, live exclusively in GitHub Actions secrets.",
-  "ssh": { "port": 18765 },
+  "_note": "Plain configuration, the same values the Saratoga and family-site repositories keep in their own config/hosting.json. Credentials (the SSH key and its passphrase, the source token) and the source platform's address live only in GitHub Actions secrets.",
+  "ssh": { "host": "gvam1041.siteground.biz", "port": 18765, "user": "u3201-8yfyndyyih8r" },
   "paths": { "web_root": "www/spataccoanalytics.com/public_html", "private": "private/spa-site" },
   "urls": { "production": "https://spataccoanalytics.com" },
-  "never_touch": ["saratoga", ".well-known", "cgi-bin"]
+  "never_touch": ["saratoga", ".well-known", "cgi-bin"],
+  "source": { "repo": "MJSpatacco715/wabi-ff" },
+  "denylist": ["\\bWWFF\\b", "\\bwabi\\b", "\\btacco\\b", "\\b15\\d{4}\\b"]
 }

@@ -22,6 +22,9 @@ the live NFL tools on [/tools/](https://spataccoanalytics.com/tools/) current.
   Actions minutes cost nothing.
 - **As current as the source.** Publish runs hourly, and every 15 minutes
   through Sunday afternoons and evenings and the Monday and Thursday night games.
+- **Private names stay private.** The words in `config/hosting.json` denylist,
+  plus the source site's host name (taken from its secret at run time), are
+  cut from screenshots and refused in copy.
 - **Safe to deploy.** It writes only the files this repo manages. It backs up
   anything it replaces, and never touches `saratoga/` or other directories
   listed in `config/hosting.json`.
@@ -42,29 +45,30 @@ the live NFL tools on [/tools/](https://spataccoanalytics.com/tools/) current.
 
 ## Setup (once)
 
-1. **Make the repository public.** Settings > General > Danger Zone > Change
-   visibility. This is what makes the scheduled runs free.
-2. **Add the secrets** (Settings > Secrets and variables > Actions):
+The repository is public, which is what makes the scheduled runs free.
+
+1. **Add four secrets** (Settings > Secrets and variables > Actions). GitHub
+   never lets one repository read another's secrets, so the SSH key is pasted
+   here once even though the Saratoga repository already holds it. Everything
+   else (SSH host, user and port, the source repository's name, the denylist)
+   is plain configuration in `config/hosting.json`, as in the Saratoga and
+   family-site repositories.
 
    | Secret | Value |
    |---|---|
-   | `DEPLOY_SSH_KEY` | Same private key the Saratoga dashboard deploys with (SiteGround Site Tools > Devs > SSH Keys Manager) |
+   | `DEPLOY_SSH_KEY` | The same private key the Saratoga dashboard deploys with (SiteGround Site Tools > Devs > SSH Keys Manager) |
    | `DEPLOY_SSH_PASSPHRASE` | That key's passphrase |
-   | `DEPLOY_SSH_HOST` | The SSH host for the spataccoanalytics.com account |
-   | `DEPLOY_SSH_USER` | The SSH username for that account |
-   | `SOURCE_REPO` | `owner/name` of the source platform's repository |
-   | `SOURCE_REPO_TOKEN` | Fine-grained token: that one repository, Contents read-only |
-   | `SOURCE_SITE_URL` | The source platform's public address, ending in `/` |
-   | `COPY_DENYLIST` | Comma-separated regular expressions for private names that must never appear in public copy or screenshots |
+   | `SOURCE_REPO_TOKEN` | Fine-grained token: the source repository only, Contents read-only (the token the source server already pulls with works) |
+   | `SOURCE_SITE_URL` | The source platform's public address, ending in `/`. A secret only so the address is not published here |
 
-3. **Import the live site.** Actions > Import live site > Run workflow. It
+2. **Import the live site.** Actions > Import live site > Run workflow. It
    copies the main site's pages, styles, scripts and images into `site/`,
    scans them for credentials, and opens a pull request. It does not change
    the live site. Merge that pull request.
-4. **Publish.** The next scheduled run deploys. You can also start one by hand:
+3. **Publish.** The next scheduled run deploys. You can also start one by hand:
    Actions > Publish > Run workflow.
 
-Until steps 2 and 3 are done, Publish skips itself with a notice. It does not fail.
+Until steps 1 and 2 are done, Publish skips itself with a notice. It does not fail.
 
 ## Changing things
 

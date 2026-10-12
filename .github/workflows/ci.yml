@@ -24,8 +24,6 @@ jobs:
           node-version: '22'
 
       - name: Tool content matches the schema and the house rules
-        env:
-          COPY_DENYLIST: ${{ secrets.COPY_DENYLIST }}
         run: python scripts/validate_showcase.py showcase/tools.json
 
       - name: Build against the reference copy of the live site
@@ -35,8 +33,6 @@ jobs:
           python scripts/build_site.py --site "$site" --out dist
 
       - name: Generated pages follow the house rules
-        env:
-          COPY_DENYLIST: ${{ secrets.COPY_DENYLIST }}
         run: python scripts/validate_showcase.py --html dist/tools/football
 
       - name: Deploy script stays inside its lane

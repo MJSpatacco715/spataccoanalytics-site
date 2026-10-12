@@ -31,10 +31,10 @@ jobs:
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
-          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
         run: |
-          [ -n "$DEPLOY_SSH_KEY" ] && [ -n "$HOST" ] || { echo "Deploy secrets are not set."; exit 1; }
+          [ -n "$DEPLOY_SSH_KEY" ] || { echo "The DEPLOY_SSH_KEY secret is not set."; exit 1; }
           port=$(jq -r .ssh.port config/hosting.json)
+          HOST=$(jq -r .ssh.host config/hosting.json)
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
           ssh-keygen -p -P "$DEPLOY_SSH_PASSPHRASE" -N "" -f ~/.ssh/deploy_key > /dev/null
@@ -45,10 +45,9 @@ jobs:
           exit 1
 
       - name: Pull the files
-        env:
-          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          USER: ${{ secrets.DEPLOY_SSH_USER }}
         run: |
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
           port=$(jq -r .ssh.port config/hosting.json)
           web=$(jq -r .paths.web_root config/hosting.json)
           never=$(jq -r '.never_touch | join(" ")' config/hosting.json)
