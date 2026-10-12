@@ -1,0 +1,53 @@
+{
+  "_note": "Approved copy edits and the NFL card markers, applied to the main site's files at build time. Each is idempotent: if the new text is already present the edit is skipped. If neither old nor new text is found the build fails, so a page rewritten elsewhere is noticed instead of silently left half-edited. Once the live site is imported into site/, these can be folded into the files themselves.",
+  "edits": [
+    {
+      "file": "tools/index.html",
+      "why": "Client-facing framing (approved 2026-10-12)",
+      "find": "Projects built out of curiosity and stubbornness.",
+      "replace": "Personal projects, built to client standards."
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Client-facing framing; the lower section now holds more than four projects",
+      "find": "The four projects in the lower section started as personal builds &mdash; curiosity, a desire to learn new frameworks, and in the case of the two movie trackers, a better way to keep track of what I&rsquo;ve actually watched than a half-remembered mental list. Take a look around.",
+      "replace": "The projects below started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around."
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Sports Desk now leads with live NFL tools",
+      "find": "<h3 class=\"subgroup-title\">Things I tried to understand.</h3>",
+      "replace": "<h3 class=\"subgroup-title\">Sports, through the data.</h3>"
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Sports Desk now leads with live NFL tools",
+      "find": "Two attempts at making foreign sports make sense to American eyes.",
+      "replace": "Live NFL tools built on real-time odds, injury and roster data, plus visual guides to sports Americans rarely see explained."
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Anchor for the tool pages' back link",
+      "find": "<div class=\"subgroup subgroup-stadium reveal d05\">",
+      "replace": "<div class=\"subgroup subgroup-stadium reveal d05\" id=\"sports-desk\">"
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Cricket moves to fourth behind the three NFL tools",
+      "find": "<span class=\"scorecard-num\">Sport &middot; 01</span>\n            <span class=\"scorecard-icon\">&#127951;</span>",
+      "replace": "<span class=\"scorecard-num\">Sport &middot; 04</span>\n            <span class=\"scorecard-icon\">&#127951;</span>"
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Curling moves to fifth",
+      "find": "<span class=\"scorecard-num\">Sport &middot; 02</span>\n            <span class=\"scorecard-icon\">&#129482;</span>",
+      "replace": "<span class=\"scorecard-num\">Sport &middot; 05</span>\n            <span class=\"scorecard-icon\">&#129482;</span>"
+    },
+    {
+      "file": "tools/index.html",
+      "why": "Where the generated NFL cards go: the top of the Sports Desk grid",
+      "find": "<div class=\"subgroup-grid\">\n          <a href=\"/tools/cricket-explainer.html\" class=\"scorecard\">",
+      "replace": "<div class=\"subgroup-grid\">\n<!-- sa-tools:nfl-cards:start -->\n<!-- sa-tools:nfl-cards:end -->\n          <a href=\"/tools/cricket-explainer.html\" class=\"scorecard\">"
+    }
+  ]
+}

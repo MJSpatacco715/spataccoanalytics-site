@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spataccoanalytics.com/tools/football/schema-v1.json",
+  "title": "Spatacco Analytics tool showcase content",
+  "description": "The copy for each tool's card and page. Plain text only in every field: the build escapes everything and renders no HTML. Metrics with a key are replaced by live numbers at build time; the value written here is the fallback.",
+  "type": "object",
+  "required": ["schema_version", "generated", "publisher", "tools"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "generated": { "type": "string", "format": "date-time" },
+    "publisher": { "const": "Spatacco Analytics" },
+    "tools": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/tool" } }
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "required": ["id", "name", "emoji", "tagline", "status", "order", "summary", "highlights", "stack", "image_alt"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+        "name": { "type": "string", "minLength": 3, "maxLength": 60 },
+        "emoji": { "type": "string", "minLength": 1, "maxLength": 8 },
+        "tagline": { "type": "string", "minLength": 10, "maxLength": 140 },
+        "status": { "enum": ["production", "beta", "development"] },
+        "order": { "type": "integer", "minimum": 0 },
+        "summary": { "type": "string", "minLength": 40, "maxLength": 600 },
+        "highlights": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "type": "string", "minLength": 10, "maxLength": 160 } },
+        "stack": { "type": "array", "minItems": 1, "maxItems": 10, "items": { "type": "string", "minLength": 1, "maxLength": 30 } },
+        "data_sources": { "type": "array", "maxItems": 10, "items": { "type": "string", "minLength": 2, "maxLength": 60 } },
+        "metrics": {
+          "type": "array", "maxItems": 6,
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "additionalProperties": false,
+            "properties": {
+              "label": { "type": "string", "minLength": 2, "maxLength": 40 },
+              "value": { "type": "string", "minLength": 1, "maxLength": 20 },
+              "key": { "enum": ["books", "exchanges", "futures", "players", "madden"] }
+            }
+          }
+        },
+        "image_alt": { "type": "string", "minLength": 10, "maxLength": 200 }
+      }
+    }
+  }
+}
