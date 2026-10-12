@@ -1,0 +1,188 @@
+# Keeps the NFL tools on spataccoanalytics.com/tools/ current, for free.
+#
+# Each run reads the source platform's repository (read-only token), takes
+# fresh screenshots (its depth chart page rendered from its own code and data;
+# its public Lines and Injuries pages loaded signed out), rebuilds the site
+# and deploys it over SSH, the same way the Saratoga dashboard deploys.
+# Nothing is written to the source platform.
+#
+# Cadence follows the source platform: hourly, and every 15 minutes through
+# Sunday afternoon and evening and the Monday and Thursday night games.
+# GitHub may start scheduled runs late; nothing depends on exact timing.
+#
+# Secrets: DEPLOY_SSH_KEY, DEPLOY_SSH_PASSPHRASE, DEPLOY_SSH_HOST,
+# DEPLOY_SSH_USER (same account as the Saratoga deploy); SOURCE_REPO,
+# SOURCE_REPO_TOKEN (read-only), SOURCE_SITE_URL; COPY_DENYLIST.
+name: Publish
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'           # hourly
+    - cron: '2,32,47 16-23 * * 0'  # Sunday, noon to 8 PM ET (with :17, every 15 min)
+    - cron: '2,32,47 0-4 * * 1'    # Sunday night game
+    - cron: '2,32,47 23 * * 1,4'   # Monday and Thursday night games
+    - cron: '2,32,47 0-3 * * 2,5'
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # the monthly keep-alive commit only
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Decide whether to run
+        id: gate
+        env:
+          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          SRC: ${{ secrets.SOURCE_REPO_TOKEN }}
+        run: |
+          if [ -z "$KEY" ] || [ -z "$HOST" ] || [ -z "$SRC" ]; then
+            echo "::notice::Deploy or source secrets are not set yet; skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          if [ ! -f site/.imported ]; then
+            echo "::notice::The live site has not been imported into site/ yet. Run the Import live site workflow first; skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Check out the source platform (read-only)
+        if: steps.gate.outputs.skip != 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ secrets.SOURCE_REPO }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: source
+          fetch-depth: 400
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          python-version: '3.12'
+      - uses: shivammathur/setup-php@v2
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          php-version: '8.2'
+      - uses: actions/setup-node@v4
+        if: steps.gate.outputs.skip != 'true'
+        with:
+          node-version: '22'
+
+      - name: Install tools
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          pip install jsonschema==4.23.0 pillow==11.0.0
+          npm install --prefix capture --no-audit --no-fund
+          npx --yes playwright@1.48.2 install --with-deps chromium
+
+      - name: Live numbers and dates
+        if: steps.gate.outputs.skip != 'true'
+        run: python scripts/source_metrics.py source build/metrics.json > /dev/null
+
+      - name: Screenshots
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          SOURCE_SITE_DIR: ${{ github.workspace }}/source/site
+          SOURCE_SITE_URL: ${{ secrets.SOURCE_SITE_URL }}
+          OUT_DIR: build/shots
+        run: node capture/capture.mjs
+
+      - name: Build
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          COPY_DENYLIST: ${{ secrets.COPY_DENYLIST }}
+        run: |
+          python scripts/build_site.py --site site --out dist
+          python scripts/validate_showcase.py --html dist/tools/football
+          if grep -rlE 'sgcaptcha|/cdn-cgi/' dist --include=*.html; then
+            echo "::error::A page holds a bot-check or CDN artifact; refusing to deploy it."; exit 1
+          fi
+
+      - name: Set up the SSH key
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+        run: |
+          port=$(jq -r .ssh.port config/hosting.json)
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -y -P "$DEPLOY_SSH_PASSPHRASE" -f ~/.ssh/deploy_key > /dev/null \
+            || { echo "DEPLOY_SSH_KEY is not a usable key, or the passphrase is wrong."; exit 1; }
+          # The host requires a passphrase on its keys and a workflow cannot
+          # type one, so strip it from this short-lived copy only.
+          ssh-keygen -p -P "$DEPLOY_SSH_PASSPHRASE" -N "" -f ~/.ssh/deploy_key > /dev/null
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            ssh-keyscan -p "$port" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null && exit 0
+            echo "keyscan attempt $attempt failed; retrying in 30s"; sleep 30
+          done
+          echo "Cannot reach the host after 10 tries."; exit 1
+
+      - name: Deploy
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+        run: |
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          priv=$(jq -r .paths.private config/hosting.json)
+          never=$(jq -r '.never_touch | join(" ")' config/hosting.json)
+          ssh_opts="-o ConnectionAttempts=8 -o ConnectTimeout=25 -i $HOME/.ssh/deploy_key -p $port"
+          ( cd dist && find . -type f | sed 's#^\./##' | sort > ../incoming.txt && tar -czf ../incoming.tgz -T ../incoming.txt )
+          ssh $ssh_opts "$USER@$HOST" "mkdir -p '$priv' && chmod 700 '$priv'"
+          scp -q -o ConnectionAttempts=8 -o ConnectTimeout=25 -i ~/.ssh/deploy_key -P "$port" \
+            incoming.tgz incoming.txt "$USER@$HOST:$priv/"
+          ssh $ssh_opts "$USER@$HOST" bash -s -- "$web" "$priv" "'$never'" < scripts/remote_deploy.sh
+
+      - name: Verify on the server
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+          USER: ${{ secrets.DEPLOY_SSH_USER }}
+        run: |
+          # The host's bot check answers runners over HTTP, so check the files
+          # where they are served from.
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          ssh -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" bash -s -- "$web" <<'REMOTE'
+          set -eu
+          root="$HOME/$1"
+          grep -q 'sa-tools:nfl-cards:start' "$root/tools/index.html"
+          grep -q 'class="scorecard"' "$root/tools/index.html"
+          for f in nfl-lines-tracker nfl-injury-tracker nfl-depth-charts; do test -s "$root/tools/football/$f.html"; done
+          test -d "$root/saratoga" && echo "saratoga/ still present"
+          echo "Verified on the server."
+          REMOTE
+
+      - name: Keep the schedule alive
+        if: steps.gate.outputs.skip != 'true' && github.event_name == 'schedule'
+        run: |
+          # GitHub turns off scheduled workflows in a public repository after
+          # 60 days without activity. One small commit a month counts.
+          month=$(date -u +%Y-%m)
+          if [ "$(cat .github/keepalive 2>/dev/null)" != "$month" ]; then
+            echo "$month" > .github/keepalive
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/keepalive && git commit -m "Keep the publish schedule alive ($month)" && git push origin HEAD:main
+          fi
+
+      - name: Clean up
+        if: always()
+        run: rm -f ~/.ssh/deploy_key incoming.tgz incoming.txt

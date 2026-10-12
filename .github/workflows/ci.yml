@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install jsonschema==4.23.0 pillow==11.0.0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'   # the host's
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Tool content matches the schema and the house rules
+        env:
+          COPY_DENYLIST: ${{ secrets.COPY_DENYLIST }}
+        run: python scripts/validate_showcase.py showcase/tools.json
+
+      - name: Build against the reference copy of the live site
+        run: |
+          site=site
+          [ -f site/tools/index.html ] || site=reference/live
+          python scripts/build_site.py --site "$site" --out dist
+
+      - name: Generated pages follow the house rules
+        env:
+          COPY_DENYLIST: ${{ secrets.COPY_DENYLIST }}
+        run: python scripts/validate_showcase.py --html dist/tools/football
+
+      - name: Deploy script stays inside its lane
+        run: bash tests/remote_deploy_test.sh
+
+      - name: Lint
+        run: |
+          php -l capture/stub_api.php
+          node --check capture/capture.mjs
+          bash -n scripts/remote_deploy.sh

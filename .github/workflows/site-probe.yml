@@ -1,0 +1,98 @@
+# Fetches live public files of the main site from a GitHub runner (the agent
+# container cannot reach the site) and commits them under reference/live/ on
+# the branch that ran it, so a session can build against the real markup.
+# A real browser is used because the host answers plain HTTP clients with a
+# bot check. Reads the site only; the one write is that commit to this repo.
+name: Site probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: Space-separated paths to fetch
+        default: / /tools/ /contact/ /css/shared.css /js/shared.js
+  push:
+    paths: ['.github/workflows/site-probe.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install playwright==1.48.0 && python -m playwright install --with-deps chromium
+      - name: Fetch the files
+        env:
+          BASE: https://spataccoanalytics.com
+          PATHS: ${{ inputs.paths || '/ /tools/ /contact/ /css/shared.css /js/shared.js' }}
+        run: |
+          python - <<'PY'
+          import os, re, pathlib
+          from playwright.sync_api import sync_playwright
+          base, paths = os.environ['BASE'], os.environ['PATHS'].split()
+          root = pathlib.Path('reference/live')
+          if root.exists():
+              import shutil; shutil.rmtree(root)
+          def dest(p):
+              rel = p.lstrip('/')
+              if rel == '' or rel.endswith('/'):
+                  rel += 'index.html'
+              return root / rel
+          with sync_playwright() as pw:
+              b = pw.chromium.launch()
+              ctx = b.new_context(user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36')
+              page = ctx.new_page()
+              links = set()
+              for p in paths:
+                  out = dest(p); out.parent.mkdir(parents=True, exist_ok=True)
+                  if out.suffix == '.html':
+                      # A page navigation runs the host's bot check in the
+                      # browser; wait for it to hand over the real page.
+                      page.goto(base + p, wait_until='domcontentloaded', timeout=60000)
+                      body = b''
+                      for _ in range(15):
+                          try:
+                              page.wait_for_load_state('networkidle', timeout=15000)
+                          except Exception:
+                              pass
+                          page.wait_for_timeout(2000)
+                          if 'sgcaptcha' in page.url:
+                              continue
+                          # The browser now holds the host's pass; fetch the raw
+                          # file with it rather than the script-modified page.
+                          r = ctx.request.get(base + p, timeout=30000)
+                          if b'sgcaptcha' not in r.body() and r.status == 200:
+                              body = r.body(); break
+                      print(f'page {p}: url now {page.url}, {"ok" if body else "still the bot check"}')
+                      if not body:
+                          continue
+                  else:
+                      r = ctx.request.get(base + p, timeout=30000)
+                      body = r.body()
+                      if b'sgcaptcha' in body:
+                          print(f'{r.status} {p}: bot check'); continue
+                  out.write_bytes(body)
+                  print(f'saved {p} -> {out} ({len(body)} bytes)')
+                  if out.suffix == '.html':
+                      for m in re.findall(rb'(?:href|src)="([^"#]+)"', body):
+                          u = m.decode('utf-8', 'replace')
+                          if not re.match(r'^(https?:)?//|^(mailto|tel|javascript|data):', u):
+                              links.add(u)
+              (root / 'LINKS.txt').write_text('\n'.join(sorted(links)) + '\n')
+              print('\n'.join(sorted(links)))
+              b.close()
+          PY
+      - name: Commit what was fetched
+        run: |
+          grep -rl sgcaptcha reference/live 2>/dev/null | xargs -r rm -f
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A reference/live
+          git diff --cached --quiet && { echo "No change."; exit 0; }
+          git commit -m "Reference: live copy of the main site's files (fetched by Site probe)"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

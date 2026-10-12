@@ -1,0 +1,7 @@
+{
+  "_note": "Plain configuration only. The SSH host, user, key and passphrase, and the source platform's repository, token and address, live exclusively in GitHub Actions secrets.",
+  "ssh": { "port": 18765 },
+  "paths": { "web_root": "www/spataccoanalytics.com/public_html", "private": "private/spa-site" },
+  "urls": { "production": "https://spataccoanalytics.com" },
+  "never_touch": ["saratoga", ".well-known", "cgi-bin"]
+}
