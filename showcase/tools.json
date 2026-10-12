@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "generated": "2026-10-12T00:00:00Z",
+  "publisher": "Spatacco Analytics",
+  "tools": [
+    {
+      "id": "nfl-lines-tracker",
+      "name": "NFL Lines Tracker",
+      "emoji": "📈",
+      "tagline": "Every NFL line from open to close, stripped of the bookmaker's margin and merged into one fair price.",
+      "status": "production",
+      "order": 1,
+      "summary": "Reads six major U.S. sportsbooks and two prediction exchanges, removes the bookmaker's margin from each price, and averages what is left into a consensus fair line. Every game is charted from open to close, graded against its closing line, and annotated with the injury news that landed while the line moved.",
+      "highlights": [
+        "Margin-free consensus line: each price converted to a probability, the vig removed, the books averaged and converted back",
+        "Spread and moneyline charted from open to close on one time axis",
+        "Injury news pinned to the chart at the moment it broke, with the move that followed",
+        "Every game graded against its closing line, plus a 19-market futures board tracked week over week",
+        "Follow a game: alerts when its line moves past a set threshold or key injury news hits",
+        "Referee assignment on every game with that referee's historical over, under and cover tendencies"
+      ],
+      "stack": [
+        "Python",
+        "PHP 8",
+        "MySQL",
+        "JavaScript",
+        "GitHub Actions"
+      ],
+      "data_sources": [
+        "U.S. sportsbook lines",
+        "Kalshi",
+        "Polymarket",
+        "nflverse"
+      ],
+      "metrics": [
+        {
+          "label": "Sportsbooks merged",
+          "value": "6",
+          "key": "books"
+        },
+        {
+          "label": "Prediction exchanges",
+          "value": "2",
+          "key": "exchanges"
+        },
+        {
+          "label": "Futures markets",
+          "value": "19",
+          "key": "futures"
+        },
+        {
+          "label": "Reads near kickoff",
+          "value": "Every 15 min"
+        }
+      ],
+      "image_alt": "Lines Tracker: every NFL game with its opening, current and closing line"
+    },
+    {
+      "id": "nfl-injury-tracker",
+      "name": "NFL Injury Tracker",
+      "emoji": "🩹",
+      "tagline": "The league-wide injury report with a full change history, start dates and betting line impact.",
+      "status": "production",
+      "order": 2,
+      "summary": "Polls the full NFL injury report on a schedule that tightens near kickoff, keeps an append-only history of every designation change, and flags the injuries that came just before a betting line move. Built to tell real news from feed noise: a status that flickers between two equivalent designations is damped, not reported as news.",
+      "highlights": [
+        "Full report read every 30 minutes, and every 10 within two hours of a kickoff",
+        "Append-only history: when each injury began, its latest update and every status change",
+        "Line-moving flag when an impact player's news came within a day before a move of a point or more",
+        "Flicker damping so a feed alternating between equivalent statuses does not file false changes",
+        "A second source fills in long-term injured players the primary report drops past its per-team cap",
+        "Filters by team, game, starters and every position, with the offensive line and each defensive spot broken out"
+      ],
+      "stack": [
+        "PHP 8",
+        "MySQL",
+        "Python",
+        "JavaScript"
+      ],
+      "data_sources": [
+        "League-wide NFL injury report",
+        "Sleeper",
+        "nflverse"
+      ],
+      "metrics": [
+        {
+          "label": "Reads near kickoff",
+          "value": "Every 10 min"
+        },
+        {
+          "label": "Report entries a read",
+          "value": "About 800"
+        },
+        {
+          "label": "History kept",
+          "value": "Every change"
+        }
+      ],
+      "image_alt": "Injury Tracker: the league-wide report with start dates and status changes"
+    },
+    {
+      "id": "nfl-depth-charts",
+      "name": "NFL Depth Charts with Madden Ratings",
+      "emoji": "🏈",
+      "tagline": "All 32 depth charts, offense and defense, with contracts, acquisition history and Madden ratings.",
+      "status": "production",
+      "order": 3,
+      "summary": "Rebuilds every NFL depth chart four times a day, offense by position and defense by alignment spot, and attaches each player's acquisition path, current contract, injury status and Madden NFL 27 overall rating. The attributes behind each rating are ranked by a regression fitted to every rated player at each position.",
+      "highlights": [
+        "Offense by position, defense by alignment spot (edge, nose, linebacker, corner, nickel) and the kicker",
+        "Acquisition for every player: draft round and year, free agent signing or trade",
+        "Contract column with salary and term, with rookie deals and practice squad labeled where no figure is published",
+        "Madden NFL 27 overall on every player, matched to 99.8% of rated players",
+        "Rating drivers measured per position by a non-negative least squares fit (R-squared 0.976 to 0.998)",
+        "Views by team, division, conference or a single game, with injury status inline"
+      ],
+      "stack": [
+        "Python",
+        "NumPy",
+        "SciPy",
+        "PHP 8",
+        "JavaScript",
+        "GitHub Actions"
+      ],
+      "data_sources": [
+        "Sleeper",
+        "nflverse",
+        "Madden NFL 27 ratings"
+      ],
+      "metrics": [
+        {
+          "label": "Players charted",
+          "value": "1,505",
+          "key": "players"
+        },
+        {
+          "label": "Madden ratings matched",
+          "value": "1,943",
+          "key": "madden"
+        },
+        {
+          "label": "Rebuilds a day",
+          "value": "4"
+        }
+      ],
+      "image_alt": "Depth chart for one team, offense and defense, with Madden ratings, acquisition and contract columns"
+    }
+  ]
+}

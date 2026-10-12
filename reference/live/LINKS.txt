@@ -1,0 +1,17 @@
+/
+/contact/
+/css/shared.css
+/favicon-180x180.png
+/favicon-192x192.png
+/favicon.ico
+/img/logo.jpg
+/js/shared.js
+/tools/
+/tools/afi-tracker.html
+/tools/card-evaluator.html
+/tools/cricket-explainer.html
+/tools/curling-explainer.html
+/tools/oscar-tracker.html
+/tools/resume-parser/
+/tools/website-scorer.html
+/unleash/

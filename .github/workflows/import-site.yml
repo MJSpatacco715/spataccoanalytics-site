@@ -1,0 +1,109 @@
+# One-time (re-runnable) import of the main site's files from the host into
+# site/, so GitHub becomes where the site is edited. Opens a pull request; it
+# never changes the live site.
+#
+# Takes only files a browser is served as-is (pages, styles, scripts, images,
+# fonts) plus .htaccess files, from the main web root, skipping directories
+# other projects own (config/hosting.json never_touch) and the generated
+# tools/football/. Anything else (PHP and the like) is listed in the pull
+# request and left on the server, unmanaged.
+#
+# Before anything is committed, every file is scanned for credentials. This
+# repository is public: one hit stops the import and nothing is pushed.
+name: Import live site
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up the SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
+        run: |
+          [ -n "$DEPLOY_SSH_KEY" ] || { echo "The DEPLOY_SSH_KEY secret is not set."; exit 1; }
+          port=$(jq -r .ssh.port config/hosting.json)
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          ssh-keygen -p -P "$DEPLOY_SSH_PASSPHRASE" -N "" -f ~/.ssh/deploy_key > /dev/null
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            ssh-keyscan -p "$port" "$HOST" >> ~/.ssh/known_hosts 2>/dev/null && exit 0
+            sleep 30
+          done
+          exit 1
+
+      - name: Pull the files
+        run: |
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          never=$(jq -r '.never_touch | join(" ")' config/hosting.json)
+          ssh -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" bash -s -- "$web" "'$never tools/football'" > listing.txt <<'REMOTE'
+          set -eu
+          cd "$HOME/$1"
+          prune=""
+          for d in $2; do prune="$prune -path ./$d -prune -o"; done
+          # shellcheck disable=SC2086
+          find . $prune -type f -size -5M -print | sed 's#^\./##' | sort
+          REMOTE
+          grep -iE '\.(html?|css|js|mjs|json|xml|txt|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|webmanifest|pdf)$|(^|/)\.htaccess$' listing.txt > take.txt || true
+          grep -viE '\.(html?|css|js|mjs|json|xml|txt|svg|png|jpe?g|gif|webp|avif|ico|woff2?|ttf|otf|webmanifest|pdf)$|(^|/)\.htaccess$' listing.txt > leave.txt || true
+          echo "taking $(wc -l < take.txt) files, leaving $(wc -l < leave.txt) on the server"
+          ssh -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" \
+            "cd \"\$HOME/$web\" && tar -czf - -T -" < take.txt > live.tgz
+          rm -rf incoming && mkdir incoming && tar -xzf live.tgz -C incoming
+
+      - name: Scan for credentials (the repository is public)
+        run: |
+          pat='sk-ant-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|AIza[0-9A-Za-z_-]{35}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abpr]-[A-Za-z0-9-]{10,}|(api[_-]?key|secret|password|passwd|token)["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"']{8,}'
+          if grep -rIlE "$pat" incoming; then
+            echo "::error::Possible credentials in the files listed above. Nothing was committed. Move the secret server-side, then run this again."
+            exit 1
+          fi
+          echo "No credentials found."
+
+      - name: Commit and open a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="import/live-site-$(date -u +%Y%m%d-%H%M)"
+          git switch -c "$branch"
+          rm -rf site && mkdir -p site && cp -a incoming/. site/
+          { echo "imported $(date -u +%Y-%m-%dT%H:%M:%SZ)"; cat take.txt; } > site/.imported
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A site
+          git commit -m "Import the live main site into site/"
+          git push origin "$branch"
+          {
+            echo "Imports the main site's files from the host into \`site/\`, so GitHub becomes where the site is edited and Publish deploys it."
+            echo
+            echo "**Taken:** $(wc -l < take.txt) files. **Left on the server, unmanaged:** $(wc -l < leave.txt) files:"
+            echo
+            sed 's/^/- `/; s/$/`/' leave.txt | head -200
+            echo
+            echo "Credential scan: clean. CI does not start on its own for pull requests opened by a workflow; push any commit to this branch or close and reopen to run it."
+          } > body.md
+          # A new repository does not let workflows open pull requests until
+          # Settings > Actions > General allows it; the branch is pushed
+          # either way, so fall back to a link.
+          if ! gh pr create --base main --head "$branch" --title "Import the live main site into site/" --body-file body.md --draft; then
+            echo "::warning::Could not open the pull request. Open it here: https://github.com/${GITHUB_REPOSITORY}/compare/main...${branch}?expand=1"
+          fi
+
+      - name: Clean up
+        if: always()
+        run: rm -f ~/.ssh/deploy_key live.tgz
