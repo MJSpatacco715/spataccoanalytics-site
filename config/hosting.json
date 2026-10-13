@@ -3,7 +3,7 @@
   "ssh": { "host": "gvam1041.siteground.biz", "port": 18765, "user": "u3201-8yfyndyyih8r" },
   "paths": { "web_root": "www/spataccoanalytics.com/public_html", "private": "private/spa-site" },
   "urls": { "production": "https://spataccoanalytics.com" },
-  "never_touch": ["saratoga", ".well-known", "cgi-bin"],
+  "never_touch": ["saratoga", ".well-known", "cgi-bin", "tools/gc-demo"],
   "source": { "repo": "MJSpatacco715/wabi-ff" },
   "denylist": ["\\bWWFF\\b", "\\bwabi\\b", "\\btacco\\b", "\\b15\\d{4}\\b"]
 }
