@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cricket vs Baseball - Visual Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #1c1917;
+      color: #f5f5f4;
+      min-height: 100vh;
+      padding: 1.5rem;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 56rem;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 2rem;
+    }
+
+    .header-accent {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header-line {
+      width: 4rem;
+      height: 4px;
+      background: #f59e0b;
+    }
+
+    .header-label {
+      color: #f59e0b;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 3.5rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 span {
+      color: #f59e0b;
+      margin: 0 0.75rem;
+    }
+
+    .subtitle {
+      color: #a8a29e;
+      font-size: 1.125rem;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .nav-btn {
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #292524;
+      color: #a8a29e;
+    }
+
+    .nav-btn:hover {
+      background: #44403c;
+      color: #e7e5e4;
+    }
+
+    .nav-btn.active {
+      background: #f59e0b;
+      color: #1c1917;
+    }
+
+    /* Content sections */
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: #292524;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid #44403c;
+      margin-bottom: 1.5rem;
+    }
+
+    .card.highlight {
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .card-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+    }
+
+    .card-icon.red { background: #dc2626; }
+    .card-icon.amber { background: #f59e0b; }
+    .card-icon.green { background: #22c55e; }
+    .card-icon.purple { background: #a855f7; }
+    .card-icon.blue { background: #3b82f6; }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    /* SVG containers */
+    .field-svg {
+      width: 100%;
+      height: 12rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Lists */
+    .info-list {
+      list-style: none;
+    }
+
+    .info-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      color: #d6d3d1;
+      font-size: 0.875rem;
+    }
+
+    .info-list .bullet {
+      margin-top: 0.25rem;
+    }
+
+    .info-list .bullet.red { color: #ef4444; }
+    .info-list .bullet.amber { color: #f59e0b; }
+
+    /* Callout */
+    .callout {
+      background: linear-gradient(to right, rgba(245, 158, 11, 0.2), transparent);
+      border-left: 4px solid #f59e0b;
+      padding: 1.25rem;
+      border-radius: 0 0.75rem 0.75rem 0;
+      margin-top: 1.5rem;
+    }
+
+    .callout p {
+      font-size: 1.125rem;
+      font-weight: 500;
+    }
+
+    .callout strong {
+      color: #f59e0b;
+      font-weight: 700;
+    }
+
+    /* Table */
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 1rem;
+    }
+
+    .comparison-table th {
+      background: rgba(68, 64, 60, 0.5);
+      padding: 1rem;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .comparison-table th:first-child { color: #f87171; }
+    .comparison-table th:nth-child(2) { color: #a8a29e; }
+    .comparison-table th:last-child { color: #fbbf24; }
+
+    .comparison-table td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #44403c;
+    }
+
+    .comparison-table tr:nth-child(even) {
+      background: rgba(41, 37, 36, 0.5);
+    }
+
+    .comparison-table td:first-child { color: #fca5a5; font-weight: 500; }
+    .comparison-table td:nth-child(2) { color: #78716c; font-size: 0.875rem; }
+    .comparison-table td:last-child { color: #fcd34d; font-weight: 500; }
+
+    /* Scoring items */
+    .score-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(68, 64, 60, 0.3);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .score-item.special {
+      background: linear-gradient(to right, rgba(168, 85, 247, 0.2), rgba(68, 64, 60, 0.3));
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .score-circle {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #1c1917;
+      flex-shrink: 0;
+    }
+
+    .score-circle.amber { background: #f59e0b; }
+    .score-circle.green { background: #22c55e; }
+    .score-circle.purple { background: #a855f7; color: white; }
+
+    .score-info {
+      flex: 1;
+    }
+
+    .score-title {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .score-title.amber { color: #fbbf24; }
+    .score-title.green { color: #4ade80; }
+    .score-title.purple { color: #c084fc; }
+
+    .score-desc {
+      color: #a8a29e;
+      font-size: 0.875rem;
+    }
+
+    .score-emoji {
+      font-size: 2rem;
+      opacity: 0.5;
+    }
+
+    /* Score comparison boxes */
+    .score-box {
+      border-radius: 0.75rem;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .score-box.red {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .score-box.amber {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .score-box-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .score-box-label.red { color: #f87171; }
+    .score-box-label.amber { color: #fbbf24; }
+
+    .score-box-number {
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .score-box-number.red { color: #fca5a5; }
+    .score-box-number.amber { color: #fcd34d; }
+
+    .score-box-note {
+      color: #78716c;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    /* Out cards */
+    .out-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .out-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .out-card {
+      background: #292524;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      border: 1px solid #44403c;
+      transition: border-color 0.2s;
+    }
+
+    .out-card:hover {
+      border-color: rgba(245, 158, 11, 0.5);
+    }
+
+    .out-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .out-emoji {
+      font-size: 1.75rem;
+    }
+
+    .out-name {
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+
+    .out-equiv {
+      font-size: 0.75rem;
+      color: #78716c;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .out-desc {
+      color: #a8a29e;
+      font-size: 0.875rem;
+    }
+
+    /* Format cards */
+    .format-card {
+      background: #292524;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid #44403c;
+      margin-bottom: 1rem;
+    }
+
+    .format-card.featured {
+      background: linear-gradient(to right, rgba(245, 158, 11, 0.1), #292524);
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+
+    .format-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .format-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #78716c;
+      margin-bottom: 0.25rem;
+    }
+
+    .format-label.amber {
+      color: #f59e0b;
+    }
+
+    .format-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .format-time {
+      font-size: 1.75rem;
+      font-weight: 900;
+      text-align: right;
+    }
+
+    .format-time.red { color: #f87171; }
+    .format-time.blue { color: #60a5fa; }
+    .format-time.amber { color: #fbbf24; }
+
+    .format-time-note {
+      color: #78716c;
+      font-size: 0.875rem;
+    }
+
+    .format-desc {
+      color: #a8a29e;
+      margin-bottom: 1rem;
+    }
+
+    .format-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+    }
+
+    .tag.red {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+
+    .tag.blue {
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+    }
+
+    .tag.amber {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+    }
+
+    .tag.gray {
+      background: #44403c;
+      color: #a8a29e;
+    }
+
+    /* Reference box */
+    .reference-box {
+      background: rgba(68, 64, 60, 0.3);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+
+    .reference-label {
+      color: #78716c;
+      margin-bottom: 0.5rem;
+    }
+
+    .reference-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .reference-sport {
+      color: #f87171;
+      font-weight: 700;
+    }
+
+    .reference-time {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #d6d3d1;
+    }
+
+    .reference-divider {
+      color: #44403c;
+    }
+
+    .reference-note {
+      color: #a8a29e;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #292524;
+      text-align: center;
+      color: #57534e;
+      font-size: 0.875rem;
+    }
+
+    /* Subsection styling */
+    .subsection {
+      background: #292524;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid #44403c;
+      margin-bottom: 1.5rem;
+    }
+
+    .subsection-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .subsection-title span {
+      color: #f59e0b;
+    }
+
+    .mini-card {
+      background: rgba(68, 64, 60, 0.5);
+      border-radius: 0.75rem;
+      padding: 1rem;
+    }
+
+    .mini-card.amber {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .mini-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .mini-label.red { color: #f87171; }
+    .mini-label.amber { color: #fbbf24; }
+
+    .mini-list {
+      font-size: 0.875rem;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-accent">
+        <div class="header-line"></div>
+        <span class="header-label">Visual Guide</span>
+      </div>
+      <h1>CRICKET<span>vs</span>BASEBALL</h1>
+      <p class="subtitle">Everything you need to know, translated for American sports fans</p>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+      <button class="nav-btn active" data-section="field">The Field</button>
+      <button class="nav-btn" data-section="roles">Key Roles</button>
+      <button class="nav-btn" data-section="scoring">Scoring</button>
+      <button class="nav-btn" data-section="outs">Getting Out</button>
+      <button class="nav-btn" data-section="formats">Game Formats</button>
+    </nav>
+
+    <!-- FIELD SECTION -->
+    <div id="field" class="section active">
+      <div class="grid-2">
+        <!-- Baseball Field -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-icon red">⚾</div>
+            <h3 class="card-title">Baseball Diamond</h3>
+          </div>
+          <svg class="field-svg" viewBox="0 0 200 200">
+            <path d="M100,180 L20,100 A113,113 0 0,1 180,100 Z" fill="#2d5a27" stroke="#1a3d18" stroke-width="2"/>
+            <path d="M100,180 L60,140 L100,100 L140,140 Z" fill="#8B7355" stroke="#6B5344" stroke-width="2"/>
+            <rect x="96" y="96" width="8" height="8" fill="white" transform="rotate(45 100 100)"/>
+            <rect x="56" y="136" width="8" height="8" fill="white" transform="rotate(45 60 140)"/>
+            <rect x="136" y="136" width="8" height="8" fill="white" transform="rotate(45 140 140)"/>
+            <path d="M95,175 L100,180 L105,175 Z" fill="white"/>
+            <text x="100" y="92" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="bold">2nd</text>
+            <text x="48" y="145" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="bold">3rd</text>
+            <text x="152" y="145" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="bold">1st</text>
+            <text x="100" y="195" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="bold">HOME</text>
+          </svg>
+          <ul class="info-list">
+            <li><span class="bullet red">▸</span><span><strong>Diamond shaped</strong> infield with 4 bases</span></li>
+            <li><span class="bullet red">▸</span><span>Runners circle bases <strong>counter-clockwise</strong></span></li>
+            <li><span class="bullet red">▸</span><span>Pitcher throws from raised mound</span></li>
+          </ul>
+        </div>
+
+        <!-- Cricket Field -->
+        <div class="card highlight">
+          <div class="card-header">
+            <div class="card-icon amber">🏏</div>
+            <h3 class="card-title">Cricket Oval</h3>
+          </div>
+          <svg class="field-svg" viewBox="0 0 200 200">
+            <ellipse cx="100" cy="100" rx="90" ry="85" fill="#2d5a27" stroke="#1a3d18" stroke-width="2"/>
+            <rect x="85" y="40" width="30" height="120" fill="#c9a86c" stroke="#a08050" stroke-width="1"/>
+            <rect x="97" y="45" width="6" height="12" fill="#8B4513"/>
+            <rect x="97" y="143" width="6" height="12" fill="#8B4513"/>
+            <line x1="75" y1="55" x2="125" y2="55" stroke="white" stroke-width="1"/>
+            <line x1="75" y1="145" x2="125" y2="145" stroke="white" stroke-width="1"/>
+            <circle cx="100" cy="65" r="5" fill="#fbbf24"/>
+            <circle cx="100" cy="135" r="5" fill="#fbbf24"/>
+            <text x="100" y="35" text-anchor="middle" fill="#fbbf24" font-size="7" font-weight="bold">WICKET</text>
+            <text x="100" y="170" text-anchor="middle" fill="#fbbf24" font-size="7" font-weight="bold">WICKET</text>
+            <text x="100" y="100" text-anchor="middle" fill="white" font-size="6">22 yards</text>
+            <path d="M70,100 L65,95 M70,100 L65,105 M70,100 L55,100" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+            <path d="M130,100 L135,95 M130,100 L135,105 M130,100 L145,100" stroke="#fbbf24" stroke-width="1.5" fill="none"/>
+          </svg>
+          <ul class="info-list">
+            <li><span class="bullet amber">▸</span><span><strong>Oval shaped</strong> with rectangular pitch in center</span></li>
+            <li><span class="bullet amber">▸</span><span>Two batters run <strong>back and forth</strong> between wickets</span></li>
+            <li><span class="bullet amber">▸</span><span>Bowler delivers from ground level with bounce</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Key Difference:</strong> Baseball has foul territory—hit it there, it doesn't count. In cricket, <strong>you can hit the ball in any direction, 360°</strong> around you.</p>
+      </div>
+    </div>
+
+    <!-- ROLES SECTION -->
+    <div id="roles" class="section">
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="comparison-table">
+          <tr>
+            <th>⚾ Baseball</th>
+            <th>Role</th>
+            <th>Cricket 🏏</th>
+          </tr>
+          <tr>
+            <td>Pitcher</td>
+            <td>Throws to batter</td>
+            <td>Bowler</td>
+          </tr>
+          <tr>
+            <td>Catcher</td>
+            <td>Behind batter</td>
+            <td>Wicket-keeper</td>
+          </tr>
+          <tr>
+            <td>Batter</td>
+            <td>Hits the ball</td>
+            <td>Batsman/Batter</td>
+          </tr>
+          <tr>
+            <td>Fielders</td>
+            <td>Catch & throw</td>
+            <td>Fielders</td>
+          </tr>
+          <tr>
+            <td>Umpire</td>
+            <td>Makes calls</td>
+            <td>Umpire</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title"><span>🎯</span> Pitching vs Bowling</h3>
+        <div class="grid-2">
+          <div class="mini-card">
+            <div class="mini-label red">Baseball Pitcher</div>
+            <div class="mini-list">
+              ✓ Throws from elevated mound<br>
+              ✓ Ball arrives on the fly (no bounce)<br>
+              ✓ Uses curveballs, sliders, changeups<br>
+              ✓ Arm motion can be overhand, sidearm
+            </div>
+          </div>
+          <div class="mini-card amber">
+            <div class="mini-label amber">Cricket Bowler</div>
+            <div class="mini-list">
+              ✓ Takes a running start (run-up)<br>
+              ✓ Ball <strong>must bounce</strong> before batter<br>
+              ✓ Arm must stay straight (no bent elbow)<br>
+              ✓ Spin off the pitch creates deception
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Key Difference:</strong> A cricket bowler's arm must stay straight—bending it is illegal (called "chucking"). Imagine pitching with a stiff arm while running. That's bowling.</p>
+      </div>
+    </div>
+
+    <!-- SCORING SECTION -->
+    <div id="scoring" class="section">
+      <div class="subsection">
+        <h3 class="subsection-title">How Runs Work</h3>
+
+        <div class="score-item">
+          <div class="score-circle amber">1</div>
+          <div class="score-info">
+            <div class="score-title amber">Single Run</div>
+            <p class="score-desc">Both batters swap ends once. Like reaching first base.</p>
+          </div>
+          <div class="score-emoji">↔️</div>
+        </div>
+
+        <div class="score-item">
+          <div class="score-circle amber">2-3</div>
+          <div class="score-info">
+            <div class="score-title amber">Multiple Runs</div>
+            <p class="score-desc">Keep running back and forth until fielder retrieves ball. Like extra bases.</p>
+          </div>
+          <div class="score-emoji">↔️↔️</div>
+        </div>
+
+        <div class="score-item">
+          <div class="score-circle green">4</div>
+          <div class="score-info">
+            <div class="score-title green">Boundary (Ground)</div>
+            <p class="score-desc">Ball rolls/bounces to rope at field edge. Automatic 4 runs. Like a ground-rule double, but better.</p>
+          </div>
+          <div class="score-emoji">〰️</div>
+        </div>
+
+        <div class="score-item special">
+          <div class="score-circle purple">6</div>
+          <div class="score-info">
+            <div class="score-title purple">Six (Over the Boundary)</div>
+            <p class="score-desc">Ball clears rope on the fly. <strong>Cricket's home run.</strong> Maximum excitement.</p>
+          </div>
+          <div class="score-emoji">🚀</div>
+        </div>
+      </div>
+
+      <div class="subsection">
+        <h3 class="subsection-title">Typical Scores</h3>
+        <div class="grid-2">
+          <div class="score-box red">
+            <div class="score-box-label red">⚾ Baseball Game</div>
+            <div class="score-box-number red">5 - 3</div>
+            <div class="score-box-note">Low scoring, every run matters</div>
+          </div>
+          <div class="score-box amber">
+            <div class="score-box-label amber">🏏 Cricket Match (T20)</div>
+            <div class="score-box-number amber">185 - 171</div>
+            <div class="score-box-note">High scoring, big totals common</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Key Difference:</strong> Cricket scores look like basketball scores. A single batter might score 50-100 runs in one innings if they're good enough.</p>
+      </div>
+    </div>
+
+    <!-- OUTS SECTION -->
+    <div id="outs" class="section">
+      <div class="out-grid">
+        <div class="out-card">
+          <div class="out-header">
+            <span class="out-emoji">🎯</span>
+            <div>
+              <div class="out-name">Bowled</div>
+              <div class="out-equiv">≈ Strikeout (sort of)</div>
+            </div>
+          </div>
+          <p class="out-desc">Ball hits the wicket behind you. Most dramatic way to get out.</p>
+        </div>
+
+        <div class="out-card">
+          <div class="out-header">
+            <span class="out-emoji">🧤</span>
+            <div>
+              <div class="out-name">Caught</div>
+              <div class="out-equiv">≈ Fly out</div>
+            </div>
+          </div>
+          <p class="out-desc">Fielder catches your hit before it bounces. Exact same as baseball.</p>
+        </div>
+
+        <div class="out-card">
+          <div class="out-header">
+            <span class="out-emoji">🦵</span>
+            <div>
+              <div class="out-name">LBW</div>
+              <div class="out-equiv">≈ No equivalent</div>
+            </div>
+          </div>
+          <p class="out-desc">Leg Before Wicket—ball would have hit wicket but hit your body instead. You're out.</p>
+        </div>
+
+        <div class="out-card">
+          <div class="out-header">
+            <span class="out-emoji">🏃</span>
+            <div>
+              <div class="out-name">Run Out</div>
+              <div class="out-equiv">≈ Thrown out at base</div>
+            </div>
+          </div>
+          <p class="out-desc">Fielder breaks wicket while you're running between ends. Very similar.</p>
+        </div>
+
+        <div class="out-card">
+          <div class="out-header">
+            <span class="out-emoji">⚡</span>
+            <div>
+              <div class="out-name">Stumped</div>
+              <div class="out-equiv">≈ Catcher tag out</div>
+            </div>
+          </div>
+          <p class="out-desc">You step forward to hit, miss, and wicket-keeper breaks wicket behind you.</p>
+        </div>
+
+        <div class="out-card">
+          <div class="out-header">
+            <span class="out-emoji">🤦</span>
+            <div>
+              <div class="out-name">Hit Wicket</div>
+              <div class="out-equiv">≈ No equivalent</div>
+            </div>
+          </div>
+          <p class="out-desc">You accidentally knock over your own wicket while batting. Embarrassing.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Key Difference:</strong> In baseball, 3 strikes = out. In cricket, <strong>there are no strikes or balls</strong>. Miss 50 times? You're still batting. But one mistake that hits that wicket? Game over for you.</p>
+      </div>
+    </div>
+
+    <!-- FORMATS SECTION -->
+    <div id="formats" class="section">
+      <div class="format-card">
+        <div class="format-header">
+          <div>
+            <div class="format-label">Traditional</div>
+            <h3 class="format-name">Test Cricket</h3>
+          </div>
+          <div>
+            <div class="format-time red">5 DAYS</div>
+            <div class="format-time-note">Yes, really</div>
+          </div>
+        </div>
+        <p class="format-desc">The original format. Each team bats twice. No limit on overs. Games can end in a draw if time runs out. Think of it as chess—slow, strategic, grueling.</p>
+        <div class="format-tags">
+          <span class="tag red">Purist favorite</span>
+          <span class="tag gray">International only</span>
+        </div>
+      </div>
+
+      <div class="format-card">
+        <div class="format-header">
+          <div>
+            <div class="format-label">Limited Overs</div>
+            <h3 class="format-name">One Day International (ODI)</h3>
+          </div>
+          <div>
+            <div class="format-time blue">~8 HRS</div>
+            <div class="format-time-note">50 overs per side</div>
+          </div>
+        </div>
+        <p class="format-desc">Each team gets exactly 50 overs (300 legal deliveries) to score as much as possible. World Cup format. Good balance of strategy and action.</p>
+        <div class="format-tags">
+          <span class="tag blue">World Cup format</span>
+          <span class="tag gray">Full day event</span>
+        </div>
+      </div>
+
+      <div class="format-card featured">
+        <div class="format-header">
+          <div>
+            <div class="format-label amber">Fast & Modern</div>
+            <h3 class="format-name">T20 (Twenty20)</h3>
+          </div>
+          <div>
+            <div class="format-time amber">~3 HRS</div>
+            <div class="format-time-note">20 overs per side</div>
+          </div>
+        </div>
+        <p class="format-desc"><strong>This is what you should watch first.</strong> Fast-paced, big hits, constant action. Same length as a baseball game. IPL (India) and Big Bash (Australia) are the big leagues.</p>
+        <div class="format-tags">
+          <span class="tag amber">⭐ Start here</span>
+          <span class="tag amber">Most popular globally</span>
+          <span class="tag gray">Like baseball length</span>
+        </div>
+      </div>
+
+      <div class="reference-box">
+        <div class="reference-label">For reference</div>
+        <div class="reference-content">
+          <span class="reference-sport">⚾ MLB Game</span>
+          <span class="reference-time">~3 hours</span>
+          <span class="reference-divider">|</span>
+          <span class="reference-note">9 innings</span>
+        </div>
+      </div>
+
+      <div class="callout">
+        <p><strong>Pro Tip:</strong> Watch a T20 match first (IPL or Big Bash). It's cricket's "SportsCenter highlights" format—all the exciting stuff, reasonable time commitment.</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      Click the tabs above to explore each aspect of the game
+    </div>
+  </div>
+
+  <script>
+    // Tab navigation
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Update active button
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show corresponding section
+        const sectionId = btn.getAttribute('data-section');
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+      });
+    });
+  </script>
+  <footer style="text-align:center;padding:24px 16px;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;letter-spacing:1px;color:#7A8090;border-top:1px solid rgba(0,0,0,0.08);margin-top:48px">
+  Built by <a href="https://spataccoanalytics.com" style="color:#7A8090 !important;text-decoration:none;border-bottom:1px solid #7A8090" target="_blank" rel="noopener">Spatacco Analytics</a> &middot; &copy; 2026
+</footer>
+</body>
+</html>
