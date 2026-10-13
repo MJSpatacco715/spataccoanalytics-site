@@ -2,3 +2,4 @@ dist/
 build/
 capture/node_modules/
 __pycache__/
+live/node_modules/
