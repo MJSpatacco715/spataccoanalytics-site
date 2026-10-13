@@ -20,6 +20,7 @@
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
         "name": { "type": "string", "minLength": 3, "maxLength": 60 },
+        "short": { "type": "string", "minLength": 2, "maxLength": 24, "description": "Label for the Sports Desk tabs on the tool pages" },
         "emoji": { "type": "string", "minLength": 1, "maxLength": 8 },
         "tagline": { "type": "string", "minLength": 10, "maxLength": 140 },
         "status": { "enum": ["production", "beta", "development"] },

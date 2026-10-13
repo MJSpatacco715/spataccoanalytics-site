@@ -6,6 +6,7 @@
     {
       "id": "nfl-lines-tracker",
       "name": "NFL Lines Tracker",
+      "short": "Lines Tracker",
       "emoji": "📈",
       "tagline": "Every NFL line from open to close, stripped of the bookmaker's margin and merged into one fair price.",
       "status": "production",
@@ -58,6 +59,7 @@
     {
       "id": "nfl-injury-tracker",
       "name": "NFL Injury Tracker",
+      "short": "Injury Tracker",
       "emoji": "🩹",
       "tagline": "The league-wide injury report with a full change history, start dates and betting line impact.",
       "status": "production",
@@ -101,6 +103,7 @@
     {
       "id": "nfl-depth-charts",
       "name": "NFL Depth Charts with Madden Ratings",
+      "short": "Depth Charts",
       "emoji": "🏈",
       "tagline": "All 32 depth charts, offense and defense, with contracts, acquisition history and Madden ratings.",
       "status": "production",
