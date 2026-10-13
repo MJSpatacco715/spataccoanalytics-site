@@ -11,6 +11,9 @@
 /tools/card-evaluator.html
 /tools/cricket-explainer.html
 /tools/curling-explainer.html
+/tools/football/nfl-depth-charts.html
+/tools/football/nfl-injury-tracker.html
+/tools/football/nfl-lines-tracker.html
 /tools/oscar-tracker.html
 /tools/resume-parser/
 /tools/website-scorer.html

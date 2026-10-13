@@ -136,7 +136,7 @@
     <div class="page-hero-tag">Tools &amp; Projects</div>
     <h1>Built for <em>curiosity.</em> Available for you.</h1>
     <p class="tools-intro">Custom tools and interactive projects &mdash; some built for financial services, some built for fun. All built to show what&rsquo;s possible when you pair <em>good data</em> with <em>smart design</em>.</p>
-    <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The four projects in the lower section started as personal builds &mdash; curiosity, a desire to learn new frameworks, and in the case of the two movie trackers, a better way to keep track of what I&rsquo;ve actually watched than a half-remembered mental list. Take a look around.</p>
+    <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The projects below started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around.</p>
   </div>
 </section>
 
@@ -172,21 +172,53 @@
   <div class="section-inner">
     <div class="reveal">
       <div class="category-label fun">Just for Fun</div>
-      <h2 class="section-heading section-heading-light">Projects built out of curiosity and stubbornness.</h2>
+      <h2 class="section-heading section-heading-light">Personal projects, built to client standards.</h2>
       <div class="accent-line"></div>
     </div>
     <div class="tools-grid" style="display:block;margin-top:40px">
 
       <!-- ===== SPORTS — STADIUM SCORECARD ===== -->
-      <div class="subgroup subgroup-stadium reveal d05">
+      <div class="subgroup subgroup-stadium reveal d05" id="sports-desk">
         <div class="subgroup-header">
           <span class="subgroup-eyebrow">Sports Desk</span>
-          <h3 class="subgroup-title">Things I tried to understand.</h3>
-          <p class="subgroup-tagline">Two attempts at making foreign sports make sense to American eyes.</p>
+          <h3 class="subgroup-title">Sports, through the data.</h3>
+          <p class="subgroup-tagline">Live NFL tools built on real-time odds, injury and roster data, plus visual guides to sports Americans rarely see explained.</p>
         </div>
         <div class="subgroup-grid">
-          <a href="/tools/cricket-explainer.html" class="scorecard">
+<!-- sa-tools:nfl-cards:start -->
+          <a href="/tools/football/nfl-lines-tracker.html" class="scorecard">
             <span class="scorecard-num">Sport &middot; 01</span>
+            <span class="scorecard-icon">📈</span>
+            <h4>NFL Lines Tracker</h4>
+            <p>Every NFL line from open to close, stripped of the bookmaker&#x27;s margin and merged into one fair price.</p>
+            <div class="scorecard-foot">
+              <span class="scorecard-stat">Live data</span>
+              <span class="scorecard-launch">See it</span>
+            </div>
+          </a>
+          <a href="/tools/football/nfl-injury-tracker.html" class="scorecard">
+            <span class="scorecard-num">Sport &middot; 02</span>
+            <span class="scorecard-icon">🩹</span>
+            <h4>NFL Injury Tracker</h4>
+            <p>The league-wide injury report with a full change history, start dates and betting line impact.</p>
+            <div class="scorecard-foot">
+              <span class="scorecard-stat">Live data</span>
+              <span class="scorecard-launch">See it</span>
+            </div>
+          </a>
+          <a href="/tools/football/nfl-depth-charts.html" class="scorecard">
+            <span class="scorecard-num">Sport &middot; 03</span>
+            <span class="scorecard-icon">🏈</span>
+            <h4>NFL Depth Charts with Madden Ratings</h4>
+            <p>All 32 depth charts, offense and defense, with contracts, acquisition history and Madden ratings.</p>
+            <div class="scorecard-foot">
+              <span class="scorecard-stat">Live data</span>
+              <span class="scorecard-launch">See it</span>
+            </div>
+          </a>
+<!-- sa-tools:nfl-cards:end -->
+          <a href="/tools/cricket-explainer.html" class="scorecard">
+            <span class="scorecard-num">Sport &middot; 04</span>
             <span class="scorecard-icon">&#127951;</span>
             <h4>Cricket vs. Baseball</h4>
             <p>An interactive visual guide that maps cricket concepts to baseball equivalents. Built for Americans who keep hearing about cricket and want to finally understand what&rsquo;s going on.</p>
@@ -196,7 +228,7 @@
             </div>
           </a>
           <a href="/tools/curling-explainer.html" class="scorecard">
-            <span class="scorecard-num">Sport &middot; 02</span>
+            <span class="scorecard-num">Sport &middot; 05</span>
             <span class="scorecard-icon">&#129482;</span>
             <h4>Curling Explainer</h4>
             <p>An interactive visual guide that demystifies curling &mdash; the sweeping, the hammer, the house, the bonspiel. Built for casual viewers who tune in every Olympics and want to actually follow the action.</p>
