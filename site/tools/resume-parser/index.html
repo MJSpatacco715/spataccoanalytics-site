@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Parser — Spatacco Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@400;500;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Palette — SA main site navy/cyan/purple + Website Scorer cream body */
+    --navy:          #0F1B2D;
+    --navy-mid:      #1E3A6E;
+    --navy-deep:     #0A1420;
+    --navy-soft:     #15253F;
+    --cyan:          #3DD8D8;
+    --cyan-bright:   #5FE3E3;
+    --cyan-pale:     #E8F7F7;
+    --cyan-border:   #B2E0E0;
+    --purple:        #7B5CFF;
+    --purple-pale:   #EEEAFF;
+    --bg:            #F6F7F5;
+    --bg-warm:       #F0F1EE;
+    --white:         #FFFFFF;
+    --border:        #E2E4DE;
+    --border-dark:   #C8CBC2;
+    --text:          #1A1E28;
+    --text-mid:      #4A5060;
+    --text-light:    #7A8090;
+    --text-faint:    #A8AFBC;
+    --green:         #1A6B40;
+    --green-mid:     #2A9458;
+    --green-pale:    #EAF5EE;
+    --green-border:  #A8D8BC;
+    --red:           #B83232;
+    --red-pale:      #FDF0F0;
+    --red-border:    #E8AAAA;
+    --amber:         #8C5A10;
+    --amber-mid:     #B8860B;
+    --amber-pale:    #FDF4E8;
+    --amber-border:  #E8D080;
+    --serif:         'Cormorant Garamond', Georgia, serif;
+    --sans:          'DM Sans', 'Helvetica Neue', sans-serif;
+    --mono:          'Courier Prime', 'Courier New', monospace;
+    --radius:        6px;
+    --shadow:        0 2px 12px rgba(15,27,45,0.08);
+    --shadow-lg:     0 8px 40px rgba(15,27,45,0.14);
+  }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-size: 14px; line-height: 1.55;
+    min-height: 100vh; -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: var(--sans); cursor: pointer; transition: all 0.15s; }
+  input, select, textarea { font-family: var(--sans); }
+  ::selection { background: rgba(61,216,216,0.25); }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg-warm); }
+  ::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+
+  .hidden { display: none !important; }
+
+  /* ============================================================
+     MASTHEAD (DARK) — SA main site energy
+     ============================================================ */
+  .masthead {
+    background: var(--navy);
+    border-bottom: 3px solid var(--cyan);
+    position: relative;
+    overflow: hidden;
+  }
+  .masthead::after {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 85% 50%, rgba(123,92,255,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .masthead-inner {
+    max-width: 1320px; margin: 0 auto;
+    padding: 22px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; z-index: 1;
+  }
+  .masthead-left { display: flex; align-items: center; gap: 18px; }
+  .masthead-logo {
+    width: 48px; height: 48px; background: var(--navy-deep);
+    border: 1px solid rgba(61,216,216,0.35);
+    border-radius: 6px; display: flex; align-items: center; justify-content: center;
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    color: var(--cyan); letter-spacing: 0.08em;
+  }
+  .masthead-brand {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.24em;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: 4px;
+  }
+  .masthead-title {
+    font-family: var(--serif); font-size: 26px; font-weight: 600;
+    color: var(--white); line-height: 1; letter-spacing: -0.005em;
+  }
+  .masthead-title em { font-style: italic; color: var(--cyan); font-weight: 500; }
+  .masthead-right { display: flex; align-items: center; gap: 18px; }
+  .masthead-link {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.65); text-transform: uppercase;
+    text-decoration: none; transition: color 0.2s;
+  }
+  .masthead-link:hover { color: var(--cyan); }
+  .masthead-meta {
+    font-family: var(--mono); font-size: 10px;
+    color: rgba(255,255,255,0.4); letter-spacing: 0.08em;
+  }
+
+  /* ============================================================
+     CANDIDATE STRIP (DARK) — appears post-parse
+     ============================================================ */
+  .candidate-strip {
+    background: linear-gradient(90deg, var(--navy-deep) 0%, var(--navy) 50%, var(--navy-soft) 100%);
+    border-bottom: 1px solid rgba(61,216,216,0.2);
+    color: var(--white);
+    position: relative;
+  }
+  .candidate-strip::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--cyan) 0%, var(--purple) 100%);
+  }
+  .candidate-inner {
+    max-width: 1320px; margin: 0 auto;
+    padding: 20px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    flex-wrap: wrap;
+  }
+  .candidate-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.2em;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .candidate-name {
+    font-family: var(--serif); font-size: 24px; font-weight: 600;
+    color: var(--white); line-height: 1.15;
+  }
+  .candidate-meta {
+    font-family: var(--mono); font-size: 11px; color: rgba(255,255,255,0.55);
+    margin-top: 4px; letter-spacing: 0.04em;
+  }
+  .candidate-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ============================================================
+     CONTROL BAR (LIGHT) — SF mode + model
+     ============================================================ */
+  .control-bar {
+    background: var(--bg-warm);
+    border-bottom: 1px solid var(--border);
+  }
+  .control-bar-inner {
+    max-width: 1320px; margin: 0 auto;
+    padding: 12px 40px;
+    display: flex; align-items: center; justify-content: space-between; gap: 28px;
+    flex-wrap: wrap;
+  }
+  .control-group {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .control-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--text-light); text-transform: uppercase;
+  }
+  .sf-toggle {
+    padding: 7px 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; background: var(--white);
+    border: 1.5px solid var(--border); color: var(--text-mid);
+    border-radius: 4px; transition: all 0.15s;
+  }
+  .sf-toggle:hover { border-color: var(--cyan-border); color: var(--navy); }
+  .sf-toggle.active-new {
+    background: var(--green-pale); border-color: var(--green-border); color: var(--green);
+  }
+  .sf-toggle.active-exists {
+    background: var(--amber-pale); border-color: var(--amber-border); color: var(--amber);
+  }
+  .sf-id-section { display: flex; align-items: center; gap: 10px; }
+  .sf-id-input {
+    background: var(--white); border: 1.5px solid var(--border);
+    color: var(--text); padding: 7px 12px; font-size: 12px;
+    font-family: var(--mono); width: 220px; border-radius: 4px;
+    transition: border-color 0.15s;
+  }
+  .sf-id-input:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(61,216,216,0.12); }
+  .sf-id-valid {
+    font-size: 10px; font-family: var(--mono); font-weight: 600;
+  }
+  .sf-id-badge {
+    font-size: 10px; letter-spacing: 0.08em; padding: 5px 10px;
+    background: var(--amber-pale); border: 1px solid var(--amber-border);
+    color: var(--amber); border-radius: 4px; font-family: var(--mono);
+  }
+  .insert-note {
+    font-size: 10px; color: var(--green); font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+  .model-select {
+    background: var(--white); border: 1.5px solid var(--border);
+    color: var(--text); padding: 7px 12px; font-size: 12px;
+    font-family: var(--mono); border-radius: 4px; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .model-select:focus, .model-select:hover { outline: none; border-color: var(--cyan); }
+
+  /* ============================================================
+     TAB BAR (LIGHT)
+     ============================================================ */
+  .tab-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .tab-bar-inner {
+    max-width: 1320px; margin: 0 auto;
+    padding: 0 40px;
+    display: flex; gap: 0; overflow-x: auto;
+  }
+  .tab {
+    padding: 14px 24px; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--text-light); background: none;
+    border: none; border-bottom: 3px solid transparent;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .tab:hover { color: var(--navy); }
+  .tab.active { color: var(--navy); border-bottom-color: var(--cyan); }
+  .tab:disabled { color: var(--text-faint); cursor: not-allowed; }
+
+  /* ============================================================
+     MAIN CONTENT (LIGHT CREAM)
+     ============================================================ */
+  .main {
+    max-width: 1320px; margin: 0 auto;
+    padding: 32px 40px 48px;
+    min-height: 400px;
+  }
+  .main.no-pad { padding: 0; }
+  .tab-content { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ============================================================
+     SECTION HEAD (count + action buttons for each tab)
+     ============================================================ */
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+  }
+  .section-count {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    color: var(--text-light); text-transform: uppercase;
+  }
+  .section-count strong { color: var(--navy); font-weight: 700; }
+  .section-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* ============================================================
+     UPLOAD ZONE
+     ============================================================ */
+  .upload-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-top: 3px solid var(--cyan);
+    border-radius: var(--radius); padding: 40px;
+    box-shadow: var(--shadow);
+  }
+  .upload-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: 10px;
+  }
+  .upload-heading {
+    font-family: var(--serif); font-size: 32px; font-weight: 600;
+    color: var(--navy); line-height: 1.2; margin-bottom: 10px;
+  }
+  .upload-heading em { font-style: italic; color: var(--cyan); }
+  .upload-desc {
+    font-size: 14px; color: var(--text-mid); line-height: 1.7;
+    margin-bottom: 28px; max-width: 640px;
+  }
+  .upload-zone {
+    border: 2px dashed var(--border-dark);
+    border-radius: var(--radius); padding: 48px 32px;
+    text-align: center; cursor: pointer;
+    background: var(--bg); transition: all 0.25s;
+  }
+  .upload-zone:hover {
+    border-color: var(--cyan);
+    background: var(--cyan-pale);
+  }
+  .upload-zone.drag-over {
+    border-color: var(--cyan); border-style: solid;
+    background: var(--cyan-pale);
+    transform: scale(1.005);
+  }
+  .upload-icon {
+    font-size: 36px; color: var(--cyan); margin-bottom: 12px;
+    font-family: var(--serif); font-weight: 600;
+  }
+  .upload-primary {
+    font-family: var(--serif); font-size: 22px; font-weight: 600;
+    color: var(--navy); margin-bottom: 8px;
+  }
+  .upload-secondary {
+    font-size: 13px; color: var(--text-light); line-height: 1.7;
+    max-width: 480px; margin: 0 auto;
+  }
+  .upload-last {
+    font-size: 11px; color: var(--green); margin-top: 16px;
+    font-family: var(--mono); letter-spacing: 0.05em;
+  }
+  .parse-another {
+    text-align: center; padding: 24px 0 8px;
+  }
+
+  /* DUAL-MODE UPLOAD (PDF vs Camera) */
+  .upload-modes {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px;
+    align-items: stretch;
+  }
+  .upload-mode {
+    border: 2px dashed var(--border-dark); border-radius: var(--radius);
+    padding: 36px 24px; text-align: center; cursor: pointer;
+    background: var(--bg); transition: all 0.25s;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 220px;
+  }
+  .upload-mode:hover {
+    border-color: var(--cyan); background: var(--cyan-pale);
+  }
+  .upload-mode.drag-over {
+    border-color: var(--cyan); border-style: solid;
+    background: var(--cyan-pale);
+  }
+  .upload-mode-icon {
+    font-size: 32px; color: var(--cyan); margin-bottom: 10px;
+    font-family: var(--serif); font-weight: 600; line-height: 1;
+  }
+  .upload-mode-primary {
+    font-family: var(--serif); font-size: 20px; font-weight: 600;
+    color: var(--navy); margin-bottom: 6px;
+  }
+  .upload-mode-secondary {
+    font-size: 12px; color: var(--text-light); line-height: 1.6;
+    max-width: 260px;
+  }
+  .upload-divider {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-faint); font-family: var(--serif);
+    font-style: italic; font-size: 14px; letter-spacing: 0.04em;
+  }
+
+  /* CAPTURED IMAGES STRIP */
+  .captures-wrap {
+    margin-top: 24px; padding: 20px;
+    background: var(--bg-warm); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .captures-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px; flex-wrap: wrap; gap: 12px;
+  }
+  .captures-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em;
+    color: var(--navy); text-transform: uppercase;
+  }
+  .captures-title .count {
+    color: var(--cyan); font-family: var(--mono); margin-left: 6px;
+  }
+  .captures-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .captures-strip {
+    display: flex; gap: 12px; overflow-x: auto;
+    padding: 4px 2px 8px;
+  }
+  .capture-thumb {
+    position: relative; flex-shrink: 0;
+    width: 110px; height: 140px;
+    border: 2px solid var(--border); border-radius: 4px;
+    overflow: hidden; background: var(--white);
+    box-shadow: var(--shadow);
+  }
+  .capture-thumb img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .capture-thumb-num {
+    position: absolute; top: 4px; left: 4px;
+    background: var(--navy); color: var(--cyan);
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    padding: 2px 6px; border-radius: 3px; letter-spacing: 0.04em;
+  }
+  .capture-thumb-del {
+    position: absolute; top: 4px; right: 4px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(184,50,50,0.92); color: var(--white);
+    border: none; cursor: pointer;
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1; padding: 0;
+    transition: background 0.15s;
+  }
+  .capture-thumb-del:hover { background: var(--red); }
+
+  /* ============================================================
+     CONTACT GRID
+     ============================================================ */
+  .contact-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--border); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .contact-cell {
+    background: var(--white); padding: 16px 18px;
+    min-height: 64px; display: flex; flex-direction: column; justify-content: flex-start;
+  }
+  .contact-label {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.16em;
+    color: var(--text-light); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .contact-value {
+    font-size: 13px; line-height: 1.5; color: var(--text);
+    word-break: break-word;
+  }
+  .contact-value.empty { color: var(--text-faint); font-style: italic; }
+
+  /* ============================================================
+     DATA TABLES
+     ============================================================ */
+  .data-table-wrap {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .data-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px;
+  }
+  .data-table th {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em;
+    color: var(--text-light); text-transform: uppercase;
+    text-align: left; padding: 12px 16px;
+    background: var(--bg-warm); border-bottom: 1.5px solid var(--border);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5; vertical-align: top; color: var(--text);
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg); }
+  .data-table td.mono {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--text-mid); letter-spacing: 0.02em;
+  }
+  .data-table td.muted { color: var(--text-light); font-size: 12px; }
+  .data-table td.strong { font-weight: 600; color: var(--navy); }
+  .data-table td.nowrap { white-space: nowrap; }
+
+  /* Confidence pills */
+  .conf-pill {
+    display: inline-block; padding: 3px 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; border-radius: 20px;
+    border: 1px solid;
+  }
+  .conf-high   { background: var(--green-pale); color: var(--green); border-color: var(--green-border); }
+  .conf-medium { background: var(--amber-pale); color: var(--amber); border-color: var(--amber-border); }
+  .conf-low    { background: var(--red-pale);   color: var(--red);   border-color: var(--red-border); }
+  .conf-na     { background: var(--bg);         color: var(--text-faint); border-color: var(--border); font-style: italic; }
+
+  /* Education match pills */
+  .ed-matched {
+    font-family: var(--mono); font-size: 10px; color: var(--green-mid);
+    background: var(--green-pale); padding: 3px 8px; border-radius: 3px;
+    border: 1px solid var(--green-border); letter-spacing: 0.02em;
+  }
+  .ed-unmatched {
+    font-family: var(--mono); font-size: 10px; color: var(--red);
+    background: var(--red-pale); padding: 3px 8px; border-radius: 3px;
+    border: 1px solid var(--red-border); letter-spacing: 0.02em; font-weight: 700;
+  }
+  .unmatched-warn {
+    display: inline-block; background: var(--red-pale);
+    border: 1px solid var(--red-border); color: var(--red);
+    padding: 2px 8px; border-radius: 3px; font-size: 10px;
+    font-weight: 700; letter-spacing: 0.08em; margin-left: 6px;
+  }
+
+  /* ============================================================
+     BUTTONS
+     ============================================================ */
+  .btn-primary {
+    background: var(--cyan); color: var(--navy);
+    border: none; border-radius: 4px;
+    padding: 11px 22px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: var(--cyan-bright); transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled {
+    background: var(--border); color: var(--text-faint);
+    cursor: not-allowed; transform: none;
+  }
+  .btn-navy {
+    background: var(--navy); color: var(--white);
+    border: none; border-radius: 4px;
+    padding: 11px 22px; font-size: 12px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-navy:hover { background: var(--navy-mid); }
+  .btn-outline {
+    background: transparent; color: var(--text-mid);
+    border: 1.5px solid var(--border-dark); border-radius: 4px;
+    padding: 9px 18px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-outline:hover { border-color: var(--cyan); color: var(--cyan); }
+  .btn-outline-dark {
+    background: rgba(61,216,216,0.08); color: var(--cyan);
+    border: 1px solid rgba(61,216,216,0.35); border-radius: 4px;
+    padding: 9px 18px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-outline-dark:hover { background: rgba(61,216,216,0.18); border-color: var(--cyan); }
+  .btn-sm { padding: 6px 12px; font-size: 10px; letter-spacing: 0.1em; }
+  .btn-export {
+    background: var(--white); color: var(--text-mid);
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 7px 14px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-export:hover { border-color: var(--cyan); color: var(--navy); background: var(--cyan-pale); }
+  .btn-copy {
+    background: var(--navy); color: var(--white);
+    border: 1px solid var(--navy); border-radius: 4px;
+    padding: 7px 14px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-copy:hover { background: var(--navy-mid); }
+
+  /* ============================================================
+     RESUME VIEWER
+     ============================================================ */
+  .resume-viewer-wrap {
+    height: calc(100vh - 300px); min-height: 480px;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .resume-viewer-empty {
+    height: 100%; display: flex; align-items: center; justify-content: center;
+    color: var(--text-faint); font-family: var(--serif);
+    font-size: 18px; font-style: italic;
+  }
+
+  /* ============================================================
+     PROCESSING OVERLAY
+     ============================================================ */
+  .processing {
+    position: fixed; inset: 0;
+    background: rgba(15,27,45,0.88); backdrop-filter: blur(4px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 500;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 2px solid rgba(61,216,216,0.2); border-top-color: var(--cyan);
+    border-radius: 50%; animation: spin 0.9s linear infinite;
+    margin-bottom: 20px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-title {
+    color: var(--cyan); font-family: var(--serif);
+    font-size: 20px; font-weight: 500; letter-spacing: 0.02em;
+    margin-bottom: 8px;
+  }
+  .processing-detail {
+    color: rgba(255,255,255,0.55); font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.05em;
+  }
+
+  /* ============================================================
+     ERROR BANNER
+     ============================================================ */
+  .error-banner {
+    background: var(--red-pale); border-bottom: 2px solid var(--red-border);
+    color: var(--red); padding: 14px 40px; font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .error-banner .error-icon { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+  .error-banner .dismiss-btn {
+    margin-left: auto; background: none; border: 1px solid var(--red-border);
+    color: var(--red); padding: 5px 12px; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; border-radius: 3px;
+  }
+  .error-banner .dismiss-btn:hover { background: var(--red); color: var(--white); }
+
+  /* ============================================================
+     MODAL
+     ============================================================ */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15,27,45,0.75); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 400; padding: 24px;
+  }
+  .modal-box {
+    width: 100%; max-width: 1000px; height: 75vh;
+    background: var(--white); border: 1px solid var(--border);
+    border-top: 4px solid var(--cyan); border-radius: var(--radius);
+    display: flex; flex-direction: column; overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    background: var(--bg-warm);
+  }
+  .modal-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+    color: var(--navy); text-transform: uppercase;
+  }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-textarea {
+    flex: 1; background: var(--bg); color: var(--text-mid);
+    font-family: var(--mono); font-size: 11px; padding: 20px;
+    border: none; outline: none; resize: none; line-height: 1.7;
+  }
+
+  /* ============================================================
+     FOOTER (DARK) — closes the dark/light/dark rhythm
+     ============================================================ */
+  .footer {
+    background: var(--navy); color: rgba(255,255,255,0.45);
+    padding: 24px 40px; margin-top: 60px;
+    border-top: 1px solid rgba(61,216,216,0.15);
+  }
+  .footer-inner {
+    max-width: 1320px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .footer-inner a { color: var(--cyan); text-decoration: none; }
+  .footer-inner a:hover { color: var(--cyan-bright); }
+  .footer-mono { font-family: var(--mono); color: rgba(255,255,255,0.3); letter-spacing: 0.08em; }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 900px) {
+    .contact-grid { grid-template-columns: repeat(2, 1fr); }
+    .masthead-inner, .candidate-inner, .control-bar-inner, .tab-bar-inner, .main, .footer-inner {
+      padding-left: 24px; padding-right: 24px;
+    }
+    .data-table-wrap { overflow-x: auto; }
+    .data-table { min-width: 700px; }
+  }
+  @media (max-width: 600px) {
+    .contact-grid { grid-template-columns: 1fr; }
+    .masthead-title { font-size: 20px; }
+    .candidate-name { font-size: 20px; }
+    .upload-heading { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PROCESSING OVERLAY (hidden by default)
+     ============================================================ -->
+<div id="processing" class="processing hidden">
+  <div class="spinner"></div>
+  <div id="processingText" class="processing-title"></div>
+  <div id="processingDetail" class="processing-detail"></div>
+</div>
+
+<!-- ============================================================
+     COPY / EXPORT MODAL (hidden by default)
+     ============================================================ -->
+<div id="copyModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-actions">
+        <button class="btn-copy" id="modalCopyBtn" onclick="copyModalContent()">Copy All</button>
+        <button class="btn-export" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+    <textarea id="modalTextarea" class="modal-textarea" readonly onclick="this.select()"></textarea>
+  </div>
+</div>
+
+<!-- ============================================================
+     ERROR BANNER (hidden by default)
+     ============================================================ -->
+<div id="errorBanner" class="error-banner hidden">
+  <span class="error-icon">!</span>
+  <span id="errorText"></span>
+  <button class="dismiss-btn" onclick="this.parentElement.classList.add('hidden')">Dismiss</button>
+</div>
+
+<!-- ============================================================
+     MASTHEAD — dark navy with cyan accent
+     ============================================================ -->
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-left">
+      <div class="masthead-logo">SA</div>
+      <div>
+        <div class="masthead-brand">Spatacco Analytics</div>
+        <div class="masthead-title">Resume <em>Parser</em></div>
+      </div>
+    </div>
+    <div class="masthead-right">
+      <span class="masthead-meta">Internal · Gladstone Operations</span>
+      <a href="/tools/" class="masthead-link">← Tools</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CANDIDATE STRIP — dark, appears after parsing
+     ============================================================ -->
+<div id="candidateStrip" class="candidate-strip hidden">
+  <div class="candidate-inner">
+    <div>
+      <div class="candidate-label">Candidate</div>
+      <div id="candidateName" class="candidate-name">—</div>
+      <div id="candidateMeta" class="candidate-meta hidden"></div>
+    </div>
+    <div class="candidate-actions">
+      <button class="btn-outline-dark" id="btnCopyAll" onclick="showFullExport()" disabled>↗ Copy All</button>
+      <button class="btn-primary" id="btnExport" onclick="exportAll()" disabled>↓ Export XLSX</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CONTROL BAR — SF mode toggle + model selector
+     ============================================================ -->
+<div class="control-bar">
+  <div class="control-bar-inner">
+    <div class="control-group">
+      <span class="control-label">Salesforce</span>
+      <button id="sfNew" class="sf-toggle active-new" onclick="setSFMode(false)">New Contact</button>
+      <button id="sfExists" class="sf-toggle" onclick="setSFMode(true)">Exists in SF</button>
+      <div id="sfIdSection" class="sf-id-section" style="display:none">
+        <input type="text" id="sfContactId" class="sf-id-input" placeholder="003XXXXXXXXXXXX" oninput="updateSFId()">
+        <span id="sfIdValid" class="sf-id-valid"></span>
+      </div>
+      <span id="sfIdBadge" class="sf-id-badge hidden"></span>
+      <span id="sfInsertNote" class="insert-note">INSERT mode — new records</span>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Model</span>
+      <select id="modelSelect" class="model-select">
+        <option value="claude-sonnet-4-20250514">Sonnet 4</option>
+        <option value="claude-opus-4-20250514">Opus 4</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TAB BAR
+     ============================================================ -->
+<div class="tab-bar">
+  <div class="tab-bar-inner">
+    <button class="tab active" onclick="switchTab('upload')" data-tab="upload">Upload</button>
+    <button class="tab" onclick="switchTab('contact')" data-tab="contact">Contact</button>
+    <button class="tab" onclick="switchTab('attributes')" data-tab="attributes">Attributes</button>
+    <button class="tab" onclick="switchTab('employment')" data-tab="employment">Employment</button>
+    <button class="tab" onclick="switchTab('education')" data-tab="education">Education</button>
+    <button class="tab" onclick="switchTab('resume')" data-tab="resume">Resume</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT AREA
+     ============================================================ -->
+<main class="main">
+
+  <!-- TAB: UPLOAD -->
+  <div id="tab-upload" class="tab-content">
+    <div class="upload-card">
+      <div class="upload-eyebrow">Step One</div>
+      <h1 class="upload-heading">Parse a <em>resume</em>.</h1>
+      <p class="upload-desc">
+        Extracts text, sends it to Claude for structured parsing, matches schools against
+        the Gladstone Salesforce Education lookup, and populates Contact, Attributes,
+        Employment, and Education tabs. Export as XLSX ready for Salesforce import or update.
+      </p>
+      <div class="upload-modes">
+        <div class="upload-mode" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="event.preventDefault();this.classList.remove('drag-over');handleFileDrop(event)">
+          <div class="upload-mode-icon">+</div>
+          <div class="upload-mode-primary">Upload PDF</div>
+          <div class="upload-mode-secondary">Drop a PDF here or click to browse — best for digital resumes</div>
+          <input type="file" id="fileInput" accept="application/pdf" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+        <div class="upload-divider">or</div>
+        <div class="upload-mode" onclick="document.getElementById('cameraInput').click()">
+          <div class="upload-mode-icon">◉</div>
+          <div class="upload-mode-primary">Capture Pages</div>
+          <div class="upload-mode-secondary">Use your camera to snap each page — works on mobile and desktop with webcam</div>
+          <input type="file" id="cameraInput" accept="image/*" capture="environment" multiple style="display:none" onchange="handleImageCapture(event)">
+        </div>
+      </div>
+      <div id="lastFile" class="upload-last hidden" style="text-align:center"></div>
+
+      <div id="capturesWrap" class="captures-wrap hidden">
+        <div class="captures-head">
+          <div class="captures-title">Captured Pages<span class="count" id="captureCount">0</span></div>
+          <div class="captures-actions">
+            <button class="btn-outline" onclick="document.getElementById('cameraInput').click()">+ Add Page</button>
+            <button class="btn-outline" onclick="clearCaptures()">Clear All</button>
+            <button class="btn-primary" id="parseCapturesBtn" onclick="parseCapturedImages()">Parse Now →</button>
+          </div>
+        </div>
+        <div class="captures-strip" id="capturesStrip"></div>
+      </div>
+      <div id="parseAnother" class="parse-another hidden">
+        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Parse Another Resume →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CONTACT -->
+  <div id="tab-contact" class="tab-content hidden"></div>
+
+  <!-- TAB: ATTRIBUTES -->
+  <div id="tab-attributes" class="tab-content hidden"></div>
+
+  <!-- TAB: EMPLOYMENT -->
+  <div id="tab-employment" class="tab-content hidden"></div>
+
+  <!-- TAB: EDUCATION -->
+  <div id="tab-education" class="tab-content hidden"></div>
+
+  <!-- TAB: RESUME VIEWER -->
+  <div id="tab-resume" class="tab-content hidden">
+    <div class="resume-viewer-wrap">
+      <div id="resumeViewer" class="resume-viewer-empty">No resume loaded</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============================================================
+     FOOTER — dark, closes the vertical rhythm
+     ============================================================ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span>Spatacco Analytics · Internal Tooling</span>
+    <span class="footer-mono">via ria-scorer.workers.dev · passthrough</span>
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// WORKER PROXY — replaces direct api.anthropic.com calls
+// ============================================================
+const WORKER_URL = "https://ria-scorer.spatacco-analytics.workers.dev";
+
+// ============================================================
+// EDUCATION LOOKUP — preserved verbatim from original
+// (321+ institutions from Gladstone SF Education__c)
+// ============================================================
+const EDUCATION_LOOKUP = {
+  "Adelphi University":"a0kaJ00000BWF2TQAX","Albion College":"a0kaJ00000BWF2ZQAX","Albright University":"a0kaJ00000BWF2aQAH",
+  "American College of Financial Services":"a0kaJ00000BWF2gQAH","American University":"a0kaJ00000BWF2lQAH","Amherst College":"a0kaJ00000BWF2mQAH",
+  "Appalachian State University":"a0kaJ00000BWF2qQAH","Arizona State University":"a0kaJ00000BWF2sQAH","Assumption College":"a0kaJ00000BWF2xQAH",
+  "Auburn University":"a0kaJ00000BWF30QAH","BYU - Brigham Young University":"a0kaJ00000BWF3xQAH","Babson College":"a0kaJ00000BWF36QAH",
+  "Baldwin-Walace College":"a0kaJ00000BWF39QAH","Ball State University":"a0kaJ00000BWF3AQAX","Baruch College":"a0kaJ00000BWF3CQAX",
+  "Bates College":"a0kaJ00000BWF3DQAX","Baylor University":"a0kaJ00000BWF3FQAX","Bentley University":"a0kaJ00000BWF3NQAX",
+  "Binghampton University":"a0kaJ00000BWF3SQAX","Bloomsburg University":"a0kaJ00000BWF3WQAX","Boston College":"a0kaJ00000BWF3bQAH",
+  "Boston University":"a0kaJ00000BWF3fQAH","Bowdin College":"a0kaJ00000BWF3gQAH","Bowling Green State University":"a0kaJ00000BWF3iQAH",
+  "Brandeis University":"a0kaJ00000BWF3kQAH","Bridgewater State College":"a0kaJ00000BWF3lQAH","Brooklyn College":"a0kaJ00000BWF3oQAH",
+  "Brown University":"a0kaJ00000BWF3rQAH","Bryant University":"a0kaJ00000BWF3sQAH","Bucknell":"a0kaJ00000BWF3uQAH",
+  "C.W. Post":"a0kaJ00000BWF3yQAH","CUNY - City University of New York":"a0kaJ00000BWHBwQAP","Cal State University":"a0kaJ00000BWHAfQAP",
+  "California Polytechnic":"a0kaJ00000BWHAjQAP","Canisius College":"a0kaJ00000BWHAmQAP","Carnegie Mellon University":"a0kaJ00000BWHAtQAP",
+  "Case - Western University":"a0kaJ00000BWHAuQAP","Catholic University":"a0kaJ00000BWHAvQAP","Central Connecticut State University":"a0kaJ00000BWHAyQAP",
+  "Central Michigan University":"a0kaJ00000BWHAzQAP","Clark University":"a0kaJ00000BWHBLQA5","Clemson University":"a0kaJ00000BWHBNQA5",
+  "Cleveland State University":"a0kaJ00000BWHBPQA5","Colby College":"a0kaJ00000BWHBRQA5","Colgate University":"a0kaJ00000BWHBUQA5",
+  "College for Financial Planning":"a0kaJ00000BWHBVQA5","College of Financial Planning":"a0kaJ00000BWHBZQA5","Colorado State University":"a0kaJ00000BWHBiQAP",
+  "Columbia University":"a0kaJ00000BWHBkQAP","Cornell University":"a0kaJ00000BWHBsQAP","Creighton":"a0kaJ00000BWHBuQAP",
+  "Dartmouth College":"a0kaJ00000BWHC2QAP","De Paul University":"a0kaJ00000BWHC9QAP","DePaul University":"a0kaJ00000DS1jGQAT",
+  "DeSales University":"a0kaJ00000BWHCCQA5","DeVry University":"a0kaJ00000BWHCFQA5","Denison University":"a0kaJ00000BWHCBQA5",
+  "Dickinson College":"a0kaJ00000BWHCGQA5","Dowling College":"a0kaJ00000BVoqJQAT","Drake University":"a0kaJ00000BVoqKQAT",
+  "Drexel University":"a0kaJ00000BVoqMQAT","Duke University":"a0kaJ00000BVoqNQAT","Duquesne University":"a0kaJ00000BVoqOQAT",
+  "East Carolina University":"a0kaJ00000BVoqPQAT","Eastern Illinois University":"a0kaJ00000BVoqWQAT","Eckerd College":"a0kaJ00000BVoqdQAD",
+  "Elon University":"a0kaJ00000Aux69QAB","Emory University":"a0kaJ00000BVoqrQAD","FSU - Florida State University":"a0kaJ00000AgJQVQA3",
+  "Fairfield University":"a0kaJ00000BVor0QAD","Fairleigh Dickinson":"a0kaJ00000BVor1QAD","Florida A & M University":"a0kaJ00000BVorBQAT",
+  "Florida Atlantic University":"a0kaJ00000BVorCQAT","Florida International University":"a0kaJ00000BVorDQAT","Fordham University":"a0kaJ00000BVorJQAT",
+  "Franklin & Marshall College":"a0kaJ00000BVorOQAT","Franklin University":"a0kaJ00000BVorRQAT","Frostburg State University":"a0kaJ00000BVorTQAT",
+  "George Mason University":"a0kaJ00000BVorZQAT","George Washington University":"a0kaJ00000BVoraQAD","Georgetown University":"a0kaJ00000BVorbQAD",
+  "Georgia Institute of Technology":"a0kaJ00000BVordQAD","Georgia State University":"a0kaJ00000BVorgQAD","Gettysburg College":"a0kaJ00000BVoriQAD",
+  "Grove City College":"a0kaJ00000BWHE0QAP","Gustavus Adolphus College":"a0kaJ00000BWHE2QAP","Hamilton College":"a0kaJ00000BWHE4QAP",
+  "Hampton University":"a0kaJ00000BWHE8QAP","Hartwick College":"a0kaJ00000BWHECQA5","Harvard University":"a0kaJ00000BWHEDQA5",
+  "Haverford College":"a0kaJ00000BWHEEQA5","Hobart & William Smith Colleges":"a0kaJ00000BWHEMQA5","Hofstra":"a0kaJ00000BWHENQA5",
+  "Holy Cross University":"a0kaJ00000BWHEPQA5","Howard University":"a0kaJ00000BWHEUQA5","Hunter College":"a0kaJ00000BWHEWQA5",
+  "Illinois Insititute of Technology":"a0kaJ00000BWHEYQA5","Illinois State University":"a0kaJ00000BWHEaQAP","Illinois Wesleyan University":"a0kaJ00000BWHEbQAP",
+  "Indiana University":"a0kaJ00000Augy6QAB","Iona University":"a0kaJ00000BWHEjQAP","Iowa State University":"a0kaJ00000BWHEkQAP",
+  "Ithaca College":"a0kaJ00000BWHEnQAP","James Madison University":"a0kaJ00000BWHErQAP","Johns Hopkins University":"a0kaJ00000BWHExQAP",
+  "Johnson & Wales University":"a0kaJ00000BWHEyQAP","Kansas State University":"a0kaJ00000BWHF4QAP","Kent State University":"a0kaJ00000BWHFCQA5",
+  "Kenyon College":"a0kaJ00000BWHFDQA5","King's College":"a0kaJ00000BWHFFQA5","Kutztown University":"a0kaJ00000BWHFIQA5",
+  "LSU - Louisiana State University":"a0kaJ00000BWHHIQA5","La Salle University":"a0kaJ00000BWHFKQA5","Lafayette College":"a0kaJ00000BWHFLQA5",
+  "Lake Forest University":"a0kaJ00000BWHFMQA5","Lehigh University":"a0kaJ00000BWHFSQA5","Lewis University":"a0kaJ00000BWHFVQA5",
+  "Liberty University":"a0kaJ00000BWHFWQA5","Long Island University":"a0kaJ00000BWHHCQA5","Loyola Marymount University":"a0kaJ00000BWHHGQA5",
+  "Loyola University":"a0kaJ00000BWHHHQA5","MIT - Massachusetts Institute of Technology":"a0kaJ00000BWHI5QAP","Manhattan College":"a0kaJ00000BWHHOQA5",
+  "Manhattanville College":"a0kaJ00000BWHHPQA5","Marist College":"a0kaJ00000BWHHUQA5","Marquette University":"a0kaJ00000BWHHVQA5",
+  "McGill University":"a0kaJ00000BWHHbQAP","Merrimack College":"a0kaJ00000BWHHjQAP","Metropolitan State College":"a0kaJ00000BWHHmQAP",
+  "Miami University (Ohio)":"a0kaJ00000BWHHnQAP","Michigan State University":"a0kaJ00000BWHHoQAP","Middle Tennessee State":"a0kaJ00000BWHHrQAP",
+  "Middlebury College":"a0kaJ00000BWHHsQAP","Millersville University":"a0kaJ00000BWHHwQAP","Monmouth College":"a0kaJ00000BWHI8QAP",
+  "Montclair State University":"a0kaJ00000BWHICQA5","Moravian University":"a0kaJ00000BWHIFQA5","Morehouse College":"a0kaJ00000BWHIHQA5",
+  "Mount St. Mary's University":"a0kaJ00000BWHILQA5","Muhlenberg College":"a0kaJ00000BWHIMQA5","NYU - New York University":"a0kaJ00000BWHJ7QAP",
+  "National University of Ireland":"a0kaJ00000BWHITQA5","New Hampshire College":"a0kaJ00000BWHIZQA5","New York Institute of Technology":"a0kaJ00000BWHIeQAP",
+  "Niagara University":"a0kaJ00000BWHIhQAP","Nichols College":"a0kaJ00000BWHIiQAP","North Carolina State University (NC State)":"a0kaJ00000BWHImQAP",
+  "Northeastern University":"a0kaJ00000BWHIsQAP","Northern Illinois University":"a0kaJ00000BWHIvQAP","Northwestern University":"a0kaJ00000BWHIzQAP",
+  "Norwich University":"a0kaJ00000BWHJ1QAP","Notre Dame":"a0kaJ00000BWHJ2QAP","OSU - Ohio State University":"a0kaJ00000BWHJOQA5",
+  "Ohio University":"a0kaJ00000BWHJEQA5","Ohio Wesleyan University":"a0kaJ00000BWHJFQA5","Oklahoma State University":"a0kam00000ElwGbAAJ",
+  "Oxford University":"a0kaJ00000BWHJRQA5","PENN - University of Pennsylvania":"a0kaJ00000BWC2WQAX",
+  "PITT - University of Pittsburgh":"a0kaJ00000BWC2ZQAX","PSU - Pennsylvania State University":"a0kaJ00000BWHJxQAP",
+  "Pace University":"a0kaJ00000BWHJSQA5","Pacific Lutheran University":"a0kaJ00000BWHJTQA5","Pepperdine University":"a0kaJ00000BWHJfQAP",
+  "Philadelphia University":"a0kaJ00000BWHJiQAP","Princeton University":"a0kaJ00000BWHJuQAP","Providence College":"a0kaJ00000BWHJwQAP",
+  "Purdue University":"a0kaJ00000BWHJyQAP","Queens College":"a0kaJ00000BWHJzQAP","RIT - Rochester Institute of Technology":"a0kaJ00000BWHKHQA5",
+  "Ramapo College of New Jersey":"a0kaJ00000BWHK4QAP","Rensselaer Polytechnic Institute":"a0kaJ00000BWHK9QAP","Rider University":"a0kaJ00000BWHKFQA5",
+  "Roanoke University":"a0kaJ00000BWHKIQA5","Robert Morris University":"a0kaJ00000BWHKJQA5","Rollins College":"a0kaJ00000BWHKPQA5",
+  "Rowan University":"a0kaJ00000BWHKTQA5","Rutgers University":"a0kaJ00000BWHKUQA5","SDSU":"a0kaJ00000BWHKvQAP",
+  "SUNY - State University of New York":"a0kaJ00000BWHM5QAP","Sacred Heart University":"a0kaJ00000BWHKVQA5","Saint Anselm College":"a0kaJ00000BWHKXQA5",
+  "Saint Joseph's University":"a0kaJ00000BWHKZQA5","Saint Michaels College":"a0kaJ00000BWHKeQAP","Saint Peter's College":"a0kaJ00000BWHKfQAP",
+  "Salem State College":"a0kaJ00000BWHKiQAP","Salisbury State University":"a0kaJ00000BWHKkQAP","San Francisco State University":"a0kaJ00000BWHKoQAP",
+  "San Jose State University":"a0kaJ00000BWHKpQAP","Santa Clara University":"a0kaJ00000BWHKqQAP","Seton Hall University":"a0kaJ00000BWHKyQAP",
+  "Shippensburg University":"a0kaJ00000BWHL0QAP","Siena College":"a0kaJ00000BWHL2QAP","Skidmore College":"a0kaJ00000BWHL7QAP",
+  "Smith College":"a0kaJ00000BWHL9QAP","Southern Connecticut State University":"a0kaJ00000BWHLIQA5","Southern Illinois University":"a0kaJ00000BWHLKQA5",
+  "Southern Methodist University":"a0kaJ00000BWHLLQA5","Southwest Texas State University":"a0kaJ00000BWHLSQA5",
+  "St. Bonaventure University":"a0kaJ00000BWHLaQAP","St. Cloud State University":"a0kaJ00000BWHLbQAP","St. John's University":"a0kaJ00000BWHLeQAP",
+  "St. Lawrence University":"a0kaJ00000BWHLfQAP","St. Mary's University":"a0kaJ00000BWHLmQAP","St. Olaf College":"a0kaJ00000BWHLpQAP",
+  "St. Peter's College":"a0kaJ00000BWHLrQAP","Stanford University":"a0kaJ00000BWHLwQAP","Stephen F. Austin State University":"a0kaJ00000BWHLxQAP",
+  "Stetson University":"a0kaJ00000BWHLyQAP","Stockton College":"a0kaJ00000BWHM1QAP","Stonehill College":"a0kaJ00000BWHM2QAP",
+  "Suffolk University":"a0kaJ00000BWHM4QAP","Susquehanna University":"a0kaJ00000BWHM6QAP","Swarthmore College":"a0kaJ00000BWHM8QAP",
+  "Syracuse University":"a0kaJ00000BWHM9QAP","TAMU - Texas A & M University":"a0kaJ00000BWHMAQA5","TCNJ - The College of New Jersey":"a0kaJ00000BWHMDQA5",
+  "TCU- Texas Christian University":"a0kaJ00000BWHMEQA5","Temple University":"a0kaJ00000BWHMFQA5","Texas Southern University":"a0kaJ00000BWHMJQA5",
+  "Texas State University":"a0kaJ00000BWHMKQA5","Texas Tech University":"a0kaJ00000BWHMLQA5","The City College of New York":"a0kaJ00000BWHMNQA5",
+  "The College Of William and Mary":"a0kaJ00000BWHMRQA5","Towson University":"a0kaJ00000BWHMgQAP","Trinity College":"a0kaJ00000BWHMiQAP",
+  "Tufts University":"a0kaJ00000BWHMlQAP","Tulane University":"a0kaJ00000BWHMmQAP","U.S. Military Academy - West Point":"a0kaJ00000BWHMsQAP",
+  "UC Boulder - University of Colorado":"a0kaJ00000BWC1NQAX","UCF - University of Central Florida":"a0kaJ00000BWHMuQAP",
+  "UCONN - University of Connecticut":"a0kaJ00000BWHMvQAP","UD - University of Delaware":"a0kaJ00000BWC1QQAX",
+  "UK - University of Kentucky":"a0kaJ00000BWHMxQAP","UMass":"a0kaJ00000BWHMyQAP","UNC - University of North Carolina":"a0kaJ00000BWHMzQAP",
+  "USC - University of Southern California":"a0kaJ00000BWHO1QAP","USF - University of South Florida":"a0kaJ00000BWHO2QAP",
+  "UVA - University of Virginia":"a0kaJ00000BWHO6QAP","Union College":"a0kaJ00000BWHN0QAP","University Of Florida":"a0kaJ00000BWC1dQAH",
+  "University Of North Florida":"a0kaJ00000BWC2NQAX","University of Akron":"a0kaJ00000BWHNIQA5","University of Alabama":"a0kaJ00000BWHNJQA5",
+  "University of Arizona":"a0kaJ00000BWHNMQA5","University of Arkansas":"a0kaJ00000BWHNNQA5","University of California":"a0kaJ00000BWHNTQA5",
+  "University of Chicago":"a0kaJ00000BWHNMQA5","University of Cincinatti":"a0kaJ00000BWC1MQAX","University of Dayton":"a0kaJ00000BWC1PQAX",
+  "University of Denver":"a0kaJ00000BWC1SQAX","University of Georgia":"a0kaJ00000BWC1eQAH","University of Hartford":"a0kaJ00000BWC1fQAH",
+  "University of Houston":"a0kaJ00000BWC1iQAH","University of Illinois":"a0kaJ00000BWC1kQAH","University of Iowa":"a0kaJ00000BWC1lQAH",
+  "University of Kansas":"a0kaJ00000BWC1mQAH","University of Louisiana":"a0kaJ00000BWC1uQAH","University of Louisville":"a0kaJ00000BWC1vQAH",
+  "University of Maine":"a0kaJ00000BWC1zQAH","University of Maryland":"a0kaJ00000BWC21QAH","University of Massachusetts":"a0kaJ00000BWC22QAH",
+  "University of Memphis":"a0kaJ00000BWC23QAH","University of Miami":"a0kaJ00000BWC24QAH","University of Michigan":"a0kaJ00000BWC25QAH",
+  "University of Minnesota":"a0kaJ00000BWC26QAH","University of Mississippi":"a0kaJ00000BWC27QAH","University of Missouri":"a0kaJ00000BWC28QAH",
+  "University of Nebraska":"a0kaJ00000BWC2DQAX","University of New Hampshire":"a0kaJ00000BWC2GQAX","University of New Mexico":"a0kaJ00000BWC2IQAX",
+  "University of New Orleans":"a0kaJ00000BWC2JQAX","University of North Texas":"a0kaJ00000BWC2OQAX","University of Northern Colorado":"a0kaJ00000BWC2PQAX",
+  "University of Oklahoma":"a0kaJ00000BWC2SQAX","University of Oregon":"a0kaJ00000BWC2TQAX","University of Phoenix":"a0kaJ00000BWC2XQAX",
+  "University of Rhode Island":"a0kaJ00000BWC2fQAH","University of Richmond":"a0kaJ00000BWC2gQAH","University of Rochester":"a0kaJ00000BWC2hQAH",
+  "University of San Francisco":"a0kaJ00000AgKvxQAF","University of Scranton":"a0kaJ00000BWC2kQAH","University of South Carolina":"a0kaJ00000BWC2nQAH",
+  "University of St. Thomas":"a0kaJ00000BWC2uQAH","University of Tampa":"a0kaJ00000BWHNaQAP","University of Tennessee":"a0kaJ00000BWHNbQAP",
+  "University of Texas":"a0kaJ00000BWHNcQAP","University of Utah":"a0kaJ00000BWHNmQAP","University of Vermont":"a0kaJ00000BWHNnQAP",
+  "University of Washington":"a0kaJ00000BWHNqQAP","University of Wisconsin":"a0kaJ00000BWHNvQAP","Ursinus College":"a0kaJ00000BWHO0QAP",
+  "Vanderbilt University":"a0kaJ00000BWHO8QAP","Villanova University":"a0kam00000FJNhxAAH","Virginia Polytechnic Institute":"a0kaJ00000BWHOEQA5",
+  "Virginia Tech":"a0kaJ00000BWHOFQA5","WVU - West Virginia University":"a0kaJ00000BWHOhQAP","Wagner College":"a0kaJ00000BWHOGQA5",
+  "Wake Forest University":"a0kaJ00000BWHOHQA5","Walsh College":"a0kaJ00000BWHOJQA5","Washington & Lee University":"a0kaJ00000BWHONQA5",
+  "Washington College":"a0kaJ00000BWHOOQA5","Washington State University":"a0kaJ00000BWHOPQA5","Washington University":"a0kaJ00000BWHOQQA5",
+  "Wayne State University":"a0kaJ00000BWHOVQA5","Webster University":"a0kaJ00000BWHOYQA5","Wellesley College":"a0kaJ00000BWHOZQA5",
+  "Wesleyan University":"a0kaJ00000AgDCtQAN","West Chester University":"a0kaJ00000BWHOdQAP","Western Illinois University":"a0kaJ00000BWHOlQAP",
+  "Western Michigan University":"a0kaJ00000BWHOoQAP","Western New England College":"a0kaJ00000BWHOpQAP","Westfield State College":"a0kaJ00000BWHOtQAP",
+  "Westminster College":"a0kaJ00000BWHOuQAP","Wheaton College":"a0kaJ00000BWHOwQAP","Widener University":"a0kaJ00000BWHP0QAP",
+  "Williams College":"a0kaJ00000BWHP7QAP","Wittenberg University":"a0kaJ00000BWHPDQA5","Wright State University":"a0kaJ00000BWHQqQAP",
+  "Xavier University":"a0kaJ00000BWHQrQAP","Yale University":"a0kaJ00000BWHQsQAP","York College":"a0kaJ00000BWHQuQAP"
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let parsedData = null, pdfDataURL = null, existsInSF = false, sfContactId = "";
+let capturedImages = []; // Array of {dataURL, mediaType} for camera-captured pages
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener("DOMContentLoaded", () => {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+});
+
+// ============================================================
+// SF MODE
+// ============================================================
+function setSFMode(exists) {
+  existsInSF = exists;
+  document.getElementById("sfNew").className = "sf-toggle" + (exists ? "" : " active-new");
+  document.getElementById("sfExists").className = "sf-toggle" + (exists ? " active-exists" : "");
+  document.getElementById("sfIdSection").style.display = exists ? "flex" : "none";
+  document.getElementById("sfInsertNote").classList.toggle("hidden", exists);
+  if (!exists) {
+    sfContactId = "";
+    document.getElementById("sfContactId").value = "";
+  }
+  updateSFId();
+  updateExportBtn();
+}
+function updateSFId() {
+  sfContactId = (document.getElementById("sfContactId").value || "").trim();
+  const v = document.getElementById("sfIdValid");
+  const b = document.getElementById("sfIdBadge");
+  if (sfContactId) {
+    const ok = sfContactId.startsWith("003");
+    v.textContent = ok ? "✓ Valid prefix" : "⚠ Expected 003…";
+    v.style.color = ok ? "var(--green)" : "var(--amber)";
+    if (ok) {
+      b.textContent = "ACTIVE: " + sfContactId;
+      b.classList.remove("hidden");
+    } else {
+      b.classList.add("hidden");
+    }
+  } else {
+    v.textContent = "";
+    b.classList.add("hidden");
+  }
+  updateExportBtn();
+}
+function getSfId() { return existsInSF && sfContactId.length > 0 ? sfContactId : null; }
+function updateExportBtn() {
+  const btn = document.getElementById("btnExport");
+  if (btn && !btn.disabled) {
+    btn.textContent = getSfId() ? "↓ Export SF Update" : "↓ Export SF Import";
+  }
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll("[data-tab]").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  ["upload","contact","attributes","employment","education","resume"].forEach(t => {
+    const el = document.getElementById("tab-" + t);
+    if (el) el.classList.toggle("hidden", t !== name);
+  });
+}
+
+// ============================================================
+// FILE HANDLING — PDF
+// ============================================================
+function handleFileSelect(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+function handleFileDrop(e)   { if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); }
+
+// ============================================================
+// FILE HANDLING — CAMERA / IMAGES
+// ============================================================
+function handleImageCapture(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+  files.forEach(f => {
+    if (!f.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      capturedImages.push({
+        dataURL: ev.target.result,
+        mediaType: f.type
+      });
+      renderCaptures();
+    };
+    reader.readAsDataURL(f);
+  });
+  // Reset the input so the same file can be re-selected if needed
+  e.target.value = "";
+}
+
+function renderCaptures() {
+  const wrap = document.getElementById("capturesWrap");
+  const strip = document.getElementById("capturesStrip");
+  const countEl = document.getElementById("captureCount");
+  const parseBtn = document.getElementById("parseCapturesBtn");
+
+  if (capturedImages.length === 0) {
+    wrap.classList.add("hidden");
+    return;
+  }
+  wrap.classList.remove("hidden");
+  countEl.textContent = capturedImages.length;
+  parseBtn.disabled = false;
+  parseBtn.textContent = "Parse " + capturedImages.length + " Page" + (capturedImages.length === 1 ? "" : "s") + " →";
+
+  let h = "";
+  capturedImages.forEach((img, i) => {
+    h += `<div class="capture-thumb">
+      <img src="${img.dataURL}" alt="Page ${i+1}">
+      <span class="capture-thumb-num">${i+1}</span>
+      <button class="capture-thumb-del" onclick="removeCapture(${i})" title="Remove this page">×</button>
+    </div>`;
+  });
+  strip.innerHTML = h;
+}
+
+function removeCapture(idx) {
+  capturedImages.splice(idx, 1);
+  renderCaptures();
+}
+
+function clearCaptures() {
+  capturedImages = [];
+  renderCaptures();
+}
+
+async function parseCapturedImages() {
+  if (capturedImages.length === 0) return;
+
+  try {
+    showProcessing(true, "Sending " + capturedImages.length + " page" + (capturedImages.length === 1 ? "" : "s") + " to Claude…", "Vision parsing — this can take 30–60 seconds");
+
+    const model = document.getElementById("modelSelect").value;
+    const result = await callClaudeAPIWithImages(capturedImages, model);
+    parsedData = result;
+
+    // Resolve education IDs
+    if (parsedData.education) {
+      parsedData.education.forEach(e => {
+        e.SFEducationID = resolveEducationID(e.SchoolName);
+        e.Notes = (e.Notes || "") + (e.SFEducationID === "UNMATCHED" ? " ⚠ No SF match found." : " Auto-matched via SF Education lookup.");
+      });
+    }
+
+    // Render all tabs
+    renderContact();
+    renderAttributes();
+    renderEmployment();
+    renderEducation();
+
+    // For the resume tab — show the first captured image as a viewer
+    pdfDataURL = capturedImages[0].dataURL;
+    renderResume();
+
+    // Update candidate strip
+    const c = parsedData.contact;
+    const nm = ((c.FirstName || "") + " " + (c.LastName || "")).trim() || "Unnamed";
+    const sfx = c.ProfessionalSuffix;
+    document.getElementById("candidateName").textContent = sfx ? nm + ", " + sfx : nm;
+    const metaBits = [c.Title, c.Email].filter(Boolean).join(" · ");
+    const metaEl = document.getElementById("candidateMeta");
+    if (metaBits) { metaEl.textContent = metaBits; metaEl.classList.remove("hidden"); }
+    else metaEl.classList.add("hidden");
+    document.getElementById("candidateStrip").classList.remove("hidden");
+    document.getElementById("btnExport").disabled = false;
+    document.getElementById("btnCopyAll").disabled = false;
+    updateExportBtn();
+
+    document.getElementById("lastFile").textContent = "✓ Parsed: " + capturedImages.length + " captured page" + (capturedImages.length === 1 ? "" : "s");
+    document.getElementById("lastFile").classList.remove("hidden");
+    document.getElementById("parseAnother").classList.remove("hidden");
+
+    // Clear the captures strip — fresh slate for next parse
+    capturedImages = [];
+    renderCaptures();
+
+    showProcessing(false);
+    switchTab("contact");
+  } catch (err) {
+    showProcessing(false);
+    showError("Parse failed: " + err.message);
+    console.error(err);
+  }
+}
+
+async function processFile(file) {
+  if (file.type !== "application/pdf") { showError("Please upload a PDF file."); return; }
+
+  try {
+    showProcessing(true, "Extracting text from PDF…", file.name);
+
+    // Store PDF for viewer
+    const reader = new FileReader();
+    reader.onload = (e) => { pdfDataURL = e.target.result; };
+    reader.readAsDataURL(file);
+
+    // Extract text via pdf.js
+    const arrayBuf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+    let txt = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      txt += content.items.map(it => it.str).join(" ") + "\n";
+    }
+    txt = txt.trim();
+    if (txt.length < 50) {
+      showProcessing(false);
+      showError("Extracted text too short. The PDF might be image-based — try Capture Pages instead.");
+      return;
+    }
+
+    const model = document.getElementById("modelSelect").value;
+    showProcessing(true, "Parsing with Claude…", "Model: " + model + " · " + txt.length.toLocaleString() + " chars");
+
+    const result = await callClaudeAPI(txt, model);
+    parsedData = result;
+
+    // Resolve education IDs via local lookup
+    if (parsedData.education) {
+      parsedData.education.forEach(e => {
+        e.SFEducationID = resolveEducationID(e.SchoolName);
+        e.Notes = (e.Notes || "") + (e.SFEducationID === "UNMATCHED" ? " ⚠ No SF match found." : " Auto-matched via SF Education lookup.");
+      });
+    }
+
+    // Render all tabs
+    renderContact();
+    renderAttributes();
+    renderEmployment();
+    renderEducation();
+    renderResume();
+
+    // Update candidate strip + show
+    const c = parsedData.contact;
+    const nm = ((c.FirstName || "") + " " + (c.LastName || "")).trim() || "Unnamed";
+    const sfx = c.ProfessionalSuffix;
+    document.getElementById("candidateName").textContent = sfx ? nm + ", " + sfx : nm;
+    const metaBits = [c.Title, c.Email].filter(Boolean).join(" · ");
+    const metaEl = document.getElementById("candidateMeta");
+    if (metaBits) { metaEl.textContent = metaBits; metaEl.classList.remove("hidden"); }
+    else metaEl.classList.add("hidden");
+    document.getElementById("candidateStrip").classList.remove("hidden");
+    document.getElementById("btnExport").disabled = false;
+    document.getElementById("btnCopyAll").disabled = false;
+    updateExportBtn();
+
+    document.getElementById("lastFile").textContent = "✓ Parsed: " + file.name;
+    document.getElementById("lastFile").classList.remove("hidden");
+    document.getElementById("parseAnother").classList.remove("hidden");
+
+    showProcessing(false);
+    switchTab("contact");
+  } catch (err) {
+    showProcessing(false);
+    showError("Parse failed: " + err.message);
+    console.error(err);
+  }
+  document.getElementById("fileInput").value = "";
+}
+
+// ============================================================
+// EDUCATION ID RESOLVER — 3-tier matching (preserved verbatim)
+// ============================================================
+function resolveEducationID(name) {
+  if (!name) return "UNMATCHED";
+  if (EDUCATION_LOOKUP[name]) return EDUCATION_LOOKUP[name];
+  const lo = name.toLowerCase();
+  for (const [n, id] of Object.entries(EDUCATION_LOOKUP)) if (n.toLowerCase() === lo) return id;
+  for (const [n, id] of Object.entries(EDUCATION_LOOKUP)) {
+    const nl = n.toLowerCase();
+    if (nl.includes(lo) || lo.includes(nl)) return id;
+  }
+  return "UNMATCHED";
+}
+
+// ============================================================
+// CLAUDE API CALL via Cloudflare Worker passthrough
+// System prompt folded into user message to avoid worker-schema
+// dependency on "system" field passthrough.
+// ============================================================
+const RESUME_PARSE_PROMPT = `You are a resume parser for Spatacco Analytics. Parse the resume text and return ONLY valid JSON — no markdown fencing, no explanation.
+
+The JSON must have exactly these four keys:
+
+1. "contact" — object with fields: FirstName, LastName, MiddleName, ProfessionalSuffix (e.g. "CFP, CFA"), Email, Phone, Mobile, LinkedIn, Title (current/most recent), MailingAddress, Salary, Relocate ("Yes"/"No"/"Possible"/""), ReloRegion, LicensesFINRA (all certs with issuer+year, semicolon-separated), Biography (2-3 sentence summary YOU write), PersonComment, RecruiterNotes
+
+2. "attributes" — array of objects with: Category, SFField, Value, Confidence ("High"/"Medium"/"Low"/"N/A"), Basis
+   Categories to evaluate (include even if empty): Industry (Industry__c), Sub Industry (Sub_Industry__c), Job Function (Job_Function__c), Job Function Type (Job_Function_Type__c), Buyer Attributes (BuyerAttributes__c), Prospect Type (Prospect_Type__c), Qualifications (Qualifications__c — one per cert), Distribution (Distribution__c), Custodian / Clearing (Custodian_Clearing__c)
+   Multiple entries per category allowed. Industry values: RIA, Broker-Dealer, Trust Company, Insurance, Bank, PE/Venture Capital, Investment Bank, Mutual Fund, Hedge Fund, etc.
+
+3. "employment" — array (most recent first) with: Company, Title, StartDate, EndDate ("Present"/year/""), PositionLevel ("C-Suite"/"VP / SVP / EVP"/"Director"/"Manager"/"Individual Contributor"/"Partner"), PositionFunction, Notes
+
+4. "education" — array with: SchoolName (full official name), Degree, FieldOfStudy, GradDate, Notes
+
+RULES: Return ONLY JSON. Use "" for unknowns, never null. Biography = your 2-3 sentence summary. Be thorough with Qualifications — every license, cert, designation.`;
+
+async function callClaudeAPI(resumeText, model) {
+  const userContent = RESUME_PARSE_PROMPT + "\n\n---\n\nParse this resume:\n\n" + resumeText;
+
+  const r = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: model,
+      max_tokens: 8000,
+      messages: [{ role: "user", content: userContent }]
+    })
+  });
+
+  return parseClaudeResponse(r);
+}
+
+async function callClaudeAPIWithImages(images, model) {
+  // Build content blocks: instruction + image blocks, all in one user message
+  const contentBlocks = [
+    { type: "text", text: RESUME_PARSE_PROMPT + "\n\n---\n\nParse this resume. The pages are provided as images below, in order:" }
+  ];
+  images.forEach(img => {
+    // dataURL is "data:image/jpeg;base64,XXXXX" — split off the base64
+    const base64Data = img.dataURL.split(",")[1];
+    contentBlocks.push({
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: img.mediaType || "image/jpeg",
+        data: base64Data
+      }
+    });
+  });
+
+  const r = await fetch(WORKER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: model,
+      max_tokens: 8000,
+      messages: [{ role: "user", content: contentBlocks }]
+    })
+  });
+
+  return parseClaudeResponse(r);
+}
+
+async function parseClaudeResponse(r) {
+  if (!r.ok) {
+    let errMsg = "";
+    try { const j = await r.json(); errMsg = j.error?.message || JSON.stringify(j); }
+    catch { errMsg = await r.text(); }
+    if (r.status === 401 || r.status === 403) throw new Error("Worker auth error. Contact admin.");
+    if (r.status === 429) throw new Error("Rate limited — wait a moment and retry.");
+    throw new Error("API " + r.status + ": " + errMsg);
+  }
+
+  const d = await r.json();
+  const t = (d.content || []).map(b => b.text || "").join("");
+  const cleaned = t.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    console.error("Raw API response:", t);
+    throw new Error("JSON parse failed. Check console for raw response.");
+  }
+}
+
+// ============================================================
+// RENDER: CONTACT
+// ============================================================
+function renderContact() {
+  if (!parsedData) return;
+  const c = parsedData.contact;
+  const entries = Object.entries(c);
+  let h = `<div class="section-head">
+    <span class="section-count"><strong>${entries.length}</strong> fields</span>
+    <div class="section-actions">
+      <button class="btn-export" onclick="downloadCSV('contact')">↓ CSV</button>
+      <button class="btn-export" onclick="showCSVModal('contact')">↗ Copy</button>
+    </div>
+  </div>
+  <div class="contact-grid">`;
+  entries.forEach(([k, v]) => {
+    const label = k.replace(/([A-Z])/g, " $1").trim();
+    const isEmpty = !v;
+    h += `<div class="contact-cell">
+      <div class="contact-label">${label}</div>
+      <div class="contact-value ${isEmpty ? 'empty' : ''}">${v || "—"}</div>
+    </div>`;
+  });
+  h += "</div>";
+  document.getElementById("tab-contact").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: ATTRIBUTES
+// ============================================================
+function renderAttributes() {
+  if (!parsedData) return;
+  const a = parsedData.attributes || [];
+  const tagged = a.filter(x => x.Value).length;
+  let h = `<div class="section-head">
+    <span class="section-count"><strong>${tagged}</strong> tagged · <span style="color:var(--text-faint)">${a.length} categories</span></span>
+    <div class="section-actions">
+      <button class="btn-export" onclick="downloadCSV('attributes')">↓ CSV</button>
+      <button class="btn-export" onclick="showCSVModal('attributes')">↗ Copy</button>
+    </div>
+  </div>
+  <div class="data-table-wrap"><table class="data-table">
+    <thead><tr><th>Category</th><th>SF Field</th><th>Value</th><th>Confidence</th><th>Basis</th></tr></thead>
+    <tbody>`;
+  a.forEach(r => {
+    const confClass = r.Confidence === "High" ? "conf-high" :
+                      r.Confidence === "Medium" ? "conf-medium" :
+                      r.Confidence === "Low" ? "conf-low" : "conf-na";
+    h += `<tr>
+      <td class="strong">${r.Category || ""}</td>
+      <td class="mono">${r.SFField || ""}</td>
+      <td>${r.Value || '<span style="color:var(--text-faint);font-style:italic">—</span>'}</td>
+      <td class="nowrap"><span class="conf-pill ${confClass}">${r.Confidence || "N/A"}</span></td>
+      <td class="muted">${r.Basis || ""}</td>
+    </tr>`;
+  });
+  h += "</tbody></table></div>";
+  document.getElementById("tab-attributes").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: EMPLOYMENT
+// ============================================================
+function renderEmployment() {
+  if (!parsedData) return;
+  const e = parsedData.employment || [];
+  let h = `<div class="section-head">
+    <span class="section-count"><strong>${e.length}</strong> positions</span>
+    <div class="section-actions">
+      <button class="btn-export" onclick="downloadCSV('employment')">↓ CSV</button>
+      <button class="btn-export" onclick="showCSVModal('employment')">↗ Copy</button>
+    </div>
+  </div>
+  <div class="data-table-wrap"><table class="data-table">
+    <thead><tr><th>Company</th><th>Title</th><th>Dates</th><th>Level</th><th>Function</th><th>Notes</th></tr></thead>
+    <tbody>`;
+  e.forEach(r => {
+    const dates = (r.StartDate || "?") + " – " + (r.EndDate || "?");
+    h += `<tr>
+      <td class="strong">${r.Company || ""}</td>
+      <td>${r.Title || ""}</td>
+      <td class="mono nowrap">${dates}</td>
+      <td class="muted nowrap">${r.PositionLevel || ""}</td>
+      <td class="muted">${r.PositionFunction || ""}</td>
+      <td class="muted" style="max-width:280px">${r.Notes || ""}</td>
+    </tr>`;
+  });
+  h += "</tbody></table></div>";
+  document.getElementById("tab-employment").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: EDUCATION
+// ============================================================
+function renderEducation() {
+  if (!parsedData) return;
+  const ed = parsedData.education || [];
+  const unmatched = ed.filter(e => e.SFEducationID === "UNMATCHED").length;
+  let h = `<div class="section-head">
+    <span class="section-count"><strong>${ed.length}</strong> entries${unmatched ? '<span class="unmatched-warn">' + unmatched + ' UNMATCHED</span>' : ''}</span>
+    <div class="section-actions">
+      <button class="btn-export" onclick="downloadCSV('education')">↓ CSV</button>
+      <button class="btn-export" onclick="showCSVModal('education')">↗ Copy</button>
+    </div>
+  </div>
+  <div class="data-table-wrap"><table class="data-table">
+    <thead><tr><th>School</th><th>SF Education ID</th><th>Degree</th><th>Field</th><th>Year</th><th>Notes</th></tr></thead>
+    <tbody>`;
+  ed.forEach(r => {
+    const isUnmatched = r.SFEducationID === "UNMATCHED";
+    h += `<tr>
+      <td class="strong">${r.SchoolName || ""}</td>
+      <td class="nowrap"><span class="${isUnmatched ? 'ed-unmatched' : 'ed-matched'}">${r.SFEducationID || ""}</span></td>
+      <td>${r.Degree || ""}</td>
+      <td class="muted">${r.FieldOfStudy || ""}</td>
+      <td class="mono nowrap">${r.GradDate || ""}</td>
+      <td class="muted" style="max-width:240px">${r.Notes || ""}</td>
+    </tr>`;
+  });
+  h += "</tbody></table></div>";
+  document.getElementById("tab-education").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: RESUME VIEWER
+// ============================================================
+function renderResume() {
+  const viewer = document.getElementById("resumeViewer");
+  if (pdfDataURL) {
+    viewer.classList.remove("resume-viewer-empty");
+    viewer.style.cssText = "height:100%";
+    viewer.innerHTML = `<iframe src="${pdfDataURL}" style="width:100%;height:100%;border:none"></iframe>`;
+  }
+}
+
+// ============================================================
+// CSV EXPORT (preserved from original)
+// ============================================================
+function getCSVData(section) {
+  if (!parsedData) return "";
+  const sfId = getSfId();
+  if (section === "contact") {
+    const c = parsedData.contact;
+    let header = Object.keys(c).join(",");
+    let vals = Object.values(c).map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+    if (sfId) { header = "ContactId," + header; vals = sfId + "," + vals; }
+    return header + "\n" + vals;
+  }
+  if (section === "attributes") {
+    const rows = parsedData.attributes.filter(a => a.Value);
+    let header = "Category,SFField,Value,Confidence,Basis";
+    if (sfId) header = "ContactId," + header;
+    const lines = rows.map(r => {
+      let line = [r.Category, r.SFField, r.Value, r.Confidence, r.Basis].map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+      if (sfId) line = sfId + "," + line;
+      return line;
+    });
+    return header + "\n" + lines.join("\n");
+  }
+  if (section === "employment") {
+    let header = "Company,Title,StartDate,EndDate,PositionLevel,PositionFunction,Notes";
+    if (sfId) header = "ContactId," + header;
+    const lines = parsedData.employment.map(r => {
+      let line = [r.Company, r.Title, r.StartDate, r.EndDate, r.PositionLevel, r.PositionFunction, r.Notes].map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+      if (sfId) line = sfId + "," + line;
+      return line;
+    });
+    return header + "\n" + lines.join("\n");
+  }
+  if (section === "education") {
+    let header = "SchoolName,SFEducationID,Degree,FieldOfStudy,GradDate,Notes";
+    if (sfId) header = "ContactId," + header;
+    const lines = parsedData.education.map(r => {
+      let line = [r.SchoolName, r.SFEducationID, r.Degree, r.FieldOfStudy, r.GradDate, r.Notes].map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+      if (sfId) line = sfId + "," + line;
+      return line;
+    });
+    return header + "\n" + lines.join("\n");
+  }
+  return "";
+}
+
+function downloadCSV(section) {
+  const csv = getCSVData(section);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const name = parsedData.contact ? (parsedData.contact.LastName || "resume") : "resume";
+  a.download = name + "_" + section + ".csv";
+  a.click();
+}
+
+function showCSVModal(section) {
+  openModal(section.toUpperCase() + " — CSV", getCSVData(section));
+}
+
+function showFullExport() {
+  let all = "=== CONTACT ===\n" + getCSVData("contact") +
+            "\n\n=== ATTRIBUTES ===\n" + getCSVData("attributes") +
+            "\n\n=== EMPLOYMENT ===\n" + getCSVData("employment") +
+            "\n\n=== EDUCATION ===\n" + getCSVData("education");
+  openModal("Full Export", all);
+}
+
+function exportAll() {
+  if (!parsedData) return;
+  try {
+    const wb = XLSX.utils.book_new();
+    const sfId = getSfId();
+
+    // Contact sheet
+    const cData = [Object.keys(parsedData.contact), Object.values(parsedData.contact).map(v => v || "")];
+    if (sfId) { cData[0].unshift("ContactId"); cData[1].unshift(sfId); }
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cData), "Contact");
+
+    // Attributes sheet
+    const aRows = parsedData.attributes.filter(a => a.Value);
+    const aHeader = ["Category", "SFField", "Value", "Confidence", "Basis"];
+    if (sfId) aHeader.unshift("ContactId");
+    const aData = [aHeader, ...aRows.map(r => {
+      const row = [r.Category, r.SFField, r.Value, r.Confidence, r.Basis];
+      if (sfId) row.unshift(sfId);
+      return row;
+    })];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aData), "Attributes");
+
+    // Employment sheet
+    const eHeader = ["Company", "Title", "StartDate", "EndDate", "PositionLevel", "PositionFunction", "Notes"];
+    if (sfId) eHeader.unshift("ContactId");
+    const eData = [eHeader, ...parsedData.employment.map(r => {
+      const row = [r.Company, r.Title, r.StartDate, r.EndDate, r.PositionLevel, r.PositionFunction, r.Notes];
+      if (sfId) row.unshift(sfId);
+      return row;
+    })];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(eData), "Employment");
+
+    // Education sheet
+    const edHeader = ["SchoolName", "SFEducationID", "Degree", "FieldOfStudy", "GradDate", "Notes"];
+    if (sfId) edHeader.unshift("ContactId");
+    const edData = [edHeader, ...parsedData.education.map(r => {
+      const row = [r.SchoolName, r.SFEducationID, r.Degree, r.FieldOfStudy, r.GradDate, r.Notes];
+      if (sfId) row.unshift(sfId);
+      return row;
+    })];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(edData), "Education");
+
+    const name = parsedData.contact ? (parsedData.contact.LastName || "resume") : "resume";
+    XLSX.writeFile(wb, name + "_" + (sfId ? "SF_Update" : "SF_Import") + ".xlsx");
+  } catch (e) {
+    console.error(e);
+    showFullExport();
+  }
+}
+
+// ============================================================
+// MODAL / UI HELPERS
+// ============================================================
+function openModal(title, content) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalTextarea").value = content;
+  document.getElementById("copyModal").classList.remove("hidden");
+}
+function closeModal() {
+  document.getElementById("copyModal").classList.add("hidden");
+}
+function copyModalContent() {
+  navigator.clipboard.writeText(document.getElementById("modalTextarea").value).then(() => {
+    const b = document.getElementById("modalCopyBtn");
+    const orig = b.textContent;
+    b.textContent = "✓ Copied";
+    setTimeout(() => { b.textContent = orig; }, 2000);
+  });
+}
+function showProcessing(show, title, detail) {
+  document.getElementById("processing").classList.toggle("hidden", !show);
+  if (title)  document.getElementById("processingText").textContent = title;
+  if (detail) document.getElementById("processingDetail").textContent = detail;
+}
+function showError(msg) {
+  document.getElementById("errorText").textContent = msg;
+  document.getElementById("errorBanner").classList.remove("hidden");
+}
+</script>
+</body>
+</html>

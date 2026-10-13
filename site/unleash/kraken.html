@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Michael Spatacco — Data Engineer, Hockey Operations</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --kraken-deep: #001628;
+    --kraken-navy: #002244;
+    --kraken-teal: #99D9D9;
+    --kraken-ice: #C4E8E8;
+    --kraken-red: #C8102E;
+    --kraken-light: #E8F4F8;
+    --ice-white: #F0F8FF;
+    --text-primary: #E8F4F8;
+    --text-secondary: #8BB8C8;
+    --text-muted: #5A8899;
+    --accent-glow: rgba(153, 217, 217, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--kraken-deep);
+    color: var(--text-primary);
+    font-family: 'Source Sans Pro', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* === ICE RINK BACKGROUND === */
+  .rink-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .rink-bg::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background:
+      radial-gradient(ellipse 800px 600px at 30% 20%, rgba(153,217,217,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 600px 800px at 70% 80%, rgba(0,34,68,0.6) 0%, transparent 70%),
+      radial-gradient(ellipse 1200px 400px at 50% 50%, rgba(153,217,217,0.02) 0%, transparent 60%);
+  }
+  /* ice scratches */
+  .rink-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      87deg,
+      transparent,
+      transparent 120px,
+      rgba(153,217,217,0.008) 120px,
+      rgba(153,217,217,0.008) 121px
+    ),
+    repeating-linear-gradient(
+      93deg,
+      transparent,
+      transparent 180px,
+      rgba(153,217,217,0.005) 180px,
+      rgba(153,217,217,0.005) 181px
+    );
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+
+  /* === HEADER / JERSEY === */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    position: relative;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -20px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 300px;
+    background: radial-gradient(ellipse, rgba(153,217,217,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .jersey-number {
+    font-family: 'Oswald', sans-serif;
+    font-size: 120px;
+    font-weight: 700;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(153,217,217,0.15);
+    line-height: 1;
+    letter-spacing: -4px;
+    user-select: none;
+    animation: fadeSlideDown 0.8s ease-out;
+  }
+  .player-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--kraken-teal);
+    margin-top: -30px;
+    position: relative;
+    animation: fadeSlideUp 0.8s ease-out 0.2s both;
+  }
+  .position-label {
+    font-family: 'Oswald', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 8px;
+    animation: fadeSlideUp 0.8s ease-out 0.4s both;
+  }
+  .draft-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: fadeSlideUp 0.8s ease-out 0.5s both;
+  }
+  .draft-line .sep {
+    width: 30px;
+    height: 1px;
+    background: rgba(153,217,217,0.2);
+  }
+
+  /* The application this page was built for has closed; it stays up, unlinked, for reference. */
+  .archived-note {
+    margin: 0 auto 28px;
+    max-width: 520px;
+    padding: 8px 16px;
+    border: 1px solid rgba(153,217,217,0.25);
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  /* === CENTER ICE LINE === */
+  .center-ice {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 32px 0;
+  }
+  .center-ice::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--kraken-red), transparent);
+  }
+  .center-ice-dot {
+    width: 14px; height: 14px;
+    background: var(--kraken-red);
+    border-radius: 50%;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 12px rgba(200,16,46,0.4);
+  }
+
+  /* === SECTION HEADERS === */
+  .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--kraken-teal);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .section-title .puck {
+    width: 8px; height: 8px;
+    background: var(--kraken-red);
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px rgba(200,16,46,0.3);
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(153,217,217,0.2), transparent);
+  }
+
+  /* === SUMMARY PANEL === */
+  .summary-panel {
+    background: linear-gradient(135deg, rgba(0,34,68,0.6) 0%, rgba(0,22,40,0.8) 100%);
+    border: 1px solid rgba(153,217,217,0.1);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .summary-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, var(--kraken-teal), var(--kraken-red));
+  }
+  .summary-panel p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+  .summary-panel p em {
+    color: var(--kraken-ice);
+    font-style: italic;
+    font-size: 16px;
+  }
+  .summary-panel p:last-child { margin-bottom: 0; }
+  .summary-panel strong {
+    color: var(--kraken-teal);
+    font-weight: 600;
+  }
+
+  /* === STAT CARDS (like hockey card stats) === */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .stat-card {
+    background: rgba(0,34,68,0.5);
+    border: 1px solid rgba(153,217,217,0.08);
+    border-radius: 10px;
+    padding: 20px 16px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .stat-card:hover {
+    border-color: rgba(153,217,217,0.25);
+    transform: translateY(-2px);
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--kraken-teal);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .stat-card:hover::after { opacity: 1; }
+  .stat-number {
+    font-family: 'Oswald', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--kraken-teal);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* === SKILLS (like player attributes radar) === */
+  .skills-section {
+    margin-bottom: 40px;
+  }
+  .skill-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+    padding: 10px 16px;
+    background: rgba(0,34,68,0.3);
+    border-radius: 8px;
+    border-left: 3px solid transparent;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .skill-row:hover {
+    border-left-color: var(--kraken-teal);
+    background: rgba(0,34,68,0.5);
+  }
+  .skill-category {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--kraken-teal);
+    width: 180px;
+    flex-shrink: 0;
+  }
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .skill-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    background: rgba(153,217,217,0.08);
+    border: 1px solid rgba(153,217,217,0.12);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+
+  /* === CAREER TIMELINE (like game log) === */
+  .timeline {
+    position: relative;
+    margin-bottom: 40px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 24px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg,
+      var(--kraken-teal),
+      rgba(153,217,217,0.3) 40%,
+      rgba(153,217,217,0.1) 80%,
+      transparent
+    );
+  }
+  .period {
+    position: relative;
+    padding-left: 64px;
+    margin-bottom: 28px;
+  }
+  .period-marker {
+    position: absolute;
+    left: 16px; top: 4px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--kraken-teal);
+    background: var(--kraken-deep);
+  }
+  .period.current .period-marker {
+    background: var(--kraken-teal);
+    box-shadow: 0 0 12px rgba(153,217,217,0.4);
+  }
+  .period-years {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .period-role {
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+  .period-company {
+    font-size: 14px;
+    color: var(--kraken-teal);
+    margin-bottom: 6px;
+  }
+  .period-desc {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+  .period-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .highlight-chip {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: rgba(153,217,217,0.06);
+    border: 1px solid rgba(153,217,217,0.12);
+    color: var(--kraken-teal);
+  }
+
+  /* === PROJECTS (like power play units) === */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  .project-card {
+    background: rgba(0,34,68,0.4);
+    border: 1px solid rgba(153,217,217,0.08);
+    border-radius: 10px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .project-card:hover {
+    border-color: rgba(153,217,217,0.2);
+  }
+  .project-card::before {
+    content: attr(data-pp);
+    position: absolute;
+    top: 12px; right: 16px;
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--kraken-red);
+    background: rgba(200,16,46,0.1);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+  .project-name {
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .project-desc {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+  .project-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .project-stack span {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    padding: 2px 7px;
+    background: rgba(153,217,217,0.06);
+    border-radius: 3px;
+    color: var(--kraken-teal);
+  }
+
+  /* === HOCKEY SECTION === */
+  .hockey-section {
+    background: linear-gradient(135deg, rgba(200,16,46,0.08) 0%, rgba(0,22,40,0.6) 100%);
+    border: 1px solid rgba(200,16,46,0.15);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hockey-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, var(--kraken-red), rgba(200,16,46,0.3));
+  }
+  .hockey-section .section-title { margin-bottom: 16px; }
+  .hockey-section p {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-secondary);
+  }
+  .hockey-callout {
+    font-family: 'Oswald', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--kraken-ice);
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(200,16,46,0.15);
+  }
+
+  /* === EDUCATION / CREDS FOOTER === */
+  .creds-bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+  .cred-block {
+    background: rgba(0,34,68,0.3);
+    border: 1px solid rgba(153,217,217,0.06);
+    border-radius: 10px;
+    padding: 22px;
+  }
+  .cred-block h4 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--kraken-teal);
+    margin-bottom: 8px;
+  }
+  .cred-block p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .cred-block .small {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 4px;
+  }
+
+  /* === BOTTOM BAR === */
+  .bottom-bar {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(153,217,217,0.06);
+  }
+  .bottom-bar p {
+    font-family: 'Oswald', sans-serif;
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* === ANIMATIONS === */
+  @keyframes fadeSlideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in {
+    opacity: 0;
+    transform: translateY(14px);
+    animation: fadeSlideUp 0.6s ease-out forwards;
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+  .delay-5 { animation-delay: 0.5s; }
+  .delay-6 { animation-delay: 0.6s; }
+  .delay-7 { animation-delay: 0.7s; }
+
+  @media (max-width: 768px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .projects-grid { grid-template-columns: 1fr; }
+    .creds-bar { grid-template-columns: 1fr; }
+    .skill-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .skill-category { width: auto; }
+    .jersey-number { font-size: 80px; }
+    .player-name { font-size: 36px; margin-top: -20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rink-bg"></div>
+
+<div class="container">
+
+  <div class="archived-note">Archived &middot; kept for reference, no longer updated</div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="jersey-number">18</div>
+    <h1 class="player-name">Michael Spatacco</h1>
+    <div class="position-label">Data Engineer &bull; Hockey Operations</div>
+    <div class="draft-line">
+      <span>Mike@SpataccoAnalytics.com</span>
+    </div>
+  </header>
+
+  <!-- CENTER ICE -->
+  <div class="center-ice"><div class="center-ice-dot"></div></div>
+
+  <!-- SUMMARY -->
+  <div class="summary-panel fade-in delay-1">
+    <p><em>This role represents the intersection of everything I have built my career around and everything I care about most.</em></p>
+    <p><strong>Over 18 years</strong> building data systems in financial services. Sole architect of a production Salesforce org powering M&A deal flow — designing relational data models, writing ETL pipelines, running SOQL queries against a <strong>265K+ record</strong> database, and delivering infrastructure that analysts and leadership depend on daily.</p>
+    <p><strong>Self-taught developer</strong> who codes extensively for both work and passion. Professional builds include production React applications, Python data pipelines, full-stack web deployments, and AI-powered analytics tools. Personal projects span sports analytics, fantasy optimization models, and data visualization — driven by the same obsession with turning messy data into clean, usable systems.</p>
+    <p><strong>Lifelong hockey player, fan, and coach.</strong> Coached developmental youth hockey for 10 years and remain deeply engaged with the game at every level — from tracking AHL, Junior and College prospect development pipelines to analyzing NHL systems and scouting reports.</p>
+  </div>
+
+  <!-- CAREER STATS -->
+  <div class="section-title fade-in delay-2"><span class="puck"></span>Career Stats</div>
+  <div class="stat-grid fade-in delay-2">
+    <div class="stat-card">
+      <div class="stat-number">18+</div>
+      <div class="stat-label">Years Experience</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">265K</div>
+      <div class="stat-label">Records Managed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">10</div>
+      <div class="stat-label">Years Coaching</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">7</div>
+      <div class="stat-label">FINRA Exams Passed</div>
+    </div>
+  </div>
+
+  <!-- TECHNICAL SKILLS -->
+  <div class="section-title fade-in delay-3"><span class="puck"></span>Player Attributes</div>
+  <div class="skills-section fade-in delay-3">
+    <div class="skill-row">
+      <div class="skill-category">Languages</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">JavaScript</span>
+        <span class="skill-tag">React/JSX</span>
+        <span class="skill-tag">SQL (PostgreSQL)</span>
+        <span class="skill-tag">SOQL</span>
+        <span class="skill-tag">HTML/CSS</span>
+        <span class="skill-tag">Apex</span>
+      </div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-category">Data Engineering</div>
+      <div class="skill-tags">
+        <span class="skill-tag">ETL Pipelines</span>
+        <span class="skill-tag">Data Modeling</span>
+        <span class="skill-tag">Relational DB</span>
+        <span class="skill-tag">API Integration</span>
+        <span class="skill-tag">Bulk Ops</span>
+        <span class="skill-tag">Deduplication</span>
+      </div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-category">Platforms</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Salesforce Admin</span>
+        <span class="skill-tag">WordPress</span>
+        <span class="skill-tag">Cloudflare</span>
+        <span class="skill-tag">SiteGround</span>
+        <span class="skill-tag">eBay API</span>
+        <span class="skill-tag">Git</span>
+      </div>
+    </div>
+    <div class="skill-row">
+      <div class="skill-category">Analysis</div>
+      <div class="skill-tags">
+        <span class="skill-tag">Financial Modeling</span>
+        <span class="skill-tag">Market Research</span>
+        <span class="skill-tag">Competitive Intel</span>
+        <span class="skill-tag">AUM Analytics</span>
+        <span class="skill-tag">Advanced Excel</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME LOG / CAREER TIMELINE -->
+  <div class="section-title fade-in delay-4"><span class="puck"></span>Game Log</div>
+  <div class="timeline fade-in delay-4">
+
+    <div class="period current">
+      <div class="period-marker"></div>
+      <div class="period-years">2024 — PRESENT</div>
+      <div class="period-role">Director of Corporate Development</div>
+      <div class="period-company">Gladstone Group Inc. — Plymouth Meeting, PA</div>
+      <div class="period-desc">Brought on to lead a technological and sales modernization — migrated the firm off an ancient CRM onto a purpose-built Salesforce environment aligned to RIA transaction advisory workflow. Firm saw record revenue two consecutive years after the switch. Architected 10+ custom objects; designed and launched Gladstone Connect, a proprietary buyer-seller matchmaking platform. Built production tooling: AI-powered scoring engine, resume parser mapping to 136 SF fields, Python report generators. Executed bulk ETL across 265K+ accounts.</div>
+      <div class="period-highlights">
+        <span class="highlight-chip">CRM Modernization</span>
+        <span class="highlight-chip">Record Revenue</span>
+        <span class="highlight-chip">Gladstone Connect</span>
+        <span class="highlight-chip">React Apps</span>
+        <span class="highlight-chip">Python Pipelines</span>
+        <span class="highlight-chip">265K Records</span>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="period-marker"></div>
+      <div class="period-years">2023 — 2024</div>
+      <div class="period-role">Advisor</div>
+      <div class="period-company">Karr Barth Associates / Equitable Advisors — Greater Philadelphia</div>
+      <div class="period-desc">Retirement plan design (401(k), defined benefit, deferred comp), executive benefit strategies, and insurance solutions for business owners and executives.</div>
+    </div>
+
+    <div class="period">
+      <div class="period-marker"></div>
+      <div class="period-years">2018 — 2023</div>
+      <div class="period-role">Director of Cash Management / SVP</div>
+      <div class="period-company">Bancroft Capital, LLC — Fort Washington, PA</div>
+      <div class="period-desc">Founding partner of a Broker-Dealer. Directed cash management operations, fixed income trading (corporates, agencies, CMBS, RMBS, munis). Oversaw creation of co-branded 1940 Act funds in partnership with State Street and BlackRock. Built data-driven tracking systems for portfolio analytics and client reporting.</div>
+      <div class="period-highlights">
+        <span class="highlight-chip">Founding Partner</span>
+        <span class="highlight-chip">Fixed Income</span>
+        <span class="highlight-chip">State Street / BlackRock</span>
+        <span class="highlight-chip">Portfolio Analytics</span>
+      </div>
+    </div>
+
+    <div class="period">
+      <div class="period-marker"></div>
+      <div class="period-years">2014 — 2018</div>
+      <div class="period-role">Vice President, Investments</div>
+      <div class="period-company">CFG Capital Markets — Ardmore, PA</div>
+      <div class="period-desc">Created 401(k) & Retirement Plan Division from scratch — built the business plan, sales process, and operational infrastructure. Managed cash management and fixed income trading.</div>
+    </div>
+
+    <div class="period">
+      <div class="period-marker"></div>
+      <div class="period-years">2007 — 2014</div>
+      <div class="period-role">Vice President / Equity Derivatives Trader</div>
+      <div class="period-company">Boenning & Scattergood, Inc. — West Conshohocken & Ardmore, PA</div>
+      <div class="period-desc">Started on the equity derivatives trading desk — heavy focus on trade execution and database management. Built and maintained the data systems supporting trading operations. Advanced to VP handling 401(k) servicing, private clients, and institutional fixed income.</div>
+      <div class="period-highlights">
+        <span class="highlight-chip">Database Management</span>
+        <span class="highlight-chip">Trading Desk</span>
+        <span class="highlight-chip">Data Systems</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- POWER PLAY UNITS (Projects) -->
+  <div class="section-title fade-in delay-5"><span class="puck"></span>Power Play Units</div>
+  <div class="projects-grid fade-in delay-5">
+    <div class="project-card" data-pp="PP1">
+      <div class="project-name">Website Scoring Engine</div>
+      <div class="project-desc">AI-powered competitive intelligence tool with sequential API architecture, real-time scoring across 6 categories, pros/cons analysis, and multi-tab Excel export.</div>
+      <div class="project-stack"><span>React/JSX</span><span>Anthropic API</span><span>SheetJS</span></div>
+    </div>
+    <div class="project-card" data-pp="PP1">
+      <div class="project-name">Resume Parser → Salesforce</div>
+      <div class="project-desc">Parsing engine mapping extracted resume data to 136 Salesforce fields with fuzzy education matching against 1,056-record institution lookup table.</div>
+      <div class="project-stack"><span>React/JSX</span><span>SheetJS</span><span>SOQL</span></div>
+    </div>
+    <div class="project-card" data-pp="PP2">
+      <div class="project-name">Buyer-Seller Matchmaking</div>
+      <div class="project-desc">White-label platform with configurable scoring matrices, dynamic AUM/Revenue inputs, and branded PDF/PPTX report generation for client deliverables.</div>
+      <div class="project-stack"><span>Python</span><span>ReportLab</span><span>python-pptx</span></div>
+    </div>
+    <div class="project-card" data-pp="PP2">
+      <div class="project-name">Full-Stack Web Infrastructure</div>
+      <div class="project-desc">Two LLC web deployments — WordPress/WooCommerce on SiteGround with Cloudflare CDN, custom DNS, SSL, Google Workspace, and eBay storefront integration.</div>
+      <div class="project-stack"><span>WordPress</span><span>Cloudflare</span><span>WooCommerce</span></div>
+    </div>
+  </div>
+
+  <!-- CENTER ICE -->
+  <div class="center-ice"><div class="center-ice-dot"></div></div>
+
+  <!-- HOCKEY -->
+  <div class="hockey-section fade-in delay-6">
+    <div class="section-title"><span class="puck"></span>On the Ice</div>
+    <p>Lifelong hockey player and fan. Coached youth hockey for 10 years across multiple age groups (Lower Merion Ice Hockey Club) — developing game plans, evaluating player development, and translating hockey concepts for young athletes and their families. Active follower of NHL systems, AHL prospect development, draft analytics, and the evolving role of data in hockey operations.</p>
+    <div class="hockey-callout">"This is not a career pivot toward hockey — it is the convergence of a career built on data systems with a lifelong passion for the game."</div>
+  </div>
+
+  <!-- EDUCATION & CREDENTIALS -->
+  <div class="section-title fade-in delay-7"><span class="puck"></span>Credentials</div>
+  <div class="creds-bar fade-in delay-7">
+    <div class="cred-block">
+      <h4>Education</h4>
+      <p>Bachelor of Science, Finance<br>St. Joseph's University — Philadelphia, PA (2015)</p>
+    </div>
+    <div class="cred-block">
+      <h4>FINRA Licenses (Previously Held)</h4>
+      <p>Series 79, 24, 65, 63, 7, 4 &bull; PA Insurance License</p>
+      <p class="small">All examinations passed — demonstrates capacity to independently master complex, domain-specific material.</p>
+    </div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div class="bottom-bar">
+    <p>Release the Kraken</p>
+  </div>
+
+</div>
+
+</body>
+</html>

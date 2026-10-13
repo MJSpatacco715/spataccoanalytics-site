@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spatacco Analytics · Resume Parser</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Mono:wght@300;400&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --gold:#c8a96e;--gold-dim:#7a6a5a;--bg:#0a0a0f;--bg2:#0d0d12;--bg3:#0f0f14;--bg4:#111116;
+    --line:#2a2420;--dim:#5a5a50;--text:#e8e0d0;
+    --green:#5a8a50;--green-bg:#1a2a1a;--green-border:#2a4a2a;--green-lit:#7aba70;
+    --red:#9a4030;--yellow:#9a8a40;
+    --mono:'DM Mono',monospace;--serif:'EB Garamond',Georgia,serif;
+  }
+  body{background:var(--bg);color:var(--text);font-family:var(--serif);font-size:13px;min-height:100vh}
+  button{font-family:var(--serif);cursor:pointer;transition:all .15s}
+  button:hover{filter:brightness(1.15)}
+  input,textarea{font-family:var(--mono)}
+  ::selection{background:rgba(200,169,110,.25)}
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:var(--bg)}
+  ::-webkit-scrollbar-thumb{background:#2a2420;border-radius:3px}
+
+  /* HEADER */
+  .header{border-bottom:1px solid var(--line);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
+  .header-brand{font-size:9px;letter-spacing:4px;color:var(--gold-dim);text-transform:uppercase;margin-bottom:3px}
+  .header-title{font-size:19px;color:var(--gold);letter-spacing:1px}
+  .header-right{display:flex;align-items:center;gap:20px}
+
+  /* API KEY */
+  .api-bar{display:flex;align-items:center;gap:10px;padding:10px 28px;background:var(--bg3);border-bottom:1px solid #1a1814}
+  .api-input{background:#08080c;border:1px solid #2a2420;color:var(--text);padding:6px 10px;font-size:11px;width:260px;border-radius:3px}
+  .api-input:focus{outline:none;border-color:var(--gold)}
+  .api-status{font-size:10px;letter-spacing:1px}
+  .api-status.ok{color:var(--green)}
+  .api-status.missing{color:var(--dim)}
+
+  /* TABS */
+  .tab-bar{display:flex;gap:0;border-bottom:1px solid var(--line);background:var(--bg2)}
+  .tab{padding:11px 22px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+  .tab:hover{color:var(--text)}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+  /* SF MODE */
+  .sf-bar{display:flex;align-items:center;gap:14px;padding:10px 28px;background:var(--bg3);border-bottom:1px solid #1a1814}
+  .sf-toggle{padding:6px 16px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;background:none;border:1px solid #2a2420;color:var(--dim);border-radius:3px}
+  .sf-toggle.active-new{background:var(--green-bg);border-color:var(--green-border);color:var(--green-lit)}
+  .sf-toggle.active-exists{background:#2a1a10;border-color:#4a3020;color:#ca8a50}
+  .sf-id-input{background:#08080c;border:1px solid #2a2420;color:var(--text);padding:6px 10px;font-size:11px;font-family:var(--mono);width:200px;border-radius:3px}
+  .sf-id-input:focus{outline:none;border-color:var(--gold)}
+  .sf-id-badge{font-size:9px;letter-spacing:1px;padding:4px 10px;background:#1a1410;border:1px solid #3a2a20;color:#ca8a50;border-radius:3px}
+
+  /* MODEL SELECT */
+  .model-select{background:#08080c;border:1px solid #2a2420;color:var(--text);padding:6px 10px;font-size:11px;font-family:var(--mono);border-radius:3px}
+  .model-select:focus{outline:none;border-color:var(--gold)}
+
+  /* CONTENT */
+  .content{padding:20px 28px}
+  .content.no-pad{padding:0}
+  .hidden{display:none!important}
+
+  /* LABELS */
+  .label-xs{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+  .label-sm{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-dim)}
+
+  /* BUTTONS */
+  .btn-gold{background:none;border:1px solid var(--gold);color:var(--gold);padding:8px 18px;font-size:11px;letter-spacing:2px;text-transform:uppercase;border-radius:3px}
+  .btn-gold:hover{background:rgba(200,169,110,.08)}
+  .btn-gold-lg{background:rgba(200,169,110,.08);border:1px solid var(--gold);color:var(--gold);padding:12px 28px;font-size:13px;letter-spacing:2px;text-transform:uppercase;border-radius:3px}
+  .btn-green{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green-lit);padding:8px 18px;font-size:11px;letter-spacing:2px;text-transform:uppercase;border-radius:3px}
+  .btn-export{background:none;border:1px solid #2a2420;color:var(--dim);padding:6px 14px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px}
+  .btn-sm{padding:5px 12px;font-size:9px}
+
+  /* CONTACT GRID */
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+  .contact-cell{background:var(--bg3);padding:12px 14px}
+  .contact-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold-dim);margin-bottom:4px}
+
+  /* TABLE */
+  .data-table{width:100%;border-collapse:collapse}
+  .data-table th{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold-dim);text-align:left;padding:10px 14px;background:var(--bg4);border-bottom:1px solid var(--line)}
+  .data-table td{padding:11px 14px;border-bottom:1px solid #1a1814;font-size:12px;line-height:1.5;vertical-align:top}
+  .data-table tr:nth-child(even) td{background:rgba(15,15,20,.5)}
+
+  /* CONFIDENCE */
+  .conf-high{color:var(--green);font-weight:600}
+  .conf-medium{color:var(--yellow)}
+  .conf-low{color:var(--red)}
+  .conf-na{color:var(--dim);font-style:italic}
+
+  /* PROCESSING */
+  .processing{position:fixed;inset:0;background:rgba(5,5,8,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100}
+  .spinner{width:36px;height:36px;border:2px solid #2a2420;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ERROR */
+  .error-banner{padding:12px 28px;background:#1a0a0a;border-bottom:1px solid #3a1a1a;color:var(--red);font-size:12px;display:flex;align-items:center;gap:10px}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(5,5,8,.9);display:flex;align-items:center;justify-content:center;z-index:200}
+  .modal-box{width:80vw;height:70vh;background:var(--bg2);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;overflow:hidden}
+
+  /* UPLOAD ZONE */
+  .upload-zone{border:2px dashed #2a2420;border-radius:6px;padding:40px;text-align:center;cursor:pointer;transition:all .3s}
+  .upload-zone:hover{border-color:var(--gold);background:rgba(200,169,110,.03)}
+  .upload-zone.drag-over{border-color:var(--gold);background:rgba(200,169,110,.06)}
+
+  /* UNMATCHED */
+  .unmatched{background:#1a0a0a;border:1px solid #3a1a1a;border-radius:3px;padding:2px 6px;font-size:10px;color:var(--red)}
+
+  /* FOOTER */
+  .footer{padding:12px 28px 20px;font-size:9px;color:#222220;letter-spacing:2px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div id="copyModal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--line)">
+      <div class="label-sm" id="modalTitle"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-green" onclick="copyModalContent()" id="modalCopyBtn">Copy All</button>
+        <button class="btn-export" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+    <textarea id="modalTextarea" readonly style="flex:1;background:#08080c;color:#9a9a80;font-family:var(--mono);font-size:11px;padding:16px;border:none;outline:none;resize:none;line-height:1.6" onclick="this.select()"></textarea>
+  </div>
+</div>
+
+<!-- PROCESSING -->
+<div id="processing" class="processing hidden">
+  <div class="spinner"></div>
+  <div id="processingText" style="color:var(--gold);font-size:14px;letter-spacing:1px"></div>
+  <div id="processingDetail" style="color:var(--dim);font-size:11px;margin-top:6px;font-family:var(--mono)"></div>
+</div>
+
+<!-- ERROR -->
+<div id="errorBanner" class="error-banner hidden">
+  <span>⚠</span>
+  <span id="errorText"></span>
+  <button class="btn-export btn-sm" style="margin-left:auto" onclick="this.parentElement.classList.add('hidden')">Dismiss</button>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-brand">Spatacco Analytics</div>
+    <div class="header-title">Resume Parser</div>
+  </div>
+  <div class="header-right">
+    <div style="text-align:right">
+      <div class="label-xs" style="margin-bottom:3px">Candidate</div>
+      <div id="candidateName" style="font-size:14px;color:var(--dim)">No resume loaded</div>
+    </div>
+    <div id="candidateInfo" class="hidden" style="display:flex;gap:8px">
+      <button class="btn-gold btn-sm" id="btnExport" onclick="exportAll()" disabled>↓ Export XLSX</button>
+      <button class="btn-export btn-sm" id="btnCopyAll" onclick="showFullExport()" disabled>↗ Copy All</button>
+    </div>
+  </div>
+</div>
+
+<!-- API KEY BAR -->
+<div class="api-bar">
+  <span class="label-xs">API Key</span>
+  <input type="password" id="apiKeyInput" class="api-input" placeholder="sk-ant-..." onchange="saveApiKey()">
+  <button class="btn-export btn-sm" onclick="toggleKeyVis()">Show</button>
+  <span id="apiStatus" class="api-status missing" style="font-family:var(--mono)">No key</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <span class="label-xs">Model</span>
+    <select id="modelSelect" class="model-select">
+      <option value="claude-sonnet-4-20250514">Sonnet 4</option>
+      <option value="claude-opus-4-20250514">Opus 4</option>
+    </select>
+  </div>
+</div>
+
+<!-- SF MODE BAR -->
+<div class="sf-bar">
+  <span class="label-xs">Salesforce</span>
+  <button id="sfNew" class="sf-toggle active-new" onclick="setSFMode(false)">New Contact</button>
+  <button id="sfExists" class="sf-toggle" onclick="setSFMode(true)">Exists in SF</button>
+  <div id="sfIdSection" style="display:none;align-items:center;gap:8px">
+    <input type="text" id="sfContactId" class="sf-id-input" placeholder="003XXXXXXXXXXXX" oninput="updateSFId()">
+    <span id="sfIdValid" style="font-size:10px;font-family:var(--mono)"></span>
+  </div>
+  <span id="sfIdBadge" class="sf-id-badge hidden"></span>
+  <span id="sfInsertNote" style="font-size:10px;color:var(--green);font-family:var(--mono);margin-left:8px">INSERT mode — new records</span>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('upload')" data-tab="upload">Upload</button>
+  <button class="tab" onclick="switchTab('contact')" data-tab="contact">Contact</button>
+  <button class="tab" onclick="switchTab('attributes')" data-tab="attributes">Attributes</button>
+  <button class="tab" onclick="switchTab('employment')" data-tab="employment">Employment</button>
+  <button class="tab" onclick="switchTab('education')" data-tab="education">Education</button>
+  <button class="tab" onclick="switchTab('resume')" data-tab="resume">Resume</button>
+</div>
+
+<!-- TAB: UPLOAD -->
+<div id="tab-upload" class="content">
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()"
+       ondragover="event.preventDefault();this.classList.add('drag-over')"
+       ondragleave="this.classList.remove('drag-over')"
+       ondrop="event.preventDefault();this.classList.remove('drag-over');handleFileDrop(event)">
+    <div style="font-size:16px;color:var(--gold);margin-bottom:8px">Drop Resume PDF Here</div>
+    <div style="color:var(--dim);font-size:12px;line-height:1.8">
+      or click to browse · PDF files only<br>
+      The tool extracts text, sends it to Claude for structured parsing,<br>
+      matches schools to Salesforce Education IDs, and populates all tabs.
+    </div>
+    <input type="file" id="fileInput" accept="application/pdf" style="display:none" onchange="handleFileSelect(event)">
+    <button class="btn-gold" onclick="event.stopPropagation();document.getElementById('fileInput').click()" style="margin-top:14px">Select PDF →</button>
+    <div id="lastFile" style="font-size:10px;color:var(--green);margin-top:12px;font-family:var(--mono)" class="hidden"></div>
+  </div>
+  <div id="parseAnother" class="hidden" style="text-align:center;padding:20px">
+    <button class="btn-gold" onclick="document.getElementById('fileInput').click()">Parse Another Resume →</button>
+  </div>
+</div>
+
+<!-- TAB PANELS -->
+<div id="tab-contact" class="content hidden"></div>
+<div id="tab-attributes" class="content hidden"></div>
+<div id="tab-employment" class="content hidden"></div>
+<div id="tab-education" class="content hidden"></div>
+<div id="tab-resume" class="content no-pad hidden" style="height:calc(100vh - 200px)">
+  <div id="resumeViewer" style="height:100%;display:flex;align-items:center;justify-content:center">
+    <div class="label-xs">No resume loaded</div>
+  </div>
+</div>
+
+<div class="footer">Standalone Tool · Spatacco Analytics</div>
+
+<script>
+// ============================================================
+// EDUCATION LOOKUP — 321+ institutions from SF Education__c
+// ============================================================
+const EDUCATION_LOOKUP = {
+  "Adelphi University":"a0kaJ00000BWF2TQAX","Albion College":"a0kaJ00000BWF2ZQAX","Albright University":"a0kaJ00000BWF2aQAH",
+  "American College of Financial Services":"a0kaJ00000BWF2gQAH","American University":"a0kaJ00000BWF2lQAH","Amherst College":"a0kaJ00000BWF2mQAH",
+  "Appalachian State University":"a0kaJ00000BWF2qQAH","Arizona State University":"a0kaJ00000BWF2sQAH","Assumption College":"a0kaJ00000BWF2xQAH",
+  "Auburn University":"a0kaJ00000BWF30QAH","BYU - Brigham Young University":"a0kaJ00000BWF3xQAH","Babson College":"a0kaJ00000BWF36QAH",
+  "Baldwin-Walace College":"a0kaJ00000BWF39QAH","Ball State University":"a0kaJ00000BWF3AQAX","Baruch College":"a0kaJ00000BWF3CQAX",
+  "Bates College":"a0kaJ00000BWF3DQAX","Baylor University":"a0kaJ00000BWF3FQAX","Bentley University":"a0kaJ00000BWF3NQAX",
+  "Binghampton University":"a0kaJ00000BWF3SQAX","Bloomsburg University":"a0kaJ00000BWF3WQAX","Boston College":"a0kaJ00000BWF3bQAH",
+  "Boston University":"a0kaJ00000BWF3fQAH","Bowdin College":"a0kaJ00000BWF3gQAH","Bowling Green State University":"a0kaJ00000BWF3iQAH",
+  "Brandeis University":"a0kaJ00000BWF3kQAH","Bridgewater State College":"a0kaJ00000BWF3lQAH","Brooklyn College":"a0kaJ00000BWF3oQAH",
+  "Brown University":"a0kaJ00000BWF3rQAH","Bryant University":"a0kaJ00000BWF3sQAH","Bucknell":"a0kaJ00000BWF3uQAH",
+  "C.W. Post":"a0kaJ00000BWF3yQAH","CUNY - City University of New York":"a0kaJ00000BWHBwQAP","Cal State University":"a0kaJ00000BWHAfQAP",
+  "California Polytechnic":"a0kaJ00000BWHAjQAP","Canisius College":"a0kaJ00000BWHAmQAP","Carnegie Mellon University":"a0kaJ00000BWHAtQAP",
+  "Case - Western University":"a0kaJ00000BWHAuQAP","Catholic University":"a0kaJ00000BWHAvQAP","Central Connecticut State University":"a0kaJ00000BWHAyQAP",
+  "Central Michigan University":"a0kaJ00000BWHAzQAP","Clark University":"a0kaJ00000BWHBLQA5","Clemson University":"a0kaJ00000BWHBNQA5",
+  "Cleveland State University":"a0kaJ00000BWHBPQA5","Colby College":"a0kaJ00000BWHBRQA5","Colgate University":"a0kaJ00000BWHBUQA5",
+  "College for Financial Planning":"a0kaJ00000BWHBVQA5","College of Financial Planning":"a0kaJ00000BWHBZQA5","Colorado State University":"a0kaJ00000BWHBiQAP",
+  "Columbia University":"a0kaJ00000BWHBkQAP","Cornell University":"a0kaJ00000BWHBsQAP","Creighton":"a0kaJ00000BWHBuQAP",
+  "Dartmouth College":"a0kaJ00000BWHC2QAP","De Paul University":"a0kaJ00000BWHC9QAP","DePaul University":"a0kaJ00000DS1jGQAT",
+  "DeSales University":"a0kaJ00000BWHCCQA5","DeVry University":"a0kaJ00000BWHCFQA5","Denison University":"a0kaJ00000BWHCBQA5",
+  "Dickinson College":"a0kaJ00000BWHCGQA5","Dowling College":"a0kaJ00000BVoqJQAT","Drake University":"a0kaJ00000BVoqKQAT",
+  "Drexel University":"a0kaJ00000BVoqMQAT","Duke University":"a0kaJ00000BVoqNQAT","Duquesne University":"a0kaJ00000BVoqOQAT",
+  "East Carolina University":"a0kaJ00000BVoqPQAT","Eastern Illinois University":"a0kaJ00000BVoqWQAT","Eckerd College":"a0kaJ00000BVoqdQAD",
+  "Elon University":"a0kaJ00000Aux69QAB","Emory University":"a0kaJ00000BVoqrQAD","FSU - Florida State University":"a0kaJ00000AgJQVQA3",
+  "Fairfield University":"a0kaJ00000BVor0QAD","Fairleigh Dickinson":"a0kaJ00000BVor1QAD","Florida A & M University":"a0kaJ00000BVorBQAT",
+  "Florida Atlantic University":"a0kaJ00000BVorCQAT","Florida International University":"a0kaJ00000BVorDQAT","Fordham University":"a0kaJ00000BVorJQAT",
+  "Franklin & Marshall College":"a0kaJ00000BVorOQAT","Franklin University":"a0kaJ00000BVorRQAT","Frostburg State University":"a0kaJ00000BVorTQAT",
+  "George Mason University":"a0kaJ00000BVorZQAT","George Washington University":"a0kaJ00000BVoraQAD","Georgetown University":"a0kaJ00000BVorbQAD",
+  "Georgia Institute of Technology":"a0kaJ00000BVordQAD","Georgia State University":"a0kaJ00000BVorgQAD","Gettysburg College":"a0kaJ00000BVoriQAD",
+  "Grove City College":"a0kaJ00000BWHE0QAP","Gustavus Adolphus College":"a0kaJ00000BWHE2QAP","Hamilton College":"a0kaJ00000BWHE4QAP",
+  "Hampton University":"a0kaJ00000BWHE8QAP","Hartwick College":"a0kaJ00000BWHECQA5","Harvard University":"a0kaJ00000BWHEDQA5",
+  "Haverford College":"a0kaJ00000BWHEEQA5","Hobart & William Smith Colleges":"a0kaJ00000BWHEMQA5","Hofstra":"a0kaJ00000BWHENQA5",
+  "Holy Cross University":"a0kaJ00000BWHEPQA5","Howard University":"a0kaJ00000BWHEUQA5","Hunter College":"a0kaJ00000BWHEWQA5",
+  "Illinois Insititute of Technology":"a0kaJ00000BWHEYQA5","Illinois State University":"a0kaJ00000BWHEaQAP","Illinois Wesleyan University":"a0kaJ00000BWHEbQAP",
+  "Indiana University":"a0kaJ00000Augy6QAB","Iona University":"a0kaJ00000BWHEjQAP","Iowa State University":"a0kaJ00000BWHEkQAP",
+  "Ithaca College":"a0kaJ00000BWHEnQAP","James Madison University":"a0kaJ00000BWHErQAP","Johns Hopkins University":"a0kaJ00000BWHExQAP",
+  "Johnson & Wales University":"a0kaJ00000BWHEyQAP","Kansas State University":"a0kaJ00000BWHF4QAP","Kent State University":"a0kaJ00000BWHFCQA5",
+  "Kenyon College":"a0kaJ00000BWHFDQA5","King's College":"a0kaJ00000BWHFFQA5","Kutztown University":"a0kaJ00000BWHFIQA5",
+  "LSU - Louisiana State University":"a0kaJ00000BWHHIQA5","La Salle University":"a0kaJ00000BWHFKQA5","Lafayette College":"a0kaJ00000BWHFLQA5",
+  "Lake Forest University":"a0kaJ00000BWHFMQA5","Lehigh University":"a0kaJ00000BWHFSQA5","Lewis University":"a0kaJ00000BWHFVQA5",
+  "Liberty University":"a0kaJ00000BWHFWQA5","Long Island University":"a0kaJ00000BWHHCQA5","Loyola Marymount University":"a0kaJ00000BWHHGQA5",
+  "Loyola University":"a0kaJ00000BWHHHQA5","MIT - Massachusetts Institute of Technology":"a0kaJ00000BWHI5QAP","Manhattan College":"a0kaJ00000BWHHOQA5",
+  "Manhattanville College":"a0kaJ00000BWHHPQA5","Marist College":"a0kaJ00000BWHHUQA5","Marquette University":"a0kaJ00000BWHHVQA5",
+  "McGill University":"a0kaJ00000BWHHbQAP","Merrimack College":"a0kaJ00000BWHHjQAP","Metropolitan State College":"a0kaJ00000BWHHmQAP",
+  "Miami University (Ohio)":"a0kaJ00000BWHHnQAP","Michigan State University":"a0kaJ00000BWHHoQAP","Middle Tennessee State":"a0kaJ00000BWHHrQAP",
+  "Middlebury College":"a0kaJ00000BWHHsQAP","Millersville University":"a0kaJ00000BWHHwQAP","Monmouth College":"a0kaJ00000BWHI8QAP",
+  "Montclair State University":"a0kaJ00000BWHICQA5","Moravian University":"a0kaJ00000BWHIFQA5","Morehouse College":"a0kaJ00000BWHIHQA5",
+  "Mount St. Mary's University":"a0kaJ00000BWHILQA5","Muhlenberg College":"a0kaJ00000BWHIMQA5","NYU - New York University":"a0kaJ00000BWHJ7QAP",
+  "National University of Ireland":"a0kaJ00000BWHITQA5","New Hampshire College":"a0kaJ00000BWHIZQA5","New York Institute of Technology":"a0kaJ00000BWHIeQAP",
+  "Niagara University":"a0kaJ00000BWHIhQAP","Nichols College":"a0kaJ00000BWHIiQAP","North Carolina State University (NC State)":"a0kaJ00000BWHImQAP",
+  "Northeastern University":"a0kaJ00000BWHIsQAP","Northern Illinois University":"a0kaJ00000BWHIvQAP","Northwestern University":"a0kaJ00000BWHIzQAP",
+  "Norwich University":"a0kaJ00000BWHJ1QAP","Notre Dame":"a0kaJ00000BWHJ2QAP","OSU - Ohio State University":"a0kaJ00000BWHJOQA5",
+  "Ohio University":"a0kaJ00000BWHJEQA5","Ohio Wesleyan University":"a0kaJ00000BWHJFQA5","Oklahoma State University":"a0kam00000ElwGbAAJ",
+  "Oxford University":"a0kaJ00000BWHJRQA5","PENN - University of Pennsylvania":"a0kaJ00000BWC2WQAX",
+  "PITT - University of Pittsburgh":"a0kaJ00000BWC2ZQAX","PSU - Pennsylvania State University":"a0kaJ00000BWHJxQAP",
+  "Pace University":"a0kaJ00000BWHJSQA5","Pacific Lutheran University":"a0kaJ00000BWHJTQA5","Pepperdine University":"a0kaJ00000BWHJfQAP",
+  "Philadelphia University":"a0kaJ00000BWHJiQAP","Princeton University":"a0kaJ00000BWHJuQAP","Providence College":"a0kaJ00000BWHJwQAP",
+  "Purdue University":"a0kaJ00000BWHJyQAP","Queens College":"a0kaJ00000BWHJzQAP","RIT - Rochester Institute of Technology":"a0kaJ00000BWHKHQA5",
+  "Ramapo College of New Jersey":"a0kaJ00000BWHK4QAP","Rensselaer Polytechnic Institute":"a0kaJ00000BWHK9QAP","Rider University":"a0kaJ00000BWHKFQA5",
+  "Roanoke University":"a0kaJ00000BWHKIQA5","Robert Morris University":"a0kaJ00000BWHKJQA5","Rollins College":"a0kaJ00000BWHKPQA5",
+  "Rowan University":"a0kaJ00000BWHKTQA5","Rutgers University":"a0kaJ00000BWHKUQA5","SDSU":"a0kaJ00000BWHKvQAP",
+  "SUNY - State University of New York":"a0kaJ00000BWHM5QAP","Sacred Heart University":"a0kaJ00000BWHKVQA5","Saint Anselm College":"a0kaJ00000BWHKXQA5",
+  "Saint Joseph's University":"a0kaJ00000BWHKZQA5","Saint Michaels College":"a0kaJ00000BWHKeQAP","Saint Peter's College":"a0kaJ00000BWHKfQAP",
+  "Salem State College":"a0kaJ00000BWHKiQAP","Salisbury State University":"a0kaJ00000BWHKkQAP","San Francisco State University":"a0kaJ00000BWHKoQAP",
+  "San Jose State University":"a0kaJ00000BWHKpQAP","Santa Clara University":"a0kaJ00000BWHKqQAP","Seton Hall University":"a0kaJ00000BWHKyQAP",
+  "Shippensburg University":"a0kaJ00000BWHL0QAP","Siena College":"a0kaJ00000BWHL2QAP","Skidmore College":"a0kaJ00000BWHL7QAP",
+  "Smith College":"a0kaJ00000BWHL9QAP","Southern Connecticut State University":"a0kaJ00000BWHLIQA5","Southern Illinois University":"a0kaJ00000BWHLKQA5",
+  "Southern Methodist University":"a0kaJ00000BWHLLQA5","Southwest Texas State University":"a0kaJ00000BWHLSQA5",
+  "St. Bonaventure University":"a0kaJ00000BWHLaQAP","St. Cloud State University":"a0kaJ00000BWHLbQAP","St. John's University":"a0kaJ00000BWHLeQAP",
+  "St. Lawrence University":"a0kaJ00000BWHLfQAP","St. Mary's University":"a0kaJ00000BWHLmQAP","St. Olaf College":"a0kaJ00000BWHLpQAP",
+  "St. Peter's College":"a0kaJ00000BWHLrQAP","Stanford University":"a0kaJ00000BWHLwQAP","Stephen F. Austin State University":"a0kaJ00000BWHLxQAP",
+  "Stetson University":"a0kaJ00000BWHLyQAP","Stockton College":"a0kaJ00000BWHM1QAP","Stonehill College":"a0kaJ00000BWHM2QAP",
+  "Suffolk University":"a0kaJ00000BWHM4QAP","Susquehanna University":"a0kaJ00000BWHM6QAP","Swarthmore College":"a0kaJ00000BWHM8QAP",
+  "Syracuse University":"a0kaJ00000BWHM9QAP","TAMU - Texas A & M University":"a0kaJ00000BWHMAQA5","TCNJ - The College of New Jersey":"a0kaJ00000BWHMDQA5",
+  "TCU- Texas Christian University":"a0kaJ00000BWHMEQA5","Temple University":"a0kaJ00000BWHMFQA5","Texas Southern University":"a0kaJ00000BWHMJQA5",
+  "Texas State University":"a0kaJ00000BWHMKQA5","Texas Tech University":"a0kaJ00000BWHMLQA5","The City College of New York":"a0kaJ00000BWHMNQA5",
+  "The College Of William and Mary":"a0kaJ00000BWHMRQA5","Towson University":"a0kaJ00000BWHMgQAP","Trinity College":"a0kaJ00000BWHMiQAP",
+  "Tufts University":"a0kaJ00000BWHMlQAP","Tulane University":"a0kaJ00000BWHMmQAP","U.S. Military Academy - West Point":"a0kaJ00000BWHMsQAP",
+  "UC Boulder - University of Colorado":"a0kaJ00000BWC1NQAX","UCF - University of Central Florida":"a0kaJ00000BWHMuQAP",
+  "UCONN - University of Connecticut":"a0kaJ00000BWHMvQAP","UD - University of Delaware":"a0kaJ00000BWC1QQAX",
+  "UK - University of Kentucky":"a0kaJ00000BWHMxQAP","UMass":"a0kaJ00000BWHMyQAP","UNC - University of North Carolina":"a0kaJ00000BWHMzQAP",
+  "USC - University of Southern California":"a0kaJ00000BWHO1QAP","USF - University of South Florida":"a0kaJ00000BWHO2QAP",
+  "UVA - University of Virginia":"a0kaJ00000BWHO6QAP","Union College":"a0kaJ00000BWHN0QAP","University Of Florida":"a0kaJ00000BWC1dQAH",
+  "University Of North Florida":"a0kaJ00000BWC2NQAX","University of Akron":"a0kaJ00000BWHNIQA5","University of Alabama":"a0kaJ00000BWHNJQA5",
+  "University of Arizona":"a0kaJ00000BWHNMQA5","University of Arkansas":"a0kaJ00000BWHNNQA5","University of California":"a0kaJ00000BWHNTQA5",
+  "University of Chicago":"a0kaJ00000BWHNMQA5","University of Cincinatti":"a0kaJ00000BWC1MQAX","University of Dayton":"a0kaJ00000BWC1PQAX",
+  "University of Denver":"a0kaJ00000BWC1SQAX","University of Georgia":"a0kaJ00000BWC1eQAH","University of Hartford":"a0kaJ00000BWC1fQAH",
+  "University of Houston":"a0kaJ00000BWC1iQAH","University of Illinois":"a0kaJ00000BWC1kQAH","University of Iowa":"a0kaJ00000BWC1lQAH",
+  "University of Kansas":"a0kaJ00000BWC1mQAH","University of Louisiana":"a0kaJ00000BWC1uQAH","University of Louisville":"a0kaJ00000BWC1vQAH",
+  "University of Maine":"a0kaJ00000BWC1zQAH","University of Maryland":"a0kaJ00000BWC21QAH","University of Massachusetts":"a0kaJ00000BWC22QAH",
+  "University of Memphis":"a0kaJ00000BWC23QAH","University of Miami":"a0kaJ00000BWC24QAH","University of Michigan":"a0kaJ00000BWC25QAH",
+  "University of Minnesota":"a0kaJ00000BWC26QAH","University of Mississippi":"a0kaJ00000BWC27QAH","University of Missouri":"a0kaJ00000BWC28QAH",
+  "University of Nebraska":"a0kaJ00000BWC2DQAX","University of New Hampshire":"a0kaJ00000BWC2GQAX","University of New Mexico":"a0kaJ00000BWC2IQAX",
+  "University of New Orleans":"a0kaJ00000BWC2JQAX","University of North Texas":"a0kaJ00000BWC2OQAX","University of Northern Colorado":"a0kaJ00000BWC2PQAX",
+  "University of Oklahoma":"a0kaJ00000BWC2SQAX","University of Oregon":"a0kaJ00000BWC2TQAX","University of Phoenix":"a0kaJ00000BWC2XQAX",
+  "University of Rhode Island":"a0kaJ00000BWC2fQAH","University of Richmond":"a0kaJ00000BWC2gQAH","University of Rochester":"a0kaJ00000BWC2hQAH",
+  "University of San Francisco":"a0kaJ00000AgKvxQAF","University of Scranton":"a0kaJ00000BWC2kQAH","University of South Carolina":"a0kaJ00000BWC2nQAH",
+  "University of St. Thomas":"a0kaJ00000BWC2uQAH","University of Tampa":"a0kaJ00000BWHNaQAP","University of Tennessee":"a0kaJ00000BWHNbQAP",
+  "University of Texas":"a0kaJ00000BWHNcQAP","University of Utah":"a0kaJ00000BWHNmQAP","University of Vermont":"a0kaJ00000BWHNnQAP",
+  "University of Washington":"a0kaJ00000BWHNqQAP","University of Wisconsin":"a0kaJ00000BWHNvQAP","Ursinus College":"a0kaJ00000BWHO0QAP",
+  "Vanderbilt University":"a0kaJ00000BWHO8QAP","Villanova University":"a0kam00000FJNhxAAH","Virginia Polytechnic Institute":"a0kaJ00000BWHOEQA5",
+  "Virginia Tech":"a0kaJ00000BWHOFQA5","WVU - West Virginia University":"a0kaJ00000BWHOhQAP","Wagner College":"a0kaJ00000BWHOGQA5",
+  "Wake Forest University":"a0kaJ00000BWHOHQA5","Walsh College":"a0kaJ00000BWHOJQA5","Washington & Lee University":"a0kaJ00000BWHONQA5",
+  "Washington College":"a0kaJ00000BWHOOQA5","Washington State University":"a0kaJ00000BWHOPQA5","Washington University":"a0kaJ00000BWHOQQA5",
+  "Wayne State University":"a0kaJ00000BWHOVQA5","Webster University":"a0kaJ00000BWHOYQA5","Wellesley College":"a0kaJ00000BWHOZQA5",
+  "Wesleyan University":"a0kaJ00000AgDCtQAN","West Chester University":"a0kaJ00000BWHOdQAP","Western Illinois University":"a0kaJ00000BWHOlQAP",
+  "Western Michigan University":"a0kaJ00000BWHOoQAP","Western New England College":"a0kaJ00000BWHOpQAP","Westfield State College":"a0kaJ00000BWHOtQAP",
+  "Westminster College":"a0kaJ00000BWHOuQAP","Wheaton College":"a0kaJ00000BWHOwQAP","Widener University":"a0kaJ00000BWHP0QAP",
+  "Williams College":"a0kaJ00000BWHP7QAP","Wittenberg University":"a0kaJ00000BWHPDQA5","Wright State University":"a0kaJ00000BWHQqQAP",
+  "Xavier University":"a0kaJ00000BWHQrQAP","Yale University":"a0kaJ00000BWHQsQAP","York College":"a0kaJ00000BWHQuQAP"
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let parsedData = null, pdfDataURL = null, existsInSF = false, sfContactId = "";
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("spatacco_api_key");
+  if (saved) {
+    document.getElementById("apiKeyInput").value = saved;
+    document.getElementById("apiStatus").textContent = "✓ Saved";
+    document.getElementById("apiStatus").className = "api-status ok";
+  }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+});
+
+// ============================================================
+// API KEY
+// ============================================================
+function saveApiKey() {
+  const k = document.getElementById("apiKeyInput").value.trim();
+  if (k) {
+    localStorage.setItem("spatacco_api_key", k);
+    document.getElementById("apiStatus").textContent = "✓ Saved";
+    document.getElementById("apiStatus").className = "api-status ok";
+  } else {
+    localStorage.removeItem("spatacco_api_key");
+    document.getElementById("apiStatus").textContent = "No key";
+    document.getElementById("apiStatus").className = "api-status missing";
+  }
+}
+function toggleKeyVis() {
+  const i = document.getElementById("apiKeyInput");
+  i.type = i.type === "password" ? "text" : "password";
+}
+function getApiKey() {
+  return (document.getElementById("apiKeyInput").value || localStorage.getItem("spatacco_api_key") || "").trim();
+}
+
+// ============================================================
+// SF MODE
+// ============================================================
+function setSFMode(exists) {
+  existsInSF = exists;
+  document.getElementById("sfNew").className = "sf-toggle" + (exists ? "" : " active-new");
+  document.getElementById("sfExists").className = "sf-toggle" + (exists ? " active-exists" : "");
+  document.getElementById("sfIdSection").style.display = exists ? "flex" : "none";
+  document.getElementById("sfInsertNote").classList.toggle("hidden", exists);
+  if (!exists) { sfContactId = ""; document.getElementById("sfContactId").value = ""; }
+  updateSFId();
+  updateExportBtn();
+}
+function updateSFId() {
+  sfContactId = (document.getElementById("sfContactId").value || "").trim();
+  const v = document.getElementById("sfIdValid"), b = document.getElementById("sfIdBadge");
+  if (sfContactId) {
+    const ok = sfContactId.startsWith("003");
+    v.textContent = ok ? "✓ Valid prefix" : "⚠ Expected 003...";
+    v.style.color = ok ? "var(--green)" : "var(--yellow)";
+    if (ok) { b.textContent = "ACTIVE: " + sfContactId; b.classList.remove("hidden"); }
+    else b.classList.add("hidden");
+  } else { v.textContent = ""; b.classList.add("hidden"); }
+  updateExportBtn();
+}
+function getSfId() { return existsInSF && sfContactId.length > 0 ? sfContactId : null; }
+function updateExportBtn() {
+  const btn = document.getElementById("btnExport");
+  if (btn) btn.textContent = getSfId() ? "↓ Export SF Update" : "↓ Export SF Import";
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll("[data-tab]").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  ["upload","contact","attributes","employment","education","resume"].forEach(t => {
+    const el = document.getElementById("tab-" + t);
+    if (el) el.classList.toggle("hidden", t !== name);
+  });
+}
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+function handleFileSelect(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+function handleFileDrop(e) { if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]); }
+
+async function processFile(file) {
+  if (file.type !== "application/pdf") { showError("Please upload a PDF file."); return; }
+  const apiKey = getApiKey();
+  if (!apiKey) { showError("Enter your Anthropic API key first."); return; }
+
+  try {
+    showProcessing(true, "Extracting text from PDF…", file.name);
+
+    // Store PDF for viewer
+    const reader = new FileReader();
+    reader.onload = (e) => { pdfDataURL = e.target.result; };
+    reader.readAsDataURL(file);
+
+    // Extract text
+    const arrayBuf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+    let txt = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      txt += content.items.map(it => it.str).join(" ") + "\n";
+    }
+    txt = txt.trim();
+    if (txt.length < 50) { showProcessing(false); showError("Extracted text too short. The PDF might be image-based."); return; }
+
+    const model = document.getElementById("modelSelect").value;
+    showProcessing(true, "Parsing with Claude API…", "Model: " + model + " · " + txt.length.toLocaleString() + " chars");
+
+    const result = await callClaudeAPI(apiKey, txt, model);
+    parsedData = result;
+
+    // Resolve education IDs
+    if (parsedData.education) {
+      parsedData.education.forEach(e => {
+        e.SFEducationID = resolveEducationID(e.SchoolName);
+        e.Notes = (e.Notes || "") + (e.SFEducationID === "UNMATCHED" ? " ⚠ No SF match found." : " Auto-matched via SF Education lookup.");
+      });
+    }
+
+    // Render
+    renderContact();
+    renderAttributes();
+    renderEmployment();
+    renderEducation();
+    renderResume();
+
+    // Update header
+    const nm = (parsedData.contact.FirstName || "") + " " + (parsedData.contact.LastName || "");
+    const sfx = parsedData.contact.ProfessionalSuffix;
+    document.getElementById("candidateName").textContent = sfx ? nm + ", " + sfx : nm;
+    document.getElementById("candidateInfo").classList.remove("hidden");
+    document.getElementById("btnExport").disabled = false;
+    document.getElementById("btnCopyAll").disabled = false;
+    document.getElementById("lastFile").textContent = "✓ Parsed: " + file.name;
+    document.getElementById("lastFile").classList.remove("hidden");
+    document.getElementById("parseAnother").classList.remove("hidden");
+
+    showProcessing(false);
+    switchTab("contact");
+  } catch (err) {
+    showProcessing(false);
+    showError("Parse failed: " + err.message);
+    console.error(err);
+  }
+  document.getElementById("fileInput").value = "";
+}
+
+// ============================================================
+// EDUCATION ID RESOLVER — 3-tier matching
+// ============================================================
+function resolveEducationID(name) {
+  if (!name) return "UNMATCHED";
+  if (EDUCATION_LOOKUP[name]) return EDUCATION_LOOKUP[name];
+  const lo = name.toLowerCase();
+  for (const [n, id] of Object.entries(EDUCATION_LOOKUP)) if (n.toLowerCase() === lo) return id;
+  for (const [n, id] of Object.entries(EDUCATION_LOOKUP)) {
+    const nl = n.toLowerCase();
+    if (nl.includes(lo) || lo.includes(nl)) return id;
+  }
+  return "UNMATCHED";
+}
+
+// ============================================================
+// CLAUDE API CALL
+// ============================================================
+async function callClaudeAPI(apiKey, resumeText, model) {
+  const sys = `You are a resume parser for Spatacco Analytics. Parse the resume text and return ONLY valid JSON — no markdown fencing, no explanation.
+
+The JSON must have exactly these four keys:
+
+1. "contact" — object with fields: FirstName, LastName, MiddleName, ProfessionalSuffix (e.g. "CFP, CFA"), Email, Phone, Mobile, LinkedIn, Title (current/most recent), MailingAddress, Salary, Relocate ("Yes"/"No"/"Possible"/""), ReloRegion, LicensesFINRA (all certs with issuer+year, semicolon-separated), Biography (2-3 sentence summary YOU write), PersonComment, RecruiterNotes
+
+2. "attributes" — array of objects with: Category, SFField, Value, Confidence ("High"/"Medium"/"Low"/"N/A"), Basis
+   Categories to evaluate (include even if empty): Industry (Industry__c), Sub Industry (Sub_Industry__c), Job Function (Job_Function__c), Job Function Type (Job_Function_Type__c), Buyer Attributes (BuyerAttributes__c), Prospect Type (Prospect_Type__c), Qualifications (Qualifications__c — one per cert), Distribution (Distribution__c), Custodian / Clearing (Custodian_Clearing__c)
+   Multiple entries per category allowed. Industry values: RIA, Broker-Dealer, Trust Company, Insurance, Bank, PE/Venture Capital, Investment Bank, Mutual Fund, Hedge Fund, etc.
+
+3. "employment" — array (most recent first) with: Company, Title, StartDate, EndDate ("Present"/year/""), PositionLevel ("C-Suite"/"VP / SVP / EVP"/"Director"/"Manager"/"Individual Contributor"/"Partner"), PositionFunction, Notes
+
+4. "education" — array with: SchoolName (full official name), Degree, FieldOfStudy, GradDate, Notes
+
+RULES: Return ONLY JSON. Use "" for unknowns, never null. Biography = your 2-3 sentence summary. Be thorough with Qualifications — every license, cert, designation.`;
+
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({ model, max_tokens: 8000, system: sys, messages: [{ role: "user", content: "Parse this resume:\n\n" + resumeText }] })
+  });
+
+  if (!r.ok) {
+    const e = await r.text();
+    if (r.status === 401) throw new Error("Invalid API key.");
+    if (r.status === 429) throw new Error("Rate limited — wait and retry.");
+    throw new Error("API " + r.status + ": " + e);
+  }
+
+  const d = await r.json();
+  const t = d.content.map(b => b.text || "").join("");
+  const cleaned = t.replace(/```json\s*/g, "").replace(/```\s*/g, "").trim();
+  try { return JSON.parse(cleaned); }
+  catch (e) { console.error("Raw API response:", t); throw new Error("JSON parse failed. Check console for raw response."); }
+}
+
+// ============================================================
+// RENDER: CONTACT
+// ============================================================
+function renderContact() {
+  if (!parsedData) return;
+  const c = parsedData.contact, f = Object.entries(c);
+  let h = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span class="label-xs">${f.length} fields</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export btn-sm" onclick="downloadCSV('contact')">↓ CSV</button>
+      <button class="btn-gold btn-sm" onclick="showCSVModal('contact')">↗ Copy</button>
+    </div></div><div class="contact-grid">`;
+  f.forEach(([k, v]) => {
+    const l = k.replace(/([A-Z])/g, " $1").trim();
+    h += `<div class="contact-cell"><div class="contact-label">${l}</div>
+      <div style="color:${v ? 'var(--text)' : '#2a2a28'};font-style:${v ? 'normal' : 'italic'};line-height:1.5">${v || "—"}</div></div>`;
+  });
+  h += "</div>";
+  document.getElementById("tab-contact").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: ATTRIBUTES
+// ============================================================
+function renderAttributes() {
+  if (!parsedData) return;
+  const a = parsedData.attributes, tagged = a.filter(x => x.Value).length;
+  let h = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span class="label-xs">${tagged} tagged</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export btn-sm" onclick="downloadCSV('attributes')">↓ CSV</button>
+      <button class="btn-gold btn-sm" onclick="showCSVModal('attributes')">↗ Copy</button>
+    </div></div>
+    <table class="data-table"><thead><tr><th>Category</th><th>SF Field</th><th>Value</th><th>Conf</th><th>Basis</th></tr></thead><tbody>`;
+  a.forEach(r => {
+    const cc = r.Confidence === "High" ? "conf-high" : r.Confidence === "Medium" ? "conf-medium" : r.Confidence === "Low" ? "conf-low" : "conf-na";
+    h += `<tr><td>${r.Category || ""}</td><td style="font-family:var(--mono);font-size:10px;color:var(--dim)">${r.SFField || ""}</td>
+      <td style="color:${r.Value ? 'var(--text)' : '#2a2a28'}">${r.Value || "—"}</td>
+      <td class="${cc}">${r.Confidence || ""}</td><td style="color:var(--dim);font-size:11px">${r.Basis || ""}</td></tr>`;
+  });
+  h += "</tbody></table>";
+  document.getElementById("tab-attributes").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: EMPLOYMENT
+// ============================================================
+function renderEmployment() {
+  if (!parsedData) return;
+  const e = parsedData.employment;
+  let h = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span class="label-xs">${e.length} positions</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export btn-sm" onclick="downloadCSV('employment')">↓ CSV</button>
+      <button class="btn-gold btn-sm" onclick="showCSVModal('employment')">↗ Copy</button>
+    </div></div>
+    <table class="data-table"><thead><tr><th>Company</th><th>Title</th><th>Dates</th><th>Level</th><th>Function</th><th>Notes</th></tr></thead><tbody>`;
+  e.forEach(r => {
+    const dates = (r.StartDate || "?") + " – " + (r.EndDate || "?");
+    h += `<tr><td style="font-weight:600">${r.Company || ""}</td><td>${r.Title || ""}</td>
+      <td style="font-family:var(--mono);font-size:10px;white-space:nowrap">${dates}</td>
+      <td style="font-size:11px">${r.PositionLevel || ""}</td><td style="font-size:11px">${r.PositionFunction || ""}</td>
+      <td style="color:var(--dim);font-size:11px;max-width:250px">${r.Notes || ""}</td></tr>`;
+  });
+  h += "</tbody></table>";
+  document.getElementById("tab-employment").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: EDUCATION
+// ============================================================
+function renderEducation() {
+  if (!parsedData) return;
+  const ed = parsedData.education;
+  const unmatched = ed.filter(e => e.SFEducationID === "UNMATCHED").length;
+  let h = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <span class="label-xs">${ed.length} entries${unmatched ? ' · <span class="unmatched">' + unmatched + ' UNMATCHED</span>' : ''}</span>
+    <div style="display:flex;gap:8px">
+      <button class="btn-export btn-sm" onclick="downloadCSV('education')">↓ CSV</button>
+      <button class="btn-gold btn-sm" onclick="showCSVModal('education')">↗ Copy</button>
+    </div></div>
+    <table class="data-table"><thead><tr><th>School</th><th>SF Education ID</th><th>Degree</th><th>Field</th><th>Year</th><th>Notes</th></tr></thead><tbody>`;
+  ed.forEach(r => {
+    const isUnmatched = r.SFEducationID === "UNMATCHED";
+    h += `<tr><td style="font-weight:600">${r.SchoolName || ""}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${isUnmatched ? 'var(--red)' : 'var(--green)'}">${r.SFEducationID || ""}</td>
+      <td>${r.Degree || ""}</td><td>${r.FieldOfStudy || ""}</td>
+      <td style="font-family:var(--mono);font-size:11px">${r.GradDate || ""}</td>
+      <td style="color:var(--dim);font-size:11px">${r.Notes || ""}</td></tr>`;
+  });
+  h += "</tbody></table>";
+  document.getElementById("tab-education").innerHTML = h;
+}
+
+// ============================================================
+// RENDER: RESUME VIEWER
+// ============================================================
+function renderResume() {
+  const viewer = document.getElementById("resumeViewer");
+  if (pdfDataURL) {
+    viewer.innerHTML = `<iframe src="${pdfDataURL}" style="width:100%;height:100%;border:none"></iframe>`;
+  }
+}
+
+// ============================================================
+// CSV / EXPORT
+// ============================================================
+function getCSVData(section) {
+  if (!parsedData) return "";
+  const sfId = getSfId();
+  if (section === "contact") {
+    const c = parsedData.contact;
+    let header = Object.keys(c).join(",");
+    let vals = Object.values(c).map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+    if (sfId) { header = "ContactId," + header; vals = sfId + "," + vals; }
+    return header + "\n" + vals;
+  }
+  if (section === "attributes") {
+    const rows = parsedData.attributes.filter(a => a.Value);
+    let header = "Category,SFField,Value,Confidence,Basis";
+    if (sfId) header = "ContactId," + header;
+    const lines = rows.map(r => {
+      let line = [r.Category, r.SFField, r.Value, r.Confidence, r.Basis].map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+      if (sfId) line = sfId + "," + line;
+      return line;
+    });
+    return header + "\n" + lines.join("\n");
+  }
+  if (section === "employment") {
+    let header = "Company,Title,StartDate,EndDate,PositionLevel,PositionFunction,Notes";
+    if (sfId) header = "ContactId," + header;
+    const lines = parsedData.employment.map(r => {
+      let line = [r.Company, r.Title, r.StartDate, r.EndDate, r.PositionLevel, r.PositionFunction, r.Notes].map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+      if (sfId) line = sfId + "," + line;
+      return line;
+    });
+    return header + "\n" + lines.join("\n");
+  }
+  if (section === "education") {
+    let header = "SchoolName,SFEducationID,Degree,FieldOfStudy,GradDate,Notes";
+    if (sfId) header = "ContactId," + header;
+    const lines = parsedData.education.map(r => {
+      let line = [r.SchoolName, r.SFEducationID, r.Degree, r.FieldOfStudy, r.GradDate, r.Notes].map(v => '"' + String(v || "").replace(/"/g, '""') + '"').join(",");
+      if (sfId) line = sfId + "," + line;
+      return line;
+    });
+    return header + "\n" + lines.join("\n");
+  }
+  return "";
+}
+
+function downloadCSV(section) {
+  const csv = getCSVData(section);
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  const name = parsedData.contact ? (parsedData.contact.LastName || "resume") : "resume";
+  a.download = name + "_" + section + ".csv";
+  a.click();
+}
+
+function showCSVModal(section) {
+  openModal(section.toUpperCase() + " — CSV", getCSVData(section));
+}
+
+function showFullExport() {
+  let all = "=== CONTACT ===\n" + getCSVData("contact") + "\n\n=== ATTRIBUTES ===\n" + getCSVData("attributes") +
+    "\n\n=== EMPLOYMENT ===\n" + getCSVData("employment") + "\n\n=== EDUCATION ===\n" + getCSVData("education");
+  openModal("Full Export", all);
+}
+
+function exportAll() {
+  if (!parsedData) return;
+  try {
+    const wb = XLSX.utils.book_new();
+    // Contact
+    const cData = [Object.keys(parsedData.contact), Object.values(parsedData.contact).map(v => v || "")];
+    const sfId = getSfId();
+    if (sfId) { cData[0].unshift("ContactId"); cData[1].unshift(sfId); }
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cData), "Contact");
+    // Attributes
+    const aRows = parsedData.attributes.filter(a => a.Value);
+    const aHeader = ["Category", "SFField", "Value", "Confidence", "Basis"];
+    if (sfId) aHeader.unshift("ContactId");
+    const aData = [aHeader, ...aRows.map(r => {
+      const row = [r.Category, r.SFField, r.Value, r.Confidence, r.Basis];
+      if (sfId) row.unshift(sfId);
+      return row;
+    })];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aData), "Attributes");
+    // Employment
+    const eHeader = ["Company", "Title", "StartDate", "EndDate", "PositionLevel", "PositionFunction", "Notes"];
+    if (sfId) eHeader.unshift("ContactId");
+    const eData = [eHeader, ...parsedData.employment.map(r => {
+      const row = [r.Company, r.Title, r.StartDate, r.EndDate, r.PositionLevel, r.PositionFunction, r.Notes];
+      if (sfId) row.unshift(sfId);
+      return row;
+    })];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(eData), "Employment");
+    // Education
+    const edHeader = ["SchoolName", "SFEducationID", "Degree", "FieldOfStudy", "GradDate", "Notes"];
+    if (sfId) edHeader.unshift("ContactId");
+    const edData = [edHeader, ...parsedData.education.map(r => {
+      const row = [r.SchoolName, r.SFEducationID, r.Degree, r.FieldOfStudy, r.GradDate, r.Notes];
+      if (sfId) row.unshift(sfId);
+      return row;
+    })];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(edData), "Education");
+    const name = parsedData.contact ? (parsedData.contact.LastName || "resume") : "resume";
+    XLSX.writeFile(wb, name + "_" + (sfId ? "SF_Update" : "SF_Import") + ".xlsx");
+  } catch (e) {
+    console.error(e);
+    showFullExport();
+  }
+}
+
+// ============================================================
+// MODAL / UI HELPERS
+// ============================================================
+function openModal(title, content) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalTextarea").value = content;
+  document.getElementById("copyModal").classList.remove("hidden");
+}
+function closeModal() { document.getElementById("copyModal").classList.add("hidden"); }
+function copyModalContent() {
+  navigator.clipboard.writeText(document.getElementById("modalTextarea").value).then(() => {
+    const b = document.getElementById("modalCopyBtn");
+    b.textContent = "✓ Copied";
+    setTimeout(() => { b.textContent = "Copy All"; }, 2000);
+  });
+}
+function showProcessing(show, title, detail) {
+  document.getElementById("processing").classList.toggle("hidden", !show);
+  if (title) document.getElementById("processingText").textContent = title;
+  if (detail) document.getElementById("processingDetail").textContent = detail;
+}
+function showError(msg) {
+  document.getElementById("errorText").textContent = msg;
+  document.getElementById("errorBanner").classList.remove("hidden");
+}
+</script>
+<footer style="text-align:center;padding:24px 16px;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;letter-spacing:1px;color:#7A8090;border-top:1px solid rgba(0,0,0,0.08);margin-top:48px">
+  Built by <a href="https://spataccoanalytics.com" style="color:#7A8090 !important;text-decoration:none;border-bottom:1px solid #7A8090" target="_blank" rel="noopener">Spatacco Analytics</a> &middot; &copy; 2026
+</footer>
+</body>
+</html>
