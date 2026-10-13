@@ -1,0 +1,39 @@
+# Deletes branches this repository's own workflows made and no longer need:
+# the import/ branches the Import live site workflow opens. Run by hand, with
+# the branches named; anything outside import/ is refused, so it cannot touch
+# main or a branch someone is working on.
+name: Tidy branches
+
+on:
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: Space-separated branch names (import/ branches only)
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Delete the named branches
+        env:
+          BRANCHES: ${{ inputs.branches }}
+        run: |
+          set -u
+          for b in $BRANCHES; do
+            case "$b" in
+              import/*) ;;
+              *) echo "::error::$b is not an import/ branch; refusing it."; exit 1 ;;
+            esac
+          done
+          for b in $BRANCHES; do
+            if git ls-remote --exit-code --heads origin "$b" > /dev/null; then
+              git push origin --delete "$b" && echo "Deleted $b."
+            else
+              echo "$b is already gone."
+            fi
+          done

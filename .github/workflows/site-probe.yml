@@ -16,12 +16,67 @@ on:
       shots:
         description: Space-separated pages to screenshot as a visitor sees them (saved under reference/live/shots/)
         default: ''
+      feed:
+        description: "yes = check whether the host (and a runner) can read the source platform's public data, instead of fetching pages"
+        default: 'no'
 
 permissions:
   contents: write
 
 jobs:
+  # Can this site's own server read the source platform's public data calls
+  # (the ones its pages make for a signed-out visitor)? Prints only whether
+  # each answered with data: status, type, size, time, and whether a bot check
+  # answered instead. Never the data, never the address.
+  feed:
+    if: inputs.feed == 'yes'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up the SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
+        run: bash scripts/ssh_key.sh
+      - name: Read the feed from the host and from a runner
+        env:
+          SITE: ${{ secrets.SOURCE_SITE_URL }}
+        run: |
+          [ -n "$SITE" ] || { echo "::error::SOURCE_SITE_URL is not set"; exit 1; }
+          h=$(printf '%s' "$SITE" | sed -E 's#^[a-z]+://##; s#/.*$##'); echo "::add-mask::$h"
+          base="${SITE%/}/api.php?action="
+          cat > check.sh <<'SH'
+          base="$1"
+          BROWSER='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36'
+          for ua in plain browser; do
+            [ "$ua" = plain ] && A='Mozilla/5.0 (compatible; SpataccoAnalytics feed check)' || A="$BROWSER"
+            for a in odds_get injuries; do
+              f=$(mktemp); hd=$(mktemp)
+              m=$(curl -s -m 30 -A "$A" -H 'Accept: application/json, text/plain, */*' -D "$hd" \
+                    -o "$f" -w '%{http_code} %{content_type} %{size_download}B %{time_total}s' "$base$a")
+              keys=$(php -r '$j=json_decode(file_get_contents($argv[1]),true); echo is_array($j)?implode(",",array_slice(array_keys($j),0,8)):"not json";' "$f" 2>/dev/null || echo "no php")
+              srv=$(grep -i '^server:' "$hd" | tr -d '\r' | cut -c1-40)
+              marks=""
+              for w in sgcaptcha captcha cloudflare 'access denied' forbidden siteground bot firewall mod_security 'not acceptable'; do
+                grep -qi "$w" "$f" && marks="$marks|$w"
+              done
+              echo "$ua $a: $m keys=[$keys] $srv marks=[${marks#|}]"
+              rm -f "$f" "$hd"
+            done
+          done
+          SH
+          HOST=$(jq -r .ssh.host config/hosting.json); USER=$(jq -r .ssh.user config/hosting.json); port=$(jq -r .ssh.port config/hosting.json)
+          echo "== from this site's server"
+          ssh -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" bash -s -- "$base" < check.sh
+          echo "== from a GitHub runner"
+          sudo apt-get install -y -q php-cli >/dev/null 2>&1 || true
+          bash check.sh "$base"
+      - name: Clean up
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
   probe:
+    if: inputs.feed != 'yes'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
