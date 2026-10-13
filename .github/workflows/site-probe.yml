@@ -104,6 +104,13 @@ jobs:
                           break
                   else:
                       print(f'shot {p}: still the bot check'); continue
+                  # The site fades sections in as they scroll into view, so a
+                  # full-page capture of an unscrolled page shows them blank.
+                  # Scroll the whole page first, the way a visitor would.
+                  h = page.evaluate('document.documentElement.scrollHeight')
+                  for y in range(0, h + 400, 400):
+                      page.evaluate(f'window.scrollTo(0, {y})'); page.wait_for_timeout(120)
+                  page.evaluate('window.scrollTo(0, 0)'); page.wait_for_timeout(1200)
                   slug = re.sub(r'[^a-z0-9]+', '-', p.lower()).strip('-') or 'home'
                   out = root / 'shots' / f'{slug}.jpg'; out.parent.mkdir(parents=True, exist_ok=True)
                   page.screenshot(path=str(out), full_page=True, type='jpeg', quality=70)
