@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matches — Gladstone Connect</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+  <style>
+:root {
+      --gs-green: #7CB22C; --gs-green-dk: #5E8A1E; --gs-green-lt: #9ACF52;
+      --gs-blue: #396A87; --gs-blue-dk: #2A4F66; --gs-blue-lt: #4A8AAD;
+      --gs-black: #000000; --gs-white: #FFFFFF;
+      --g50: #F9FAFB; --g100: #F3F4F6; --g200: #E5E7EB; --g300: #D1D5DB;
+      --g400: #9CA3AF; --g500: #6B7280; --g600: #4B5563; --g700: #374151;
+      --g800: #1F2937; --g900: #111827;
+      --gc-teal: #0D9488; --gc-navy: #1E3A5F; --gc-gold: #D4A853; --gc-green2: #7CB22C; --gc-teal-lt: #5EEAD4; --gc-teal-bg: #E6F7F5;
+      --r: 10px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', -apple-system, sans-serif; background: var(--g100); color: var(--g800); -webkit-font-smoothing: antialiased; }
+
+    /* ── HEADER ── */
+    .hdr { background: linear-gradient(135deg, var(--gs-black) 0%, #111 50%, var(--gc-navy) 100%); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 58px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+    .hdr-l { display: flex; align-items: center; gap: 14px; }
+    .hdr-logos { display: flex; align-items: center; gap: 14px; }
+    .hdr-sep { width: 1px; height: 26px; background: rgba(255,255,255,0.2); }
+    .hdr-gc-wrap { display: flex; align-items: center; gap: 8px; }
+    .hdr-gc-logo { height: 32px; border-radius: 4px; background: white; padding: 3px 10px; }
+    
+    .hdr-live { background: var(--gc-teal); color: white; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 4px; letter-spacing: 0.8px; text-transform: uppercase; margin-left: 14px; }
+    .hdr-r { font-size: 11px; color: rgba(255,255,255,0.35); }
+
+    /* ── TAB BAR (back nav) ── */
+    .tbar { background: white; border-bottom: 1px solid var(--g200); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 48px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); position: sticky; top: 58px; z-index: 99; }
+    .tb-back {
+      display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--g500);
+      background: none; border: none; cursor: pointer; font-family: inherit; padding: 6px 12px; border-radius: 6px; transition: all 0.15s;
+    }
+    .tb-back:hover { background: var(--g100); color: var(--gs-black); }
+    .tb-back svg { flex-shrink: 0; }
+    .tb-back-label { font-size: 12px; font-weight: 600; color: var(--gs-black); display: flex; align-items: center; gap: 8px; }
+    .tb-back-label .lbl-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gc-teal); }
+
+    /* ── CHOOSER SCREEN ── */
+    .chooser-container { max-width: 820px; margin: 0 auto; padding: 60px 32px 80px; }
+    .chooser-hero { text-align: center; margin-bottom: 48px; }
+    .chooser-hero h1 { font-size: 30px; font-weight: 700; color: var(--gs-black); margin-bottom: 10px; letter-spacing: -0.5px; }
+    .chooser-hero p { font-size: 15px; color: var(--g500); max-width: 540px; margin: 0 auto; line-height: 1.6; }
+    .chooser-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    .chooser-card { min-height: 340px; justify-content: flex-start; }
+    .chooser-card {
+      background: white; border: 2px solid var(--g200); border-radius: 16px;
+      padding: 40px 32px 36px; text-align: center; cursor: pointer;
+      transition: all 0.25s; position: relative; font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .chooser-card:hover { transform: translateY(-4px); }
+    .chooser-card:not(.cc-buyer-card):hover { border-color: var(--gs-green); box-shadow: 0 12px 32px rgba(124,178,44,0.12); }
+    .chooser-card:not(.cc-buyer-card):hover .chooser-arrow { color: var(--gs-green); transform: translateX(4px); }
+    .chooser-card.cc-buyer-card:hover .chooser-arrow { transform: translateX(4px); }
+    .chooser-icon {
+      width: 100px; height: 80px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px; transition: all 0.25s; overflow: hidden;
+    }
+    .chooser-icon svg { width: 100%; height: 100%; }
+    .chooser-icon-logos {
+      position: relative; width: 175px; height: 68px; margin-bottom: 4px;
+    }
+    .chooser-gc-behind {
+      position: absolute; top: 38px; left: 150px;
+      height: 29px; border-radius: 4px; z-index: 1;
+    }
+    .cc-seller { background: linear-gradient(180deg, #0a1628 0%, #132744 60%, #1a3660 100%); color: white; }
+    .cc-buyer { background: linear-gradient(135deg, #1E3A5F, #0D9488); color: white; }
+    .chooser-label { font-size: 20px; font-weight: 700; color: var(--gs-black); }
+    .chooser-desc { font-size: 13px; color: var(--g500); line-height: 1.5; max-width: 280px; }
+    .chooser-bullets { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; margin-top: 4px; }
+    .cb-item {
+      font-size: 12px; font-weight: 500; color: var(--g700); display: flex; align-items: center; gap: 8px;
+    }
+    .cb-item::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gs-green); flex-shrink: 0;
+    }
+    .chooser-card.cc-buyer-card .cb-item::before { background: #0D9488; }
+    .chooser-card.cc-buyer-card:hover { border-color: #0D9488; box-shadow: 0 12px 32px rgba(13,148,136,0.12); }
+    .chooser-card.cc-buyer-card:hover .chooser-arrow { color: #0D9488; }
+    .chooser-arrow {
+      font-size: 20px; color: var(--g300); transition: all 0.25s; margin-top: 4px;
+    }
+
+    /* ── PANELS ── */
+    .vp { display: none; } .vp.on { display: block; animation: fu 0.25s ease; }
+    @keyframes fu { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+    .pc { max-width: 1200px; margin: 0 auto; padding: 32px 32px 60px; }
+
+    /* ── SHARED ── */
+    .card { background: white; border-radius: var(--r); border: 1px solid var(--g200); box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+    .ch { padding: 18px 24px; border-bottom: 1px solid var(--g200); display: flex; align-items: center; justify-content: space-between; }
+    .ch h3 { font-size: 15px; font-weight: 600; color: var(--gs-black); }
+    .cb { padding: 24px; }
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+    .bg { background: #ECFDF5; color: #065F46; } .bb { background: #EFF6FF; color: #1E40AF; }
+    .ba { background: #FFFBEB; color: #92400E; } .bgr { background: var(--g100); color: var(--g600); }
+    .sl { font-size: 11px; font-weight: 600; color: var(--g400); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 16px; margin-top: 28px; }
+    .sl:first-child { margin-top: 0; }
+
+    /* ── HERO ── */
+    .hero { background: linear-gradient(135deg, var(--gs-black) 0%, var(--gc-navy) 100%); border-radius: var(--r); padding: 48px 48px; margin-bottom: 28px; position: relative; overflow: hidden; }
+    .hero::after { content:''; position: absolute; top: -40px; right: -20px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(13,148,136,0.15) 0%, transparent 70%); border-radius: 50%; }
+    .hero h1 { font-size: 28px; font-weight: 700; color: white; margin-bottom: 5px; position: relative; z-index: 1; }
+    .hero p { font-size: 16px; color: rgba(255,255,255,0.55); position: relative; z-index: 1; max-width: 600px; line-height: 1.5; }
+
+    /* ── PROCESS STEPS (clickable) ── */
+    .pflow { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 28px; }
+    .ps {
+      background: white; border: 1px solid var(--g200); border-radius: var(--r);
+      padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.2s;
+      position: relative;
+    }
+    .ps:hover { border-color: var(--gc-teal); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13,148,136,0.1); }
+    .ps.done { border-color: var(--gc-teal); background: var(--gc-teal-bg); }
+    .ps.now { border-color: var(--gc-teal); box-shadow: 0 0 0 3px rgba(13,148,136,0.15); }
+    .ps.sel { border-color: var(--gc-teal); box-shadow: 0 0 0 3px rgba(13,148,136,0.25); background: var(--gc-teal-bg); }
+    .sn { width: 30px; height: 30px; border-radius: 50%; background: var(--g100); color: var(--g500); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; transition: all 0.2s; }
+    .ps.done .sn, .ps.now .sn, .ps.sel .sn { background: var(--gc-teal); color: white; }
+    .ps.now .sn { animation: pu 2s infinite; }
+    @keyframes syncPulse { 0%,100%{box-shadow:0 0 0 0 rgba(13,148,136,0.4);transform:scale(1)} 50%{box-shadow:0 0 0 12px rgba(13,148,136,0);transform:scale(1.05)} }
+    @keyframes pu { 0%,100%{box-shadow:0 0 0 0 rgba(13,148,136,0.4)} 50%{box-shadow:0 0 0 7px rgba(13,148,136,0)} }
+    .ps-t { font-size: 13px; font-weight: 600; color: var(--g700); margin-bottom: 2px; }
+    .ps-d { font-size: 11px; color: var(--g400); }
+    .ps.done .ps-t { color: var(--gc-navy); }
+
+    /* ── STEP CONTENT SECTIONS ── */
+    .step-content { display: none; animation: fu 0.3s ease; }
+    .step-content.on { display: block; }
+    .bs-content { display: none; animation: fu 0.3s ease; }
+    .bs-content.bs-on { display: block; }
+
+    /* ── CALCULATOR ── */
+    .calc-lay { display: grid; grid-template-columns: minmax(320px,420px) 1fr; gap: 24px; align-items: start; }
+    .calc-res { display: flex; flex-direction: column; gap: 20px; }
+    .ci-g { margin-bottom: 20px; }
+    .ci-l { display: block; font-size: 13px; font-weight: 500; color: var(--g500); margin-bottom: 6px; }
+    .ci-w { display: flex; align-items: center; gap: 6px; }
+    .ci-p { color: var(--g400); font-size: 13px; }
+    .ci { flex: 1; padding: 12px 14px; font-size: 15px; font-family: inherit; border: 1px solid var(--g200); border-radius: 7px; outline: none; transition: all 0.2s; }
+    .ci:focus { border-color: var(--gc-teal); box-shadow: 0 0 0 3px rgba(13,148,136,0.12); }
+    .cs { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--g200); }
+    .cs-t { font-size: 14px; font-weight: 600; color: var(--gs-black); margin-bottom: 16px; }
+    .csg { margin-bottom: 22px; }
+    .csg-h { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .csg-l { font-size: 13px; font-weight: 500; color: var(--g500); }
+    .csg-v { font-size: 14px; font-weight: 600; color: var(--gc-navy); }
+    .csl { width: 100%; height: 6px; border-radius: 3px; appearance: none; cursor: pointer; background: var(--g200); }
+    .csl::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--gc-teal); cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .csl::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--gc-teal); cursor: pointer; border: none; }
+    .ch-t { font-size: 11px; color: var(--g400); margin-top: 2px; }
+    .csl-ends { display: flex; justify-content: space-between; font-size: 9px; color: var(--g400); margin-top: 2px; }
+
+    /* Metrics */
+    .mrow { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+    .mc { background: white; border-radius: var(--r); padding: 22px; border: 1px solid var(--g200); }
+    .mc.hl { background: linear-gradient(135deg, #1E3A5F 0%, #0D9488 100%); border: none; }
+    .mc-l { font-size: 12px; color: var(--g400); margin-bottom: 3px; }
+    .mc.hl .mc-l { color: rgba(255,255,255,0.6); }
+    .mc-v { font-size: 28px; font-weight: 700; color: var(--gs-black); letter-spacing: -0.5px; }
+    .mc.hl .mc-v { color: #D4A853; }
+    .mc-s { font-size: 12px; color: var(--g400); margin-top: 2px; }
+    .mc.hl .mc-s { color: rgba(255,255,255,0.4); }
+
+    /* Range */
+    .ri { margin-bottom: 24px; }
+    .ri-h { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--g400); }
+    .ri-q { font-weight: 700; }
+    .ri-tr { position: relative; height: 14px; background: linear-gradient(90deg, #fecaca 0%, #fef08a 50%, #bbf7d0 100%); border-radius: 5px; }
+    .ri-th { position: absolute; top: -4px; width: 16px; height: 22px; background: var(--gs-black); border-radius: 3px; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: left 0.3s ease; }
+    .ri-lb { display: flex; justify-content: space-between; margin-top: 8px; font-size: 12px; color: var(--g400); }
+    .vg { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--g200); text-align: center; }
+    .vg-l { font-size: 12px; color: var(--g400); margin-bottom: 2px; }
+    .vg-v { font-size: 20px; font-weight: 700; }
+    .vg-v.lo { color: #DC2626; } .vg-v.mi { color: #CA8A04; } .vg-v.hi { color: var(--gc-teal); }
+
+    .vgauge { display: flex; gap: 20px; align-items: stretch; }
+    .vgauge-bar { width: 32px; position: relative; border-radius: 6px; background: linear-gradient(180deg, #22c55e 0%, #bbf7d0 20%, #fef08a 50%, #fecaca 80%, #ef4444 100%); min-height: 200px; flex-shrink: 0; }
+    .vgauge-arrow { position: absolute; left: -6px; width: 44px; height: 4px; background: var(--gs-black); border-radius: 2px; transition: top 0.4s ease; }
+    .vgauge-arrow::after { content: ''; position: absolute; right: -8px; top: -4px; width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 8px solid var(--gs-black); }
+    .vgauge-labels { display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: var(--g400); }
+    .vgauge-labels span { display: block; }
+    .vgauge-vals { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; }
+    .disc-note { font-size: 10px; color: var(--g400); line-height: 1.5; margin-top: 10px; padding: 10px; background: var(--g50); border-radius: 6px; border: 1px solid var(--g200); }
+
+    /* ── ENROLLMENT ── */
+    .enroll-card { max-width: 480px; }
+    .price-tag { font-size: 48px; font-weight: 700; color: var(--gs-green); text-align: center; margin: 16px 0 4px; }
+    .price-sub { text-align: center; font-size: 13px; color: var(--g500); margin-bottom: 20px; }
+    .feature-list { list-style: none; }
+    .feature-list li { padding: 8px 0; font-size: 13px; color: var(--g700); display: flex; align-items: flex-start; gap: 8px; border-bottom: 1px solid var(--g100); }
+    .feature-list li:last-child { border-bottom: none; }
+    .feature-check { color: var(--gs-green); font-weight: 700; flex-shrink: 0; }
+    .enroll-btn { display: block; width: 100%; padding: 14px; background: var(--gs-green); color: white; font-size: 15px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; font-family: inherit; transition: background 0.2s; }
+    .enroll-btn:hover { background: var(--gs-green-dk); }
+
+    /* ── PRACTICE PROFILE ── */
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .pf-field { display: flex; flex-direction: column; gap: 4px; }
+    .pf-label { font-size: 11px; font-weight: 600; color: var(--g500); text-transform: uppercase; letter-spacing: 0.3px; }
+    .pf-val { padding: 10px 12px; background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px; font-size: 13px; color: var(--g800); font-weight: 500; }
+    .pf-note { font-size: 10px; color: var(--g400); font-style: italic; margin-top: 2px; }
+
+    /* ── WORKBOOK TABS ── */
+    .wb-tab {
+      padding: 8px 16px; font-size: 11px; font-weight: 600; font-family: inherit;
+      background: var(--g100); color: var(--g500); border: 1px solid var(--g200);
+      border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; transition: all 0.15s;
+      margin-right: 2px;
+    }
+    .wb-tab:hover { background: var(--g50); color: var(--g700); }
+    .wb-tab-on { background: white; color: var(--gc-navy); border-color: var(--g200); border-bottom: 2px solid white; margin-bottom: -2px; position: relative; z-index: 1; }
+    .wb-pane { display: none; border: 1px solid var(--g200); border-top: none; padding: 0; background: white; }
+    .wb-pane-on { display: block; }
+    .wb-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .wb-tbl td { padding: 8px 12px; border-bottom: 1px solid var(--g100); }
+    .wb-label { font-weight: 500; color: var(--g600); width: 42%; background: var(--g50); border-right: 1px solid var(--g200); }
+    .wb-yellow { background: #FEF9C3; color: var(--g800); font-weight: 500; }
+    .wb-calc { background: #E0F2FE; color: #0369A1; font-weight: 600; font-style: italic; }
+    .wb-video { padding: 12px; background: #f8fafc; border-top: 1px solid var(--g200); }
+    .wb-video video { width: 85%; border-radius: 6px; display: block; margin: 0 auto; }
+    .wb-video-hd { font-size: 11px; font-weight: 600; color: var(--gc-navy); margin-bottom: 10px; padding: 0 4px; display: flex; align-items: center; gap: 8px; }
+    .wb-video-hd::before { content: '▶'; font-size: 8px; color: var(--gc-teal); }
+
+    /* ── MATCHING (Seller side) ── */
+    .smatch-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ── BUYER SIDE ── */
+    .krow { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 18px; }
+    .kc { background: white; border: 1px solid var(--g200); border-radius: var(--r); padding: 16px; }
+    .kc.pri { background: linear-gradient(135deg, #1E3A5F 0%, #0D9488 100%); border: none; }
+    .kc-l { font-size: 9px; font-weight: 600; color: var(--g400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .kc.pri .kc-l { color: rgba(255,255,255,0.5); }
+    .kc-v { font-size: 22px; font-weight: 700; color: var(--gs-black); }
+    .kc.pri .kc-v { color: var(--gc-gold); }
+    .kc-d { font-size: 9px; font-weight: 600; margin-top: 2px; }
+    .kc { cursor: pointer; transition: all 0.2s; }
+    .kc:hover { border-color: var(--gc-teal); box-shadow: 0 4px 12px rgba(13,148,136,0.1); transform: translateY(-2px); }
+    .kc.kc-active { border-color: var(--gc-teal); box-shadow: 0 0 0 2px var(--gc-teal); }
+    .kc.pri { cursor: pointer; }
+    .kc.pri:hover { box-shadow: 0 4px 16px rgba(13,148,136,0.3); transform: translateY(-2px); }
+    .kc-d.up { color: var(--gc-teal); }
+    .kc.pri .kc-d { color: rgba(255,255,255,0.4); }
+    .dg { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+    /* Pipeline */
+    .pt { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .pt th { text-align: left; padding: 7px 8px; font-size: 9px; font-weight: 600; color: var(--g400); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--g200); }
+    .pt td { padding: 9px 8px; border-bottom: 1px solid var(--g100); color: var(--g700); }
+    .pt tr:hover td { background: var(--g50); }
+    .pt tr.ck { cursor: pointer; } .pt tr.ck:hover td { background: rgba(13,148,136,0.06); }
+    .pt tr.se td { background: rgba(13,148,136,0.1); }
+    .pid { font-weight: 600; color: var(--gc-navy); font-size: 10px; }
+    .pam { font-weight: 600; color: var(--g800); }
+    .sg { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 600; padding: 3px 7px; border-radius: 20px; }
+    .sd { width: 4px; height: 4px; border-radius: 50%; }
+    .si .sd{background:#3B82F6} .si{background:#EFF6FF;color:#1E40AF}
+    .sm .sd{background:#F59E0B} .sm{background:#FFFBEB;color:#92400E}
+    .sn2 .sd{background:#8B5CF6} .sn2{background:#F5F3FF;color:#5B21B6}
+    .sa .sd{background:#10B981} .sa{background:#ECFDF5;color:#065F46}
+    .sc .sd{background:var(--gs-green)} .sc{background:#F7FFF0;color:var(--gs-green-dk)}
+
+    /* NDA */
+    .ni { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--g100); }
+    .ni:last-child { border-bottom: none; }
+    .ni-i { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; }
+    .ni-ok { background: #ECFDF5; color: #065F46; }
+    .ni-w { background: #FFFBEB; color: #92400E; }
+    .ni-s { background: #EFF6FF; color: #1E40AF; }
+    .ni-inf { flex: 1; }
+    .ni-b { font-size: 11px; font-weight: 600; color: var(--g800); }
+    .ni-d { font-size: 9px; color: var(--g400); }
+
+    /* Matching Engine */
+    .mel { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .me-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+    .mec {
+      font-size: 10px; font-weight: 500; padding: 4px 9px; border-radius: 5px; cursor: pointer;
+      transition: all 0.15s; border: 1px solid var(--g200); background: white; color: var(--g600); font-family: inherit;
+    }
+    .mec:hover { border-color: var(--gc-teal); }
+    .mec.on { background: var(--gc-teal); color: white; border-color: var(--gc-teal); }
+    .me-sl { font-size: 10px; font-weight: 600; color: var(--g400); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; margin-top: 8px; }
+
+    /* Heatmap */
+    .hm { display: grid; grid-template-columns: 120px repeat(5,1fr); gap: 2px; font-size: 10px; }
+    .hm-h { padding: 6px 3px; font-weight: 600; color: var(--g500); text-align: center; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .hm-rl { padding: 6px 3px; font-weight: 500; color: var(--g700); display: flex; align-items: center; font-size: 10px; }
+    .hm-c { padding: 6px 3px; text-align: center; border-radius: 3px; font-weight: 700; font-size: 10px; transition: all 0.3s; }
+    .hm-t { font-weight: 800; font-size: 11px; }
+    .h5{background:#166534;color:white} .h4{background:#4ADE80;color:#14532D}
+    .h3{background:#FDE68A;color:#78350F} .h2{background:#FED7AA;color:#9A3412}
+    .h1{background:#FECACA;color:#991B1B} .h0{background:var(--g100);color:var(--g400)}
+    .ht-h{background:#166534;color:white} .ht-m{background:#FDE68A;color:#78350F} .ht-l{background:#FECACA;color:#991B1B}
+
+    /* Activity */
+    .ai { display: flex; align-items: flex-start; gap: 9px; padding: 9px 0; border-bottom: 1px solid var(--g100); }
+    .ai:last-child { border-bottom: none; }
+    .ad { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .ad-g{background:var(--gc-teal)} .ad-b{background:var(--gc-navy)} .ad-a{background:#F59E0B} .ad-p{background:#8B5CF6}
+    .at { font-size: 11px; color: var(--g700); line-height: 1.4; }
+    .at strong { color: var(--g800); }
+    .atm { font-size: 9px; color: var(--g400); margin-top: 1px; }
+
+    /* ── FOOTER ── */
+    .ft { background: var(--gs-black); padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .ft-b { font-size: 13px; font-weight: 600; color: white; }
+    .ft-b span { color: var(--gc-gold); }
+    .ft-t { font-size: 10px; color: rgba(255,255,255,0.3); }
+    .ft-d { width: 100%; font-size: 9px; color: rgba(255,255,255,0.18); margin-top: 5px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.06); line-height: 1.5; }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:1000px){.calc-lay,.mel,.dg,.smatch-grid,.profile-grid{grid-template-columns:1fr}.pflow{grid-template-columns:repeat(3,1fr)}.krow{grid-template-columns:repeat(3,1fr)}.chooser-grid{grid-template-columns:1fr;max-width:400px;margin:0 auto}}
+    @media(max-width:600px){.hdr,.tbar,.pc,.ft{padding-left:14px;padding-right:14px}.mrow,.krow{grid-template-columns:1fr 1fr}.pflow{grid-template-columns:1fr 1fr}}
+
+/* ── SIDEBAR NAV ── */
+.site-wrap { display: flex; min-height: calc(100vh - 58px); }
+.sidebar { width: 240px; background: #0a1628; padding: 20px 0; flex-shrink: 0; position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; border-right: 1px solid rgba(255,255,255,0.06); }
+.sb-section { padding: 0 14px; margin-bottom: 20px; }
+.sb-label { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 10px; margin-bottom: 8px; }
+.sb-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); text-decoration: none; border-radius: 6px; transition: all 0.15s; margin-bottom: 2px; }
+.sb-link:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+.sb-link.active { background: var(--gc-teal); color: white; font-weight: 600; }
+.sb-link .sb-icon { width: 20px; text-align: center; font-size: 13px; }
+.sb-link .sb-badge { margin-left: auto; font-size: 9px; font-weight: 700; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; }
+.sb-link.active .sb-badge { background: rgba(255,255,255,0.2); }
+.sb-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 16px 14px; }
+.main-content { flex: 1; min-width: 0; }
+.main-content .pc { max-width: 1100px; }
+.sb-home { display: flex; align-items: center; gap: 8px; padding: 10px 24px; margin-bottom: 14px; text-decoration: none; }
+.sb-home img { height: 22px; border-radius: 3px; background: white; padding: 2px 6px; }
+.sb-home span { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); }
+
+/* ── PAGE HERO (replaces old hero) ── */
+.page-hero { background: linear-gradient(135deg, var(--gs-black) 0%, var(--gc-navy) 100%); border-radius: var(--r); padding: 32px 36px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.page-hero::after { content:''; position: absolute; top: -30px; right: -15px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(13,148,136,0.15) 0%, transparent 70%); border-radius: 50%; }
+.page-hero h1 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; position: relative; z-index: 1; }
+.page-hero p { font-size: 14px; color: rgba(255,255,255,0.5); position: relative; z-index: 1; }
+
+/* Fix step/bs content to always show on individual pages */
+.step-content, .bs-content { display: block !important; animation: fu 0.3s ease; }
+
+@media(max-width:900px) {
+  .sidebar { display: none; }
+}
+
+
+/* ── SIDEBAR NAV ── */
+.site-wrap { display: flex; min-height: calc(100vh - 58px); }
+.sidebar { width: 240px; background: #0a1628; padding: 20px 0; flex-shrink: 0; position: sticky; top: 58px; height: calc(100vh - 58px); overflow-y: auto; border-right: 1px solid rgba(255,255,255,0.06); }
+.sb-section { padding: 0 14px; margin-bottom: 20px; }
+.sb-label { font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 10px; margin-bottom: 8px; }
+.sb-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); text-decoration: none; border-radius: 6px; transition: all 0.15s; margin-bottom: 2px; }
+.sb-link:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+.sb-link.active { background: var(--gc-teal); color: white; font-weight: 600; }
+.sb-link .sb-icon { width: 20px; text-align: center; font-size: 13px; }
+.sb-link .sb-badge { margin-left: auto; font-size: 9px; font-weight: 700; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; }
+.sb-link.active .sb-badge { background: rgba(255,255,255,0.2); }
+.sb-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 16px 14px; }
+.main-content { flex: 1; min-width: 0; }
+.main-content .pc { max-width: 1100px; }
+.sb-home { display: flex; align-items: center; gap: 8px; padding: 10px 24px; margin-bottom: 14px; text-decoration: none; }
+.sb-home img { height: 22px; border-radius: 3px; background: white; padding: 2px 6px; }
+.sb-home span { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.4); }
+.page-hero { background: linear-gradient(135deg, var(--gs-black) 0%, var(--gc-navy) 100%); border-radius: var(--r); padding: 32px 36px; margin-bottom: 24px; position: relative; overflow: hidden; }
+.page-hero::after { content:''; position: absolute; top: -30px; right: -15px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(13,148,136,0.15) 0%, transparent 70%); border-radius: 50%; }
+.page-hero h1 { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; position: relative; z-index: 1; }
+.page-hero p { font-size: 14px; color: rgba(255,255,255,0.5); position: relative; z-index: 1; }
+.step-content, .bs-content { display: block !important; animation: fu 0.3s ease; }
+@media(max-width:900px) { .sidebar { display: none; } }
+
+  </style>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-logos">
+      <div class="hdr-gc-wrap">
+        <img src="data:image/jpeg;base64,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" alt="Gladstone Connect" class="hdr-gc-logo">
+      </div>
+    </div>
+    <div class="hdr-live">DEMO</div>
+  </div>
+  <div class="hdr-r">Gladstone Connect &bull; Advisor M&amp;A Platform</div>
+</header>
+
+<div class="site-wrap">
+  <nav class="sidebar">
+<a class="sb-home" href="../index.html">
+  <img src="data:image/jpeg;base64,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" alt="GC">
+  <span>Demo Home</span>
+</a>
+<div class="sb-section"><div class="sb-label">Seller Portal</div>
+<a class="sb-link" href="../seller/index.html"><span class="sb-icon">📊</span>Dashboard</a>
+<a class="sb-link" href="../seller/valuation.html"><span class="sb-icon">💰</span>Valuation Tools<span class="sb-badge">Free</span></a>
+<a class="sb-link" href="../seller/enrollment.html"><span class="sb-icon">✅</span>Enrollment<span class="sb-badge">$500</span></a>
+<a class="sb-link" href="../seller/profile.html"><span class="sb-icon">📋</span>Practice Profile</a>
+<a class="sb-link" href="../seller/pipeline.html"><span class="sb-icon">⚡</span>Data Pipeline</a>
+<a class="sb-link" href="../seller/meetings.html"><span class="sb-icon">🤝</span>Partner Meetings<span class="sb-badge">2</span></a>
+</div>
+<div class="sb-divider"></div>
+<div class="sb-section"><div class="sb-label">Buyer Dashboard</div>
+<a class="sb-link" href="../buyer/index.html"><span class="sb-icon">📈</span>Active Sellers<span class="sb-badge">14</span></a>
+<a class="sb-link" href="../buyer/onboarding.html"><span class="sb-icon">📝</span>Onboarding</a>
+<a class="sb-link active" href="../buyer/matches.html"><span class="sb-icon">🎯</span>Matches<span class="sb-badge">6</span></a>
+<a class="sb-link" href="../buyer/targets.html"><span class="sb-icon">🔍</span>Targets of Interest<span class="sb-badge">4</span></a>
+<a class="sb-link" href="../buyer/closing.html"><span class="sb-icon">✨</span>Meetings & Closing</a>
+</div>
+</nav>
+  <div class="main-content">
+    <div class="pc">
+      <div class="page-hero">
+        <h1>Matches</h1>
+        <p>Matching engine with 47-buyer consortium</p>
+      </div>
+  <div class="bs-content" id="bs-2">
+    <div style="padding:14px 18px;background:var(--gc-teal-bg);border:1px solid #99E6DD;border-radius:8px;margin-bottom:18px;">
+      <div style="font-size:13px;color:var(--g600);line-height:1.6;">Matches are determined by your preference form scores against each seller's profile. <strong>Opt in</strong> to request the full CIM. <em>Note: Individual buyers cannot see other buyers' preferences. The oversight entity can view all Consortium preferences for administration, but seller anonymity remains paramount until the seller chooses to engage.</em></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+      <div class="card">
+        <div class="ch"><h3>Your Matches</h3><span class="badge bg">6 Active</span></div>
+        <div class="cb" style="padding:0;">
+          <table class="pt">
+            <thead><tr><th>Codename</th><th>Type</th><th>Region</th><th>AUM</th><th>Match</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:700;color:var(--gc-teal)">ARCHER</td><td>Fee-Only RIA</td><td>Four Corners</td><td>$150–200M</td><td><span style="font-weight:700;color:var(--gc-teal)">92%</span></td><td><button style="padding:4px 12px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="alert('Demo: CIM request sent for ARCHER')">Opt In</button></td></tr>
+              <tr><td style="font-weight:700;color:var(--gc-teal)">SUMMIT</td><td>Hybrid RIA</td><td>Texas</td><td>$600–800M</td><td><span style="font-weight:700;color:var(--gc-teal)">87%</span></td><td><button style="padding:4px 12px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;">Opt In</button></td></tr>
+              <tr><td style="font-weight:700;color:var(--gc-teal)">ATLAS</td><td>Multi-Office</td><td>Florida</td><td>$1.0–1.5B</td><td><span style="font-weight:700;color:#CA8A04">78%</span></td><td><button style="padding:4px 12px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;">Opt In</button></td></tr>
+              <tr><td style="font-weight:700;color:var(--gc-teal)">MERIDIAN</td><td>Fee-Only RIA</td><td>California</td><td>$200–400M</td><td><span style="font-weight:700;color:#CA8A04">75%</span></td><td><button style="padding:4px 12px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;">Opt In</button></td></tr>
+              <tr style="background:var(--g50);"><td style="font-weight:700;color:var(--g400)">BEACON</td><td style="color:var(--g400)">Fee-Based</td><td style="color:var(--g400)">Heartland</td><td style="color:var(--g400)">$150–250M</td><td><span style="font-weight:700;color:var(--g400)">62%</span></td><td><span style="font-size:10px;color:var(--g400)">Below threshold</span></td></tr>
+              <tr style="background:var(--g50);"><td style="font-weight:700;color:var(--g400)">PINNACLE</td><td style="color:var(--g400)">Hybrid RIA/BD</td><td style="color:var(--g400)">NYC Metro</td><td style="color:var(--g400)">$800M–1B</td><td><span style="font-weight:700;color:var(--g400)">58%</span></td><td><span style="font-size:10px;color:var(--g400)">Below threshold</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Teaser Watchlist (fed from BS2) -->
+      <div class="card">
+        <div class="ch"><h3>Teaser Watchlist</h3><span class="badge bgr">3 Watching</span></div>
+        <div class="cb">
+          <div style="font-size:12px;color:var(--g500);margin-bottom:12px;">Teasers you've added to your watchlist from the Active Sellers pipeline. Opt in when ready.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--g50);border-radius:8px;border:1px solid var(--g200);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--g700)">CRESTLINE</div><div style="font-size:10px;color:var(--g400)">Fee-Only · Southeast · $300–500M · 71% match</div></div>
+              <button style="padding:5px 14px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Opt In to CIM</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--g50);border-radius:8px;border:1px solid var(--g200);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--g700)">VANGUARD PEAK</div><div style="font-size:10px;color:var(--g400)">Hybrid · Midwest · $250–400M · 68% match</div></div>
+              <button style="padding:5px 14px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Opt In to CIM</button>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--g50);border-radius:8px;border:1px solid var(--g200);">
+              <div><div style="font-size:13px;font-weight:700;color:var(--g700)">NORTHSTAR</div><div style="font-size:10px;color:var(--g400)">Fee-Based · Carolinas · $180–250M · 65% match</div></div>
+              <button style="padding:5px 14px;background:var(--gc-teal);color:white;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">Opt In to CIM</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matching Engine -->
+    <div class="sl">Matching Engine — <span id="me_lbl">Fee-Only RIA — OC-041 (Atlanta / GA, $400–600M)</span></div>
+    <div style="font-size:10px;color:var(--g500);margin-bottom:12px;padding:8px 12px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;"><strong>Demo Note:</strong> Buyer firm names represent actual Consortium members. Preference profiles shown are randomized for demonstration purposes and do not represent actual buyer acquisition criteria.</div>
+    <div class="mel">
+      <div class="card">
+        <div class="ch"><h3>Seller Profile</h3><span class="badge ba">Editable</span></div>
+        <div class="cb">
+          <div class="me-sl">Regions</div><div class="me-chips" id="me_reg"></div>
+          <div class="me-sl">Services</div><div class="me-chips" id="me_svc"></div>
+          <div class="me-sl">Client Demographics</div><div class="me-chips" id="me_dem"></div>
+          <div class="me-sl">Investment Style</div><div class="me-chips" id="me_inv"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Buyer Compatibility Matrix</h3><span class="badge bg" id="me_ct">47 Buyers</span></div>
+        <div class="cb">
+          <div style="font-size:10px;color:var(--g400);margin-bottom:12px;">Scores update in real time. <strong style="color:var(--g500);">Note: Buyer names are real Consortium members. Profiles are randomized for demonstration.</strong></div>
+          <div class="hm" id="hmGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="card" style="margin-top:20px;">
+      <div class="ch"><h3>Recent Activity</h3><span class="badge bgr">Custom Reporting</span></div>
+      <div class="cb">
+        <div class="ai"><div class="ad ad-g"></div><div><div class="at"><strong>ARCHER</strong> — CIM opt-in confirmed. Full financials accessible.</div><div class="atm">Mar 14 at 3:22 PM</div></div></div>
+        <div class="ai"><div class="ad ad-b"></div><div><div class="at"><strong>SUMMIT</strong> — Teaser matched. 87% compatibility score.</div><div class="atm">Mar 12 at 10:15 AM</div></div></div>
+        <div class="ai"><div class="ad ad-g"></div><div><div class="at"><strong>ATLAS</strong> — Deal closed. $1.2B AUM acquired.</div><div class="atm">Mar 7 at 11:45 AM</div></div></div>
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="profilePopup" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;justify-content:center;align-items:center;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:white;border-radius:12px;max-width:560px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="padding:20px 24px;border-bottom:1px solid var(--g200);display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:18px;font-weight:700;color:var(--gc-teal);" id="ppName">ARCHER</div><div style="font-size:12px;color:var(--g400);" id="ppType">Fee-Only RIA · Four Corners (AZ)</div></div>
+      <button style="background:none;border:none;font-size:22px;color:var(--g400);cursor:pointer;" onclick="document.getElementById('profilePopup').style.display='none'">✕</button>
+    </div>
+    <div style="padding:24px;" id="ppBody">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+        <div style="padding:12px;background:var(--g50);border-radius:8px;"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;">AUM Range</div><div style="font-size:18px;font-weight:700;color:var(--g800);" id="ppAUM">$150–200M</div></div>
+        <div style="padding:12px;background:var(--g50);border-radius:8px;"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;">Revenue</div><div style="font-size:18px;font-weight:700;color:var(--g800);" id="ppRev">$1.2–1.5M</div></div>
+        <div style="padding:12px;background:var(--g50);border-radius:8px;"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;">Match Score</div><div style="font-size:18px;font-weight:700;color:var(--gc-teal);" id="ppMatch">92%</div></div>
+        <div style="padding:12px;background:var(--g50);border-radius:8px;"><div style="font-size:10px;color:var(--g400);text-transform:uppercase;">Stage</div><div style="font-size:18px;font-weight:700;color:var(--gc-teal);" id="ppStage">Initial Meeting</div></div>
+      </div>
+      <!-- Score Breakdown -->
+      <div id="ppBreakdown" style="display:none;padding:16px;background:var(--gc-teal-bg);border:1px solid #99E6DD;border-radius:8px;margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--gc-navy);margin-bottom:10px;" id="ppBdTitle">Score Breakdown — 48/50</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="padding:10px;background:white;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--g400);">Region</div><div style="font-size:20px;font-weight:700;color:var(--gc-teal);" id="ppBdR">14/15</div></div>
+          <div style="padding:10px;background:white;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--g400);">Services</div><div style="font-size:20px;font-weight:700;color:var(--gc-teal);" id="ppBdS">10/10</div></div>
+          <div style="padding:10px;background:white;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--g400);">Demographics</div><div style="font-size:20px;font-weight:700;color:var(--gc-teal);" id="ppBdD">14/15</div></div>
+          <div style="padding:10px;background:white;border-radius:6px;text-align:center;"><div style="font-size:10px;color:var(--g400);">Inv. Style</div><div style="font-size:20px;font-weight:700;color:var(--gc-teal);" id="ppBdI">10/10</div></div>
+        </div>
+      </div>
+      <div id="ppDQ" style="display:none;padding:14px 16px;background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;margin-bottom:16px;"></div>
+      <div style="font-size:10px;color:var(--g400);text-transform:uppercase;margin-bottom:6px;">Key Details</div>
+      <div style="font-size:13px;color:var(--g600);line-height:1.7;" id="ppDetails">Recurring revenue 95%+. Schwab custodian. Mass Affluent & HNW client base. Blended investment approach. Portfolio management platform. 3–6 month transaction timeline.</div>
+    </div>
+  </div>
+</div>
+
+<footer class="ft">
+  <div class="ft-b">Gladstone <span>Connect</span></div>
+  <div class="ft-t">Demo Environment &bull; Sample Data Only</div>
+  <div class="ft-d">Information presented is not intended as tax or legal advice. Nothing herein shall constitute an offer to buy or sell securities. All data is illustrative. &copy; 2026 Gladstone Group Inc. &bull; 2250 Hickory Road, Suite 400, Plymouth Meeting, PA 19462</div>
+</footer>
+
+<script>
+/* ═══ VIEW NAVIGATION ═══ */
+function enterView(v) {
+  document.querySelectorAll('.vp').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-' + v).classList.add('on');
+  document.getElementById('backBar').style.display = 'flex';
+  document.getElementById('backLabel').innerHTML = '<span class="lbl-dot"></span>' + (v === 'seller' ? 'Advisor Experience' : 'Buyer Dashboard');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function goHome() {
+  document.querySelectorAll('.vp').forEach(p => p.classList.remove('on'));
+  document.getElementById('panel-home').classList.add('on');
+  document.getElementById('backBar').style.display = 'none';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+/* ═══ STEP NAVIGATION ═══ */
+let currentStep = 0;
+function showStep(i) {
+  currentStep = i;
+  document.querySelectorAll('#processSteps .ps').forEach((el, idx) => {
+    el.classList.remove('sel','done','now');
+    if (idx < i) el.classList.add('done');
+    else if (idx === i) el.classList.add('sel');
+  });
+  document.querySelectorAll('.step-content').forEach((el, idx) => {
+    el.classList.toggle('on', idx === i);
+  });
+  document.getElementById('step-'+i).scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ═══ WORKBOOK TAB SWITCHING ═══ */
+function showWbTab(i) {
+  document.querySelectorAll('.wb-tab').forEach((t, idx) => {
+    t.classList.toggle('wb-tab-on', idx === i);
+  });
+  document.querySelectorAll('.wb-pane').forEach((p, idx) => {
+    p.classList.toggle('wb-pane-on', idx === i);
+    const vid = p.querySelector('video');
+    if (vid) {
+      if (idx === i) { vid.play().catch(()=>{}); }
+      else { vid.pause(); vid.currentTime = 0; }
+    }
+  });
+}
+
+/* ═══ CALCULATOR — single model, 4 sliders ═══ */
+const MULT = [
+  {from:0,to:0.5,low:3,mid:4,high:5},{from:0.5,to:1,low:6,mid:7,high:8},
+  {from:1,to:2,low:7,mid:8,high:10},{from:2,to:3,low:8,mid:9,high:12},
+  {from:3,to:5,low:9,mid:11,high:14},{from:5,to:Infinity,low:11,mid:12,high:15}
+];
+const NR_D=0.5, OSJ_D=0.3;
+
+function pN(s){return parseFloat(s.replace(/,/g,''))||0}
+function fC(v){return v>=1e6?'$'+(v/1e6).toFixed(2)+'M':'$'+v.toLocaleString()}
+function fP(v){return(v*100).toFixed(1)+'%'}
+function gM(v){const m=v/1e6;return MULT.find(t=>m>=t.from&&m<t.to)||MULT[MULT.length-1]}
+
+function uSB(sl){
+  const p=((parseFloat(sl.value)-parseFloat(sl.min))/(parseFloat(sl.max)-parseFloat(sl.min)))*100;
+  sl.style.background='linear-gradient(90deg,#0D9488 0%,#0D9488 '+p+'%,#E5E7EB '+p+'%,#E5E7EB 100%)';
+}
+
+function calc(){
+  const rev=pN(document.getElementById('c_rev').value);
+  const prof=pN(document.getElementById('c_prof').value);
+  const recPct=parseInt(document.getElementById('s_rec').value);
+  const w2Pct=parseInt(document.getElementById('s_w2').value);
+  const growPct=parseInt(document.getElementById('s_grow').value);
+  const accumPct=parseInt(document.getElementById('s_accum').value);
+
+  document.getElementById('d_rec').textContent=recPct+'%';
+  document.getElementById('d_w2').textContent=w2Pct+'%';
+  document.getElementById('d_grow').textContent=(growPct>=0?'+':'')+growPct+'%';
+  document.getElementById('d_accum').textContent=accumPct+'%';
+
+  [document.getElementById('s_rec'),document.getElementById('s_w2'),document.getElementById('s_grow'),document.getElementById('s_accum')].forEach(uSB);
+
+  // Discounts
+  const nrDisc=(1-recPct/100)*NR_D;
+  const osjDisc=(1-w2Pct/100)*OSJ_D;
+  // Growth bonus: +2% per point above 5%, -1% per point below 0%
+  let growAdj=0;
+  if(growPct>5) growAdj=(growPct-5)*0.02;
+  else if(growPct<0) growAdj=growPct*0.01;
+  // Accumulation bonus: slight premium for higher accumulation (more growth potential)
+  const accumAdj=(accumPct-50)/100*0.1; // ±5% max
+
+  const finalMult=(1-nrDisc)*(1-osjDisc)*(1+growAdj)*(1+accumAdj);
+
+  const tier=gM(prof);
+  const vals={low:prof*tier.low,mid:prof*tier.mid,high:prof*tier.high};
+  const adjVal=vals.high*finalMult;
+
+  document.getElementById('o_val').textContent=fC(adjVal);
+  document.getElementById('o_pct').textContent=fP(finalMult)+' of high-end';
+  document.getElementById('o_mult').textContent=tier.low+'x – '+tier.high+'x';
+  document.getElementById('o_mid').textContent='Mid: '+tier.mid+'x';
+
+  const margin=rev>0?prof/rev:0;
+  document.getElementById('o_marg').textContent=fP(margin);
+  document.getElementById('o_margSub').textContent='On '+fC(rev)+' revenue';
+
+  const range=vals.high-vals.low;
+  const pos=range>0?Math.min(Math.max((adjVal-vals.low)/range,0),1):0.5;
+  let qL,qC;
+  if(pos<=0.2){qL='Lower 20%';qC='#DC2626'}
+  else if(pos<=0.4){qL='Below Mid';qC='#EA580C'}
+  else if(pos<=0.6){qL='Mid-Range';qC='#CA8A04'}
+  else if(pos<=0.8){qL='Above Mid';qC='#16A34A'}
+  else{qL='Top 20%';qC='#0D9488'}
+
+  document.getElementById('o_qLbl').textContent=qL;
+  document.getElementById('o_qLbl').style.color=qC;
+  document.getElementById('o_arrow').style.top=((1-pos)*88+4)+'%';
+
+  // Values updated via o_loV, o_miV, o_hiV below
+  document.getElementById('o_loLbl').textContent='Low ('+tier.low+'x)';
+  document.getElementById('o_miLbl').textContent='Mid ('+tier.mid+'x)';
+  document.getElementById('o_hiLbl').textContent='High ('+tier.high+'x)';
+  document.getElementById('o_loV').textContent=fC(vals.low);
+  document.getElementById('o_miV').textContent=fC(vals.mid);
+  document.getElementById('o_hiV').textContent=fC(vals.high);
+}
+
+function hCI(e){
+  const i=e.target;const p=i.selectionStart;const ol=i.value.length;
+  const r=i.value.replace(/,/g,'').replace(/[^\d]/g,'');
+  i.value=r?r.replace(/\B(?=(\d{3})+(?!\d))/g,','):'';
+  const nl=i.value.length;i.setSelectionRange(p+(nl-ol),p+(nl-ol));calc();
+}
+document.getElementById('c_rev').addEventListener('input',hCI);
+document.getElementById('c_prof').addEventListener('input',hCI);
+['s_rec','s_w2','s_grow','s_accum'].forEach(id=>document.getElementById(id).addEventListener('input',calc));
+calc();
+
+/* ═══ PIPELINE ═══ */
+const PL=[
+  {id:'OC-041',name:'Fee-Only RIA',reg:'Atlanta / GA',aum:'$400–600M',rev:'$2.0–2.5M',stg:'Active',sc:'sa',m:3,regs:['Atlanta / Georgia','Carolinas'],svcs:['Investments','Holistic Planning'],dems:['HNW ($1-5M)','VHNW ($5-30M)'],invs:['Passive','TAMP'],av:500,rc:75},
+  {id:'OC-038',name:'Hybrid RIA/BD',reg:'NYC Metro',aum:'$800M–1B',rev:'$4.5–5.0M',stg:'NDA Phase',sc:'sn2',m:5,regs:['NYC Metro','NJ / Phila / Delaware'],svcs:['Investments','Insurance'],dems:['UHNW ($30M+)','VHNW ($5-30M)'],invs:['Active','Private Placement'],av:900,rc:90},
+  {id:'OC-035',name:'Fee-Only RIA',reg:'California',aum:'$200–400M',rev:'$1.2–1.5M',stg:'Matching',sc:'sm',m:7,regs:['California','Seattle / PNW'],svcs:['Holistic Planning','Insurance'],dems:['Mass Affluent (<$1M)','HNW ($1-5M)'],invs:['Passive','Active'],av:300,rc:80},
+  {id:'OC-032',name:'Fee-Based Practice',reg:'Heartland',aum:'$150–250M',rev:'$0.8–1.0M',stg:'Intake',sc:'si',m:0,regs:['Heartland / Midwest'],svcs:['Investments'],dems:['Mass Affluent (<$1M)'],invs:['Passive'],av:200,rc:85},
+  {id:'OC-029',name:'Hybrid RIA',reg:'Texas',aum:'$600–800M',rev:'$3.0–3.5M',stg:'Active',sc:'sa',m:4,regs:['Texas','Four Corners'],svcs:['Investments','Annuities'],dems:['UHNW ($30M+)','VHNW ($5-30M)'],invs:['Active','TAMP'],av:700,rc:92},
+  {id:'OC-024',name:'Multi-Office RIA',reg:'Florida',aum:'$1.0–1.5B',rev:'$6.0–7.0M',stg:'Closed ✓',sc:'sc',m:6,regs:['Florida','Atlanta / Georgia','DC / VA / MD'],svcs:['Investments','Insurance','Holistic Planning'],dems:['UHNW ($30M+)','VHNW ($5-30M)','HNW ($1-5M)'],invs:['Active','Private Placement','TAMP'],av:1200,rc:98}
+];
+let selPL=0;
+function bPL(){
+  const tb=document.querySelector('#ptbl tbody');tb.innerHTML='';
+  PL.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+    tr.className='ck'+(i===selPL?' se':'');
+    tr.innerHTML='<td><span class="pid">'+p.id+'</span></td><td style="font-weight:500">'+p.name+'</td><td>'+p.reg+'</td><td class="pam">'+p.aum+'</td><td>'+p.rev+'</td><td><span class="sg '+p.sc+'"><span class="sd"></span>'+p.stg+'</span></td><td>'+(p.m||'—')+'</td><td><button style="padding:3px 10px;background:var(--g50);color:var(--gc-teal);border:1px solid var(--gc-teal);border-radius:4px;font-size:9px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="event.stopPropagation();alert(\'Demo: Added to watchlist\')">+ Watch</button></td>';
+    tr.onclick=()=>selPLRow(i);
+    tb.appendChild(tr);
+  });
+}
+function selPLRow(i){
+  selPL=i;bPL();
+  const p=PL[i];
+  document.getElementById('me_lbl').textContent=p.name+' — '+p.id+' ('+p.reg+', '+p.aum+')';
+  SP.regions=[...p.regs];SP.services=[...p.svcs];SP.demos=[...p.dems];SP.invs=[...p.invs];
+  bC('me_reg',ME_R,SP.regions,'regions');
+  bC('me_svc',ME_S,SP.services,'services');
+  bC('me_dem',ME_D,SP.demos,'demos');
+  bC('me_inv',ME_I,SP.invs,'invs');
+  runMatch();
+}
+
+/* ═══ COMPANY PROFILE POPUP ═══ */
+const PROFILES = {
+  'ARCHER': { name:'ARCHER', type:'Fee-Only RIA · Four Corners (AZ)', aum:'$150–200M', rev:'$1.2–1.5M', match:'92%', stage:'Initial Meeting', details:'Recurring revenue 95%+. Schwab custodian. Mass Affluent & HNW client base. Blended investment approach (Active & Passive). Portfolio management platform. eMoney financial planning. 4 advisors, 8 employees. Est. 2012. Transaction timeline: 3–6 months. Owner seeking long-term transition (3+ years).', bd:{r:'13/15',s:'10/10',d:'12/15',i:'9/10'} },
+  'SUMMIT': { name:'SUMMIT', type:'Hybrid RIA · Texas', aum:'$600–800M', rev:'$3.0–3.5M', match:'87%', stage:'CIM Review', details:'92% recurring revenue. Multi-custodian (Schwab, Fidelity). VHNW & UHNW client base. Active management with TAMP overlay. 12 advisors. Est. 2005. Strong growth trajectory in Texas market.', bd:{r:'12/15',s:'9/10',d:'11/15',i:'8/10'} },
+  'ATLAS': { name:'ATLAS', type:'Multi-Office RIA · Florida', aum:'$1.0–1.5B', rev:'$6.0–7.0M', match:'Closed', stage:'Deal Closed Mar 7', details:'98% recurring. Multi-office (FL, GA, DC/VA). Full service: Investments, Insurance, Holistic Planning. UHNW/VHNW/HNW. Active + Private Placement style. 18 advisors. $1.2B AUM acquired.', bd:{r:'11/15',s:'10/10',d:'13/15',i:'8/10'} },
+  'MERIDIAN': { name:'MERIDIAN', type:'Fee-Only RIA · California', aum:'$200–400M', rev:'$1.2–1.5M', match:'75%', stage:'CIM Review', details:'80% recurring. Schwab custodian. Mass Affluent & HNW. Passive/Active blend. 6 advisors. Strong referral network. Est. 2010. Seeking 12-18 month timeline.', bd:{r:'9/15',s:'8/10',d:'10/15',i:'7/10'} }
+};
+const BUYER_PROFILES = {
+  'Wealth Enhancement Group': { name:'Wealth Enhancement Group', type:'National RIA Aggregator', aum:'$85B+ AUM', regions:'Nationwide — 40+ offices', focus:'HNW, VHNW, UHNW. Full-service wealth management, tax, estate planning. Multi-custodian. Active acquirer seeking fee-only and hybrid RIAs in all regions.', score:'48/50' , bd:{r:'14/15',s:'10/10',d:'14/15',i:'10/10'}},
+  'Cerity Partners': { name:'Cerity Partners', type:'National RIA Platform', aum:'$90B+ AUM', regions:'Major metros nationwide', focus:'HNW, VHNW. Comprehensive wealth management with tax, estate, and insurance integration. Schwab/Fidelity custodian. Seeking established practices with strong recurring revenue.', score:'46/50' , bd:{r:'12/15',s:'10/10',d:'14/15',i:'10/10'}},
+  'Carson Group': { name:'Carson Group', type:'Advisor Network & RIA', aum:'$40B+ AUM', regions:'Nationwide network', focus:'Mass Affluent, HNW. Partnership model with centralized investment management. Orion power user. Seeking advisors who value coaching and community.', score:'45/50' , bd:{r:'12/15',s:'9/10',d:'13/15',i:'9/10'}},
+  'Perigon Wealth Mgmt': { name:'Perigon Wealth Management', type:'Regional RIA', aum:'$10B+ AUM', regions:'West Coast, Four Corners, Texas', focus:'HNW, VHNW. Personalized wealth planning with active and passive strategies. Schwab custodian. Seeking culturally aligned firms in growth markets.', score:'45/50' , bd:{r:'13/15',s:'9/10',d:'12/15',i:'9/10'}},
+  'Creative Planning': { name:'Creative Planning', type:'National RIA', aum:'$300B+ AUM', regions:'Nationwide', focus:'Mass Affluent through UHNW. Full financial planning — investments, tax, estate, insurance, trust. Aggressive acquirer seeking all practice types.', score:'44/50' , bd:{r:'12/15',s:'9/10',d:'13/15',i:'8/10'}},
+  'Mercer Advisors': { name:'Mercer Advisors', type:'National RIA Consolidator', aum:'$55B+ AUM', regions:'35+ offices nationwide', focus:'HNW, VHNW. Total wealth management including tax prep and estate. Multi-custodian. Seeking fee-only practices with $100M+ AUM.', score:'43/50' , bd:{r:'11/15',s:'9/10',d:'13/15',i:'8/10'}},
+  'Modern Wealth Mgmt': { name:'Modern Wealth Management', type:'Regional RIA', aum:'$5B+ AUM', regions:'Midwest, Four Corners, Texas', focus:'HNW. Goal-based financial planning with institutional-quality investment management. Schwab custodian. Seeking practices with strong client relationships.', score:'43/50' , bd:{r:'12/15',s:'8/10',d:'13/15',i:'8/10'}},
+  'NorthRock Partners': { name:'NorthRock Partners', type:'Regional RIA', aum:'$15B+ AUM', regions:'Midwest, Southeast', focus:'HNW, VHNW. Comprehensive wealth advisory with alternative investments. Multi-custodian. Seeking advisors with entrepreneurial mindset.', score:'41/50' , bd:{r:'11/15',s:'9/10',d:'12/15',i:'7/10'}},
+  'Edelman Financial Engines': { name:'Edelman Financial Engines', type:'National RIA', aum:'$300B+ AUM', regions:'East Coast, Midwest (no Four Corners)', focus:'Mass Affluent. High-volume, technology-driven financial planning. Limited regional presence in western states.', score:'DQ', dq:'Region: 0 (No Four Corners presence) · Demographics: 2 (Limited Mass Affluent/HNW focus)' },
+  'Alera Group': { name:'Alera Group', type:'Insurance & Benefits Platform', aum:'$3B+ AUM', regions:'East Coast, Southeast (no western coverage)', focus:'Employee benefits, property/casualty, wealth management. Insurance-first model with RIA bolt-on.', score:'DQ', dq:'Region: 0 (No western region coverage) · Investment Style: 1 (Insurance-first, style mismatch)' },
+  'MassMutual': { name:'MassMutual', type:'Insurance Carrier / RIA', aum:'$700B+ General Account', regions:'East Coast (no Four Corners)', focus:'Insurance products, annuities, passive investment solutions. Carrier model with affiliated RIA network.', score:'DQ', dq:'Region: 0 (No Four Corners presence) · Investment Style: 0 (Exclusively passive/insurance model)' },
+  'Focus Partners Wealth': { name:'Focus Partners Wealth', type:'PE-backed Platform', aum:'$400B+ Partner AUM', regions:'Major metros only', focus:'VHNW, UHNW only. Ultra-high-end wealth management and family office services. Limited interest in Mass Affluent/HNW.', score:'DQ', dq:'Region: 2 (Weak Four Corners presence) · Demographics: 2 (VHNW/UHNW-only, no Mass Affluent/HNW fit)' },
+};
+function showBuyerProfile(name) {
+  const p = BUYER_PROFILES[name]; if (!p) { alert('Profile: ' + name); return; }
+  document.getElementById('ppName').textContent = p.name;
+  document.getElementById('ppType').textContent = p.type;
+  document.getElementById('ppAUM').textContent = p.aum;
+  document.getElementById('ppRev').textContent = p.regions;
+  document.getElementById('ppMatch').textContent = p.score;
+  document.getElementById('ppStage').textContent = p.type;
+  document.getElementById('ppDetails').textContent = p.focus;
+  // DQ callout
+  const dqEl = document.getElementById('ppDQ');
+  if (p.dq) {
+    dqEl.style.display = 'block';
+    dqEl.innerHTML = '<div style="font-size:12px;font-weight:700;color:#991B1B;margin-bottom:6px;">⚠ DISQUALIFIED — Below Threshold</div><div style="font-size:13px;color:#991B1B;line-height:1.6;">' + p.dq + '</div>';
+  } else {
+    dqEl.style.display = 'none';
+  }
+  // Score breakdown
+  const bdEl2 = document.getElementById('ppBreakdown');
+  if (p.bd) {
+    bdEl2.style.display = 'block';
+    document.getElementById('ppBdTitle').textContent = 'Score Breakdown — ' + p.score;
+    document.getElementById('ppBdR').textContent = p.bd.r;
+    document.getElementById('ppBdS').textContent = p.bd.s;
+    document.getElementById('ppBdD').textContent = p.bd.d;
+    document.getElementById('ppBdI').textContent = p.bd.i;
+  } else { bdEl2.style.display = 'none'; }
+  document.getElementById('profilePopup').style.display = 'flex';
+}
+
+function showProfile(code) {
+  const p = PROFILES[code]; if (!p) return;
+  document.getElementById('ppName').textContent = p.name;
+  document.getElementById('ppType').textContent = p.type;
+  document.getElementById('ppAUM').textContent = p.aum;
+  document.getElementById('ppRev').textContent = p.rev;
+  document.getElementById('ppMatch').textContent = p.match;
+  document.getElementById('ppStage').textContent = p.stage;
+  document.getElementById('ppDetails').textContent = p.details;
+  // Score breakdown
+  const bdEl = document.getElementById('ppBreakdown');
+  if (p.bd) {
+    bdEl.style.display = 'block';
+    document.getElementById('ppBdTitle').textContent = 'Score Breakdown — ' + p.match;
+    document.getElementById('ppBdR').textContent = p.bd.r;
+    document.getElementById('ppBdS').textContent = p.bd.s;
+    document.getElementById('ppBdD').textContent = p.bd.d;
+    document.getElementById('ppBdI').textContent = p.bd.i;
+  } else { bdEl.style.display = 'none'; }
+  document.getElementById('profilePopup').style.display = 'flex';
+}
+
+/* ═══ HEATMAP TABLE BUILDER ═══ */
+const HM_BUYERS = [
+  {n:'Wealth Enhancement',t:41,fs:13,dm:13,st:10,loc:5,inv:5,ins:3,ma:5,hnw:5,vhnw:5,pas:5,act:5},
+  {n:'Cerity Partners',t:36,fs:15,dm:11,st:8,loc:2,inv:5,ins:3,ma:3,hnw:5,vhnw:3,pas:3,act:5},
+  {n:'NewEdge Wealth',t:36,fs:11,dm:15,st:8,loc:2,inv:5,ins:3,ma:5,hnw:5,vhnw:5,pas:5,act:3},
+  {n:'Perigon Wealth',t:33,fs:11,dm:9,st:8,loc:5,inv:5,ins:3,ma:5,hnw:3,vhnw:1,pas:3,act:5},
+  {n:'Modern Wealth',t:30,fs:10,dm:9,st:8,loc:3,inv:5,ins:2,ma:3,hnw:1,vhnw:5,pas:5,act:3},
+  {n:'Carson Group',t:-71,fs:-92,dm:8,st:8,loc:5,inv:5,ins:-100,ma:0,hnw:3,vhnw:5,pas:5,act:0},
+  {n:'Creative Planning',t:-72,fs:10,dm:-92,st:5,loc:5,inv:3,ins:5,ma:0,hnw:5,vhnw:3,pas:3,act:2},
+  {n:'Mercer Advisors',t:-79,fs:-94,dm:8,st:6,loc:1,inv:3,ins:-100,ma:0,hnw:2,vhnw:3,pas:3,act:3},
+  {n:'Edelman Financial',t:-73,fs:-94,dm:10,st:6,loc:5,inv:3,ins:-100,ma:0,hnw:3,vhnw:2,pas:5,act:1},
+  {n:'MassMutual',t:-176,fs:-90,dm:9,st:5,loc:-100,inv:5,ins:-100,ma:0,hnw:3,vhnw:3,pas:3,act:2},
+  {n:'Mariner',t:-171,fs:-90,dm:-94,st:8,loc:5,inv:5,ins:-100,ma:0,hnw:5,vhnw:1,pas:3,act:5},
+  {n:'Focus Partners',t:-80,fs:10,dm:-96,st:4,loc:2,inv:5,ins:3,ma:0,hnw:2,vhnw:2,pas:2,act:2},
+];
+function hmColor(v) {
+  if (v <= -100) return 'background:#DC2626;color:white;';
+  if (v <= 0) return 'background:#FECACA;color:#991B1B;';
+  if (v <= 1) return 'background:#FED7AA;color:#9A3412;';
+  if (v <= 2) return 'background:#FDE68A;color:#78350F;';
+  if (v <= 3) return 'background:#BBF7D0;color:#14532D;';
+  if (v <= 4) return 'background:#4ADE80;color:#14532D;';
+  return 'background:#166534;color:white;';
+}
+function hmTotColor(v) {
+  if (v >= 30) return 'background:#166534;color:white;';
+  if (v >= 20) return 'background:#4ADE80;color:#14532D;';
+  if (v >= 10) return 'background:#BBF7D0;color:#14532D;';
+  if (v >= 0) return 'background:#FDE68A;color:#78350F;';
+  return 'background:#FECACA;color:#991B1B;';
+}
+function buildHeatmap() {
+  const tb = document.getElementById('hmTbl'); if(!tb) return;
+  tb.innerHTML = '';
+  HM_BUYERS.forEach(b => {
+    const cols = [b.t,b.fs,b.dm,b.st,b.loc,b.inv,b.ins,b.ma,b.hnw,b.vhnw,b.pas,b.act];
+    let row = '<tr><td style="padding:5px 8px;font-weight:600;color:var(--g700);font-size:11px;white-space:nowrap;">'+b.n+'</td>';
+    row += '<td style="padding:4px;text-align:center;font-weight:700;font-size:10px;border-radius:3px;'+hmTotColor(b.t)+'">'+b.t+'</td>';
+    cols.slice(1).forEach(v => {
+      const display = v <= -100 ? '-100' : v;
+      row += '<td style="padding:4px;text-align:center;font-weight:700;font-size:10px;border-radius:3px;'+hmColor(v)+'">'+display+'</td>';
+    });
+    row += '</tr>';
+    tb.innerHTML += row;
+  });
+}
+
+/* ═══ BUYER STEP NAVIGATION ═══ */
+function showBuyerStep(i) {
+  document.querySelectorAll('#buyerSteps .ps').forEach((s, idx) => {
+    s.classList.remove('sel','done');
+    if (idx < i) s.classList.add('done');
+    if (idx === i) s.classList.add('sel');
+  });
+  document.querySelectorAll('.bs-content').forEach((c, idx) => {
+    c.classList.toggle('bs-on', idx === i);
+  });
+}
+
+/* ═══ MATCHING ENGINE ═══ */
+const ME_R=['Atlanta / Georgia','Boston / New England','California','Carolinas','DC / VA / MD','Florida','Four Corners','Heartland / Midwest','NJ / Phila / Delaware','NYC Metro','Seattle / PNW','Texas','Other'];
+const ME_S=['Investments','Insurance','Annuities','Holistic Planning'];
+const ME_D=['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)','UHNW ($30M+)','Institutional'];
+const ME_I=['Passive','Active','TAMP','Private Placement'];
+
+const BYR=[
+  {n:'Alera Group',r:['Boston / New England','NYC Metro','NJ / Phila / Delaware'],s:['Investments','Insurance','Annuities'],d:['Mass Affluent (<$1M)','HNW ($1-5M)'],i:['Passive','TAMP']},
+  {n:'Apella Wealth',r:['NYC Metro','NJ / Phila / Delaware','DC / VA / MD'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'Bedel Financial',r:['Heartland / Midwest'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active']},
+  {n:'Bison Wealth',r:['Atlanta / Georgia','Carolinas','Florida'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'Blue Trust',r:['Atlanta / Georgia','Florida','Texas','Carolinas','DC / VA / MD'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','TAMP']},
+  {n:'Capita Financial',r:['Heartland / Midwest','NJ / Phila / Delaware'],s:['Investments','Insurance'],d:['Mass Affluent (<$1M)','HNW ($1-5M)'],i:['Passive','TAMP']},
+  {n:'Carson Group',r:['Heartland / Midwest','Texas','Four Corners','California'],s:['Investments','Holistic Planning','Insurance'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','TAMP']},
+  {n:'Cerity Partners',r:['NYC Metro','NJ / Phila / Delaware','Boston / New England','DC / VA / MD'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'Cetera Financial',r:['California','Four Corners','Texas','Heartland / Midwest','Florida','Atlanta / Georgia','Carolinas','DC / VA / MD','NJ / Phila / Delaware','NYC Metro','Boston / New England','Seattle / PNW'],s:['Investments','Insurance','Annuities','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'Clearstead Advisors',r:['Heartland / Midwest','NJ / Phila / Delaware'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)','Institutional'],i:['Active','TAMP']},
+  {n:'Coldstream Wealth',r:['Seattle / PNW','California'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'Commonwealth',r:['Boston / New England','NYC Metro','NJ / Phila / Delaware','DC / VA / MD','Carolinas','Atlanta / Georgia','Florida'],s:['Investments','Insurance','Annuities','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'Corient',r:['NYC Metro','Florida','California','Texas','DC / VA / MD','NJ / Phila / Delaware'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement','TAMP']},
+  {n:'Creative Planning',r:['Heartland / Midwest','Texas','California','NYC Metro','Florida','Atlanta / Georgia','DC / VA / MD'],s:['Investments','Holistic Planning','Insurance'],d:['HNW ($1-5M)','VHNW ($5-30M)','UHNW ($30M+)'],i:['Passive','Active','TAMP']},
+  {n:'Credent Wealth',r:['Heartland / Midwest','Atlanta / Georgia'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'Destination Wealth',r:['California'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'Diversify Advisor',r:['Florida','Atlanta / Georgia','Texas','Carolinas'],s:['Investments','Insurance','Annuities'],d:['Mass Affluent (<$1M)','HNW ($1-5M)'],i:['Passive','TAMP']},
+  {n:'Dynamic Advisor',r:['NJ / Phila / Delaware','NYC Metro','DC / VA / MD'],s:['Investments','Insurance'],d:['Mass Affluent (<$1M)','HNW ($1-5M)'],i:['Passive','Active']},
+  {n:'Edelman Financial',r:['DC / VA / MD','Atlanta / Georgia','Texas','California','NYC Metro','Boston / New England','Florida','NJ / Phila / Delaware'],s:['Investments','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','TAMP']},
+  {n:'Excelsior Capital',r:['NYC Metro','NJ / Phila / Delaware','Boston / New England'],s:['Investments','Annuities'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'Focus Financial',r:['NYC Metro','Boston / New England','California','DC / VA / MD','Florida','Texas'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','TAMP','Private Placement']},
+  {n:'HUB International',r:['Heartland / Midwest','California','NYC Metro','Boston / New England','NJ / Phila / Delaware','Texas'],s:['Investments','Insurance','Annuities','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'LPL Financial',r:['California','Texas','Florida','NYC Metro','Boston / New England','DC / VA / MD','NJ / Phila / Delaware','Atlanta / Georgia','Carolinas','Heartland / Midwest','Four Corners','Seattle / PNW'],s:['Investments','Insurance','Annuities','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'Mariner Wealth',r:['Heartland / Midwest','Texas','Florida','NYC Metro','California'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','TAMP']},
+  {n:'MassMutual',r:['Boston / New England','NYC Metro','NJ / Phila / Delaware','DC / VA / MD','Heartland / Midwest','Carolinas','Atlanta / Georgia','Florida'],s:['Investments','Insurance','Annuities','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)'],i:['Passive','Active']},
+  {n:'Mercer Advisors',r:['California','Four Corners','Texas','Florida','DC / VA / MD','NYC Metro','Carolinas'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','TAMP']},
+  {n:'Merit Financial',r:['Atlanta / Georgia','Carolinas','Florida','Texas'],s:['Investments','Holistic Planning','Insurance'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'Mesirow',r:['Heartland / Midwest','NYC Metro'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)','Institutional'],i:['Active','Private Placement']},
+  {n:'Modern Wealth',r:['Heartland / Midwest','Four Corners'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active']},
+  {n:'NewEdge Capital',r:['NYC Metro','NJ / Phila / Delaware','California','Florida'],s:['Investments','Holistic Planning'],d:['UHNW ($30M+)','VHNW ($5-30M)'],i:['Active','Private Placement','TAMP']},
+  {n:'NorthRock Partners',r:['Heartland / Midwest','Four Corners'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'Osaic',r:['Four Corners','California','Texas','Florida','NYC Metro','NJ / Phila / Delaware','Heartland / Midwest','Carolinas','Atlanta / Georgia'],s:['Investments','Insurance','Annuities','Holistic Planning'],d:['Mass Affluent (<$1M)','HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'Perigon Wealth',r:['California','Four Corners','Florida'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'Private Advisor Grp',r:['NJ / Phila / Delaware','NYC Metro','DC / VA / MD','Carolinas','Florida'],s:['Investments','Insurance','Annuities'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'RFG Advisory',r:['California','Texas','Florida'],s:['Investments','Insurance'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'RWA Wealth',r:['NJ / Phila / Delaware','NYC Metro'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'SeaCrest Wealth',r:['California','Seattle / PNW'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'SignatureFD',r:['Atlanta / Georgia','Carolinas'],s:['Investments','Holistic Planning'],d:['VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','TAMP']},
+  {n:'Simon Quick',r:['NYC Metro','NJ / Phila / Delaware'],s:['Investments','Holistic Planning'],d:['UHNW ($30M+)'],i:['Active','Private Placement']},
+  {n:'Stratos Wealth',r:['NJ / Phila / Delaware','Heartland / Midwest','DC / VA / MD','Carolinas'],s:['Investments','Insurance','Annuities'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'Summit Financial',r:['NJ / Phila / Delaware','NYC Metro','DC / VA / MD'],s:['Investments','Insurance'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active']},
+  {n:'The Mather Group',r:['Heartland / Midwest','California','Texas'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active']},
+  {n:'Triad Wealth',r:['Carolinas','Atlanta / Georgia'],s:['Investments','Insurance','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'Waverly Advisors',r:['Atlanta / Georgia','Carolinas','Florida'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)','UHNW ($30M+)'],i:['Active','TAMP']},
+  {n:'Wealth Enhancement',r:['Heartland / Midwest','NYC Metro','NJ / Phila / Delaware','Florida','Four Corners'],s:['Investments','Holistic Planning','Insurance'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Passive','Active','TAMP']},
+  {n:'Wealth Partners Cap',r:['Texas','Four Corners','Heartland / Midwest'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']},
+  {n:'WorthPointe',r:['Texas','Four Corners'],s:['Investments','Holistic Planning'],d:['HNW ($1-5M)','VHNW ($5-30M)'],i:['Active','TAMP']}
+];
+
+let SP={regions:['Atlanta / Georgia','Carolinas'],services:['Investments','Holistic Planning'],demos:['HNW ($1-5M)','VHNW ($5-30M)'],invs:['Passive','TAMP']};
+
+function bC(cid,opts,active,cat){
+  const c=document.getElementById(cid);c.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='mec'+(active.includes(o)?' on':'');b.textContent=o;
+    b.onclick=()=>{
+      if(active.includes(o))active.splice(active.indexOf(o),1);else active.push(o);
+      SP[cat]=active;bC(cid,opts,active,cat);runMatch();
+    };
+    c.appendChild(b);
+  });
+}
+
+function scCat(si,bi){if(!si.length||!bi.length)return 1;const ov=si.filter(x=>bi.includes(x)).length;const mx=Math.min(si.length,bi.length);if(!mx)return 1;const r=ov/mx;return r>=0.8?5:r>=0.6?4:r>=0.4?3:r>=0.2?2:1}
+function hC(s){return 'hm-c h'+s}
+function tC(t){return 'hm-c hm-t '+(t>=16?'ht-h':t>=12?'ht-m':'ht-l')}
+
+function runMatch(){
+  const g=document.getElementById('hmGrid');g.innerHTML='';
+  ['','Region','Services','Demo','Style','TOTAL'].forEach(h=>{const d=document.createElement('div');d.className='hm-h';d.textContent=h;g.appendChild(d)});
+
+  const scored=BYR.map(b=>{
+    const rs=scCat(SP.regions,b.r),ss=scCat(SP.services,b.s),ds=scCat(SP.demos,b.d),is=scCat(SP.invs,b.i),tot=rs+ss+ds+is;
+    return{...b,rs,ss,ds,is,tot};
+  }).sort((a,b)=>b.tot-a.tot);
+
+  scored.forEach(b=>{
+    const l=document.createElement('div');l.className='hm-rl';l.textContent=b.n;g.appendChild(l);
+    [b.rs,b.ss,b.ds,b.is].forEach(s=>{const c=document.createElement('div');c.className=hC(s);c.textContent=s;g.appendChild(c)});
+    const tc=document.createElement('div');tc.className=tC(b.tot);tc.textContent=b.tot+'/20';g.appendChild(tc);
+  });
+  document.getElementById('me_ct').textContent=scored.length+' Buyers';
+}
+
+bC('me_reg',ME_R,SP.regions,'regions');
+bC('me_svc',ME_S,SP.services,'services');
+bC('me_dem',ME_D,SP.demos,'demos');
+bC('me_inv',ME_I,SP.invs,'invs');
+bPL();runMatch();buildHeatmap();
+
+/* ═══ MARKETABILITY ASSESSMENT ═══ */
+function calcMarket() {
+  const r = parseInt(document.getElementById('ma_region').value);
+  // Services: score based on number and type selected
+  const inv = document.getElementById('ma_svc_inv').checked;
+  const ins = document.getElementById('ma_svc_ins').checked;
+  const ann = document.getElementById('ma_svc_ann').checked;
+  const hol = document.getElementById('ma_svc_hol').checked;
+  const svcCount = [inv,ins,ann,hol].filter(Boolean).length;
+  // Investments and Holistic are most valued; more services = higher score
+  let s = 0;
+  if (inv) s += 2;
+  if (hol) s += 2;
+  if (ins) s += 1;
+  if (ann) s += 0.5;
+  s = Math.min(Math.round(s), 5); // cap at 5
+  if (svcCount === 0) s = 0;
+  const d = parseInt(document.getElementById('ma_demo').value);
+  const i = parseInt(document.getElementById('ma_style').value);
+  const total = r + s + d + i;
+  const maxScore = 20;
+  const pct = total / maxScore;
+  
+  document.getElementById('ma_score').textContent = total;
+  
+  // Buyer interest estimate (out of 47)
+  const buyers = Math.round(pct * pct * 42 + 5); // non-linear: high scores get more buyers
+  const buyerPct = Math.round((buyers / 47) * 100);
+  document.getElementById('ma_buyers').textContent = buyers + ' of 47';
+  document.getElementById('ma_bar').style.width = buyerPct + '%';
+  
+  // Label
+  let label, labelColor;
+  if (total >= 18) { label = 'Highly Marketable'; labelColor = '#4ADE80'; }
+  else if (total >= 15) { label = 'Strong Market Interest'; labelColor = '#86EFAC'; }
+  else if (total >= 12) { label = 'Moderate Interest'; labelColor = '#FDE68A'; }
+  else if (total >= 8) { label = 'Limited Market'; labelColor = '#FCA5A5'; }
+  else { label = 'Challenging Market'; labelColor = '#EF4444'; }
+  document.getElementById('ma_label').textContent = label;
+  document.getElementById('ma_label').style.color = labelColor;
+  
+  // Dimension labels
+  function dimLabel(v) { return v >= 5 ? 'High' : v >= 4 ? 'Strong' : v >= 3 ? 'Moderate' : v >= 2 ? 'Low' : 'Very Low'; }
+  function dimColor(v) { return v >= 4 ? 'var(--gc-teal)' : v >= 3 ? '#CA8A04' : '#DC2626'; }
+  ['ma_rScore','ma_sScore','ma_dScore','ma_iScore'].forEach((id, idx) => {
+    const v = [r,s,d,i][idx];
+    const el = document.getElementById(id);
+    el.textContent = dimLabel(v);
+    el.style.color = dimColor(v);
+  });
+}
+calcMarket();
+
+/* ═══ PIPELINE STEP ACCORDION ═══ */
+function showPipeStep(idx) {
+  document.querySelectorAll('.pipe-step').forEach((step, i) => {
+    const vid = step.querySelector('.pipe-video');
+    const video = step.querySelector('video');
+    if (i === idx) {
+      step.style.background = 'rgba(255,255,255,0.08)';
+      step.style.borderColor = 'rgba(13,148,136,0.4)';
+      vid.style.maxHeight = '500px';
+      vid.style.marginTop = '10px';
+      if (video) video.play().catch(()=>{});
+    } else {
+      step.style.background = 'rgba(255,255,255,0.03)';
+      step.style.borderColor = 'rgba(255,255,255,0.1)';
+      vid.style.maxHeight = '0';
+      vid.style.marginTop = '0';
+      if (video) { video.pause(); video.currentTime = 0; }
+    }
+  });
+}
+</script>
+<script>if(typeof bC==="function"){bC("me_reg",ME_R,SP.regions,"regions");bC("me_svc",ME_S,SP.services,"services");bC("me_dem",ME_D,SP.demos,"demos");bC("me_inv",ME_I,SP.invs,"invs");runMatch();}</script>
+</body>
+</html>
