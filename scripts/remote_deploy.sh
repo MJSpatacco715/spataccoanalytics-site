@@ -38,8 +38,12 @@ stamp=$(date -u +%Y%m%dT%H%M%SZ)
 mkdir -p "$priv/backups"
 touch "$priv/deployed.txt"
 
-# Files to remove: deployed by us before, not in the new list.
-comm -23 <(sort -u "$priv/deployed.txt") <(sort -u "$priv/incoming.txt") > "$priv/remove.txt" || true
+# Files to remove: deployed by us before, not in the new list. Sorted into
+# plain files because the host's shell has no /dev/fd for process
+# substitution, and a failure here must stop the deploy, not skip removals.
+sort -u "$priv/deployed.txt" > "$priv/old.txt"
+sort -u "$priv/incoming.txt" > "$priv/new.txt"
+comm -23 "$priv/old.txt" "$priv/new.txt" > "$priv/remove.txt"
 
 # Back up whatever exists today at any path we will replace or remove.
 ( cd "$web" && cat "$priv/incoming.txt" "$priv/remove.txt" | sort -u | while IFS= read -r f; do
@@ -55,5 +59,5 @@ while IFS= read -r f; do
 done < "$priv/remove.txt"
 
 cp "$priv/incoming.txt" "$priv/deployed.txt"
-rm -f "$priv/incoming.tgz" "$priv/incoming.txt" "$priv/remove.txt" "$priv/backup-list.txt"
+rm -f "$priv/incoming.tgz" "$priv/incoming.txt" "$priv/remove.txt" "$priv/backup-list.txt" "$priv/old.txt" "$priv/new.txt"
 echo "DEPLOYED $(wc -l < "$priv/deployed.txt") files to $web (backup: ${stamp}.tgz)"

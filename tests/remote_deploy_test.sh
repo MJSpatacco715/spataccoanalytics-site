@@ -64,6 +64,10 @@ stage "$src"
 HOME="$home" bash "$here/scripts/remote_deploy.sh" "www/example.com" "private/spa-site" "saratoga" >/dev/null 2>&1; rc=$?
 check "refuses a non-public_html root" '[ $rc -ne 0 ]'
 
+# 6. The host's shell has no /dev/fd, so process substitution fails there
+#    even though it works here (found on the first live deploy).
+check "no process substitution in the deploy script" '! grep -q "<(" "$here/scripts/remote_deploy.sh"'
+
 rm -rf "$src"
 [ $fails -eq 0 ] && echo "all $n checks passed" || echo "$fails of $n checks failed"
 exit $fails
