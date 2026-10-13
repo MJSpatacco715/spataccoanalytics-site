@@ -9,15 +9,16 @@ check() { n=$((n+1)); if eval "$2"; then :; else fails=$((fails+1)); echo "FAIL 
 
 home=$(mktemp -d); trap 'rm -rf "$home"' EXIT
 web="$home/www/example.com/public_html"; priv="$home/private/spa-site"
-mkdir -p "$web/tools" "$web/saratoga" "$priv"
+mkdir -p "$web/tools/gc-demo" "$web/saratoga" "$priv"
 echo "old tools page" > "$web/tools/index.html"
 echo "someone else's" > "$web/saratoga/index.php"
 echo "unmanaged" > "$web/notes.txt"
+echo "kept off the repo" > "$web/tools/gc-demo/index.html"
 
 stage() {  # stage <dir> : tar the dir's files as the incoming set
   ( cd "$1" && find . -type f | sed 's#^\./##' | sort > "$priv/incoming.txt" && tar -czf "$priv/incoming.tgz" -T "$priv/incoming.txt" )
 }
-run() { HOME="$home" bash "$here/scripts/remote_deploy.sh" "www/example.com/public_html" "private/spa-site" "saratoga .well-known" >/dev/null 2>&1; }
+run() { HOME="$home" bash "$here/scripts/remote_deploy.sh" "www/example.com/public_html" "private/spa-site" "saratoga .well-known tools/gc-demo" >/dev/null 2>&1; }
 
 # 1. First deploy: replaces the tools page, adds a new page, backs up the old one.
 src=$(mktemp -d); mkdir -p "$src/tools/football"
@@ -44,6 +45,14 @@ stage "$src"; run; rc=$?
 check "refuses saratoga/" '[ $rc -ne 0 ]'
 check "saratoga still intact" 'grep -q "someone else" "$web/saratoga/index.php"'
 rm -rf "$src/saratoga"
+
+# 3b. The same for a nested directory kept out of the repo.
+mkdir -p "$src/tools/gc-demo"; echo "x" > "$src/tools/gc-demo/index.html"
+stage "$src"; run; rc=$?
+check "refuses tools/gc-demo/" '[ $rc -ne 0 ]'
+check "tools/gc-demo still intact" 'grep -q "kept off the repo" "$web/tools/gc-demo/index.html"'
+rm -rf "$src/tools/gc-demo"
+check "a deploy beside it leaves it alone" 'stage "$src"; run && grep -q "kept off the repo" "$web/tools/gc-demo/index.html"'
 
 # 4. Refuses a path that climbs out of the web root.
 printf '../escape.txt\n' > "$priv/incoming.txt"; tar -czf "$priv/incoming.tgz" -T /dev/null
