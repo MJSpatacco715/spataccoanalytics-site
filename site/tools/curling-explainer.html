@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Curling — Explained via Cornhole</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ice:    #EEF6FB;
+      --frost:  #C9E4F4;
+      --blue:   #1A5276;
+      --teal:   #0E8C8C;
+      --red:    #C0392B;
+      --gold:   #D4AC0D;
+      --slate:  #2C3E50;
+      --mid:    #5D7A8A;
+      --text:   #1C2B36;
+      --muted:  #7F9BA6;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--ice);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    /* ── HEADER ─────────────────────────────────── */
+    .header {
+      max-width: 860px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+    .kicker::before {
+      content: '';
+      display: inline-block;
+      width: 28px;
+      height: 3px;
+      background: var(--teal);
+      border-radius: 2px;
+    }
+
+    h1 {
+      font-family: 'Bebas Neue', Impact, sans-serif;
+      font-size: clamp(3rem, 8vw, 5.5rem);
+      line-height: 0.95;
+      letter-spacing: 0.03em;
+      color: var(--blue);
+      margin-bottom: 0.5rem;
+    }
+    h1 .vs {
+      color: var(--teal);
+      font-size: 0.55em;
+      vertical-align: middle;
+      margin: 0 0.15em;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--mid);
+      max-width: 560px;
+      margin-top: 0.4rem;
+      line-height: 1.5;
+    }
+
+    /* ── NAV ─────────────────────────────────────── */
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      max-width: 860px;
+      margin: 0 auto 2rem;
+    }
+
+    .nav-btn {
+      padding: 0.45rem 1.2rem;
+      border: 2px solid var(--frost);
+      border-radius: 100px;
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--mid);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .nav-btn:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+    .nav-btn.active {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: white;
+    }
+
+    /* ── CONTENT ─────────────────────────────────── */
+    .content {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* ── CARD ────────────────────────────────────── */
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 1.75rem 2rem;
+      margin-bottom: 1.25rem;
+      border: 1.5px solid var(--frost);
+      box-shadow: 0 2px 12px rgba(26,82,118,0.06);
+    }
+    .card-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--teal);
+      margin-bottom: 0.9rem;
+    }
+
+    /* ── COMPARISON ROW ──────────────────────────── */
+    .compare {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    .compare-side {
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+    }
+    .compare-side.curling { background: #EAF4FB; border-left: 4px solid var(--blue); }
+    .compare-side.cornhole { background: #FEF9E7; border-left: 4px solid var(--gold); }
+    .compare-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.35rem;
+    }
+    .compare-label.curling { color: var(--blue); }
+    .compare-label.cornhole { color: #B7950B; }
+    .compare-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+    }
+    .compare-body {
+      font-size: 0.875rem;
+      color: var(--mid);
+      line-height: 1.55;
+    }
+    .compare-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      color: var(--mid);
+      font-size: 1.2rem;
+      padding-top: 0.9rem;
+    }
+
+    /* ── CALLOUT ─────────────────────────────────── */
+    .callout {
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-top: 0.75rem;
+    }
+    .callout.blue  { background: #D6EAF8; border-left: 4px solid var(--blue); color: var(--slate); }
+    .callout.teal  { background: #D0F0F0; border-left: 4px solid var(--teal); color: #0A5E5E; }
+    .callout.red   { background: #FADBD8; border-left: 4px solid var(--red);  color: #7B241C; }
+    .callout.gold  { background: #FEF9E7; border-left: 4px solid var(--gold); color: #7D6608; }
+    .callout strong { font-weight: 700; }
+
+    /* ── STAT ROW ────────────────────────────────── */
+    .stat-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      flex: 1;
+      min-width: 130px;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      background: var(--ice);
+      border: 1.5px solid var(--frost);
+      text-align: center;
+    }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.6rem;
+      color: var(--blue);
+      line-height: 1;
+    }
+    .stat-unit {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--mid);
+      margin-top: 0.1rem;
+    }
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      line-height: 1.3;
+    }
+
+    /* ── DIAGRAM: THE SHEET ──────────────────────── */
+    .sheet-diagram {
+      background: #0B5563;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 0.75rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .sheet-inner {
+      background: #B8E4EE;
+      border-radius: 6px;
+      width: 100%;
+      height: 160px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1rem;
+    }
+    /* Ice texture */
+    .sheet-inner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(255,255,255,0.07) 0px,
+        rgba(255,255,255,0.07) 1px,
+        transparent 1px,
+        transparent 40px
+      );
+      border-radius: 6px;
+    }
+    .house {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .house-ring {
+      border-radius: 50%;
+      border: 3px solid white;
+      position: absolute;
+    }
+    .house-r1 { width: 100px; height: 100px; border-color: var(--blue); }
+    .house-r2 { width: 70px;  height: 70px;  border-color: white; }
+    .house-r3 { width: 44px;  height: 44px;  border-color: var(--red); }
+    .house-button {
+      width: 16px;
+      height: 16px;
+      background: white;
+      border-radius: 50%;
+      position: relative;
+      z-index: 2;
+    }
+    .sheet-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      position: relative;
+      z-index: 1;
+    }
+    .hog-line {
+      width: 80%;
+      height: 3px;
+      background: var(--red);
+      border-radius: 1px;
+    }
+    .center-line {
+      width: 2px;
+      height: 60px;
+      background: rgba(255,255,255,0.5);
+    }
+    .sheet-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+      margin-top: 4px;
+    }
+    .dim-badge {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 0.75rem;
+      background: rgba(0,0,0,0.4);
+      color: rgba(255,255,255,0.9);
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      z-index: 2;
+    }
+
+    /* ── SCORING DIAGRAM ─────────────────────────── */
+    .scoring-visual {
+      display: flex;
+      gap: 1rem;
+      align-items: stretch;
+    }
+    .scoring-box {
+      flex: 1;
+      border-radius: 10px;
+      padding: 1.1rem;
+      font-size: 0.875rem;
+    }
+    .scoring-box.b { background: #EAF4FB; }
+    .scoring-box.y { background: #FEF9E7; }
+    .scoring-box h4 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.6rem;
+    }
+    .scoring-box.b h4 { color: var(--blue); }
+    .scoring-box.y h4 { color: #B7950B; }
+    .score-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+      font-size: 0.83rem;
+      color: var(--slate);
+    }
+    .score-row .dot {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: white;
+    }
+    .dot-red   { background: var(--red); }
+    .dot-yel   { background: var(--gold); }
+    .dot-bag   { background: var(--gold); font-size: 0.55rem; }
+    .dot-hole  { background: #555; }
+
+    /* ── TEAMS TABLE ─────────────────────────────── */
+    .team-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .team-table th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      border-bottom: 2px solid var(--frost);
+    }
+    .team-table td {
+      padding: 0.65rem 0.75rem;
+      vertical-align: top;
+      border-bottom: 1px solid var(--frost);
+      line-height: 1.45;
+    }
+    .team-table tr:last-child td { border-bottom: none; }
+    .role-name {
+      font-weight: 700;
+      color: var(--blue);
+      white-space: nowrap;
+    }
+    .role-alt {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 1px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .badge-blue { background: #D6EAF8; color: var(--blue); }
+    .badge-gold { background: #FEF9E7; color: #B7950B; }
+
+    /* ── ENDS TABLE ──────────────────────────────── */
+    .ends-visual {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+    .end-cell {
+      background: var(--ice);
+      border: 1.5px solid var(--frost);
+      border-radius: 6px;
+      padding: 0.5rem;
+      text-align: center;
+    }
+    .end-cell .end-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--blue);
+    }
+    .end-cell .end-pts {
+      font-size: 0.7rem;
+      color: var(--mid);
+    }
+    .end-cell.scoring { background: #EAF4FB; border-color: var(--blue); }
+    .end-cell.blank   { background: #FEF0F0; border-color: #F1948A; }
+
+    /* ── DELIVERY STEPS ──────────────────────────── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+    .step {
+      display: flex;
+      gap: 0.9rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .step-body h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.15rem; }
+    .step-body p  { font-size: 0.83rem; color: var(--mid); line-height: 1.5; }
+
+    /* ── KEY DIFFERENCE BOX ──────────────────────── */
+    .key-diff {
+      background: var(--blue);
+      color: white;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-top: 1.25rem;
+    }
+    .key-diff-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #A9CCE3;
+      margin-bottom: 0.4rem;
+    }
+    .key-diff p { font-size: 0.9rem; line-height: 1.6; }
+    .key-diff strong { color: #7EC8E3; }
+
+    /* ── FOOTER ──────────────────────────────────── */
+    .footer {
+      max-width: 860px;
+      margin: 2.5rem auto 0;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-top: 1px solid var(--frost);
+      padding-top: 1.25rem;
+    }
+
+    @media (max-width: 580px) {
+      .compare { grid-template-columns: 1fr; }
+      .compare-arrow { display: none; }
+      .scoring-visual { flex-direction: column; }
+      .ends-visual { grid-template-columns: repeat(5, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="kicker">Sport Explainer</div>
+  <h1>CURLING <span class="vs">VS</span> CORNHOLE</h1>
+  <p class="subtitle">You already know this game. It's just on ice, with 42-pound granite rocks, and Olympic-level strategy.</p>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" data-section="field">The Playing Surface</button>
+  <button class="nav-btn" data-section="scoring">How You Score</button>
+  <button class="nav-btn" data-section="throw">The Throw</button>
+  <button class="nav-btn" data-section="teams">Roles &amp; Teams</button>
+  <button class="nav-btn" data-section="game">The Game</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- SECTION 1: THE FIELD                          -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="section active" id="field">
+
+    <div class="card">
+      <div class="card-title">The Playing Surface</div>
+
+      <!-- Sheet Diagram -->
+      <div class="sheet-diagram">
+        <div class="sheet-inner">
+          <!-- Left house -->
+          <div style="position:relative; width:100px; height:100px; flex-shrink:0; z-index:1;">
+            <div class="house-ring house-r1" style="position:absolute; top:0; left:0;"></div>
+            <div class="house-ring house-r2" style="position:absolute; top:15px; left:15px;"></div>
+            <div class="house-ring house-r3" style="position:absolute; top:28px; left:28px;"></div>
+            <div class="house-button" style="position:absolute; top:42px; left:42px;"></div>
+          </div>
+          <!-- Center -->
+          <div class="sheet-center">
+            <span class="sheet-label">Hack<br>(starting block)</span>
+            <div style="width:10px;height:10px;background:#888;border-radius:50%;z-index:1;"></div>
+            <div class="hog-line" style="margin-top:4px;"></div>
+            <span class="sheet-label" style="margin-top:2px;">Hog Line</span>
+            <div class="center-line"></div>
+            <div class="hog-line"></div>
+            <span class="sheet-label">Hog Line</span>
+            <div style="width:10px;height:10px;background:#888;border-radius:50%;z-index:1;"></div>
+            <span class="sheet-label">Hack</span>
+          </div>
+          <!-- Right house -->
+          <div style="position:relative; width:100px; height:100px; flex-shrink:0; z-index:1;">
+            <div class="house-ring house-r1" style="position:absolute; top:0; left:0;"></div>
+            <div class="house-ring house-r2" style="position:absolute; top:15px; left:15px;"></div>
+            <div class="house-ring house-r3" style="position:absolute; top:28px; left:28px;"></div>
+            <div class="house-button" style="position:absolute; top:42px; left:42px;"></div>
+          </div>
+        </div>
+        <div class="dim-badge">146 ft × 15.7 ft</div>
+        <div style="display:flex; justify-content:space-between; padding: 0.5rem 0 0; font-size: 0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.12em; color:rgba(255,255,255,0.6);">
+          <span>← Your House</span>
+          <span style="color:rgba(255,255,255,0.4);">The Sheet (Ice)</span>
+          <span>Opponent's House →</span>
+        </div>
+      </div>
+
+      <div class="compare">
+        <div class="compare-side curling">
+          <div class="compare-label curling">🥌 Curling</div>
+          <div class="compare-title">The Sheet</div>
+          <div class="compare-body">A 146-foot strip of meticulously prepared ice. At each end sits the <strong>House</strong>—four concentric rings (12 ft diameter) with a center dot called the <strong>Button</strong>. You throw from one end toward the far House.</div>
+        </div>
+        <div class="compare-arrow">↔</div>
+        <div class="compare-side cornhole">
+          <div class="compare-label cornhole">🌽 Cornhole</div>
+          <div class="compare-title">The Court</div>
+          <div class="compare-body">A 27-foot lane with a board at each end. You stand behind your board and throw toward the opponent's board. The target is the center hole on the opposite platform.</div>
+        </div>
+      </div>
+
+      <div class="callout blue" style="margin-top: 0.75rem;">
+        <strong>Key visual:</strong> The House in curling is basically the cornhole board — it's the target zone you're aiming for. The Button (dead center) is the hole. Except instead of 27 feet of grass, you've got 126 feet of ice between you and the target.
+      </div>
+    </div>
+
+    <div class="key-diff">
+      <div class="key-diff-label">⬡ Key Difference</div>
+      <p>There's a <strong>House at both ends</strong> of the sheet. Teams alternate throwing toward the far end's House, then physically walk to that end to score and throw back. In cornhole, both boards stay put — in curling, the active target alternates each "End" (round).</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- SECTION 2: HOW YOU SCORE                      -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="section" id="scoring">
+
+    <div class="card">
+      <div class="card-title">How You Score — Cancellation Scoring</div>
+
+      <div class="callout teal" style="margin-bottom: 1rem;">
+        <strong>This is the single most important concept.</strong> Both curling and cornhole use <strong>cancellation scoring</strong> — only one team scores per round, and your opponent's best stone/bag cancels out yours.
+      </div>
+
+      <div class="scoring-visual">
+        <div class="scoring-box b">
+          <h4>🥌 Curling — One End</h4>
+          <div class="score-row"><div class="dot dot-red"></div> Red stone — closest to Button</div>
+          <div class="score-row"><div class="dot dot-red"></div> Red stone — 2nd closest</div>
+          <div class="score-row"><div class="dot" style="background:var(--gold); color:#333;">Y</div> Yellow stone — 3rd closest</div>
+          <div class="score-row"><div class="dot dot-red"></div> Red stone — 4th closest</div>
+          <hr style="border:none;border-top:1px solid var(--frost);margin:0.5rem 0;">
+          <div class="score-row" style="font-weight:700; color:var(--red);">🏆 Red scores 2 points</div>
+          <div style="font-size:0.78rem; color:var(--mid); margin-top:0.3rem;">Red had the 3 closest stones inside Yellow's closest stone.</div>
+        </div>
+        <div class="scoring-box y">
+          <h4>🌽 Cornhole — One Round</h4>
+          <div class="score-row"><div class="dot dot-red"></div> Red bag — in the hole (3 pts)</div>
+          <div class="score-row"><div class="dot dot-yel"></div> Yellow bag — in the hole (3 pts)</div>
+          <div class="score-row"><div class="dot dot-red"></div> Red bag — on board (1 pt)</div>
+          <div class="score-row"><div class="dot dot-yel"></div> Yellow bag — on board (1 pt)</div>
+          <hr style="border:none;border-top:1px solid var(--frost);margin:0.5rem 0;">
+          <div class="score-row" style="font-weight:700; color:var(--red);">🏆 Red scores 0 net points</div>
+          <div style="font-size:0.78rem; color:var(--mid); margin-top:0.3rem;">Holes cancel (3–3=0), boards cancel (1–1=0). Cancellation scoring.</div>
+        </div>
+      </div>
+
+      <div class="callout gold" style="margin-top:0.75rem;">
+        <strong>The "Blank End" move:</strong> If you have the last stone advantage (the <em>hammer</em>) but can't score 2+ points, elite teams intentionally finish an End with zero score for <em>both</em> teams — a "blank end." This preserves the hammer for the next end. In cornhole terms: deliberately tying 0–0 to keep "last bag" advantage.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Point Values</div>
+      <div class="compare">
+        <div class="compare-side curling">
+          <div class="compare-label curling">🥌 Curling</div>
+          <div class="compare-title">1 pt per stone in the House</div>
+          <div class="compare-body">Each of your stones closer to the Button than your opponent's nearest stone = 1 point. A <em>score of 5</em> in one end is a big deal — it means you had 5 stones in the House and opponent had zero inside them.</div>
+        </div>
+        <div class="compare-arrow">↔</div>
+        <div class="compare-side cornhole">
+          <div class="compare-label cornhole">🌽 Cornhole</div>
+          <div class="compare-title">3 pts hole / 1 pt on board</div>
+          <div class="compare-body">In the hole = 3 points. On the board = 1 point. Bags that fall off count as zero. Net scoring only — opponent's points cancel yours.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-diff">
+      <div class="key-diff-label">⬡ Key Difference</div>
+      <p>Curling doesn't have different point values for stone placement — <strong>every stone in the House is worth exactly 1 point</strong>, provided it's closer to the Button than your opponent's nearest stone. The House doesn't have a hole — the Button is just the reference point. The stone touching the Button isn't automatically worth more; it's just the most protected position.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- SECTION 3: THE THROW                          -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="section" id="throw">
+
+    <div class="card">
+      <div class="card-title">The Throw — Delivery</div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h4>The Hack</h4>
+            <p>You start in the <strong>Hack</strong> — a rubber foothold embedded in the ice. You push off from it like a starting block. <em>Cornhole equivalent:</em> Standing behind the board.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h4>The Slide & Release</h4>
+            <p>You glide forward on one knee, balanced on a Teflon-soled shoe, holding the stone's handle. <strong>Must release before the Hog Line</strong> (a red line at ~26 ft). Releasing late = stone removed. <em>Cornhole equivalent:</em> You have to release the bag before your foot crosses the foul line.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h4>The Turn (The Curl)</h4>
+            <p>At release, you rotate the handle clockwise or counter-clockwise. This creates the <strong>curl</strong> — the stone arcs toward the House rather than traveling straight. Clockwise = curls right. Counter = curls left. This is the entire skill of the sport. <em>Cornhole equivalent:</em> Backspin vs. topspin to control whether a bag slides or sticks.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h4>Sweeping</h4>
+            <p><strong>This is the part that looks insane to first-timers.</strong> Two teammates sprint ahead of the thrown stone and furiously sweep the ice with brooms. Sweeping melts a thin layer of ice, reducing friction — making the stone travel faster, farther, and <em>curl less</em>. The Skip (captain) calls "Sweep!" or "Hard!" to direct them. <em>Cornhole equivalent:</em> Imagine if, after you tossed a bag, your teammate could slightly redirect it in mid-air. That's sweeping.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout blue" style="margin-top: 0.75rem;">
+        <strong>The "curl" is where the name comes from.</strong> Every stone curves. How much it curves (6–18 inches typically) depends on ice temperature, ice texture (pebble), weight of throw, and amount of handle rotation. Reading the ice — knowing exactly how much a stone will curl on a given sheet — is an elite skill.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Shot Types</div>
+      <div class="compare">
+        <div class="compare-side curling">
+          <div class="compare-label curling">Draw</div>
+          <div class="compare-title">Land softly in the House</div>
+          <div class="compare-body">A finesse shot — just enough weight to reach and stop inside the House, ideally near the Button. The bread-and-butter shot. <em>Cornhole: tossing your bag gently so it lands and sticks on the board.</em></div>
+        </div>
+        <div class="compare-arrow">↔</div>
+        <div class="compare-side cornhole">
+          <div class="compare-label cornhole">Takeout</div>
+          <div class="compare-title">Knock the opponent out</div>
+          <div class="compare-body">A power shot — throw hard to knock your opponent's stone(s) out of the House. Both stones typically slide off the far end. <em>Cornhole: throwing hard to knock opponent's bag off the board.</em></div>
+        </div>
+      </div>
+      <div class="callout gold" style="margin-top:0.75rem;">
+        <strong>The Raise:</strong> Hitting one of your own stones to bump it into a better position — like nudging your own cornhole bag closer to the hole after it landed on the board.
+      </div>
+    </div>
+
+    <div class="key-diff">
+      <div class="key-diff-label">⬡ Key Difference</div>
+      <p>In cornhole, once the bag leaves your hand, it's done — you just watch. In curling, <strong>the throw isn't over until the stone stops</strong>. Sweeping is active, real-time shot-shaping that happens after release. A stone that looks like it's going wide can be swept back on line. This is why curling is sometimes called "chess on ice" — the strategy continues mid-throw.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- SECTION 4: ROLES & TEAMS                      -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="section" id="teams">
+
+    <div class="card">
+      <div class="card-title">Team Structure — 4 Players per Team</div>
+      <table class="team-table">
+        <thead>
+          <tr>
+            <th>Curling Role</th>
+            <th>What They Do</th>
+            <th>Cornhole Equivalent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="role-name">Skip</div>
+              <div class="role-alt">Captain / Strategist</div>
+            </td>
+            <td>Stands in the House at the far end. Calls all shot strategy. Directs sweepers in real time. Throws last two stones of each End — the most important shots. <span class="badge badge-blue">Team leader</span></td>
+            <td>The strongest player who tosses last in a round. The one calling strategy.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-name">Vice / Third</div>
+              <div class="role-alt">3rd Thrower</div>
+            </td>
+            <td>Throws 3rd and 4th stones. Often holds the broom as a target for the Skip when the Skip throws. Acts as co-strategist. <span class="badge badge-blue">2nd in command</span></td>
+            <td>Second-best player, throws 3rd bag per round.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-name">Second</div>
+              <div class="role-alt">2nd Thrower</div>
+            </td>
+            <td>Throws 3rd and 4th stones from the delivery end. Sweeps when others throw.</td>
+            <td>Middle player.</td>
+          </tr>
+          <tr>
+            <td>
+              <div class="role-name">Lead</div>
+              <div class="role-alt">1st Thrower</div>
+            </td>
+            <td>Throws the first two stones of each End. Sets up the end. Sweeps for all other throwers. <span class="badge badge-gold">Throws first</span></td>
+            <td>Opens the round. Throws the first bag.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout blue" style="margin-top:0.75rem;">
+        <strong>Total stones per End:</strong> Each player throws 2 stones → 4 players × 2 = <strong>8 stones per team per End</strong>, 16 total. Teams alternate throws (Team A throws, Team B throws, repeat). In cornhole: each player throws 4 bags, 8 total, alternating.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">The Hammer — Last Stone Advantage</div>
+      <div class="compare">
+        <div class="compare-side curling">
+          <div class="compare-label curling">🥌 Curling — The Hammer</div>
+          <div class="compare-title">Last stone of the End</div>
+          <div class="compare-body">The team with the <strong>Hammer</strong> throws the final stone of the End. This is a massive advantage — like last ups in baseball. The team that scores an End loses the Hammer for the next End. The team that gets blanked (scoreless) retains the Hammer.</div>
+        </div>
+        <div class="compare-arrow">↔</div>
+        <div class="compare-side cornhole">
+          <div class="compare-label cornhole">🌽 Cornhole — Last Bag</div>
+          <div class="compare-title">Last toss of the round</div>
+          <div class="compare-body">Whoever scores in a round typically hasn't "earned" formal last-bag advantage in standard rules, but tournament cornhole tracks throwing order. Throwing last is always the best position.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-diff">
+      <div class="key-diff-label">⬡ Key Difference</div>
+      <p>Cornhole is typically 2v2 or 1v1. Curling is always <strong>4v4</strong>, and the division of labor is formalized. The Skip doesn't just throw — they actively coach the stone after it's released by shouting commands to the sweepers. This real-time communication is fundamental to the sport, not optional.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- SECTION 5: THE GAME                           -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div class="section" id="game">
+
+    <div class="card">
+      <div class="card-title">Game Structure — Ends</div>
+
+      <div class="compare">
+        <div class="compare-side curling">
+          <div class="compare-label curling">🥌 Curling — "Ends"</div>
+          <div class="compare-title">Basically Innings</div>
+          <div class="compare-body">A standard competitive game has <strong>10 Ends</strong>. Each End: both teams alternate throwing all 8 of their stones. Score the End. Clear the House. Walk to the other end and repeat. Highest score after 10 Ends wins. If tied, play extra Ends (one at a time) until someone scores.</div>
+        </div>
+        <div class="compare-arrow">↔</div>
+        <div class="compare-side cornhole">
+          <div class="compare-label cornhole">🌽 Cornhole — "Rounds"</div>
+          <div class="compare-title">Rounds to 21</div>
+          <div class="compare-body">You play rounds until someone reaches exactly 21 points (or wins by 2 in some rulesets). Each round: both players throw all 4 bags, score net. No fixed number of rounds.</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 1rem;">
+        <div class="card-title" style="margin-bottom: 0.75rem;">Sample 10-End Scorecard</div>
+        <div class="ends-visual">
+          <div class="end-cell scoring"><div class="end-num">E1</div><div class="end-pts">🔴 +2</div></div>
+          <div class="end-cell blank"><div class="end-num">E2</div><div class="end-pts">Blank</div></div>
+          <div class="end-cell scoring"><div class="end-num">E3</div><div class="end-pts">🟡 +1</div></div>
+          <div class="end-cell scoring"><div class="end-num">E4</div><div class="end-pts">🔴 +3</div></div>
+          <div class="end-cell scoring"><div class="end-num">E5</div><div class="end-pts">🟡 +2</div></div>
+          <div class="end-cell blank"><div class="end-num">E6</div><div class="end-pts">Blank</div></div>
+          <div class="end-cell scoring"><div class="end-num">E7</div><div class="end-pts">🔴 +1</div></div>
+          <div class="end-cell scoring"><div class="end-num">E8</div><div class="end-pts">🔴 +2</div></div>
+          <div class="end-cell scoring"><div class="end-num">E9</div><div class="end-pts">🟡 +4</div></div>
+          <div class="end-cell scoring"><div class="end-num">E10</div><div class="end-pts">🔴 +1</div></div>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <div class="stat-box">
+            <div class="stat-num" style="color: var(--red);">9</div>
+            <div class="stat-unit">🔴 Red</div>
+            <div class="stat-label">Total Points</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" style="color: #B7950B;">7</div>
+            <div class="stat-unit">🟡 Yellow</div>
+            <div class="stat-label">Total Points</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num">~2</div>
+            <div class="stat-unit">Hours</div>
+            <div class="stat-label">Typical game length</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num">160</div>
+            <div class="stat-unit">Stones</div>
+            <div class="stat-label">Thrown per game (16 × 10)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Format Variations</div>
+      <div class="compare">
+        <div class="compare-side curling">
+          <div class="compare-label curling">Olympic / Elite</div>
+          <div class="compare-title">10 Ends (~2.5 hrs)</div>
+          <div class="compare-body">Full format with thinking time per shot. Used at Olympics, World Championships, Slams. The clock matters — teams get ~38 minutes of "thinking time" total, tracked per throw.</div>
+        </div>
+        <div class="compare-arrow">→</div>
+        <div class="compare-side cornhole">
+          <div class="compare-label cornhole">Club / Rec League</div>
+          <div class="compare-title">8 Ends (~1.5 hrs)</div>
+          <div class="compare-body">Most club leagues play 8 ends. Same rules, just shorter. Like playing cornhole to 15 instead of 21.</div>
+        </div>
+      </div>
+
+      <div class="callout red" style="margin-top: 0.75rem;">
+        <strong>The Concession:</strong> In curling, it is completely normal and sportsmanlike to concede (forfeit) mid-game when the math makes a comeback impossible. If you're down 8 points with 3 ends left, you shake hands and walk off. No one thinks less of you. This would never fly in cornhole.
+      </div>
+    </div>
+
+    <div class="key-diff">
+      <div class="key-diff-label">⬡ Key Difference</div>
+      <p>Cornhole is a <strong>race to a target score</strong>. Curling is a <strong>fixed-length format</strong> — 10 Ends, no matter what (unless tied). This means curling has explicit game management: teams track stolen ends, hammer efficiency, and percentage of shots made. The Olympics uses a shot clock. It's a slower, more deliberate sport — but once you understand the strategy layer, every single stone has meaning.</p>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<div class="footer">
+  Use the tabs above to explore each aspect of the game &nbsp;·&nbsp; Curling vs. Cornhole Sport Explainer
+</div>
+
+<script>
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const id = btn.getAttribute('data-section');
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+</script>
+<footer style="text-align:center;padding:24px 16px;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;letter-spacing:1px;color:#7A8090;border-top:1px solid rgba(0,0,0,0.08);margin-top:48px">
+  Built by <a href="https://spataccoanalytics.com" style="color:#7A8090 !important;text-decoration:none;border-bottom:1px solid #7A8090" target="_blank" rel="noopener">Spatacco Analytics</a> &middot; &copy; 2026
+</footer>
+</body>
+</html>

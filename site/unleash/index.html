@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNLEASH</title>
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAACPUlEQVR4nO2Vz2sTURDHZ+a9t/nZkp+NpUUtKVRLwOJBBKWnYvHo3UPPvQv+AZ6KV6/ixYM3of4CLxa0IhRqKRiLtAaLaSqxSUyz281mdzxEL2k23Y31IPZ7fe/N5zsz781DZgYXtVott6UOSSndlsjLeXT1cLQ8ARj7Z3gCtBl/F9C3TgBHyvX+9pDNjACEnm6Wb4DDHFASAMBxABAYGHqB/AGYQVPq6WYxEVTj8ajNjiTUpBwU4hgAzCAEvi18v/N68+rY4FRmwGLbQCzlN+YvX8qcSjMzYud78QMABqD1Uv3eTO7iSFw3rYcfvqiQjDiqR5HQ17AjQiKxuLqzbViWsGez8YW1j3O57HQm7TDTIfs+AMxABIbhvFgpx9LqykRst9Jc3ak1qDU9FE5Go5FwsGsQb8OOgQSahnP71ufnj6tBU9x/Urxxd2Mp37iZO93Yqxm6AQBdvXrqASIAMwk8MxIs7VmJhJyQ4cniAVpoWs3z57K/t/1BiYABCYXA9+9+fP1kTk5FHcV6yFrO12YupM6mI0J0n7f+mswOKI0KW/rutvWtfJBMKBii9UJ97tpoQAlmOJyDv1lEAvR6q7xmZ8dCs9dT1aq9tWKODySJBECX6P4A7VbrFfvZQu3Vg/03i/sRUMMxbenlcrVSb284LB8PDRHsFsdH1fyjdGxYSYUMjCC0VCwQILcM/PXglymJtg2OzYDAzJqmetjq5z+wLGZmJEAEImw2m8cM6CgFUa8g//6XeQL4DwA/AXkM9PL3MbzbAAAAAElFTkSuQmCC">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+body { background:#001628; color:#E8F4F8; font-family:"Oswald",sans-serif; overflow:hidden; min-height:100vh; }
+.gate { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; position:relative; z-index:1; }
+.gate-bg { position:fixed; inset:0; z-index:0; overflow:hidden; }
+.gate-bg::before { content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:800px; height:800px; border-radius:50%; background:radial-gradient(circle, rgba(200,16,46,0.06) 0%, transparent 60%); animation: pulse 4s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { transform:translate(-50%,-50%) scale(1); opacity:0.6; } 50% { transform:translate(-50%,-50%) scale(1.15); opacity:1; } }
+@keyframes shake { 0%,100% { transform:translateX(0); } 20%,60% { transform:translateX(-8px); } 40%,80% { transform:translateX(8px); } }
+@keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+.gate-title { font-size:clamp(48px,10vw,96px); font-weight:700; letter-spacing:12px; text-transform:uppercase; color:transparent; -webkit-text-stroke:2px rgba(200,16,46,0.4); margin-bottom:8px; user-select:none; animation: fadeIn 0.8s ease-out; }
+.gate-subtitle { font-size:14px; letter-spacing:6px; text-transform:uppercase; color:#5A8899; margin-bottom:48px; animation: fadeIn 0.8s ease-out 0.2s both; }
+.gate-form { display:flex; flex-direction:column; align-items:center; gap:16px; animation: fadeIn 0.8s ease-out 0.4s both; }
+.gate-input { width:320px; padding:16px 24px; background:rgba(0,34,68,0.6); border:1px solid rgba(200,16,46,0.2); border-radius:8px; color:#E8F4F8; font-family:"Oswald",sans-serif; font-size:18px; letter-spacing:4px; text-transform:lowercase; text-align:center; outline:none; transition:border-color 0.3s, box-shadow 0.3s; }
+.gate-input::placeholder { color:#5A8899; letter-spacing:3px; font-size:14px; text-transform:uppercase; }
+.gate-input:focus { border-color:rgba(200,16,46,0.5); box-shadow:0 0 20px rgba(200,16,46,0.15); }
+.gate-input.error { border-color:#C8102E; animation: shake 0.4s ease-out; }
+.gate-btn { padding:14px 48px; background:transparent; border:1px solid rgba(200,16,46,0.3); color:#C8102E; font-family:"Oswald",sans-serif; font-size:14px; font-weight:600; letter-spacing:4px; text-transform:uppercase; cursor:pointer; transition:all 0.3s; border-radius:6px; }
+.gate-btn:hover { background:rgba(200,16,46,0.1); border-color:#C8102E; box-shadow:0 0 24px rgba(200,16,46,0.2); }
+.gate-hint { font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#3A5A6A; margin-top:24px; }
+.gate-back { position:absolute; top:24px; left:24px; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#5A8899; text-decoration:none; transition:color 0.3s; z-index:10; }
+.gate-back:hover { color:#99D9D9; }
+</style>
+</head>
+<body>
+<div class="gate-bg"></div>
+<div class="gate" id="gate">
+  <a href="/" class="gate-back">&larr; Back to Spatacco Analytics</a>
+  <div class="gate-title">Unleash</div>
+  <div class="gate-subtitle">Access Required</div>
+  <div class="gate-form">
+    <input type="password" id="pw" class="gate-input" placeholder="Enter Password" autofocus>
+    <button class="gate-btn" id="btn" type="button">Release</button>
+  </div>
+  <div class="gate-hint">Hint: what are you unleashing?</div>
+</div>
+<script>
+var correct = "thekraken";
+var input = document.getElementById("pw");
+var btn = document.getElementById("btn");
+function attempt() {
+  if (input.value.toLowerCase().trim() === correct) {
+    window.location.href = "/unleash/kraken.html";
+  } else {
+    input.classList.add("error");
+    setTimeout(function() { input.classList.remove("error"); }, 500);
+    input.value = "";
+    input.focus();
+  }
+}
+btn.addEventListener("click", attempt);
+input.addEventListener("keydown", function(e) { if (e.key === "Enter") attempt(); });
+</script>
+</body>
+</html>

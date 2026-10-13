@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Best Picture Oscar Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Source Sans 3', sans-serif; background: #09090b; color: #fafafa; min-height: 100vh; }
+    header { background: linear-gradient(to bottom, #18181b, #09090b); border-bottom: 1px solid rgba(245,158,11,0.3); padding: 1.5rem 1rem; text-align: center; position: sticky; top: 0; z-index: 100; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 1.75rem; font-weight: 700; letter-spacing: 0.15em; color: #f59e0b; }
+    .subtitle { color: #71717a; font-size: 0.7rem; letter-spacing: 0.2em; margin-top: 0.25rem; }
+    .sync-status { font-size: 0.7rem; color: #52525b; margin-top: 0.25rem; }
+    .stats { display: flex; justify-content: center; gap: 2rem; padding: 1rem; background: #18181b; border-bottom: 1px solid #27272a; flex-wrap: wrap; }
+    .stat { text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; font-family: 'Playfair Display', serif; }
+    .stat-label { font-size: 0.65rem; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; }
+    .stat-green { color: #4ade80; }
+    .stat-gray { color: #a1a1aa; }
+    .stat-red { color: #f87171; }
+    .stat-amber { color: #fbbf24; }
+    nav { display: flex; justify-content: center; flex-wrap: wrap; background: #18181b; border-bottom: 1px solid #27272a; }
+    nav button { padding: 0.75rem 1.25rem; font-size: 0.8rem; font-weight: 500; letter-spacing: 0.05em; background: none; border: none; border-bottom: 2px solid transparent; color: #71717a; cursor: pointer; transition: all 0.2s; }
+    nav button:hover { color: #d4d4d8; }
+    nav button.active { color: #f59e0b; border-bottom-color: #f59e0b; }
+    .filters { padding: 1rem; background: #09090b; border-bottom: 1px solid #27272a; }
+    .filters-inner { max-width: 72rem; margin: 0 auto; }
+    .search-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .search-row input { flex: 1; min-width: 150px; padding: 0.5rem 0.75rem; background: #18181b; border: 1px solid #3f3f46; border-radius: 0.375rem; color: #fafafa; font-size: 0.875rem; }
+    .search-row input:focus { outline: none; border-color: #b45309; }
+    .search-row input::placeholder { color: #71717a; }
+    .filter-toggle { padding: 0.5rem 0.75rem; background: #18181b; border: 1px solid #3f3f46; border-radius: 0.375rem; color: #a1a1aa; font-size: 0.875rem; cursor: pointer; }
+    .filter-toggle.active { background: rgba(180,83,9,0.2); border-color: #b45309; color: #fbbf24; }
+    .filter-grid { display: none; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.5rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #27272a; }
+    .filter-grid.show { display: grid; }
+    .filter-grid select { padding: 0.5rem; background: #18181b; border: 1px solid #3f3f46; border-radius: 0.375rem; color: #d4d4d8; font-size: 0.8rem; }
+    .filter-grid select:focus { outline: none; border-color: #b45309; }
+    .filter-grid button { padding: 0.5rem; background: #27272a; border: 1px solid #3f3f46; border-radius: 0.375rem; color: #a1a1aa; font-size: 0.8rem; cursor: pointer; }
+    .filter-grid button:hover { color: #fafafa; }
+    .results-count { max-width: 72rem; margin: 0.5rem auto 0; font-size: 0.75rem; color: #71717a; }
+    main { max-width: 72rem; margin: 0 auto; padding: 1rem; }
+    .grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+    .card { background: #18181b; border: 1px solid #27272a; border-radius: 0.5rem; overflow: hidden; transition: border-color 0.2s; }
+    .card:hover { border-color: #b45309; }
+    .card.watched { border-color: rgba(34,197,94,0.4); }
+    .card.winner { border-left: 3px solid #f59e0b; }
+    .card-watched-banner { background: rgba(34,197,94,0.2); color: #4ade80; font-size: 0.7rem; padding: 0.2rem 0.75rem; display: flex; align-items: center; gap: 0.25rem; }
+    .card-body { padding: 0.75rem; }
+    .card-header { display: flex; gap: 0.75rem; align-items: flex-start; margin-bottom: 0.5rem; }
+    .card-year { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: #d97706; min-width: 50px; }
+    .card-title { font-family: 'Playfair Display', serif; font-size: 1rem; color: #fef3c7; }
+    .card-director { font-size: 0.75rem; color: #a1a1aa; }
+    .card-badges { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.5rem; }
+    .badge { font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 0.25rem; }
+    .badge-winner { background: rgba(245,158,11,0.2); color: #fbbf24; }
+    .badge-contender { background: rgba(168,162,158,0.2); color: #a8a29e; }
+    .badge-boxoffice { background: rgba(34,211,238,0.2); color: #22d3ee; }
+    .badge-classic { background: rgba(192,132,252,0.2); color: #c084fc; }
+    .tag-solo { background: rgba(239,68,68,0.2); color: #f87171; }
+    .tag-family { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .tag-maybe { background: rgba(251,191,36,0.2); color: #fbbf24; }
+    .card-synopsis { font-size: 0.75rem; color: #a1a1aa; margin-bottom: 0.5rem; line-height: 1.4; }
+    .card-meta { font-size: 0.65rem; color: #71717a; margin-bottom: 0.5rem; }
+    .card-meta span { color: #52525b; }
+    .card-themes { display: flex; flex-wrap: wrap; gap: 0.2rem; margin-bottom: 0.5rem; }
+    .theme-tag { font-size: 0.6rem; padding: 0.1rem 0.35rem; background: rgba(39,39,42,0.5); border-radius: 0.25rem; color: #71717a; cursor: pointer; transition: all 0.2s; }
+    .theme-tag:hover { background: rgba(180,83,9,0.2); color: #fbbf24; }
+    .card-review { font-size: 0.75rem; color: #a1a1aa; font-style: italic; margin-bottom: 0.5rem; padding: 0.5rem; background: rgba(39,39,42,0.5); border-radius: 0.25rem; }
+    .card-review-meta { font-size: 0.65rem; color: #71717a; margin-bottom: 0.5rem; }
+    .card-actions { display: flex; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #27272a; }
+    .card-actions button { flex: 1; padding: 0.4rem; font-size: 0.7rem; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s; }
+    .btn-watch { background: #27272a; color: #a1a1aa; }
+    .btn-watch:hover { background: #3f3f46; color: #fafafa; }
+    .btn-watch.watched { background: rgba(34,197,94,0.2); color: #4ade80; }
+    .btn-rate { background: rgba(180,83,9,0.2); color: #fbbf24; }
+    .btn-rate:hover { background: rgba(180,83,9,0.4); }
+    .empty { text-align: center; padding: 4rem 1rem; color: #71717a; }
+    .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .data-actions { background: #18181b; border-top: 1px solid #27272a; padding: 1rem; margin-top: 2rem; }
+    .data-actions-inner { max-width: 72rem; margin: 0 auto; display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap; }
+    .data-actions button, .data-actions label { padding: 0.5rem 1rem; background: #27272a; border: 1px solid #3f3f46; border-radius: 0.375rem; color: #a1a1aa; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+    .data-actions button:hover, .data-actions label:hover { color: #fafafa; border-color: #52525b; }
+    .data-actions input[type="file"] { display: none; }
+    .data-actions-note { text-align: center; font-size: 0.7rem; color: #52525b; margin-top: 0.5rem; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #18181b; border: 1px solid rgba(180,83,9,0.4); border-radius: 0.5rem; width: 100%; max-width: 28rem; max-height: 90vh; overflow-y: auto; }
+    .modal-header { padding: 1rem; border-bottom: 1px solid #27272a; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: #f59e0b; }
+    .modal-close { background: none; border: none; color: #71717a; font-size: 1.5rem; cursor: pointer; line-height: 1; }
+    .modal-close:hover { color: #fafafa; }
+    .modal-body { padding: 1rem; }
+    .modal-field { margin-bottom: 1rem; }
+    .modal-label { display: block; font-size: 0.7rem; color: #b45309; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+    .modal-stars { display: flex; gap: 0.25rem; }
+    .modal-star { font-size: 1.75rem; background: none; border: none; color: #3f3f46; cursor: pointer; transition: color 0.2s; }
+    .modal-star:hover, .modal-star.active { color: #f59e0b; }
+    .modal-body input, .modal-body textarea { width: 100%; padding: 0.5rem 0.75rem; background: #27272a; border: 1px solid #3f3f46; border-radius: 0.375rem; color: #fafafa; font-size: 0.875rem; font-family: inherit; }
+    .modal-body input:focus, .modal-body textarea:focus { outline: none; border-color: #b45309; }
+    .modal-body textarea { min-height: 80px; resize: vertical; }
+    .modal-footer { padding: 1rem; border-top: 1px solid #27272a; display: flex; gap: 0.75rem; }
+    .modal-footer button { flex: 1; padding: 0.625rem; border: none; border-radius: 0.375rem; font-size: 0.875rem; cursor: pointer; transition: all 0.2s; }
+    .modal-cancel { background: #27272a; color: #a1a1aa; }
+    .modal-cancel:hover { background: #3f3f46; color: #fafafa; }
+    .modal-save { background: #b45309; color: #fef3c7; }
+    .modal-save:hover { background: #d97706; }
+    .back-tools { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #71717a; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.1em; transition: color 0.2s; }
+    .back-tools:hover { color: #f59e0b; }
+    @media (max-width: 640px) { .stats { gap: 1rem; } .stat-value { font-size: 1.25rem; } .grid { grid-template-columns: 1fr; } .back-tools { position: static; transform: none; display: block; margin-bottom: 0.25rem; } }
+
+    /* Signup prompt banner */
+    .signup-banner { display: none; background: linear-gradient(90deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04)); border-bottom: 1px solid rgba(245,158,11,0.3); padding: 0.75rem 1rem; }
+    .signup-banner.show { display: block; }
+    .signup-banner-inner { max-width: 64rem; margin: 0 auto; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.85rem; }
+    .signup-banner-text { flex: 1; min-width: 200px; color: #fde68a; }
+    .signup-banner-text strong { color: #fbbf24; }
+    .signup-banner-cta { padding: 0.4rem 0.9rem; background: #f59e0b; color: #09090b; border: none; border-radius: 0.375rem; font-weight: 600; font-size: 0.8rem; cursor: pointer; text-decoration: none; display: inline-block; }
+    .signup-banner-cta:hover { background: #fbbf24; }
+    .signup-banner-dismiss { padding: 0.4rem 0.6rem; background: transparent; color: #a1a1aa; border: 1px solid #3f3f46; border-radius: 0.375rem; font-size: 0.8rem; cursor: pointer; }
+    .signup-banner-dismiss:hover { color: #fafafa; border-color: #71717a; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/tools/" class="back-tools">← Tools</a>
+    <h1>🏆 BEST PICTURE TRACKER</h1>
+    <div class="subtitle">WINNERS & ESSENTIAL FILMS • 1928-2024</div>
+    <div class="sync-status" id="syncStatus"></div>
+  </header>
+  <div class="signup-banner" id="signupBanner">
+    <div class="signup-banner-inner">
+      <div class="signup-banner-text"><strong>Heads up:</strong> your progress is saved in this browser only. Clear your data or switch devices and it's gone. Cloud sync &amp; accounts are coming soon.</div>
+      <a class="signup-banner-cta" id="signupBannerCta" href="/contact/?topic=film-tracker-signup">Get notified →</a>
+      <button class="signup-banner-dismiss" id="signupBannerDismiss" title="Dismiss for 7 days">✕</button>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-value stat-green" id="statWatched">0</div><div class="stat-label">Watched</div></div>
+    <div class="stat"><div class="stat-value stat-gray" id="statRemaining">0</div><div class="stat-label">Remaining</div></div>
+    <div class="stat"><div class="stat-value stat-amber" id="statWinners">0</div><div class="stat-label">Winners</div></div>
+    <div class="stat"><div class="stat-value stat-red" id="statSolo">0</div><div class="stat-label">Solo Queue</div></div>
+    <div class="stat"><div class="stat-value stat-amber" id="statPct">0%</div><div class="stat-label">Complete</div></div>
+  </div>
+  <nav>
+    <button class="active" data-view="all">All Films</button>
+    <button data-view="winners">Winners</button>
+    <button data-view="reviews">My Reviews</button>
+    <button data-view="decade" data-decade="2020">2020s</button>
+    <button data-view="decade" data-decade="2010">2010s</button>
+    <button data-view="decade" data-decade="2000">2000s</button>
+    <button data-view="decade" data-decade="1990">1990s</button>
+    <button data-view="decade" data-decade="classic">Pre-1990</button>
+  </nav>
+  <div class="filters">
+    <div class="filters-inner">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search films, directors, actors, themes...">
+        <button class="filter-toggle" id="filterToggle">Filters ▶</button>
+      </div>
+      <div class="filter-grid" id="filterGrid">
+        <select id="statusFilter"><option value="all">All Status</option><option value="watched">Watched</option><option value="unwatched">Unwatched</option></select>
+        <select id="soloFilter"><option value="all">All Types</option><option value="solo">🎬 Solo</option><option value="family">👨‍👩‍👧 Family</option><option value="maybe">🤔 Maybe</option></select>
+        <select id="tagFilter"><option value="all">All Tags</option><option value="winner">🏆 Winners</option><option value="contender">🥈 Contenders</option><option value="boxoffice">💰 Box Office</option><option value="classic">⭐ Fan Favorites</option></select>
+        <select id="yearFilter"><option value="all">All Years</option></select>
+        <select id="decadeFilter"><option value="all">All Decades</option></select>
+        <select id="directorFilter"><option value="all">Directors</option></select>
+        <select id="themeFilter"><option value="all">Themes</option></select>
+        <button id="clearFilters">Clear</button>
+      </div>
+      <div class="results-count" id="resultsCount">0 films</div>
+    </div>
+  </div>
+  <main>
+    <div class="grid" id="filmGrid"></div>
+    <div class="empty" id="emptyState" style="display:none;"><div class="empty-icon">🔍</div><p>No films match your filters</p></div>
+  </main>
+  <div class="data-actions">
+    <div class="data-actions-inner">
+      <button id="exportBtn">Export Data</button>
+      <label>Import Data<input type="file" id="importInput" accept=".json"></label>
+    </div>
+    <div class="data-actions-note">Your data saves automatically in this browser</div>
+  </div>
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header"><div class="modal-title" id="modalTitle">Rate Film</div><button class="modal-close" id="modalClose">×</button></div>
+      <div class="modal-body">
+        <div class="modal-field"><div class="modal-label">Your Rating</div><div class="modal-stars"><button class="modal-star" data-rating="1">★</button><button class="modal-star" data-rating="2">★</button><button class="modal-star" data-rating="3">★</button><button class="modal-star" data-rating="4">★</button><button class="modal-star" data-rating="5">★</button></div></div>
+        <div class="modal-field"><label class="modal-label">Review</label><textarea id="modalReview" placeholder="What did you think?"></textarea></div>
+        <div class="modal-field"><label class="modal-label">Date Watched</label><input type="date" id="modalDate"></div>
+        <div class="modal-field"><label class="modal-label">Watched With</label><input type="text" id="modalWith" placeholder="Solo, family, friends..."></div>
+        <div class="modal-field"><label class="modal-label">Notes</label><textarea id="modalNotes" placeholder="Any other thoughts..."></textarea></div>
+      </div>
+      <div class="modal-footer"><button class="modal-cancel" id="modalCancel">Cancel</button><button class="modal-save" id="modalSave">Save</button></div>
+    </div>
+  </div>
+  <script>
+const STORAGE_KEY = 'best-picture-oscar-tracker-v4';
+const films = [
+  {id:1,year:2024,title:"Anora",director:"Sean Baker",stars:["Mikey Madison","Mark Eydelshteyn"],synopsis:"A Brooklyn stripper's impulsive marriage to a Russian oligarch's son spirals into chaos.",solo:"Yes",themes:["Class","Love","Independence"],tags:["winner"]},
+  {id:2,year:2024,title:"The Brutalist",director:"Brady Corbet",stars:["Adrien Brody","Felicity Jones"],synopsis:"A Hungarian architect's visionary ambitions collide with a wealthy American patron.",solo:"Yes",themes:["Immigration","Art","Ambition"],tags:["contender"]},
+  {id:3,year:2024,title:"Dune: Part Two",director:"Denis Villeneuve",stars:["Timothée Chalamet","Zendaya"],synopsis:"Paul Atreides unites with the Fremen to wage war against House Harkonnen.",solo:"No",themes:["Destiny","War","Colonialism"],tags:["boxoffice"]},
+  {id:4,year:2024,title:"Wicked",director:"Jon M. Chu",stars:["Cynthia Erivo","Ariana Grande"],synopsis:"An unlikely friendship changes the land of Oz forever.",solo:"No",themes:["Friendship","Prejudice","Identity"],tags:["boxoffice"]},
+  {id:5,year:2023,title:"Oppenheimer",director:"Christopher Nolan",stars:["Cillian Murphy","Robert Downey Jr."],synopsis:"The father of the atomic bomb grapples with the moral weight of creation.",solo:"Yes",themes:["War","Science","Morality"],tags:["winner","boxoffice"]},
+  {id:6,year:2023,title:"Poor Things",director:"Yorgos Lanthimos",stars:["Emma Stone","Mark Ruffalo"],synopsis:"A Victorian woman resurrected by a mad scientist embarks on a journey of discovery.",solo:"Yes",themes:["Feminism","Freedom","Self-Discovery"],tags:["contender"]},
+  {id:7,year:2023,title:"Barbie",director:"Greta Gerwig",stars:["Margot Robbie","Ryan Gosling"],synopsis:"A perfect doll ventures into the real world and discovers being human is complex.",solo:"No",themes:["Feminism","Identity","Self-Discovery"],tags:["boxoffice","classic"]},
+  {id:8,year:2023,title:"Killers of the Flower Moon",director:"Martin Scorsese",stars:["Leonardo DiCaprio","Robert De Niro"],synopsis:"The systematic murder of Osage Nation members exposes a vast conspiracy.",solo:"Yes",themes:["Indigenous Rights","Greed","Corruption"],tags:["contender","classic"]},
+  {id:9,year:2022,title:"Everything Everywhere All at Once",director:"The Daniels",stars:["Michelle Yeoh","Ke Huy Quan"],synopsis:"A woman saves existence by accessing powers from parallel universe versions of herself.",solo:"No",themes:["Family","Immigration","Love"],tags:["winner","classic"]},
+  {id:10,year:2022,title:"Top Gun: Maverick",director:"Joseph Kosinski",stars:["Tom Cruise","Miles Teller"],synopsis:"An aging fighter pilot trains a new generation for an impossible mission.",solo:"No",themes:["Legacy","Redemption","Mentorship"],tags:["boxoffice","classic"]},
+  {id:11,year:2022,title:"Avatar: The Way of Water",director:"James Cameron",stars:["Sam Worthington","Zoe Saldaña"],synopsis:"The Sully family flees to oceanic Pandoran tribes as humans pursue them.",solo:"No",themes:["Environment","Family","Colonialism"],tags:["boxoffice"]},
+  {id:12,year:2021,title:"CODA",director:"Sian Heder",stars:["Emilia Jones","Troy Kotsur"],synopsis:"The only hearing member of a deaf family must choose between dreams and duty.",solo:"No",themes:["Family","Disability","Dreams"],tags:["winner"]},
+  {id:13,year:2021,title:"Dune",director:"Denis Villeneuve",stars:["Timothée Chalamet","Rebecca Ferguson"],synopsis:"A young heir must travel to the most dangerous planet to ensure his family's future.",solo:"No",themes:["Destiny","Colonialism","Power"],tags:["contender","boxoffice"]},
+  {id:14,year:2021,title:"The Power of the Dog",director:"Jane Campion",stars:["Benedict Cumberbatch","Kirsten Dunst"],synopsis:"A cruel rancher's torment of his brother's new wife hides darker currents.",solo:"Yes",themes:["Masculinity","Repression","Secrets"],tags:["contender","classic"]},
+  {id:15,year:2020,title:"Nomadland",director:"Chloé Zhao",stars:["Frances McDormand","David Strathairn"],synopsis:"A woman becomes a modern-day nomad across the American West after economic collapse.",solo:"No",themes:["Economy","Freedom","Community"],tags:["winner","classic"]},
+  {id:16,year:2020,title:"Promising Young Woman",director:"Emerald Fennell",stars:["Carey Mulligan","Bo Burnham"],synopsis:"A traumatized woman takes revenge on predatory men.",solo:"Yes",themes:["Revenge","Trauma","Justice"],tags:["classic"]},
+  {id:17,year:2019,title:"Parasite",director:"Bong Joon-ho",stars:["Song Kang-ho","Cho Yeo-jeong"],synopsis:"A poor family schemes into employment with the wealthy, but class tensions erupt.",solo:"Yes",themes:["Class","Inequality","Deception"],tags:["winner","classic"]},
+  {id:18,year:2019,title:"1917",director:"Sam Mendes",stars:["George MacKay","Dean-Charles Chapman"],synopsis:"Two soldiers cross enemy territory to deliver a life-saving message.",solo:"Yes",themes:["War","Duty","Brotherhood"],tags:["contender","boxoffice"]},
+  {id:19,year:2019,title:"Joker",director:"Todd Phillips",stars:["Joaquin Phoenix","Robert De Niro"],synopsis:"A failed comedian descends into madness and becomes Gotham's agent of chaos.",solo:"Yes",themes:["Mental Illness","Class","Isolation"],tags:["boxoffice","classic"]},
+  {id:20,year:2018,title:"Green Book",director:"Peter Farrelly",stars:["Viggo Mortensen","Mahershala Ali"],synopsis:"A bouncer drives a pianist through the Jim Crow South, finding unexpected friendship.",solo:"No",themes:["Race","Friendship","Prejudice"],tags:["winner"]},
+  {id:21,year:2018,title:"Roma",director:"Alfonso Cuarón",stars:["Yalitza Aparicio","Marina de Tavira"],synopsis:"A maid in 1970s Mexico City navigates tragedy against political upheaval.",solo:"No",themes:["Class","Family","Politics"],tags:["contender","classic"]},
+  {id:22,year:2018,title:"Black Panther",director:"Ryan Coogler",stars:["Chadwick Boseman","Michael B. Jordan"],synopsis:"A new king must defend Wakanda from a challenger threatening the world.",solo:"No",themes:["Heritage","Identity","Colonialism"],tags:["boxoffice","classic"]},
+  {id:23,year:2017,title:"The Shape of Water",director:"Guillermo del Toro",stars:["Sally Hawkins","Doug Jones"],synopsis:"A mute cleaning woman forms a bond with an amphibious creature in a Cold War lab.",solo:"No",themes:["Love","Otherness","Identity"],tags:["winner"]},
+  {id:24,year:2017,title:"Get Out",director:"Jordan Peele",stars:["Daniel Kaluuya","Allison Williams"],synopsis:"A young Black man uncovers disturbing secrets at his girlfriend's family estate.",solo:"Yes",themes:["Race","Horror","Paranoia"],tags:["classic","boxoffice"]},
+  {id:25,year:2016,title:"Moonlight",director:"Barry Jenkins",stars:["Mahershala Ali","Trevante Rhodes"],synopsis:"Three chapters in the life of a young Black man struggling with identity and love.",solo:"Yes",themes:["Identity","Sexuality","Poverty"],tags:["winner","classic"]},
+  {id:26,year:2016,title:"La La Land",director:"Damien Chazelle",stars:["Ryan Gosling","Emma Stone"],synopsis:"An aspiring actress and jazz musician chase dreams while their love faces choices.",solo:"No",themes:["Dreams","Love","Sacrifice"],tags:["contender","boxoffice","classic"]},
+  {id:27,year:2015,title:"Spotlight",director:"Tom McCarthy",stars:["Michael Keaton","Mark Ruffalo"],synopsis:"Boston Globe journalists investigate systemic child abuse in the Catholic Church.",solo:"Yes",themes:["Journalism","Justice","Corruption"],tags:["winner"]},
+  {id:28,year:2015,title:"Mad Max: Fury Road",director:"George Miller",stars:["Tom Hardy","Charlize Theron"],synopsis:"In a post-apocalyptic wasteland, a woman rebels against a tyrannical ruler.",solo:"Yes",themes:["Survival","Freedom","Feminism"],tags:["classic","boxoffice"]},
+  {id:29,year:2014,title:"Birdman",director:"Alejandro G. Iñárritu",stars:["Michael Keaton","Edward Norton"],synopsis:"A washed-up superhero actor attempts to mount a Broadway play.",solo:"Yes",themes:["Fame","Art","Ego"],tags:["winner"]},
+  {id:30,year:2014,title:"Whiplash",director:"Damien Chazelle",stars:["Miles Teller","J.K. Simmons"],synopsis:"A young drummer's dreams are mentored by an abusive instructor.",solo:"Yes",themes:["Ambition","Abuse","Perfection"],tags:["classic"]},
+  {id:31,year:2013,title:"12 Years a Slave",director:"Steve McQueen",stars:["Chiwetel Ejiofor","Lupita Nyong'o"],synopsis:"A free Black man is kidnapped into slavery and endures twelve years of captivity.",solo:"Yes",themes:["Slavery","Survival","History"],tags:["winner","classic"]},
+  {id:32,year:2013,title:"Gravity",director:"Alfonso Cuarón",stars:["Sandra Bullock","George Clooney"],synopsis:"After debris destroys their shuttle, two astronauts fight for survival in space.",solo:"No",themes:["Survival","Isolation","Rebirth"],tags:["contender","boxoffice"]},
+  {id:33,year:2013,title:"Her",director:"Spike Jonze",stars:["Joaquin Phoenix","Scarlett Johansson"],synopsis:"A lonely writer develops a relationship with an artificial intelligence.",solo:"Yes",themes:["Love","Technology","Loneliness"],tags:["classic"]},
+  {id:34,year:2012,title:"Argo",director:"Ben Affleck",stars:["Ben Affleck","Bryan Cranston"],synopsis:"A CIA operative creates a fake film production to rescue hostages from Iran.",solo:"No",themes:["Politics","Hollywood","Espionage"],tags:["winner"]},
+  {id:35,year:2012,title:"Django Unchained",director:"Quentin Tarantino",stars:["Jamie Foxx","Christoph Waltz"],synopsis:"A freed slave joins a bounty hunter to rescue his wife from a brutal plantation.",solo:"Yes",themes:["Slavery","Revenge","Freedom"],tags:["classic","boxoffice"]},
+  {id:36,year:2011,title:"The Artist",director:"Michel Hazanavicius",stars:["Jean Dujardin","Bérénice Bejo"],synopsis:"A silent film star's career fades as talkies rise, while a young actress ascends.",solo:"No",themes:["Hollywood","Change","Love"],tags:["winner"]},
+  {id:37,year:2010,title:"The King's Speech",director:"Tom Hooper",stars:["Colin Firth","Geoffrey Rush"],synopsis:"King George VI overcomes his stammer with an unorthodox speech therapist.",solo:"No",themes:["Leadership","Friendship","History"],tags:["winner"]},
+  {id:38,year:2010,title:"The Social Network",director:"David Fincher",stars:["Jesse Eisenberg","Andrew Garfield"],synopsis:"The creation of Facebook and the lawsuits revealing the cost of ambition.",solo:"Yes",themes:["Ambition","Betrayal","Technology"],tags:["contender","classic"]},
+  {id:39,year:2010,title:"Inception",director:"Christopher Nolan",stars:["Leonardo DiCaprio","Joseph Gordon-Levitt"],synopsis:"A thief who enters dreams takes on an impossible job: implanting an idea.",solo:"Maybe",themes:["Dreams","Reality","Heist"],tags:["boxoffice","classic"]},
+  {id:40,year:2009,title:"The Hurt Locker",director:"Kathryn Bigelow",stars:["Jeremy Renner","Anthony Mackie"],synopsis:"An adrenaline-addicted bomb disposal expert defuses IEDs in Iraq.",solo:"Yes",themes:["War","Addiction","Trauma"],tags:["winner"]},
+  {id:41,year:2009,title:"Avatar",director:"James Cameron",stars:["Sam Worthington","Zoe Saldaña"],synopsis:"A paralyzed Marine inhabits an alien body and falls for a Na'vi woman.",solo:"No",themes:["Environment","Colonialism","Identity"],tags:["boxoffice","contender"]},
+  {id:42,year:2009,title:"Inglourious Basterds",director:"Quentin Tarantino",stars:["Brad Pitt","Christoph Waltz"],synopsis:"Jewish-American soldiers plan to assassinate Nazi leaders in occupied France.",solo:"Yes",themes:["War","Revenge","History"],tags:["classic"]},
+  {id:43,year:2008,title:"Slumdog Millionaire",director:"Danny Boyle",stars:["Dev Patel","Freida Pinto"],synopsis:"A Mumbai orphan's life is revealed through his success on Who Wants to Be a Millionaire.",solo:"No",themes:["Poverty","Destiny","Love"],tags:["winner","boxoffice"]},
+  {id:44,year:2008,title:"The Dark Knight",director:"Christopher Nolan",stars:["Christian Bale","Heath Ledger"],synopsis:"Batman faces the Joker as Gotham is plunged into chaos.",solo:"Yes",themes:["Chaos","Justice","Heroism"],tags:["boxoffice","classic"]},
+  {id:45,year:2007,title:"No Country for Old Men",director:"Coen Brothers",stars:["Javier Bardem","Josh Brolin"],synopsis:"A hunter stumbles upon drug money, setting off a deadly pursuit.",solo:"Yes",themes:["Violence","Fate","Morality"],tags:["winner","classic"]},
+  {id:46,year:2007,title:"There Will Be Blood",director:"Paul Thomas Anderson",stars:["Daniel Day-Lewis","Paul Dano"],synopsis:"An oilman's ruthless ambition consumes everyone around him.",solo:"Yes",themes:["Greed","Religion","Ambition"],tags:["classic"]},
+  {id:47,year:2006,title:"The Departed",director:"Martin Scorsese",stars:["Leonardo DiCaprio","Matt Damon"],synopsis:"An undercover cop and a mole race to identify each other in Boston's Irish mob.",solo:"Yes",themes:["Identity","Betrayal","Crime"],tags:["winner","classic"]},
+  {id:48,year:2005,title:"Crash",director:"Paul Haggis",stars:["Sandra Bullock","Don Cheadle"],synopsis:"Racial tensions collide in interconnected stories across Los Angeles.",solo:"Yes",themes:["Race","Prejudice","Redemption"],tags:["winner"]},
+  {id:49,year:2005,title:"Brokeback Mountain",director:"Ang Lee",stars:["Heath Ledger","Jake Gyllenhaal"],synopsis:"Two cowboys develop a secret romance spanning two decades.",solo:"Yes",themes:["Love","Repression","Loss"],tags:["classic"]},
+  {id:50,year:2004,title:"Million Dollar Baby",director:"Clint Eastwood",stars:["Hilary Swank","Clint Eastwood"],synopsis:"A female boxer rises under a reluctant trainer, heading toward heartbreak.",solo:"Yes",themes:["Determination","Mentorship","Loss"],tags:["winner"]},
+  {id:51,year:2003,title:"The Lord of the Rings: The Return of the King",director:"Peter Jackson",stars:["Elijah Wood","Viggo Mortensen"],synopsis:"The final battle for Middle-earth as Frodo nears Mount Doom.",solo:"No",themes:["Good vs Evil","Friendship","Sacrifice"],tags:["winner","boxoffice","classic"]},
+  {id:52,year:2002,title:"Chicago",director:"Rob Marshall",stars:["Renée Zellweger","Catherine Zeta-Jones"],synopsis:"Two murderesses compete for fame in Roaring Twenties Chicago.",solo:"No",themes:["Fame","Justice","Manipulation"],tags:["winner","boxoffice"]},
+  {id:53,year:2001,title:"A Beautiful Mind",director:"Ron Howard",stars:["Russell Crowe","Jennifer Connelly"],synopsis:"Mathematician John Nash battles schizophrenia while making groundbreaking discoveries.",solo:"No",themes:["Mental Illness","Genius","Love"],tags:["winner"]},
+  {id:54,year:2001,title:"The Lord of the Rings: The Fellowship of the Ring",director:"Peter Jackson",stars:["Elijah Wood","Ian McKellen"],synopsis:"A hobbit inherits a ring of immense power and embarks on an epic journey.",solo:"No",themes:["Good vs Evil","Friendship","Adventure"],tags:["boxoffice","classic"]},
+  {id:55,year:2000,title:"Gladiator",director:"Ridley Scott",stars:["Russell Crowe","Joaquin Phoenix"],synopsis:"A betrayed Roman general rises through the arena to exact vengeance.",solo:"Yes",themes:["Revenge","Honor","Power"],tags:["winner","boxoffice","classic"]},
+  {id:56,year:1999,title:"American Beauty",director:"Sam Mendes",stars:["Kevin Spacey","Annette Bening"],synopsis:"A suburban father's midlife crisis unravels his picture-perfect family.",solo:"Yes",themes:["Suburban Life","Beauty","Death"],tags:["winner"]},
+  {id:57,year:1999,title:"The Matrix",director:"The Wachowskis",stars:["Keanu Reeves","Laurence Fishburne"],synopsis:"A hacker discovers reality is a simulation and joins rebels fighting machines.",solo:"Yes",themes:["Reality","Freedom","Destiny"],tags:["boxoffice","classic"]},
+  {id:58,year:1998,title:"Shakespeare in Love",director:"John Madden",stars:["Gwyneth Paltrow","Joseph Fiennes"],synopsis:"A young Shakespeare finds inspiration with a noblewoman, creating Romeo and Juliet.",solo:"No",themes:["Love","Art","Theater"],tags:["winner"]},
+  {id:59,year:1998,title:"Saving Private Ryan",director:"Steven Spielberg",stars:["Tom Hanks","Matt Damon"],synopsis:"A squad searches for a paratrooper whose brothers have been killed in action.",solo:"Yes",themes:["War","Sacrifice","Brotherhood"],tags:["classic","boxoffice"]},
+  {id:60,year:1997,title:"Titanic",director:"James Cameron",stars:["Leonardo DiCaprio","Kate Winslet"],synopsis:"Aristocracy and steerage collide in a doomed romance aboard the infamous ship.",solo:"No",themes:["Love","Class","Disaster"],tags:["winner","boxoffice","classic"]},
+  {id:61,year:1996,title:"The English Patient",director:"Anthony Minghella",stars:["Ralph Fiennes","Kristin Scott Thomas"],synopsis:"A burned pilot's past unfolds through memories of forbidden love in the Sahara.",solo:"Yes",themes:["Love","War","Memory"],tags:["winner"]},
+  {id:62,year:1996,title:"Fargo",director:"Coen Brothers",stars:["Frances McDormand","William H. Macy"],synopsis:"A car salesman hires criminals to kidnap his wife; a pregnant sheriff investigates.",solo:"Yes",themes:["Crime","Greed","Absurdity"],tags:["classic"]},
+  {id:63,year:1995,title:"Braveheart",director:"Mel Gibson",stars:["Mel Gibson","Sophie Marceau"],synopsis:"Scottish warrior William Wallace leads a rebellion against English rule.",solo:"Yes",themes:["Freedom","Rebellion","Sacrifice"],tags:["winner","boxoffice"]},
+  {id:64,year:1995,title:"Se7en",director:"David Fincher",stars:["Brad Pitt","Morgan Freeman"],synopsis:"Two detectives hunt a serial killer using the seven deadly sins as motives.",solo:"Yes",themes:["Sin","Evil","Psychology"],tags:["classic","boxoffice"]},
+  {id:65,year:1994,title:"Forrest Gump",director:"Robert Zemeckis",stars:["Tom Hanks","Robin Wright"],synopsis:"A simple man unwittingly influences iconic 20th-century events.",solo:"No",themes:["History","Love","Destiny"],tags:["winner","boxoffice","classic"]},
+  {id:66,year:1994,title:"Pulp Fiction",director:"Quentin Tarantino",stars:["John Travolta","Samuel L. Jackson"],synopsis:"Interlocking stories of crime, redemption, and dark humor in Los Angeles.",solo:"Yes",themes:["Crime","Redemption","Violence"],tags:["classic"]},
+  {id:67,year:1994,title:"The Shawshank Redemption",director:"Frank Darabont",stars:["Tim Robbins","Morgan Freeman"],synopsis:"A banker maintains hope in prison and secretly digs his way to freedom.",solo:"Yes",themes:["Hope","Friendship","Freedom"],tags:["classic"]},
+  {id:68,year:1993,title:"Schindler's List",director:"Steven Spielberg",stars:["Liam Neeson","Ralph Fiennes"],synopsis:"An industrialist saves over a thousand Jewish lives during the Holocaust.",solo:"Yes",themes:["Holocaust","Heroism","Humanity"],tags:["winner","classic"]},
+  {id:69,year:1993,title:"Jurassic Park",director:"Steven Spielberg",stars:["Sam Neill","Laura Dern"],synopsis:"Scientists visit a theme park of cloned dinosaurs; chaos ensues.",solo:"No",themes:["Science","Nature","Survival"],tags:["boxoffice","classic"]},
+  {id:70,year:1992,title:"Unforgiven",director:"Clint Eastwood",stars:["Clint Eastwood","Gene Hackman"],synopsis:"A retired gunslinger takes one last job, confronting his violent past.",solo:"Yes",themes:["Violence","Redemption","Justice"],tags:["winner","classic"]},
+  {id:71,year:1991,title:"The Silence of the Lambs",director:"Jonathan Demme",stars:["Jodie Foster","Anthony Hopkins"],synopsis:"An FBI trainee seeks help from Hannibal Lecter to catch a serial killer.",solo:"Yes",themes:["Evil","Psychology","Power"],tags:["winner","classic"]},
+  {id:72,year:1991,title:"Terminator 2: Judgment Day",director:"James Cameron",stars:["Arnold Schwarzenegger","Linda Hamilton"],synopsis:"A reprogrammed Terminator protects John Connor from a more advanced killer.",solo:"Yes",themes:["Technology","Fate","Family"],tags:["boxoffice","classic"]},
+  {id:73,year:1990,title:"Dances with Wolves",director:"Kevin Costner",stars:["Kevin Costner","Mary McDonnell"],synopsis:"A Civil War lieutenant befriends the Sioux, finding a new identity.",solo:"No",themes:["Indigenous Culture","Identity","Nature"],tags:["winner","boxoffice"]},
+  {id:74,year:1990,title:"Goodfellas",director:"Martin Scorsese",stars:["Ray Liotta","Robert De Niro"],synopsis:"A young man rises through the mob ranks, but greed brings his downfall.",solo:"Yes",themes:["Crime","Loyalty","Betrayal"],tags:["classic"]},
+  {id:75,year:1989,title:"Driving Miss Daisy",director:"Bruce Beresford",stars:["Morgan Freeman","Jessica Tandy"],synopsis:"An elderly Jewish widow and her Black chauffeur develop an unlikely friendship.",solo:"No",themes:["Race","Friendship","Aging"],tags:["winner"]},
+  {id:76,year:1988,title:"Rain Man",director:"Barry Levinson",stars:["Dustin Hoffman","Tom Cruise"],synopsis:"A selfish yuppie discovers he has an autistic savant brother.",solo:"No",themes:["Family","Disability","Redemption"],tags:["winner","boxoffice"]},
+  {id:77,year:1988,title:"Die Hard",director:"John McTiernan",stars:["Bruce Willis","Alan Rickman"],synopsis:"A cop battles terrorists in a Los Angeles skyscraper on Christmas Eve.",solo:"Yes",themes:["Action","Heroism","Survival"],tags:["boxoffice","classic"]},
+  {id:78,year:1987,title:"The Last Emperor",director:"Bernardo Bertolucci",stars:["John Lone","Joan Chen"],synopsis:"The life of Pu Yi, the last Emperor of China, from ruler to common citizen.",solo:"Maybe",themes:["History","Power","Identity"],tags:["winner"]},
+  {id:79,year:1986,title:"Platoon",director:"Oliver Stone",stars:["Charlie Sheen","Tom Berenger"],synopsis:"A young soldier in Vietnam faces a moral crisis when confronted with war's horrors.",solo:"Yes",themes:["War","Morality","Innocence"],tags:["winner","classic"]},
+  {id:80,year:1985,title:"Out of Africa",director:"Sydney Pollack",stars:["Meryl Streep","Robert Redford"],synopsis:"A Danish baroness runs a plantation in Kenya and falls for a hunter.",solo:"No",themes:["Love","Africa","Independence"],tags:["winner"]},
+  {id:81,year:1985,title:"Back to the Future",director:"Robert Zemeckis",stars:["Michael J. Fox","Christopher Lloyd"],synopsis:"A teenager is accidentally sent back in time and must ensure his parents meet.",solo:"No",themes:["Time Travel","Family","Adventure"],tags:["boxoffice","classic"]},
+  {id:82,year:1984,title:"Amadeus",director:"Milos Forman",stars:["F. Murray Abraham","Tom Hulce"],synopsis:"The rivalry between Mozart and Salieri, told through Salieri's jealous perspective.",solo:"Maybe",themes:["Genius","Jealousy","Music"],tags:["winner","classic"]},
+  {id:83,year:1983,title:"Terms of Endearment",director:"James L. Brooks",stars:["Shirley MacLaine","Debra Winger"],synopsis:"The relationship between a mother and daughter over 30 years.",solo:"No",themes:["Family","Love","Loss"],tags:["winner"]},
+  {id:84,year:1982,title:"Gandhi",director:"Richard Attenborough",stars:["Ben Kingsley","Candice Bergen"],synopsis:"The life of Mahatma Gandhi and India's struggle for independence.",solo:"Maybe",themes:["Nonviolence","Independence","Leadership"],tags:["winner"]},
+  {id:85,year:1982,title:"E.T. the Extra-Terrestrial",director:"Steven Spielberg",stars:["Henry Thomas","Drew Barrymore"],synopsis:"A boy befriends a stranded alien and helps him return home.",solo:"No",themes:["Friendship","Childhood","Wonder"],tags:["boxoffice","classic"]},
+  {id:86,year:1981,title:"Chariots of Fire",director:"Hugh Hudson",stars:["Ben Cross","Ian Charleson"],synopsis:"Two British athletes compete in the 1924 Olympics with different motivations.",solo:"No",themes:["Faith","Competition","Identity"],tags:["winner"]},
+  {id:87,year:1981,title:"Raiders of the Lost Ark",director:"Steven Spielberg",stars:["Harrison Ford","Karen Allen"],synopsis:"Archaeologist Indiana Jones races Nazis to find the Ark of the Covenant.",solo:"No",themes:["Adventure","History","Good vs Evil"],tags:["boxoffice","classic"]},
+  {id:88,year:1980,title:"Ordinary People",director:"Robert Redford",stars:["Donald Sutherland","Mary Tyler Moore"],synopsis:"A family struggles after the death of one son and the attempted suicide of another.",solo:"Yes",themes:["Family","Grief","Guilt"],tags:["winner"]},
+  {id:89,year:1980,title:"Raging Bull",director:"Martin Scorsese",stars:["Robert De Niro","Joe Pesci"],synopsis:"Boxer Jake LaMotta's violence and temper destroy his life outside the ring.",solo:"Yes",themes:["Self-Destruction","Jealousy","Violence"],tags:["classic"]},
+  {id:90,year:1980,title:"The Empire Strikes Back",director:"Irvin Kershner",stars:["Mark Hamill","Harrison Ford"],synopsis:"The Rebels face devastating losses as Luke learns the truth about his father.",solo:"No",themes:["Good vs Evil","Family","Destiny"],tags:["boxoffice","classic"]},
+  {id:91,year:1979,title:"Kramer vs. Kramer",director:"Robert Benton",stars:["Dustin Hoffman","Meryl Streep"],synopsis:"A father learns to care for his son alone after his wife leaves them.",solo:"No",themes:["Divorce","Family","Parenting"],tags:["winner"]},
+  {id:92,year:1979,title:"Apocalypse Now",director:"Francis Ford Coppola",stars:["Martin Sheen","Marlon Brando"],synopsis:"An officer is sent into Cambodia to assassinate a renegade colonel.",solo:"Yes",themes:["War","Madness","Morality"],tags:["classic"]},
+  {id:93,year:1979,title:"Alien",director:"Ridley Scott",stars:["Sigourney Weaver","Tom Skerritt"],synopsis:"The crew of a spacecraft encounter a deadly alien creature.",solo:"Yes",themes:["Horror","Survival","Isolation"],tags:["boxoffice","classic"]},
+  {id:94,year:1978,title:"The Deer Hunter",director:"Michael Cimino",stars:["Robert De Niro","Christopher Walken"],synopsis:"Friends from a Pennsylvania steel town are changed forever by Vietnam.",solo:"Yes",themes:["War","Friendship","Trauma"],tags:["winner","classic"]},
+  {id:95,year:1977,title:"Annie Hall",director:"Woody Allen",stars:["Woody Allen","Diane Keaton"],synopsis:"A neurotic comedian reflects on his failed relationship with Annie Hall.",solo:"Yes",themes:["Love","Relationships","New York"],tags:["winner","classic"]},
+  {id:96,year:1977,title:"Star Wars",director:"George Lucas",stars:["Mark Hamill","Harrison Ford"],synopsis:"Luke Skywalker joins rebels to save the galaxy from the Empire.",solo:"No",themes:["Good vs Evil","Destiny","Heroism"],tags:["boxoffice","classic"]},
+  {id:97,year:1976,title:"Rocky",director:"John G. Avildsen",stars:["Sylvester Stallone","Talia Shire"],synopsis:"A small-time boxer gets a shot at the heavyweight championship.",solo:"No",themes:["Underdog","Determination","Love"],tags:["winner","boxoffice","classic"]},
+  {id:98,year:1976,title:"Taxi Driver",director:"Martin Scorsese",stars:["Robert De Niro","Jodie Foster"],synopsis:"A mentally unstable Vietnam vet works as a nighttime taxi driver in NYC.",solo:"Yes",themes:["Isolation","Violence","Madness"],tags:["classic"]},
+  {id:99,year:1975,title:"One Flew Over the Cuckoo's Nest",director:"Milos Forman",stars:["Jack Nicholson","Louise Fletcher"],synopsis:"A criminal pleads insanity and rebels against an oppressive nurse.",solo:"Yes",themes:["Freedom","Authority","Sanity"],tags:["winner","classic"]},
+  {id:100,year:1975,title:"Jaws",director:"Steven Spielberg",stars:["Roy Scheider","Robert Shaw"],synopsis:"A police chief, scientist, and grizzled fisherman hunt a killer shark.",solo:"Maybe",themes:["Survival","Fear","Nature"],tags:["boxoffice","classic"]},
+  {id:101,year:1974,title:"The Godfather Part II",director:"Francis Ford Coppola",stars:["Al Pacino","Robert De Niro"],synopsis:"Michael Corleone expands the family empire while his father's origins are revealed.",solo:"Yes",themes:["Family","Power","Corruption"],tags:["winner","classic"]},
+  {id:102,year:1974,title:"Chinatown",director:"Roman Polanski",stars:["Jack Nicholson","Faye Dunaway"],synopsis:"A detective investigating adultery uncovers murder and corruption in 1930s LA.",solo:"Yes",themes:["Corruption","Power","Tragedy"],tags:["classic"]},
+  {id:103,year:1973,title:"The Sting",director:"George Roy Hill",stars:["Paul Newman","Robert Redford"],synopsis:"Two con men set up an elaborate scheme to swindle a mob boss.",solo:"No",themes:["Deception","Revenge","Friendship"],tags:["winner","boxoffice"]},
+  {id:104,year:1973,title:"The Exorcist",director:"William Friedkin",stars:["Ellen Burstyn","Linda Blair"],synopsis:"A mother seeks help when her daughter is possessed by a demonic entity.",solo:"Yes",themes:["Horror","Faith","Evil"],tags:["boxoffice","classic"]},
+  {id:105,year:1972,title:"The Godfather",director:"Francis Ford Coppola",stars:["Marlon Brando","Al Pacino"],synopsis:"The aging patriarch of a crime dynasty transfers control to his reluctant son.",solo:"Yes",themes:["Family","Power","Crime"],tags:["winner","classic"]},
+  {id:106,year:1971,title:"The French Connection",director:"William Friedkin",stars:["Gene Hackman","Roy Scheider"],synopsis:"NYC detectives Popeye Doyle and Buddy Russo pursue a heroin smuggling ring.",solo:"Yes",themes:["Crime","Obsession","Justice"],tags:["winner"]},
+  {id:107,year:1971,title:"A Clockwork Orange",director:"Stanley Kubrick",stars:["Malcolm McDowell","Patrick Magee"],synopsis:"A violent youth undergoes experimental rehabilitation in dystopian Britain.",solo:"Yes",themes:["Violence","Free Will","Society"],tags:["classic"]},
+  {id:108,year:1970,title:"Patton",director:"Franklin J. Schaffner",stars:["George C. Scott","Karl Malden"],synopsis:"The World War II career of controversial General George S. Patton.",solo:"Maybe",themes:["War","Leadership","Ego"],tags:["winner"]},
+  {id:109,year:1969,title:"Midnight Cowboy",director:"John Schlesinger",stars:["Dustin Hoffman","Jon Voight"],synopsis:"A naive Texan becomes a hustler in NYC and befriends a sickly con man.",solo:"Yes",themes:["Loneliness","Friendship","Dreams"],tags:["winner","classic"]},
+  {id:110,year:1969,title:"Butch Cassidy and the Sundance Kid",director:"George Roy Hill",stars:["Paul Newman","Robert Redford"],synopsis:"Two outlaws flee to Bolivia when the law closes in on them.",solo:"No",themes:["Friendship","Outlaws","Freedom"],tags:["classic","boxoffice"]},
+  {id:111,year:1968,title:"Oliver!",director:"Carol Reed",stars:["Mark Lester","Ron Moody"],synopsis:"An orphan escapes a workhouse and joins a gang of pickpockets in London.",solo:"No",themes:["Poverty","Innocence","Survival"],tags:["winner"]},
+  {id:112,year:1968,title:"2001: A Space Odyssey",director:"Stanley Kubrick",stars:["Keir Dullea","Gary Lockwood"],synopsis:"Humanity discovers a mysterious artifact and sets off to find its origins.",solo:"Yes",themes:["Evolution","Technology","Existentialism"],tags:["classic"]},
+  {id:113,year:1967,title:"In the Heat of the Night",director:"Norman Jewison",stars:["Sidney Poitier","Rod Steiger"],synopsis:"A Black detective from Philadelphia helps solve a murder in Mississippi.",solo:"Maybe",themes:["Race","Justice","Prejudice"],tags:["winner","classic"]},
+  {id:114,year:1967,title:"The Graduate",director:"Mike Nichols",stars:["Dustin Hoffman","Anne Bancroft"],synopsis:"A disillusioned graduate is seduced by an older woman, then falls for her daughter.",solo:"Yes",themes:["Coming of Age","Alienation","Rebellion"],tags:["classic"]},
+  {id:115,year:1966,title:"A Man for All Seasons",director:"Fred Zinnemann",stars:["Paul Scofield","Wendy Hiller"],synopsis:"Sir Thomas More refuses to endorse King Henry VIII's divorce.",solo:"Maybe",themes:["Conscience","Faith","Integrity"],tags:["winner"]},
+  {id:116,year:1965,title:"The Sound of Music",director:"Robert Wise",stars:["Julie Andrews","Christopher Plummer"],synopsis:"A woman becomes governess to seven children and falls for their father as Nazis threaten.",solo:"No",themes:["Family","Music","Freedom"],tags:["winner","boxoffice","classic"]},
+  {id:117,year:1964,title:"My Fair Lady",director:"George Cukor",stars:["Audrey Hepburn","Rex Harrison"],synopsis:"A professor bets he can transform a Cockney flower girl into a lady.",solo:"No",themes:["Class","Transformation","Love"],tags:["winner","boxoffice"]},
+  {id:118,year:1964,title:"Dr. Strangelove",director:"Stanley Kubrick",stars:["Peter Sellers","George C. Scott"],synopsis:"An insane general orders a nuclear strike; the President tries to prevent apocalypse.",solo:"Yes",themes:["Nuclear War","Absurdity","Politics"],tags:["classic"]},
+  {id:119,year:1963,title:"Tom Jones",director:"Tony Richardson",stars:["Albert Finney","Susannah York"],synopsis:"The adventures of a foundling in 18th-century England.",solo:"Maybe",themes:["Adventure","Class","Romance"],tags:["winner"]},
+  {id:120,year:1962,title:"Lawrence of Arabia",director:"David Lean",stars:["Peter O'Toole","Alec Guinness"],synopsis:"T.E. Lawrence unites Arab tribes during WWI to fight the Turks.",solo:"Maybe",themes:["Identity","War","Leadership"],tags:["winner","classic"]},
+  {id:121,year:1961,title:"West Side Story",director:"Robert Wise & Jerome Robbins",stars:["Natalie Wood","Richard Beymer"],synopsis:"Star-crossed lovers from rival gangs in 1950s New York.",solo:"No",themes:["Love","Prejudice","Violence"],tags:["winner","classic"]},
+  {id:122,year:1961,title:"Breakfast at Tiffany's",director:"Blake Edwards",stars:["Audrey Hepburn","George Peppard"],synopsis:"A writer falls for his eccentric, party-going neighbor in NYC.",solo:"No",themes:["Love","Identity","New York"],tags:["classic"]},
+  {id:123,year:1960,title:"The Apartment",director:"Billy Wilder",stars:["Jack Lemmon","Shirley MacLaine"],synopsis:"An office worker lends his apartment to executives for their affairs.",solo:"Maybe",themes:["Loneliness","Ambition","Love"],tags:["winner","classic"]},
+  {id:124,year:1960,title:"Psycho",director:"Alfred Hitchcock",stars:["Anthony Perkins","Janet Leigh"],synopsis:"A secretary takes refuge at a secluded motel owned by a man with a dark secret.",solo:"Yes",themes:["Madness","Identity","Violence"],tags:["classic"]},
+  {id:125,year:1959,title:"Ben-Hur",director:"William Wyler",stars:["Charlton Heston","Stephen Boyd"],synopsis:"A Jewish prince is enslaved by a Roman friend and seeks revenge.",solo:"No",themes:["Revenge","Faith","Redemption"],tags:["winner","boxoffice"]},
+  {id:126,year:1959,title:"Some Like It Hot",director:"Billy Wilder",stars:["Marilyn Monroe","Tony Curtis"],synopsis:"Two musicians witness a mob hit and flee disguised as women.",solo:"No",themes:["Identity","Comedy","Survival"],tags:["classic"]},
+  {id:127,year:1958,title:"Gigi",director:"Vincente Minnelli",stars:["Leslie Caron","Maurice Chevalier"],synopsis:"A young Parisian girl is groomed to be a courtesan but finds true love.",solo:"No",themes:["Love","Class","Coming of Age"],tags:["winner"]},
+  {id:128,year:1958,title:"Vertigo",director:"Alfred Hitchcock",stars:["James Stewart","Kim Novak"],synopsis:"A detective with acrophobia becomes obsessed with a mysterious woman.",solo:"Yes",themes:["Obsession","Identity","Deception"],tags:["classic"]},
+  {id:129,year:1957,title:"The Bridge on the River Kwai",director:"David Lean",stars:["William Holden","Alec Guinness"],synopsis:"British POWs build a railway bridge for captors, unaware of Allied plans.",solo:"Maybe",themes:["War","Honor","Obsession"],tags:["winner","classic"]},
+  {id:130,year:1957,title:"12 Angry Men",director:"Sidney Lumet",stars:["Henry Fonda","Lee J. Cobb"],synopsis:"A jury deliberates the fate of a young man accused of murder.",solo:"Maybe",themes:["Justice","Prejudice","Reason"],tags:["classic"]},
+  {id:131,year:1956,title:"Around the World in 80 Days",director:"Michael Anderson",stars:["David Niven","Cantinflas"],synopsis:"A Victorian gentleman bets he can circumnavigate the globe in 80 days.",solo:"No",themes:["Adventure","Determination","Travel"],tags:["winner","boxoffice"]},
+  {id:132,year:1955,title:"Marty",director:"Delbert Mann",stars:["Ernest Borgnine","Betsy Blair"],synopsis:"A lonely butcher finds unexpected love with a plain schoolteacher.",solo:"No",themes:["Loneliness","Love","Self-Worth"],tags:["winner"]},
+  {id:133,year:1955,title:"Rebel Without a Cause",director:"Nicholas Ray",stars:["James Dean","Natalie Wood"],synopsis:"A troubled teenager struggles to fit in after moving to a new town.",solo:"Yes",themes:["Youth","Alienation","Family"],tags:["classic"]},
+  {id:134,year:1954,title:"On the Waterfront",director:"Elia Kazan",stars:["Marlon Brando","Eva Marie Saint"],synopsis:"An ex-boxer struggles to stand up to corrupt union bosses.",solo:"Yes",themes:["Corruption","Conscience","Redemption"],tags:["winner","classic"]},
+  {id:135,year:1954,title:"Rear Window",director:"Alfred Hitchcock",stars:["James Stewart","Grace Kelly"],synopsis:"A wheelchair-bound photographer suspects his neighbor of murder.",solo:"Maybe",themes:["Voyeurism","Suspense","Obsession"],tags:["classic"]},
+  {id:136,year:1953,title:"From Here to Eternity",director:"Fred Zinnemann",stars:["Burt Lancaster","Montgomery Clift"],synopsis:"Lives of soldiers stationed at Pearl Harbor before the 1941 attack.",solo:"Yes",themes:["War","Love","Honor"],tags:["winner"]},
+  {id:137,year:1952,title:"The Greatest Show on Earth",director:"Cecil B. DeMille",stars:["Betty Hutton","Charlton Heston"],synopsis:"Drama and romance under the big top of the Ringling Bros. circus.",solo:"No",themes:["Spectacle","Love","Entertainment"],tags:["winner"]},
+  {id:138,year:1952,title:"Singin' in the Rain",director:"Stanley Donen & Gene Kelly",stars:["Gene Kelly","Debbie Reynolds"],synopsis:"A silent film star falls for a chorus girl as Hollywood transitions to talkies.",solo:"No",themes:["Hollywood","Romance","Transformation"],tags:["classic"]},
+  {id:139,year:1951,title:"An American in Paris",director:"Vincente Minnelli",stars:["Gene Kelly","Leslie Caron"],synopsis:"An American ex-GI pursues his dream of becoming a painter in Paris.",solo:"No",themes:["Art","Love","Paris"],tags:["winner"]},
+  {id:140,year:1950,title:"All About Eve",director:"Joseph L. Mankiewicz",stars:["Bette Davis","Anne Baxter"],synopsis:"An ambitious young fan insinuates herself into the life of an aging Broadway star.",solo:"Maybe",themes:["Ambition","Betrayal","Theater"],tags:["winner","classic"]},
+  {id:141,year:1950,title:"Sunset Boulevard",director:"Billy Wilder",stars:["William Holden","Gloria Swanson"],synopsis:"A screenwriter becomes entangled with a demented former silent film star.",solo:"Yes",themes:["Hollywood","Delusion","Ambition"],tags:["classic"]},
+  {id:142,year:1949,title:"All the King's Men",director:"Robert Rossen",stars:["Broderick Crawford","John Ireland"],synopsis:"The rise and fall of a corrupt Southern politician.",solo:"Yes",themes:["Corruption","Power","Politics"],tags:["winner"]},
+  {id:143,year:1948,title:"Hamlet",director:"Laurence Olivier",stars:["Laurence Olivier","Jean Simmons"],synopsis:"The Prince of Denmark seeks revenge after his father's murder.",solo:"Yes",themes:["Revenge","Madness","Tragedy"],tags:["winner"]},
+  {id:144,year:1947,title:"Gentleman's Agreement",director:"Elia Kazan",stars:["Gregory Peck","Dorothy McGuire"],synopsis:"A journalist poses as Jewish to investigate anti-Semitism.",solo:"Maybe",themes:["Prejudice","Identity","Justice"],tags:["winner"]},
+  {id:145,year:1946,title:"The Best Years of Our Lives",director:"William Wyler",stars:["Myrna Loy","Fredric March"],synopsis:"Three WWII veterans return home to find they and their families have changed.",solo:"Maybe",themes:["War","Homecoming","Family"],tags:["winner","classic"]},
+  {id:146,year:1946,title:"It's a Wonderful Life",director:"Frank Capra",stars:["James Stewart","Donna Reed"],synopsis:"An angel shows a suicidal businessman what the world would be without him.",solo:"No",themes:["Hope","Community","Redemption"],tags:["classic"]},
+  {id:147,year:1945,title:"The Lost Weekend",director:"Billy Wilder",stars:["Ray Milland","Jane Wyman"],synopsis:"An alcoholic writer struggles through a four-day bender.",solo:"Yes",themes:["Addiction","Despair","Redemption"],tags:["winner"]},
+  {id:148,year:1944,title:"Going My Way",director:"Leo McCarey",stars:["Bing Crosby","Barry Fitzgerald"],synopsis:"A young priest brings new life to a struggling parish.",solo:"No",themes:["Faith","Community","Music"],tags:["winner"]},
+  {id:149,year:1943,title:"Casablanca",director:"Michael Curtiz",stars:["Humphrey Bogart","Ingrid Bergman"],synopsis:"An American expatriate must choose between love and helping the Resistance.",solo:"Maybe",themes:["Love","Sacrifice","War"],tags:["winner","classic"]},
+  {id:150,year:1942,title:"Mrs. Miniver",director:"William Wyler",stars:["Greer Garson","Walter Pidgeon"],synopsis:"An English family endures the challenges of World War II.",solo:"No",themes:["War","Family","Resilience"],tags:["winner"]},
+  {id:151,year:1941,title:"How Green Was My Valley",director:"John Ford",stars:["Walter Pidgeon","Maureen O'Hara"],synopsis:"A boy grows up in a Welsh mining family facing hardship and change.",solo:"No",themes:["Family","Loss","Nostalgia"],tags:["winner"]},
+  {id:152,year:1941,title:"Citizen Kane",director:"Orson Welles",stars:["Orson Welles","Joseph Cotten"],synopsis:"A reporter investigates the life of a media tycoon through his dying word: Rosebud.",solo:"Yes",themes:["Power","Ambition","Loneliness"],tags:["classic"]},
+  {id:153,year:1940,title:"Rebecca",director:"Alfred Hitchcock",stars:["Laurence Olivier","Joan Fontaine"],synopsis:"A young bride is haunted by the memory of her husband's first wife.",solo:"Yes",themes:["Mystery","Obsession","Identity"],tags:["winner"]},
+  {id:154,year:1939,title:"Gone with the Wind",director:"Victor Fleming",stars:["Clark Gable","Vivien Leigh"],synopsis:"A Southern belle navigates love during the Civil War and Reconstruction.",solo:"No",themes:["War","Survival","Love"],tags:["winner","boxoffice","classic"]},
+  {id:155,year:1939,title:"The Wizard of Oz",director:"Victor Fleming",stars:["Judy Garland","Frank Morgan"],synopsis:"Dorothy is swept to a magical land and must find a wizard to return home.",solo:"No",themes:["Home","Friendship","Courage"],tags:["classic","boxoffice"]},
+  {id:156,year:1938,title:"You Can't Take It with You",director:"Frank Capra",stars:["Jean Arthur","James Stewart"],synopsis:"An eccentric family clashes with a wealthy businessman over their son's engagement.",solo:"No",themes:["Family","Class","Individuality"],tags:["winner"]},
+  {id:157,year:1937,title:"The Life of Emile Zola",director:"William Dieterle",stars:["Paul Muni","Gale Sondergaard"],synopsis:"The life of author Emile Zola and his involvement in the Dreyfus affair.",solo:"Maybe",themes:["Justice","Courage","Art"],tags:["winner"]},
+  {id:158,year:1936,title:"The Great Ziegfeld",director:"Robert Z. Leonard",stars:["William Powell","Myrna Loy"],synopsis:"The life of showman Florenz Ziegfeld Jr. and his famous Broadway revues.",solo:"No",themes:["Showbusiness","Ambition","Romance"],tags:["winner"]},
+  {id:159,year:1936,title:"Modern Times",director:"Charlie Chaplin",stars:["Charlie Chaplin","Paulette Goddard"],synopsis:"The Little Tramp struggles to survive in the modern, industrialized world.",solo:"No",themes:["Industry","Humanity","Survival"],tags:["classic"]},
+  {id:160,year:1935,title:"Mutiny on the Bounty",director:"Frank Lloyd",stars:["Clark Gable","Charles Laughton"],synopsis:"The crew of the HMS Bounty mutinies against the tyrannical Captain Bligh.",solo:"Maybe",themes:["Rebellion","Justice","Survival"],tags:["winner"]},
+  {id:161,year:1934,title:"It Happened One Night",director:"Frank Capra",stars:["Clark Gable","Claudette Colbert"],synopsis:"A runaway heiress falls for a cynical reporter helping her escape.",solo:"No",themes:["Class","Romance","Adventure"],tags:["winner","classic"]},
+  {id:162,year:1933,title:"Cavalcade",director:"Frank Lloyd",stars:["Diana Wynyard","Clive Brook"],synopsis:"Three decades in the lives of two English families from 1899 to 1933.",solo:"Maybe",themes:["History","Family","Change"],tags:["winner"]},
+  {id:163,year:1932,title:"Grand Hotel",director:"Edmund Goulding",stars:["Greta Garbo","John Barrymore"],synopsis:"Various guests' stories interweave at a luxurious Berlin hotel.",solo:"Maybe",themes:["Fate","Class","Love"],tags:["winner"]},
+  {id:164,year:1931,title:"Cimarron",director:"Wesley Ruggles",stars:["Richard Dix","Irene Dunne"],synopsis:"A family's adventures during the Oklahoma land rush and beyond.",solo:"Maybe",themes:["Frontier","Family","Ambition"],tags:["winner"]},
+  {id:165,year:1930,title:"All Quiet on the Western Front",director:"Lewis Milestone",stars:["Lew Ayres","Louis Wolheim"],synopsis:"Young German soldiers face the horrors of World War I.",solo:"Yes",themes:["War","Youth","Futility"],tags:["winner","classic"]},
+  {id:166,year:1929,title:"The Broadway Melody",director:"Harry Beaumont",stars:["Bessie Love","Anita Page"],synopsis:"Two sisters navigate love and rivalry on their way to Broadway stardom.",solo:"No",themes:["Showbusiness","Rivalry","Love"],tags:["winner"]},
+  {id:167,year:1928,title:"Wings",director:"William A. Wellman",stars:["Clara Bow","Charles Rogers"],synopsis:"Two young men become fighter pilots in WWI, both in love with the same woman.",solo:"Maybe",themes:["War","Friendship","Love"],tags:["winner"]}
+];
+
+let userData = {};
+let currentView = 'all';
+let currentDecade = null;
+let currentFilm = null;
+
+let _apiConnected = false;
+
+async function loadData() {
+  try { const saved = localStorage.getItem(STORAGE_KEY); if (saved) userData = JSON.parse(saved); } catch (e) {}
+  updateSyncStatus();
+}
+async function saveData() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(userData)); } catch (e) {}
+  updateSyncStatus();
+  maybeShowSignupPrompt();
+}
+function updateSyncStatus() { document.getElementById('syncStatus').textContent = '💾 Saved ' + new Date().toLocaleTimeString(); }
+
+function updateStats() {
+  const watched = Object.values(userData).filter(d => d.watched).length;
+  const winners = films.filter(f => f.tags.includes('winner'));
+  const winnersWatched = winners.filter(f => userData[f.id]?.watched).length;
+  const soloQueue = films.filter(f => f.solo === 'Yes' && !userData[f.id]?.watched).length;
+  document.getElementById('statWatched').textContent = watched;
+  document.getElementById('statRemaining').textContent = films.length - watched;
+  document.getElementById('statWinners').textContent = `${winnersWatched}/${winners.length}`;
+  document.getElementById('statSolo').textContent = soloQueue;
+  document.getElementById('statPct').textContent = Math.round((watched / films.length) * 100) + '%';
+}
+
+function populateFilters() {
+  const years = [...new Set(films.map(f => f.year))].sort((a, b) => b - a);
+  const yearSel = document.getElementById('yearFilter');
+  years.forEach(y => { const opt = document.createElement('option'); opt.value = y; opt.textContent = y; yearSel.appendChild(opt); });
+  const decades = [...new Set(films.map(f => Math.floor(f.year / 10) * 10))].sort((a, b) => b - a);
+  const decadeSel = document.getElementById('decadeFilter');
+  decades.forEach(d => { const opt = document.createElement('option'); opt.value = d; opt.textContent = d + 's'; decadeSel.appendChild(opt); });
+  const dirCounts = {};
+  films.forEach(f => dirCounts[f.director] = (dirCounts[f.director] || 0) + 1);
+  const recDirs = Object.entries(dirCounts).filter(([_, c]) => c >= 2).map(([d]) => d).sort();
+  const dirSel = document.getElementById('directorFilter');
+  recDirs.forEach(d => { const opt = document.createElement('option'); opt.value = d; opt.textContent = d; dirSel.appendChild(opt); });
+  const themes = new Set();
+  films.forEach(f => f.themes.forEach(t => themes.add(t)));
+  const themeSel = document.getElementById('themeFilter');
+  [...themes].sort().forEach(t => { const opt = document.createElement('option'); opt.value = t; opt.textContent = t; themeSel.appendChild(opt); });
+}
+
+function getFilteredFilms() {
+  let result = [...films];
+  if (currentView === 'winners') result = result.filter(f => f.tags.includes('winner'));
+  else if (currentView === 'reviews') { result = result.filter(f => userData[f.id]?.review); result.sort((a, b) => (userData[b.id]?.rating || 0) - (userData[a.id]?.rating || 0)); }
+  else if (currentView === 'decade' && currentDecade) {
+    if (currentDecade === 'classic') result = result.filter(f => f.year < 1990);
+    else result = result.filter(f => f.year >= parseInt(currentDecade) && f.year < parseInt(currentDecade) + 10);
+  }
+  const status = document.getElementById('statusFilter').value;
+  if (status === 'watched') result = result.filter(f => userData[f.id]?.watched);
+  else if (status === 'unwatched') result = result.filter(f => !userData[f.id]?.watched);
+  const solo = document.getElementById('soloFilter').value;
+  if (solo === 'solo') result = result.filter(f => f.solo === 'Yes');
+  else if (solo === 'family') result = result.filter(f => f.solo === 'No');
+  else if (solo === 'maybe') result = result.filter(f => f.solo === 'Maybe');
+  const tag = document.getElementById('tagFilter').value;
+  if (tag !== 'all') result = result.filter(f => f.tags.includes(tag));
+  const year = document.getElementById('yearFilter').value;
+  if (year !== 'all') result = result.filter(f => f.year === parseInt(year));
+  const decade = document.getElementById('decadeFilter').value;
+  if (decade !== 'all') result = result.filter(f => Math.floor(f.year / 10) * 10 === parseInt(decade));
+  const dir = document.getElementById('directorFilter').value;
+  if (dir !== 'all') result = result.filter(f => f.director === dir);
+  const theme = document.getElementById('themeFilter').value;
+  if (theme !== 'all') result = result.filter(f => f.themes.includes(theme));
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  if (search) {
+    result = result.filter(f => f.title.toLowerCase().includes(search) || f.director.toLowerCase().includes(search) || f.stars.some(s => s.toLowerCase().includes(search)) || f.themes.some(t => t.toLowerCase().includes(search)) || f.synopsis.toLowerCase().includes(search));
+  }
+  return result;
+}
+
+function render() {
+  const filtered = getFilteredFilms();
+  document.getElementById('resultsCount').textContent = `${filtered.length} films`;
+  const grid = document.getElementById('filmGrid');
+  const empty = document.getElementById('emptyState');
+  if (filtered.length === 0) { grid.innerHTML = ''; empty.style.display = 'block'; updateStats(); return; }
+  empty.style.display = 'none';
+  const tagLabels = { winner: '🏆 Winner', contender: '🥈 Contender', boxoffice: '💰 Box Office', classic: '⭐ Fan Favorite' };
+  const tagClasses = { winner: 'badge-winner', contender: 'badge-contender', boxoffice: 'badge-boxoffice', classic: 'badge-classic' };
+  const soloLabels = { Yes: 'Solo', No: 'Family', Maybe: 'Either' };
+  const soloClasses = { Yes: 'tag-solo', No: 'tag-family', Maybe: 'tag-maybe' };
+  grid.innerHTML = filtered.map(f => {
+    const d = userData[f.id] || {};
+    const stars = '★'.repeat(d.rating || 0) + '☆'.repeat(5 - (d.rating || 0));
+    const isWinner = f.tags.includes('winner');
+    return `<div class="card ${d.watched ? 'watched' : ''} ${isWinner ? 'winner' : ''}">${d.watched ? `<div class="card-watched-banner">✓ Watched${d.watchDate ? ' • ' + d.watchDate : ''}</div>` : ''}<div class="card-body"><div class="card-header"><div class="card-year">${f.year}</div><div><div class="card-title">${f.title}</div><div class="card-director">${f.director}</div></div></div><div class="card-badges">${f.tags.map(t => `<span class="badge ${tagClasses[t]}">${tagLabels[t]}</span>`).join('')}<span class="badge ${soloClasses[f.solo]}">${soloLabels[f.solo]}</span></div><div class="card-synopsis">${f.synopsis}</div><div class="card-meta"><span>Stars:</span> ${f.stars.join(', ')}</div><div class="card-themes">${f.themes.map(t => `<span class="theme-tag" onclick="filterByTheme('${t}')">${t}</span>`).join('')}</div>${d.review ? `<div class="card-review">"${d.review}"</div><div class="card-review-meta">${stars}${d.watchedWith ? ' • ' + d.watchedWith : ''}</div>` : ''}<div class="card-actions"><button class="btn-watch ${d.watched ? 'watched' : ''}" onclick="toggleWatch(${f.id})">${d.watched ? '✓ Watched' : '👁 Mark'}</button><button class="btn-rate" onclick="openModal(${f.id})">${d.rating ? stars : '★ Rate'}</button></div></div></div>`;
+  }).join('');
+  updateStats();
+}
+
+function toggleWatch(id) { if (!userData[id]) userData[id] = {}; userData[id].watched = !userData[id].watched; if (userData[id].watched && !userData[id].watchDate) userData[id].watchDate = new Date().toISOString().split('T')[0]; saveData(); render(); }
+function filterByTheme(theme) { document.getElementById('themeFilter').value = theme; document.getElementById('filterGrid').classList.add('show'); document.getElementById('filterToggle').classList.add('active'); document.getElementById('filterToggle').textContent = 'Filters ▼'; render(); }
+function openModal(id) { currentFilm = films.find(f => f.id === id); const d = userData[id] || {}; document.getElementById('modalTitle').textContent = currentFilm.title; document.getElementById('modalReview').value = d.review || ''; document.getElementById('modalDate').value = d.watchDate || ''; document.getElementById('modalWith').value = d.watchedWith || ''; document.getElementById('modalNotes').value = d.notes || ''; document.querySelectorAll('.modal-star').forEach((star, i) => star.classList.toggle('active', i < (d.rating || 0))); document.getElementById('modalOverlay').classList.add('show'); }
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); currentFilm = null; }
+function saveModal() { if (!currentFilm) return; const rating = document.querySelectorAll('.modal-star.active').length; if (!userData[currentFilm.id]) userData[currentFilm.id] = {}; userData[currentFilm.id].watched = true; userData[currentFilm.id].rating = rating; userData[currentFilm.id].review = document.getElementById('modalReview').value; userData[currentFilm.id].watchDate = document.getElementById('modalDate').value; userData[currentFilm.id].watchedWith = document.getElementById('modalWith').value; userData[currentFilm.id].notes = document.getElementById('modalNotes').value; saveData(); closeModal(); render(); }
+function exportData() { const blob = new Blob([JSON.stringify(userData, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `oscar-tracker-${new Date().toISOString().split('T')[0]}.json`; a.click(); }
+function importData(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (ev) => { try { userData = JSON.parse(ev.target.result); saveData(); render(); alert('Imported!'); } catch { alert('Invalid file'); } }; reader.readAsText(file); }
+
+// Signup prompt: appears after 3+ distinct films have any data. 7-day dismiss; 30-day on CTA.
+const SIGNUP_DISMISS_KEY = 'oscar-tracker-signup-dismissed-until';
+const SIGNUP_THRESHOLD = 3;
+function maybeShowSignupPrompt() {
+  const banner = document.getElementById('signupBanner');
+  if (!banner || banner.classList.contains('show')) return;
+  const dismissedUntil = parseInt(localStorage.getItem(SIGNUP_DISMISS_KEY) || '0', 10);
+  if (Date.now() < dismissedUntil) return;
+  const interactedCount = Object.values(userData).filter(d => d && (d.watched || d.rating > 0 || d.review || d.notes)).length;
+  if (interactedCount >= SIGNUP_THRESHOLD) banner.classList.add('show');
+}
+function setupSignupBanner() {
+  document.getElementById('signupBannerDismiss').addEventListener('click', () => {
+    localStorage.setItem(SIGNUP_DISMISS_KEY, String(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    document.getElementById('signupBanner').classList.remove('show');
+  });
+  document.getElementById('signupBannerCta').addEventListener('click', () => {
+    localStorage.setItem(SIGNUP_DISMISS_KEY, String(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  });
+  maybeShowSignupPrompt();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadData(); populateFilters(); render();
+  setupSignupBanner();
+  document.querySelectorAll('nav button').forEach(btn => { btn.addEventListener('click', () => { document.querySelectorAll('nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); currentView = btn.dataset.view; currentDecade = btn.dataset.decade || null; render(); }); });
+  document.getElementById('filterToggle').addEventListener('click', () => { const grid = document.getElementById('filterGrid'); const btn = document.getElementById('filterToggle'); grid.classList.toggle('show'); btn.classList.toggle('active'); btn.textContent = grid.classList.contains('show') ? 'Filters ▼' : 'Filters ▶'; });
+  ['searchInput','statusFilter','soloFilter','tagFilter','yearFilter','decadeFilter','directorFilter','themeFilter'].forEach(id => { document.getElementById(id).addEventListener(id === 'searchInput' ? 'input' : 'change', render); });
+  document.getElementById('clearFilters').addEventListener('click', () => { ['searchInput','statusFilter','soloFilter','tagFilter','yearFilter','decadeFilter','directorFilter','themeFilter'].forEach(id => { document.getElementById(id).value = id === 'searchInput' ? '' : 'all'; }); render(); });
+  document.getElementById('modalOverlay').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('modalSave').addEventListener('click', saveModal);
+  document.querySelectorAll('.modal-star').forEach(star => { star.addEventListener('click', () => { const rating = parseInt(star.dataset.rating); document.querySelectorAll('.modal-star').forEach((s, i) => s.classList.toggle('active', i < rating)); }); });
+  document.getElementById('exportBtn').addEventListener('click', exportData);
+  document.getElementById('importInput').addEventListener('change', importData);
+});
+  </script>
+  <footer style="text-align:center;padding:24px 16px;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;letter-spacing:1px;color:#7A8090;border-top:1px solid rgba(0,0,0,0.08);margin-top:48px">
+  Built by <a href="https://spataccoanalytics.com" style="color:#7A8090 !important;text-decoration:none;border-bottom:1px solid #7A8090" target="_blank" rel="noopener">Spatacco Analytics</a> &middot; &copy; 2026
+</footer>
+</body>
+</html>
