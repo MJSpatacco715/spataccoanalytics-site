@@ -13,6 +13,9 @@ on:
       paths:
         description: Space-separated paths to fetch
         default: / /tools/ /contact/ /css/shared.css /js/shared.js
+      shots:
+        description: Space-separated pages to screenshot as a visitor sees them (saved under reference/live/shots/)
+        default: ''
 
 permissions:
   contents: write
@@ -30,6 +33,7 @@ jobs:
         env:
           BASE: https://spataccoanalytics.com
           PATHS: ${{ inputs.paths || '/ /tools/ /contact/ /css/shared.css /js/shared.js' }}
+          SHOTS: ${{ inputs.shots }}
         run: |
           python - <<'PY'
           import os, re, pathlib
@@ -86,6 +90,24 @@ jobs:
                               links.add(u)
               (root / 'LINKS.txt').write_text('\n'.join(sorted(links)) + '\n')
               print('\n'.join(sorted(links)))
+              # Screenshots of the pages as served, full length, for a session
+              # that cannot reach the site to see what visitors see.
+              for p in os.environ.get('SHOTS', '').split():
+                  page.goto(base + p, wait_until='domcontentloaded', timeout=60000)
+                  for _ in range(15):
+                      try:
+                          page.wait_for_load_state('networkidle', timeout=15000)
+                      except Exception:
+                          pass
+                      page.wait_for_timeout(1500)
+                      if 'sgcaptcha' not in page.url and 'sgcaptcha' not in page.content():
+                          break
+                  else:
+                      print(f'shot {p}: still the bot check'); continue
+                  slug = re.sub(r'[^a-z0-9]+', '-', p.lower()).strip('-') or 'home'
+                  out = root / 'shots' / f'{slug}.jpg'; out.parent.mkdir(parents=True, exist_ok=True)
+                  page.screenshot(path=str(out), full_page=True, type='jpeg', quality=70)
+                  print(f'shot {p} -> {out}')
               b.close()
           PY
       - name: Commit what was fetched
