@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="/css/shared.css">
 <style>
 /* ===== TOOLS PAGE STYLES ===== */
-.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;margin-top:48px}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px;margin-top:48px}
 .tool-card{background:var(--navy-light);border:1px solid rgba(61,216,216,0.08);padding:36px;position:relative;overflow:hidden;transition:border-color .4s,transform .3s}
 .tool-card:hover{border-color:rgba(61,216,216,0.25);transform:translateY(-4px)}
 .tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(135deg,var(--cyan),var(--purple));opacity:0;transition:opacity .4s}
@@ -41,7 +41,7 @@
 .subgroup-eyebrow{font-size:10px;letter-spacing:5px;text-transform:uppercase;font-weight:700;display:inline-block;padding:6px 14px;border-radius:2px;margin-bottom:16px}
 .subgroup-title{font-family:'Cormorant Garamond',serif;font-size:32px;line-height:1.15;font-weight:600;margin-bottom:8px}
 .subgroup-tagline{font-size:13px;line-height:1.6;max-width:520px}
-.subgroup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;padding:28px 36px 36px}
+.subgroup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:22px;padding:28px 36px 36px}
 
 /* ===== SPORTS — stadium scorecard ===== */
 .subgroup-stadium{background:linear-gradient(180deg,#F0F1EE 0%,#E5E7E0 100%);border:1px solid #D4D6CE}

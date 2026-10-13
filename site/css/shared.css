@@ -30,10 +30,10 @@ body { font-family:'DM Sans',sans-serif; color:#334155; background:#0F1B2D; -web
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:20px 48px;background:rgba(15,27,45,0.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(61,216,216,0.08);opacity:0;transform:translateY(-12px);transition:opacity .6s,transform .6s}
 nav.loaded{opacity:1;transform:translateY(0)}
 nav .logo{height:36px;object-fit:contain}
-nav .nav-links{display:flex;gap:32px;align-items:center}
-nav .nav-links a{font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-light);text-decoration:none;font-weight:500;transition:color .3s}
+nav .nav-links{display:flex;gap:30px;align-items:center}
+nav .nav-links a{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:#CBD5E1;text-decoration:none;font-weight:600;padding:6px 0;border-bottom:2px solid transparent;transition:color .3s,border-color .3s}
 nav .nav-links a:hover{color:var(--cyan)}
-nav .nav-links a.active{color:var(--cyan)}
+nav .nav-links a.active{color:var(--cyan);border-bottom-color:var(--cyan)}
 nav .nav-links a.unleash-link{color:var(--red);font-weight:700;letter-spacing:3px;text-shadow:0 0 8px rgba(200,16,46,0.3);transition:color .3s,text-shadow .3s}
 nav .nav-links a.unleash-link:hover{color:#FF1744;text-shadow:0 0 16px rgba(200,16,46,0.6)}
 
@@ -70,13 +70,17 @@ footer a:hover{color:var(--cyan)}
 /* ===== RESPONSIVE ===== */
 @media(max-width:768px){
   nav{padding:16px 24px}
-  nav .nav-links{gap:16px}
-  nav .nav-links a{font-size:10px;letter-spacing:1.5px}
+  nav .nav-links{gap:18px}
+  nav .nav-links a{font-size:13px;letter-spacing:1.5px}
   .section-dark,.section-light{padding:64px 24px}
   .page-hero{padding:120px 24px 60px}
   footer{padding:32px 24px;flex-direction:column;text-align:center}
 }
-@media(max-width:480px){
-  nav .nav-links{gap:12px}
-  nav .nav-links a{font-size:9px;letter-spacing:1px}
+/* Phones: the links are a second row under the logo, every one in view,
+   rather than shrunk to 9px. */
+@media(max-width:560px){
+  nav{flex-wrap:wrap;row-gap:6px}
+  nav .nav-links{width:100%;flex-wrap:wrap;gap:4px 10px;justify-content:space-between}
+  nav .nav-links a{display:inline-block;font-size:clamp(10.5px,3vw,12px);letter-spacing:.5px;white-space:nowrap}
+  .page-hero{padding-top:150px}
 }

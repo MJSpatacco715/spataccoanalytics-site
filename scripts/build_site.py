@@ -130,6 +130,30 @@ def chrome(tools_page: str) -> tuple[str, str, str]:
     return head.group(1), nav.group(0), foot.group(0)
 
 
+def desk_cards(tools_page: str) -> list[dict]:
+    """Every card in the tools page's Sports Desk panel, in its order, so the
+    tool pages link the whole desk (the explainers too) and stay in step with
+    it."""
+    m = re.search(r'(?s)<div class="subgroup subgroup-stadium[^"]*"[^>]*>(.*?)(?=<div class="subgroup |</section>)', tools_page)
+    if not m:
+        fail("tools/index.html no longer has the Sports Desk panel (subgroup-stadium)")
+    cards = []
+    for href, inner in re.findall(r'(?s)<a href="([^"]+)" class="scorecard">(.*?)</a>', m.group(1)):
+        icon = re.search(r'(?s)<span class="scorecard-icon">(.*?)</span>', inner)
+        name = re.search(r"(?s)<h4>(.*?)</h4>", inner)
+        cards.append({"href": html.unescape(href), "html": f'<a href="{href}" class="scorecard">{inner}</a>',
+                      "icon": html.unescape(icon.group(1)).strip() if icon else "",
+                      "name": html.unescape(re.sub(r"<[^>]+>", "", name.group(1))).strip() if name else href})
+    if not cards:
+        fail("the Sports Desk panel on tools/index.html has no cards")
+    return cards
+
+
+# Keeps the Sports Desk bar just under the fixed site menu, whatever height the
+# menu takes on this screen.
+NAVH_JS = """<script>(function(){function s(){var n=document.getElementById('main-nav');if(n)document.documentElement.style.setProperty('--navh',n.offsetHeight+'px')}s();addEventListener('resize',s);addEventListener('load',s)})();</script>"""
+
+
 PAGE_CSS = """
 .nfl-wrap{max-width:1100px;margin:0 auto}
 .nfl-stamp{display:flex;flex-wrap:wrap;gap:10px 24px;font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#3A4150;margin:0 0 18px}
@@ -154,15 +178,33 @@ PAGE_CSS = """
 .nfl-chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px;padding:0;list-style:none}
 .nfl-chips li{font-size:12px;padding:4px 10px;border-radius:3px;background:#0C1F3F;color:#3DD8D8;letter-spacing:.5px}
 .nfl-note{font-size:13px;color:var(--slate);font-style:italic;border-left:3px solid #1A4D3A;padding:4px 0 4px 14px}
-.nfl-back{display:inline-block;margin-top:40px;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:#1A4D3A;text-decoration:none}
-.nfl-back::before{content:'\\2190  '}
-.nfl-more{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
-.nfl-more a{font-size:13px;color:#1A4D3A;font-weight:600}
 @media (max-width:860px){.nfl-cols{grid-template-columns:1fr;gap:28px}}
+.nfl-crumbs{font-size:12px;letter-spacing:3px;text-transform:uppercase;font-weight:600;color:var(--cyan);margin-bottom:22px}
+.nfl-crumbs a{color:var(--cyan);text-decoration:none;border-bottom:1px solid rgba(61,216,216,.35);padding-bottom:2px}
+.nfl-crumbs a:hover{color:#fff;border-color:#fff}
+.nfl-crumbs .sep{margin:0 10px;color:rgba(61,216,216,.5)}
+.nfl-crumbs [aria-current]{color:#CBD5E1}
+.nfl-desk{position:sticky;top:var(--navh,76px);z-index:90;background:#0C1F3F;border-bottom:3px solid #1A4D3A;box-shadow:0 6px 18px rgba(12,31,63,.18)}
+.nfl-desk-in{max-width:1240px;margin:0 auto;padding:10px 24px;display:flex;align-items:center;gap:14px}
+.nfl-desk-back{flex:none;font-size:13px;font-weight:700;color:#0C1F3F;background:#F4D744;text-decoration:none;padding:8px 14px;border-radius:4px;white-space:nowrap}
+.nfl-desk-back:hover{background:#fff}
+.nfl-desk-label{flex:none;font-size:10px;letter-spacing:4px;text-transform:uppercase;font-weight:700;color:#F4D744;opacity:.8}
+.nfl-desk-tabs{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.nfl-desk-tabs::-webkit-scrollbar{display:none}
+.nfl-desk-tabs a{flex:none;font-size:14px;font-weight:600;color:#E2E8F0;text-decoration:none;padding:8px 14px;border-radius:4px;border:1px solid rgba(61,216,216,.3);white-space:nowrap}
+.nfl-desk-tabs a:hover{border-color:#3DD8D8;color:#fff}
+.nfl-desk-tabs a[aria-current]{background:#3DD8D8;border-color:#3DD8D8;color:#0C1F3F}
+.nfl-desk-tabs .ic{margin-right:6px}
+.nfl-moredesk{margin-top:64px}
+.nfl-moredesk .subgroup-header{padding-top:40px}
+.nfl-allbtn{display:inline-block;margin:28px 0 0;font-size:15px;font-weight:700;color:#fff;background:#0C1F3F;text-decoration:none;padding:14px 24px;border-radius:4px}
+.nfl-allbtn:hover{background:#1A4D3A}
+@media (max-width:1180px){.nfl-desk-label{display:none}}
+@media (max-width:700px){.nfl-desk-in{padding:8px 12px;gap:10px}.nfl-desk-label{display:none}.nfl-desk-tabs a{font-size:13px;padding:7px 11px}.nfl-crumbs{font-size:10px;letter-spacing:2px}}
 """
 
 
-def page(tool: dict, live: dict, img: str | None, all_tools: list[dict], head: str, nav: str, foot: str) -> str:
+def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, nav: str, foot: str) -> str:
     head = re.sub(r"(?is)<title>.*?</title>", f"<title>{esc(tool['name'])} | Spatacco Analytics</title>", head, count=1)
     head = re.sub(r'(?is)<meta name="description" content="[^"]*">',
                   f'<meta name="description" content="{esc(tool["tagline"])}">', head, count=1)
@@ -191,8 +233,12 @@ def page(tool: dict, live: dict, img: str | None, all_tools: list[dict], head: s
     sources = ""
     if tool.get("data_sources"):
         sources = f'<p><strong>Data:</strong> {esc(", ".join(tool["data_sources"]))}</p>'
-    others = "".join(f'<a href="/tools/football/{esc(t["id"])}.html">{esc(t["name"])}</a>'
-                     for t in all_tools if t["id"] != tool["id"])
+    here = f"/tools/football/{tool['id']}.html"
+    tabs = "".join(
+        f'<a href="{esc(c["href"])}"{" aria-current=\"page\"" if c["href"] == here else ""}>'
+        f'<span class="ic" aria-hidden="true">{esc(c["icon"])}</span>{esc(c.get("short") or c["name"])}</a>'
+        for c in desk)
+    more = "\n".join(c["html"] for c in desk if c["href"] != here)
 
     body = f"""<body>
 
@@ -200,11 +246,19 @@ def page(tool: dict, live: dict, img: str | None, all_tools: list[dict], head: s
 
 <section class="page-hero">
   <div class="page-hero-inner">
-    <div class="page-hero-tag">Sports Desk &middot; Live NFL tool</div>
+    <div class="nfl-crumbs" role="navigation" aria-label="You are here"><a href="/tools/">Tools</a><span class="sep" aria-hidden="true">&rsaquo;</span><a href="/tools/#sports-desk">Sports Desk</a><span class="sep" aria-hidden="true">&rsaquo;</span><span aria-current="page">{esc(tool.get('short') or tool['name'])}</span></div>
     <h1>{esc(tool['name'])}</h1>
     <p class="tools-intro">{esc(tool['tagline'])}</p>
   </div>
 </section>
+
+<div class="nfl-desk" role="navigation" aria-label="Sports Desk">
+  <div class="nfl-desk-in">
+    <a class="nfl-desk-back" href="/tools/">&larr; All tools</a>
+    <span class="nfl-desk-label">Sports Desk</span>
+    <div class="nfl-desk-tabs">{tabs}</div>
+  </div>
+</div>
 
 <section class="section-light">
   <div class="nfl-wrap">
@@ -222,12 +276,21 @@ def page(tool: dict, live: dict, img: str | None, all_tools: list[dict], head: s
         <ul class="nfl-chips" aria-label="Built with">{stack}</ul>
         {sources}
         <p class="nfl-note">The tool runs inside a private platform. This page, its numbers and its screenshot refresh automatically from the live system.</p>
-        <div class="nfl-more">{others}</div>
       </div>
     </div>
-    <a class="nfl-back" href="/tools/#sports-desk">All tools</a>
+    <div class="subgroup subgroup-stadium nfl-moredesk">
+      <div class="subgroup-header">
+        <span class="subgroup-eyebrow">Sports Desk</span>
+        <h3 class="subgroup-title">More from the Sports Desk</h3>
+      </div>
+      <div class="subgroup-grid">
+{more}
+      </div>
+    </div>
+    <a class="nfl-allbtn" href="/tools/">&larr; Back to all tools</a>
   </div>
 </section>
+{NAVH_JS}
 
 {foot}
 """
@@ -278,13 +341,17 @@ def main() -> None:
     index.write_text(s)
 
     head, nav, foot = chrome(s)
+    desk = desk_cards(s)
+    shorts = {f"/tools/football/{t['id']}.html": t.get("short") for t in tools}
+    for c in desk:
+        c["short"] = shorts.get(c["href"])
     football = out / "tools" / "football"
     football.mkdir(parents=True, exist_ok=True)
     (football / ".htaccess").write_text(CACHE_RULES)
     for t in tools:
         live = live_all.get(t["id"], {})
         img = image_for(t, shots, football / "img")
-        (football / f"{t['id']}.html").write_text(page(t, live, img, tools, head, nav, foot))
+        (football / f"{t['id']}.html").write_text(page(t, live, img, desk, head, nav, foot))
     print(f"built {out}: {len(tools)} cards on tools/index.html, {len(tools)} tool pages")
 
 
