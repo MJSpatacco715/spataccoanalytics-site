@@ -139,6 +139,20 @@
     background: rgba(153,217,217,0.2);
   }
 
+  /* The application this page was built for has closed; it stays up, unlinked, for reference. */
+  .archived-note {
+    margin: 0 auto 28px;
+    max-width: 520px;
+    padding: 8px 16px;
+    border: 1px solid rgba(153,217,217,0.25);
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
   /* === CENTER ICE LINE === */
   .center-ice {
     position: relative;
@@ -572,16 +586,14 @@
 
 <div class="container">
 
+  <div class="archived-note">Archived &middot; kept for reference, no longer updated</div>
+
   <!-- HEADER -->
   <header class="header">
     <div class="jersey-number">18</div>
     <h1 class="player-name">Michael Spatacco</h1>
     <div class="position-label">Data Engineer &bull; Hockey Operations</div>
     <div class="draft-line">
-      <span>99 Jefferson St. Bala, PA 19004</span>
-      <span class="sep"></span>
-      <span>(484) 278-1697</span>
-      <span class="sep"></span>
       <span>Mike@SpataccoAnalytics.com</span>
     </div>
   </header>
