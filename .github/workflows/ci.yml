@@ -41,8 +41,78 @@ jobs:
       - name: Deploy key opens however the secrets were pasted
         run: bash tests/ssh_key_test.sh
 
+      - name: The live relay passes on only what it should, and no member
+        run: bash tests/feed_test.sh
+
       - name: Lint
         run: |
           php -l capture/stub_api.php
+          php -l live/feed.php
           node --check capture/capture.mjs
+          node --check live/build.mjs
+          node --check live/smoke.mjs
+          node --check live/shim.js
           bash -n scripts/remote_deploy.sh scripts/ssh_key.sh
+
+  # The working tools, built from the source platform's current code and
+  # opened in a browser, as Publish does before every deploy. Needs the
+  # read-only source token; without it (a fork) this says so and stops.
+  live:
+    runs-on: ubuntu-latest
+    env:
+      HAS_SOURCE: ${{ secrets.SOURCE_REPO_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Source access
+        id: src
+        run: |
+          if [ "$HAS_SOURCE" != "true" ]; then echo "::notice::No source token here; the live tools are checked by Publish."; fi
+          echo "ok=$HAS_SOURCE" >> "$GITHUB_OUTPUT"
+          echo "repo=$(jq -r .source.repo config/hosting.json)" >> "$GITHUB_OUTPUT"
+          list=$(jq -r '.denylist | join(",")' config/hosting.json)
+          echo "COPY_DENYLIST=$list" >> "$GITHUB_ENV"
+
+      - name: Check out the source platform (read-only)
+        if: steps.src.outputs.ok == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.src.outputs.repo }}
+          token: ${{ secrets.SOURCE_REPO_TOKEN }}
+          path: source
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        if: steps.src.outputs.ok == 'true'
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        if: steps.src.outputs.ok == 'true'
+        with:
+          php-version: '8.2'
+      - uses: actions/setup-python@v5
+        if: steps.src.outputs.ok == 'true'
+        with:
+          python-version: '3.12'
+
+      - name: Build the public editions
+        if: steps.src.outputs.ok == 'true'
+        run: |
+          npm install --prefix live --no-audit --no-fund
+          node live/build.mjs --source source --out build/live
+
+      - name: Open them in a browser
+        if: steps.src.outputs.ok == 'true'
+        run: |
+          npx --yes playwright@1.48.2 install --with-deps chromium
+          node live/smoke.mjs --live build/live
+
+      - name: The tool pages carry them, and follow the house rules
+        if: steps.src.outputs.ok == 'true'
+        run: |
+          pip install jsonschema==4.23.0 pillow==11.0.0
+          site=site
+          [ -f site/tools/index.html ] || site=reference/live
+          python scripts/build_site.py --site "$site" --out dist --live build/live
+          grep -q 'class="nfl-app"' dist/tools/football/nfl-depth-charts.html
+          python scripts/validate_showcase.py --html dist/tools/football

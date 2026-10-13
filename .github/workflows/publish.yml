@@ -1,10 +1,13 @@
 # Keeps the NFL tools on spataccoanalytics.com/tools/ current, for free.
 #
-# Each run reads the source platform's repository (read-only token), takes
-# fresh screenshots (its depth chart page rendered from its own code and data;
-# its public Lines and Injuries pages loaded signed out), rebuilds the site
-# and deploys it over SSH, the same way the Saratoga dashboard deploys.
-# Nothing is written to the source platform.
+# Each run reads the source platform's repository (read-only token), builds
+# the working public editions of its three tools from its current code and
+# data (live/build.mjs), opens them in a browser (live/smoke.mjs), rebuilds
+# the site around them and deploys it over SSH, the same way the Saratoga
+# dashboard deploys. Their live data comes through the site's own relay
+# (live/feed.php), whose config this writes beside the web root. If the tools
+# do not build or do not pass the browser check, the pages show fresh
+# screenshots instead for that run. Nothing is written to the source platform.
 #
 # Cadence follows the source platform: hourly, and every 15 minutes through
 # Sunday afternoon and evening and the Monday and Thursday night games.
@@ -94,6 +97,7 @@ jobs:
         run: |
           pip install jsonschema==4.23.0 pillow==11.0.0
           npm install --prefix capture --no-audit --no-fund
+          npm install --prefix live --no-audit --no-fund
           npx --yes playwright@1.48.2 install --with-deps chromium
 
       - name: Live numbers and dates
@@ -108,10 +112,22 @@ jobs:
           OUT_DIR: build/shots
         run: node capture/capture.mjs
 
+      - name: The live tools
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          # Built from the source's code and data, then opened in a browser.
+          # Either failing is loud, and the pages fall back to the screenshots.
+          if node live/build.mjs --source source --out build/live && node live/smoke.mjs --live build/live; then
+            echo "The live tools built and drew."
+          else
+            echo "::warning::The live tools did not build or did not pass the browser check; this run's pages show screenshots."
+            rm -rf build/live
+          fi
+
       - name: Build
         if: steps.gate.outputs.skip != 'true'
         run: |
-          python scripts/build_site.py --site site --out dist
+          python scripts/build_site.py --site site --out dist --live build/live
           python scripts/validate_showcase.py --html dist/tools/football
           if grep -rlE 'sgcaptcha|/cdn-cgi/' dist --include=*.html; then
             echo "::error::A page holds a bot-check or CDN artifact; refusing to deploy it."; exit 1
@@ -123,6 +139,25 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_SSH_PASSPHRASE: ${{ secrets.DEPLOY_SSH_PASSPHRASE }}
         run: bash scripts/ssh_key.sh
+
+      - name: Live relay config
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          SITE: ${{ secrets.SOURCE_SITE_URL }}
+        run: |
+          # The source's address and the denylist, one level above the web root
+          # where feed.php reads them and the web cannot. Sent on stdin, never
+          # on a command line; readable by this account alone.
+          [ -n "$SITE" ] || { echo "::warning::SOURCE_SITE_URL is not set; the live tools will show their files' data only."; exit 0; }
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          cfg="$(dirname "$web")/sa-feed.json"
+          jq -n --arg base "$SITE" --arg deny "$COPY_DENYLIST" '{base: $base, deny: ($deny | split(",") | map(select(length > 0)))}' \
+            | ssh -o ConnectionAttempts=8 -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" \
+                "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
+          echo "Relay config written beside the web root."
 
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'
@@ -156,6 +191,15 @@ jobs:
           grep -q 'class="scorecard"' "$root/tools/index.html"
           for f in nfl-lines-tracker nfl-injury-tracker nfl-depth-charts; do test -s "$root/tools/football/$f.html"; done
           test -d "$root/saratoga" && echo "saratoga/ still present"
+          # The relay, end to end from the server: one call through feed.php.
+          live="$root/tools/football/live"
+          if [ -f "$live/feed.php" ]; then
+            out=$(cd "$live" && php -r '$_SERVER["DOCUMENT_ROOT"] = $argv[1]; $_GET = ["a" => "referees"]; include "feed.php";' "$root" 2>/dev/null | head -c 200)
+            case "$out" in
+              *'"ok":true'*) echo "The live relay answers." ;;
+              *) echo "::warning::The live relay did not answer with data: ${out:0:80}" ;;
+            esac
+          fi
           echo "Verified on the server."
           REMOTE
 

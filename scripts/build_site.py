@@ -107,7 +107,7 @@ def image_for(tool: dict, shots: Path | None, dest: Path) -> str | None:
     return f"/tools/football/img/{out.name}?v={v}"
 
 
-def card(tool: dict, n: int) -> str:
+def card(tool: dict, n: int, live: bool = False) -> str:
     return f"""          <a href="/tools/football/{esc(tool['id'])}.html" class="scorecard">
             <span class="scorecard-num">Sport &middot; {n:02d}</span>
             <span class="scorecard-icon">{esc(tool['emoji'])}</span>
@@ -115,7 +115,7 @@ def card(tool: dict, n: int) -> str:
             <p>{esc(tool['tagline'])}</p>
             <div class="scorecard-foot">
               <span class="scorecard-stat">Live data</span>
-              <span class="scorecard-launch">See it</span>
+              <span class="scorecard-launch">{'Try it' if live else 'See it'}</span>
             </div>
           </a>"""
 
@@ -164,6 +164,15 @@ PAGE_CSS = """
 .nfl-shot::before{content:"";display:block;height:6px;background:repeating-linear-gradient(90deg,#1A4D3A 0,#1A4D3A 14px,#235847 14px,#235847 28px)}
 .nfl-shot img{display:block;width:100%;height:auto}
 .nfl-shot figcaption{font-size:12px;color:#4A5060;padding:10px 16px;border-top:1px solid #E5E7E0}
+.nfl-app{margin:0 0 40px;border-radius:8px;overflow:hidden;border:1px solid #D4D6CE;background:#fff;box-shadow:0 18px 40px rgba(12,31,63,.12)}
+.nfl-app-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 14px;background:#0C1F3F;border-bottom:3px solid #1A4D3A}
+.nfl-app-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#F4D744;white-space:nowrap}
+.nfl-app-tag::before{content:"";width:8px;height:8px;border-radius:50%;background:#1A9D5B;box-shadow:0 0 0 3px rgba(26,157,91,.3)}
+.nfl-app-try{flex:1 1 280px;font-size:13px;line-height:1.5;color:#E2E8F0}
+.nfl-app-full{flex:none;font-size:13px;font-weight:700;color:#0C1F3F;background:#3DD8D8;text-decoration:none;padding:8px 14px;border-radius:4px;white-space:nowrap}
+.nfl-app-full:hover{background:#fff}
+.nfl-app iframe{display:block;width:100%;height:min(900px,82vh);min-height:480px;border:0;background:#f4f6f9}
+@media (max-width:700px){.nfl-app-bar{padding:9px 10px}.nfl-app-try{flex-basis:100%;order:3;font-size:12.5px}.nfl-app iframe{height:78vh}}
 .nfl-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:0 0 40px}
 .nfl-metric{background:linear-gradient(170deg,#0C1F3F 0%,#0A1626 100%);border-radius:6px;padding:18px 20px;position:relative;overflow:hidden}
 .nfl-metric::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#3DD8D8 0%,#F4D744 100%)}
@@ -204,7 +213,8 @@ PAGE_CSS = """
 """
 
 
-def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, nav: str, foot: str) -> str:
+def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, nav: str, foot: str,
+         app: str | None = None) -> str:
     head = re.sub(r"(?is)<title>.*?</title>", f"<title>{esc(tool['name'])} | Spatacco Analytics</title>", head, count=1)
     head = re.sub(r'(?is)<meta name="description" content="[^"]*">',
                   f'<meta name="description" content="{esc(tool["tagline"])}">', head, count=1)
@@ -220,9 +230,24 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
         stamp.append(f"<span>Last improved <b>{esc(improved)}</b></span>")
 
     figure = ""
-    if img:
+    if app:
+        # the tool itself, framed; a link that names a week, a game or a team
+        # (?week=6&game=CAR-PHI) carries into the frame
+        src = f"live/{app}"
+        figure = (f'<div class="nfl-app"><div class="nfl-app-bar"><span class="nfl-app-tag">Live &middot; try it</span>'
+                  f'<span class="nfl-app-try">{esc(tool.get("try", ""))}</span>'
+                  f'<a class="nfl-app-full" id="nfl-app-full" href="{esc(src)}">Open full screen &#8599;</a></div>'
+                  f'<iframe id="nfl-app" src="{esc(src)}" title="{esc(tool["name"])}, live" loading="eager"></iframe></div>'
+                  f'<script>(function(){{var q=location.search+location.hash;if(!q)return;'
+                  f'var u={json.dumps(src)}+q;document.getElementById("nfl-app").src=u;document.getElementById("nfl-app-full").href=u}})();</script>')
+    elif img:
         figure = (f'<figure class="nfl-shot reveal"><img src="{esc(img)}" alt="{esc(tool["image_alt"])}" loading="eager">'
                   f"<figcaption>Screenshot of the running tool, refreshed automatically.</figcaption></figure>")
+    note = ("This is the tool itself, not a picture of it: the same page the private platform runs, served here with its "
+            "live data. Game lines and the injury report are relayed as they update; depth charts and ratings are rebuilt "
+            "through the day. The league-only parts (sign-in, rosters, alerts) stay on the platform."
+            if app else
+            "The tool runs inside a private platform. This page, its numbers and its screenshot refresh automatically from the live system.")
     mets = metrics_for(tool, live)
     metrics = ""
     if mets:
@@ -275,7 +300,7 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
         <h2>How it is built</h2>
         <ul class="nfl-chips" aria-label="Built with">{stack}</ul>
         {sources}
-        <p class="nfl-note">The tool runs inside a private platform. This page, its numbers and its screenshot refresh automatically from the live system.</p>
+        <p class="nfl-note">{esc(note)}</p>
       </div>
     </div>
     <div class="subgroup subgroup-stadium nfl-moredesk">
@@ -298,10 +323,11 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
 
 
 CACHE_RULES = """# Generated by the site build. These pages and their numbers refresh through
-# the day, so the host's cache must ask before reusing them. Screenshots carry
-# a version in their address and can be cached for long.
+# the day, so the host's cache must ask before reusing them, and so must the
+# live tools' scripts and data, which change in place. Images can be cached
+# for long (screenshots carry a version in their address).
 <IfModule mod_headers.c>
-  <FilesMatch "\\.html$">
+  <FilesMatch "\\.(html|js|json)$">
     Header set Cache-Control "no-cache, max-age=0, must-revalidate"
   </FilesMatch>
   <FilesMatch "\\.(jpg|png)$">
@@ -317,6 +343,8 @@ def main() -> None:
     ap.add_argument("--out", default=str(ROOT / "dist"))
     ap.add_argument("--metrics", default=str(ROOT / "build" / "metrics.json"))
     ap.add_argument("--shots", default=str(ROOT / "build" / "shots"))
+    ap.add_argument("--live", default=str(ROOT / "build" / "live"),
+                    help="the public editions built by live/build.mjs; without them each page shows its screenshot")
     a = ap.parse_args()
 
     site, out = Path(a.site), Path(a.out)
@@ -326,6 +354,8 @@ def main() -> None:
     tools = sorted(content["tools"], key=lambda t: t["order"])
     live_all = json.loads(Path(a.metrics).read_text())["tools"] if Path(a.metrics).is_file() else {}
     shots = Path(a.shots) if Path(a.shots).is_dir() else None
+    live_dir = Path(a.live)
+    apps = {t["id"]: t["live"] for t in tools if t.get("live") and (live_dir / t["live"]).is_file()}
 
     if out.exists():
         shutil.rmtree(out)
@@ -336,7 +366,7 @@ def main() -> None:
     s = index.read_text()
     if s.count(START) != 1 or s.count(END) != 1:
         fail("tools/index.html must hold exactly one pair of card markers")
-    cards = "\n".join(card(t, i + 1) for i, t in enumerate(tools))
+    cards = "\n".join(card(t, i + 1, t["id"] in apps) for i, t in enumerate(tools))
     s = re.sub(re.escape(START) + r".*?" + re.escape(END), lambda _: f"{START}\n{cards}\n{END}", s, flags=re.S)
     index.write_text(s)
 
@@ -348,11 +378,13 @@ def main() -> None:
     football = out / "tools" / "football"
     football.mkdir(parents=True, exist_ok=True)
     (football / ".htaccess").write_text(CACHE_RULES)
+    if apps:
+        shutil.copytree(live_dir, football / "live")
     for t in tools:
         live = live_all.get(t["id"], {})
         img = image_for(t, shots, football / "img")
-        (football / f"{t['id']}.html").write_text(page(t, live, img, desk, head, nav, foot))
-    print(f"built {out}: {len(tools)} cards on tools/index.html, {len(tools)} tool pages")
+        (football / f"{t['id']}.html").write_text(page(t, live, img, desk, head, nav, foot, apps.get(t["id"])))
+    print(f"built {out}: {len(tools)} cards on tools/index.html, {len(tools)} tool pages, {len(apps)} running live")
 
 
 if __name__ == "__main__":
