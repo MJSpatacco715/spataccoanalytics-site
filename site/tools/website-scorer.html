@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Digital Presence Scorecard — Spatacco Analytics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lato:wght@300;400;600;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --white:       #FFFFFF;
+    --bg:          #F6F7F5;
+    --bg-warm:     #F0F1EE;
+    --border:      #E2E4DE;
+    --border-dark: #C8CBC2;
+    --navy:        #0C1F3F;
+    --navy-mid:    #1E3A6E;
+    --text:        #1A1E28;
+    --text-mid:    #4A5060;
+    --text-light:  #7A8090;
+    --text-faint:  #A8AFBC;
+    --teal:        #1FA8A8;
+    --teal-light:  #3DC8C8;
+    --teal-pale:   #EAF6F6;
+    --teal-border: #B2E0E0;
+    --gold:        #B8860B;
+    --gold-light:  #D4A820;
+    --gold-pale:   #FDF6E3;
+    --gold-border: #E8D080;
+    --green:       #1A6B40;
+    --green-pale:  #EAF5EE;
+    --green-border:#A8D8BC;
+    --green-mid:   #2A9458;
+    --red:         #B83232;
+    --red-pale:    #FDF0F0;
+    --red-border:  #E8AAAA;
+    --red-mid:     #CC4444;
+    --amber:       #8C5A10;
+    --amber-pale:  #FDF4E8;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans:  'Lato', sans-serif;
+    --mono:  'Courier Prime', 'Courier New', monospace;
+    --radius: 6px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.14);
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 16px; line-height: 1.6; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+  /* MASTHEAD */
+  .masthead { background: var(--white); border-bottom: 3px solid var(--teal); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .masthead-inner { max-width: 860px; margin: 0 auto; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+  .masthead-left { display: flex; align-items: center; gap: 14px; }
+  .masthead-logo-box { width: 42px; height: 42px; background: var(--navy); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--sans); font-size: 13px; font-weight: 700; color: var(--teal-light); letter-spacing: 0.04em; }
+  .masthead-brand { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; color: var(--text-light); text-transform: uppercase; margin-bottom: 2px; }
+  .masthead-title { font-family: var(--serif); font-size: 18px; font-weight: 600; color: var(--navy); line-height: 1; }
+  .masthead-pts { display: flex; gap: 18px; align-items: center; }
+  .masthead-pt { text-align: center; }
+  .masthead-pt-num { font-family: var(--mono); color: var(--teal); font-size: 20px; font-weight: 700; line-height: 1; }
+  .masthead-pt-label { font-size: 9px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+  .masthead-divider { width: 1px; height: 36px; background: var(--border); }
+
+  /* MAIN */
+  .main { max-width: 860px; margin: 0 auto; padding: 40px 32px 80px; }
+
+  /* HERO */
+  .hero { margin-bottom: 36px; padding-bottom: 36px; border-bottom: 1px solid var(--border); }
+  .hero-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--teal); text-transform: uppercase; margin-bottom: 14px; }
+  .hero-heading { font-family: var(--serif); font-size: 44px; font-weight: 600; color: var(--navy); letter-spacing: -0.01em; line-height: 1.15; margin-bottom: 16px; }
+  .hero-heading em { font-style: italic; color: var(--teal); }
+  .hero-body { font-size: 17px; color: var(--text-mid); max-width: 560px; line-height: 1.75; }
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; align-items: center; }
+  .legend-label { font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; text-transform: uppercase; margin-right: 4px; font-weight: 600; }
+  .legend-item { display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; border: 1px solid; font-size: 12px; font-weight: 600; }
+  .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* CARDS */
+  .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .card-label { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; color: var(--teal); text-transform: uppercase; margin-bottom: 20px; }
+  .card-accent-top { border-top: 3px solid var(--teal); }
+  .card-accent-gold { border-top: 3px solid var(--gold); }
+
+  /* SCOPE SELECTOR */
+  .scope-section { margin-bottom: 26px; }
+  .scope-label { font-size: 13px; font-weight: 700; color: var(--text-mid); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; display: block; }
+  .scope-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .scope-option { position: relative; }
+  .scope-option input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .scope-option label {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 16px 12px; background: var(--bg); border: 2px solid var(--border);
+    border-radius: var(--radius); cursor: pointer; transition: all 0.15s;
+    text-align: center; gap: 6px;
+  }
+  .scope-option input:checked + label {
+    border-color: var(--teal); background: var(--teal-pale); color: var(--teal);
+  }
+  .scope-option label:hover { border-color: var(--teal-border); background: var(--teal-pale); }
+  .scope-icon { font-size: 22px; }
+  .scope-title { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .scope-option input:checked + label .scope-title { color: var(--teal); }
+  .scope-desc { font-size: 11px; color: var(--text-light); line-height: 1.4; }
+  .scope-option input:checked + label .scope-desc { color: var(--teal); opacity: 0.8; }
+
+
+  /* FORM */
+  .field { margin-bottom: 22px; }
+  .field label { display: block; font-size: 13px; font-weight: 700; color: var(--text-mid); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+  .field label .opt { font-weight: 400; color: var(--text-faint); text-transform: none; letter-spacing: 0; font-size: 12px; }
+  .field input { width: 100%; padding: 13px 16px; background: var(--bg); border: 1.5px solid var(--border); border-radius: 4px; font-size: 15px; color: var(--text); font-family: var(--sans); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .field input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(31,168,168,0.1); background: var(--white); }
+  .field input::placeholder { color: var(--text-faint); }
+  .field-hidden { display: none; }
+
+  /* BUTTONS */
+  .btn-primary { background: var(--teal); color: var(--white); border: none; border-radius: 4px; padding: 14px 32px; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; font-family: var(--sans); cursor: pointer; transition: background 0.2s, transform 0.1s; text-transform: uppercase; }
+  .btn-primary:hover { background: var(--navy); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-faint); cursor: not-allowed; transform: none; }
+  .btn-gold { background: var(--gold); color: var(--white); border: none; border-radius: 4px; padding: 14px 32px; font-size: 14px; font-weight: 700; letter-spacing: 0.08em; font-family: var(--sans); cursor: pointer; transition: background 0.2s; text-transform: uppercase; }
+  .btn-gold:hover { background: var(--amber); }
+  .btn-outline { background: transparent; color: var(--text-mid); border: 1.5px solid var(--border-dark); border-radius: 4px; padding: 12px 24px; font-size: 13px; font-family: var(--sans); cursor: pointer; transition: border-color 0.2s, color 0.2s; letter-spacing: 0.04em; }
+  .btn-outline:hover { border-color: var(--teal); color: var(--teal); }
+  .btn-row { display: flex; justify-content: space-between; align-items: center; margin-top: 24px; flex-wrap: wrap; gap: 12px; }
+  .btn-hint { font-size: 13px; color: var(--text-light); font-style: italic; }
+
+  /* PROGRESS */
+  .progress-wrap { background: var(--white); border: 1px solid var(--border); border-left: 4px solid var(--teal); border-radius: var(--radius); padding: 28px 28px 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+  .progress-label { font-size: 16px; color: var(--text-mid); font-style: italic; margin-bottom: 16px; font-family: var(--serif); }
+  .progress-track { background: var(--bg); border-radius: 2px; height: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal) 0%, var(--gold-light) 100%); border-radius: 2px; transition: width 0.7s ease; }
+  .progress-steps { display: flex; gap: 28px; margin-top: 18px; flex-wrap: wrap; }
+  .progress-step { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-faint); }
+  .progress-step.active { color: var(--teal); font-weight: 600; }
+  .progress-step.done { color: var(--green-mid); }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  .progress-step.active .step-dot { background: var(--teal); animation: blink 1.4s ease-in-out infinite; }
+  .progress-step.done .step-dot { background: var(--green-mid); }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(12,31,63,0.55); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(3px); padding: 20px; }
+  .modal { background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--teal); border-radius: var(--radius); padding: 40px 36px; width: 100%; max-width: 480px; box-shadow: var(--shadow-lg); }
+  .modal-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--teal); text-transform: uppercase; margin-bottom: 10px; }
+  .modal-heading { font-family: var(--serif); font-size: 28px; color: var(--navy); font-weight: 600; line-height: 1.2; margin-bottom: 12px; }
+  .modal-body { font-size: 15px; color: var(--text-mid); margin-bottom: 26px; line-height: 1.7; }
+  .modal-legal { font-size: 11px; color: var(--text-faint); margin-top: 14px; line-height: 1.6; font-style: italic; }
+
+  /* RESULTS */
+  .res-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .res-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.18em; color: var(--teal); text-transform: uppercase; margin-bottom: 6px; }
+  .res-firm-name { font-family: var(--serif); font-size: 30px; font-weight: 600; color: var(--navy); line-height: 1.1; margin-bottom: 4px; }
+  .res-firm-url { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
+  .res-meta { text-align: right; font-size: 12px; color: var(--text-light); line-height: 1.7; }
+
+  /* SCORE OVERVIEW */
+  .score-overview { display: grid; grid-template-columns: 160px 1fr; gap: 32px; align-items: center; }
+  .score-big { text-align: center; padding: 24px 16px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+  .score-big-num { font-family: var(--mono); font-size: 60px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .score-big-denom { font-size: 14px; color: var(--text-faint); font-family: var(--mono); }
+  .score-big-tier { margin-top: 12px; }
+  .tier-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; border: 1.5px solid; font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .score-groups { display: flex; flex-direction: column; gap: 18px; }
+  .score-group-row { display: grid; grid-template-columns: 155px 1fr 64px; align-items: center; gap: 14px; }
+  .score-group-label { font-size: 12px; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.06em; }
+  .score-bar-track { background: var(--bg); height: 8px; border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+  .score-bar-fill { height: 100%; border-radius: 4px; transition: width 1.1s cubic-bezier(0.4,0,0.2,1); }
+  .score-group-val { font-family: var(--mono); font-size: 14px; font-weight: 700; text-align: right; }
+
+  /* SUMMARY */
+  .summary-block { padding: 20px 22px; background: var(--teal-pale); border-left: 4px solid var(--teal); border-radius: 4px; margin-bottom: 22px; }
+  .summary-label { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; color: var(--teal); text-transform: uppercase; margin-bottom: 8px; }
+  .summary-text { font-size: 16px; font-style: italic; color: var(--navy); font-family: var(--serif); line-height: 1.75; }
+
+  /* PROS/CONS */
+  .dual-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .dual-col { border-radius: var(--radius); padding: 20px; border: 1.5px solid; border-left-width: 4px; }
+  .dual-heading { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 14px; }
+  .dual-item { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+  .dual-icon { font-size: 11px; margin-top: 4px; flex-shrink: 0; font-weight: 700; }
+  .dual-text { font-size: 14px; line-height: 1.55; }
+
+  /* CATEGORIES */
+  .cat-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1.5px solid var(--border); }
+  .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .cat-card { background: var(--bg); border: 1px solid var(--border); border-top-width: 3px; border-radius: 4px; padding: 14px; }
+  .cat-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .cat-card-name { font-size: 12px; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cat-card-score { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+  .cat-card-note { font-size: 14px; font-style: italic; line-height: 1.5; margin-top: 9px; font-family: var(--serif); }
+
+  /* ACTION BAR */
+  .action-bar { display: flex; gap: 14px; justify-content: center; margin-top: 32px; }
+
+  /* ERROR */
+  .error-msg { background: var(--red-pale); border: 1px solid var(--red-border); border-left: 3px solid var(--red); border-radius: 4px; padding: 12px 16px; font-size: 14px; color: var(--red); margin-top: 14px; display: none; line-height: 1.5; }
+
+  /* FOOTER */
+  .footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .footer-left { font-size: 12px; color: var(--text-faint); letter-spacing: 0.08em; font-weight: 600; text-transform: uppercase; }
+  .footer-right { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 640px) {
+    .masthead-pts { display: none; }
+    .masthead-inner { padding: 14px 20px; }
+    .main { padding: 28px 20px 60px; }
+    .hero-heading { font-size: 32px; }
+    .scope-options { grid-template-columns: 1fr; }
+    .score-overview { grid-template-columns: 1fr; }
+    .dual-panel { grid-template-columns: 1fr; }
+    .cat-grid { grid-template-columns: 1fr; }
+    .score-group-row { grid-template-columns: 120px 1fr 50px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-left">
+      <div class="masthead-logo-box">SA</div>
+      <div>
+        <div class="masthead-brand">Spatacco Analytics</div>
+        <div class="masthead-title">Digital Presence Scorecard</div>
+      </div>
+    </div>
+    <div class="masthead-pts">
+      <div class="masthead-pt"><div class="masthead-pt-num">50</div><div class="masthead-pt-label">Website</div></div>
+      <div class="masthead-pt"><div class="masthead-pt-num">30</div><div class="masthead-pt-label">Contact</div></div>
+      <div class="masthead-pt"><div class="masthead-pt-num">20</div><div class="masthead-pt-label">LinkedIn</div></div>
+      <div class="masthead-divider"></div>
+      <div class="masthead-pt"><div class="masthead-pt-num" style="color:var(--navy);">100</div><div class="masthead-pt-label">Total</div></div>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <div class="hero" id="screen-hero">
+    <div class="hero-eyebrow">Complimentary Assessment</div>
+    <h1 class="hero-heading">See how your digital<br>presence <em>actually stacks up.</em></h1>
+    <p class="hero-body">Choose what you'd like scored, enter your URL, and we'll deliver a specific, actionable report card in minutes.</p>
+  </div>
+
+  <div class="legend" id="legend-bar">
+    <span class="legend-label">Ratings</span>
+    <span class="legend-item" style="background:var(--green-pale);border-color:var(--green-border);color:var(--green);"><span class="legend-dot" style="background:var(--green);"></span>85–100 &nbsp;Distinction</span>
+    <span class="legend-item" style="background:var(--teal-pale);border-color:var(--teal-border);color:var(--teal);"><span class="legend-dot" style="background:var(--teal);"></span>70–84 &nbsp;Strong</span>
+    <span class="legend-item" style="background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold);"><span class="legend-dot" style="background:var(--gold);"></span>55–69 &nbsp;Adequate</span>
+    <span class="legend-item" style="background:var(--amber-pale);border-color:#E0C090;color:var(--amber);"><span class="legend-dot" style="background:var(--amber);"></span>40–54 &nbsp;Weak</span>
+    <span class="legend-item" style="background:var(--red-pale);border-color:var(--red-border);color:var(--red);"><span class="legend-dot" style="background:var(--red);"></span>&lt;40 &nbsp;Poor</span>
+  </div>
+
+  <!-- INPUT FORM -->
+  <div class="card card-accent-top" id="screen-input">
+    <div class="card-label">What would you like scored?</div>
+
+    <!-- SCOPE SELECTOR -->
+    <div class="scope-section">
+      <div class="scope-options">
+
+        <div class="scope-option">
+          <input type="radio" name="scope" id="scope-both" value="both" checked />
+          <label for="scope-both">
+            <span class="scope-icon">🌐 + 💼</span>
+            <span class="scope-title">Website + LinkedIn</span>
+            <span class="scope-desc">Full digital presence assessment</span>
+
+          </label>
+        </div>
+
+        <div class="scope-option">
+          <input type="radio" name="scope" id="scope-website" value="website" />
+          <label for="scope-website">
+            <span class="scope-icon">🌐</span>
+            <span class="scope-title">Website Only</span>
+            <span class="scope-desc">Design, content, UX, credibility, contact</span>
+
+          </label>
+        </div>
+
+        <div class="scope-option">
+          <input type="radio" name="scope" id="scope-linkedin" value="linkedin" />
+          <label for="scope-linkedin">
+            <span class="scope-icon">💼</span>
+            <span class="scope-title">LinkedIn Only</span>
+            <span class="scope-desc">Followers, posting frequency, content quality</span>
+
+          </label>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- URL FIELDS — shown/hidden based on selection -->
+    <div class="field" id="field-website">
+      <label>Your Website URL <span style="color:var(--red)">*</span></label>
+      <input type="url" id="inp-website" placeholder="https://yourfirm.com" autocomplete="off" />
+    </div>
+    <div class="field" id="field-linkedin">
+      <label>LinkedIn Company Page <span class="opt" id="linkedin-opt-label">(optional — we'll search if you leave this blank)</span></label>
+      <input type="url" id="inp-linkedin" placeholder="https://linkedin.com/company/yourfirm" autocomplete="off" />
+    </div>
+
+    <div class="error-msg" id="input-error"></div>
+    <div class="btn-row">
+      <span class="btn-hint" id="timing-hint">Analysis takes approximately 2–3 minutes.</span>
+      <button class="btn-primary" id="btn-analyze">Analyze →</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap hidden" id="screen-progress">
+    <div class="progress-label" id="progress-label">Initiating analysis…</div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="progress-steps">
+      <div class="progress-step" id="pstep-1"><div class="step-dot"></div><span id="pstep-1-label">Evaluating website</span></div>
+      <div class="progress-step" id="pstep-2"><div class="step-dot"></div><span id="pstep-2-label">Scoring LinkedIn</span></div>
+      <div class="progress-step" id="pstep-3"><div class="step-dot"></div><span>Compiling report</span></div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="screen-results" class="hidden">
+
+    <div class="res-header">
+      <div>
+        <div class="res-eyebrow">Assessment Results</div>
+        <div class="res-firm-name" id="res-firm-name">—</div>
+        <div class="res-firm-url" id="res-firm-url">—</div>
+      </div>
+      <div class="res-meta">
+        <div id="res-date">—</div>
+        <div>Spatacco Analytics LLC</div>
+        <div id="res-scope-label" style="color:var(--teal);font-weight:600;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;">—</div>
+      </div>
+    </div>
+
+    <div class="card card-accent-gold" style="margin-bottom:20px;">
+      <div class="card-label" style="color:var(--gold);">Overall Score</div>
+      <div class="score-overview">
+        <div class="score-big" id="score-big-wrap">
+          <div class="score-big-num" id="score-big-num">—</div>
+          <div class="score-big-denom" id="score-big-denom">/100</div>
+          <div class="score-big-tier" id="score-big-tier"></div>
+        </div>
+        <div class="score-groups" id="score-groups-wrap"></div>
+      </div>
+    </div>
+
+    <div class="summary-block">
+      <div class="summary-label">Executive Summary</div>
+      <div class="summary-text" id="res-summary">—</div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-label">Analysis</div>
+      <div class="dual-panel" id="dual-panel-wrap"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-label">Category Breakdown</div>
+      <div id="cat-breakdown-wrap"></div>
+    </div>
+
+    <div id="linkedin-row" class="hidden" style="margin-bottom:20px;padding:12px 18px;background:var(--white);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:var(--teal);text-transform:uppercase;">LinkedIn</span>
+      <a id="linkedin-link" href="#" target="_blank" style="font-size:13px;color:var(--navy-mid);font-family:var(--mono);text-decoration:none;border-bottom:1px solid var(--border);">—</a>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-gold" id="btn-pdf">↓ &nbsp;Download PDF Scorecard</button>
+      <button class="btn-outline" id="btn-restart">Score Another Site</button>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-left">CRM · DATA · WEB · STRATEGY</div>
+    <div class="footer-right">spataccoanalytics.com</div>
+  </footer>
+</main>
+
+<!-- EMAIL GATE -->
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-eyebrow">Your Results Are Ready</div>
+    <h2 class="modal-heading">Where should we<br>send your scorecard?</h2>
+    <p class="modal-body">Enter your details to unlock your full report and receive a PDF copy by email.</p>
+    <div class="field"><label>Your Name <span style="color:var(--red)">*</span></label><input type="text" id="gate-name" placeholder="First and last name" /></div>
+    <div class="field"><label>Email Address <span style="color:var(--red)">*</span></label><input type="email" id="gate-email" placeholder="you@yourfirm.com" /></div>
+    <div class="field"><label>Firm Name <span class="opt">(optional)</span></label><input type="text" id="gate-firm" placeholder="Your firm or practice name" /></div>
+    <div class="error-msg" id="gate-error" style="margin-top:0;margin-bottom:14px;"></div>
+    <button class="btn-primary" id="btn-gate-submit" style="width:100%;padding:15px;font-size:15px;">Unlock My Results →</button>
+    <div class="modal-legal">We'll send you a copy of your scorecard. No spam. Unsubscribe anytime.</div>
+  </div>
+</div>
+
+<script>
+const WORKER_URL = "https://ria-scorer.spatacco-analytics.workers.dev";
+const EMAILJS_SERVICE_ID  = "";
+const EMAILJS_TEMPLATE_ID = "";
+const EMAILJS_PUBLIC_KEY  = "";
+
+// ── SCHEMA ──────────────────────────────────────────────────────
+const WEBSITE_CATS = [
+  { id:"visual_design",        label:"Visual Design",         group:"website", max:15 },
+  { id:"content_messaging",    label:"Content & Messaging",   group:"website", max:15 },
+  { id:"navigation_ux",        label:"Navigation & UX",       group:"website", max:10 },
+  { id:"credibility_signals",  label:"Credibility Signals",   group:"website", max:10 },
+  { id:"team_leadership",      label:"Advisor Profiles",      group:"contact", max:15 },
+  { id:"contact_availability", label:"Contact Accessibility", group:"contact", max:15 },
+];
+const LINKEDIN_CAT = { id:"linkedin_presence", label:"LinkedIn Presence", group:"linkedin", max:20 };
+
+const WEBSITE_GROUPS = {
+  website: { label:"Website Quality", max:50, color:"#1FA8A8" },
+  contact: { label:"Contact & Team",  max:30, color:"#2A9458" },
+};
+const LINKEDIN_GROUP = { linkedin: { label:"LinkedIn", max:20, color:"#B8860B" } };
+
+function getTier(s, max) {
+  const pct = s / max * 100;
+  if (pct >= 85) return { label:"Distinction", color:"#1A6B40", bg:"#EAF5EE", border:"#A8D8BC" };
+  if (pct >= 70) return { label:"Strong",      color:"#1FA8A8", bg:"#EAF6F6", border:"#B2E0E0" };
+  if (pct >= 55) return { label:"Adequate",    color:"#B8860B", bg:"#FDF6E3", border:"#E8D080" };
+  if (pct >= 40) return { label:"Weak",        color:"#8C5A10", bg:"#FDF4E8", border:"#E0C090" };
+  return               { label:"Poor",        color:"#B83232", bg:"#FDF0F0", border:"#E8AAAA" };
+}
+function getScoreColor(val, max) {
+  const p = val/max;
+  if (p >= 0.75) return "#2A9458";
+  if (p >= 0.55) return "#1FA8A8";
+  if (p >= 0.35) return "#B8860B";
+  return "#B83232";
+}
+
+// ── STATE ────────────────────────────────────────────────────────
+let appState = { websiteUrl:"", linkedinUrl:"", scope:"both", result:null, leadName:"", leadEmail:"", leadFirm:"" };
+const $ = id => document.getElementById(id);
+
+// ── SCOPE LOGIC ──────────────────────────────────────────────────
+function getScope() {
+  return document.querySelector('input[name="scope"]:checked')?.value || "both";
+}
+
+function updateFormForScope() {
+  const scope = getScope();
+  const fw = $("field-website");
+  const fl = $("field-linkedin");
+  const hint = $("timing-hint");
+  const optLabel = $("linkedin-opt-label");
+
+  if (scope === "both") {
+    fw.classList.remove("field-hidden");
+    fl.classList.remove("field-hidden");
+    optLabel.textContent = "(optional — we'll search if blank)";
+    hint.textContent = "Analysis takes approximately 2–3 minutes.";
+  } else if (scope === "website") {
+    fw.classList.remove("field-hidden");
+    fl.classList.add("field-hidden");
+    hint.textContent = "Website analysis takes approximately 1–2 minutes.";
+  } else if (scope === "linkedin") {
+    fw.classList.add("field-hidden");
+    fl.classList.remove("field-hidden");
+    optLabel.textContent = "(we'll search by firm name if left blank)";
+    hint.textContent = "LinkedIn analysis takes approximately 1 minute.";
+  }
+
+  // Update progress step labels
+  if (scope === "website") {
+    $("pstep-1-label").textContent = "Evaluating website";
+    $("pstep-2").classList.add("hidden");
+  } else if (scope === "linkedin") {
+    $("pstep-1-label").textContent = "Scoring LinkedIn presence";
+    $("pstep-2").classList.add("hidden");
+  } else {
+    $("pstep-1-label").textContent = "Evaluating website";
+    $("pstep-2-label").textContent = "Scoring LinkedIn";
+    $("pstep-2").classList.remove("hidden");
+  }
+}
+
+document.querySelectorAll('input[name="scope"]').forEach(el => {
+  el.addEventListener("change", updateFormForScope);
+});
+updateFormForScope();
+
+// ── HELPERS ──────────────────────────────────────────────────────
+function showOnly(...ids) {
+  ["screen-input","screen-progress","screen-results"].forEach(id => $(id).classList.add("hidden"));
+  ids.forEach(id => $(id).classList.remove("hidden"));
+}
+function setProgress(pct, label, s1, s2, s3) {
+  $("progress-fill").style.width = pct + "%";
+  $("progress-label").textContent = label;
+  [["pstep-1",s1],["pstep-2",s2],["pstep-3",s3]].forEach(([id,st]) => {
+    const el=$(id); el.classList.remove("active","done");
+    if (st==="active") el.classList.add("active");
+    if (st==="done")   el.classList.add("done");
+  });
+}
+
+// ── API ──────────────────────────────────────────────────────────
+async function callWorker(payload) {
+  const res = await fetch(WORKER_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
+  return data;
+}
+
+async function scoreWebsite(url) {
+  const data = await callWorker({
+    model:"claude-sonnet-4-20250514", max_tokens:1400,
+    tools:[{type:"web_search_20250305",name:"web_search"}],
+    messages:[{role:"user",content:`You are a knowledgeable digital marketing consultant helping a financial advisor or RIA understand how their website compares to best practices. Be constructive, specific, and actionable.
+
+Website: ${url}
+
+Use web search to review this site thoroughly.
+
+CRITICAL SCORING RULES:
+- Use the FULL range. Many advisor websites are basic templates — reflect that honestly.
+- 0-3: Absent, broken, or non-functional
+- 4-6: Generic template, minimal customization
+- 7-9: Competent and professional
+- 10-12: Above average, clearly invested
+- 13-15: Exceptional — best-in-class (genuinely rare)
+- If all scores cluster within 4 points of each other, you are compressing — spread them.
+
+CREDIBILITY SIGNALS (do NOT mention AUM — advisors almost never disclose this):
+- Named client testimonials, professional designations (CFP, CFA, etc.)
+- Awards, media coverage, published thought leadership
+- Years of experience, NAPFA/FPA affiliations, educational content
+
+Return ONLY valid JSON — no markdown, no backticks:
+{"firm_name":"string","summary":"2 sentences: clearest strength AND single biggest improvement opportunity","pros":["strength 1","strength 2","strength 3"],"cons":["opportunity 1","opportunity 2","opportunity 3"],"scores":{"visual_design":<0-15>,"content_messaging":<0-15>,"navigation_ux":<0-10>,"credibility_signals":<0-10>,"team_leadership":<0-15>,"contact_availability":<0-15>},"notes":{"visual_design":"observation","content_messaging":"observation","navigation_ux":"observation","credibility_signals":"observation (no AUM)","team_leadership":"observation","contact_availability":"observation"}}
+
+Rubrics:
+- visual_design: 0-3=broken, 4-6=bare template, 7-9=clean but generic, 10-12=polished branded, 13-15=distinctive memorable
+- content_messaging: 0-3=placeholder, 4-6=generic boilerplate, 7-9=clear with personality, 10-12=well-defined niche, 13-15=sharp value prop with proof
+- navigation_ux: 0-2=broken, 3-4=confusing, 5-6=functional, 7-8=intuitive, 9-10=seamless mobile-optimized
+- credibility_signals: 0-2=none, 3-4=vague, 5-6=minimal, 7-8=several strong signals, 9-10=comprehensive
+- team_leadership: 0-3=no bio, 4-6=names+titles, 7-9=brief bios, 10-12=full bios+photos, 13-15=rich narrative+LinkedIn
+- contact_availability: 0-3=nothing, 4-6=form only, 7-9=form+phone, 10-12=direct contacts prominent, 13-15=multiple easy options throughout`}]
+  });
+  const text = data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").replace(/```json|```/g,"").trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Could not parse website analysis. Please check the URL and try again.");
+  return JSON.parse(match[0]);
+}
+
+async function scoreLinkedin(linkedinUrl, firmName) {
+  const urlLine = linkedinUrl ? `LinkedIn URL: ${linkedinUrl}` : `Search for the LinkedIn company page for "${firmName}" (financial advisory firm)`;
+  const data = await callWorker({
+    model:"claude-sonnet-4-20250514", max_tokens:400,
+    tools:[{type:"web_search_20250305",name:"web_search"}],
+    messages:[{role:"user",content:`Evaluate LinkedIn presence for a financial advisory firm.\n\n${urlLine}\nFirm: ${firmName||"unknown"}\n\nUse web search. Find follower count, last post date, posting frequency, content quality.\n\nReturn ONLY valid JSON:\n{"firm_name":"string","linkedin_url":"url or null","score":<0-20>,"summary":"1 sentence summary","pros":["strength 1","strength 2"],"cons":["opportunity 1","opportunity 2"],"note":"follower count if found, last post date, cadence, one actionable recommendation"}\n\nScoring:\n0-3: No page or last post 1+ year ago\n4-7: <500 followers, posts <monthly\n8-11: 500-2k followers, semi-regular monthly posts\n12-15: 2k-5k followers, consistent weekly posts\n16-20: 5k+ followers, frequent high-quality thought leadership`}]
+  });
+  const text = data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").replace(/```json|```/g,"").trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) return { firm_name:firmName||"Your Firm", linkedin_url:linkedinUrl||null, score:0, summary:"Could not evaluate LinkedIn presence.", pros:[], cons:[], note:"Could not evaluate LinkedIn presence." };
+  return JSON.parse(match[0]);
+}
+
+// ── RENDER ───────────────────────────────────────────────────────
+function renderResults(result, scope, websiteUrl) {
+  const scores  = result.scores || {};
+  const isWeb   = scope === "website" || scope === "both";
+  const isLI    = scope === "linkedin" || scope === "both";
+
+  // Determine active categories and total
+  let activeCats = [];
+  let activeGroups = {};
+  let totalMax = 0;
+  if (isWeb) { activeCats = [...WEBSITE_CATS]; activeGroups = {...WEBSITE_GROUPS}; totalMax += 80; }
+  if (isLI)  { activeCats = [...activeCats, LINKEDIN_CAT]; activeGroups = {...activeGroups, ...LINKEDIN_GROUP}; totalMax += 20; }
+
+  const total = activeCats.reduce((s,c)=>s+(scores[c.id]||0),0);
+  const tier  = getTier(total, totalMax);
+
+  $("res-firm-name").textContent = result.firm_name || "Your Firm";
+  $("res-firm-url").textContent  = websiteUrl || result.linkedin_url || "";
+  $("res-date").textContent = "Scored " + new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  $("res-scope-label").textContent = scope === "both" ? "Website + LinkedIn" : scope === "website" ? "Website Assessment" : "LinkedIn Assessment";
+
+  $("score-big-num").textContent = total;
+  $("score-big-num").style.color = tier.color;
+  $("score-big-denom").textContent = `/${totalMax}`;
+  const bw = $("score-big-wrap");
+  bw.style.background = tier.bg; bw.style.borderColor = tier.border;
+  $("score-big-tier").innerHTML = `<span class="tier-badge" style="color:${tier.color};background:${tier.bg};border-color:${tier.border};">${tier.label}</span>`;
+
+  const gw = $("score-groups-wrap");
+  gw.innerHTML = "";
+  Object.entries(activeGroups).forEach(([g,meta])=>{
+    const cats = activeCats.filter(c=>c.group===g);
+    const gs   = cats.reduce((s,c)=>s+(scores[c.id]||0),0);
+    const pct  = (gs/meta.max)*100;
+    const row  = document.createElement("div");
+    row.className = "score-group-row";
+    row.innerHTML = `<div class="score-group-label">${meta.label}</div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${meta.color};"></div></div><div class="score-group-val" style="color:${meta.color};">${gs}<span style="color:var(--text-faint);font-size:11px;font-weight:400;">/${meta.max}</span></div>`;
+    gw.appendChild(row);
+  });
+
+  $("res-summary").textContent = result.summary || "";
+
+  const dw   = $("dual-panel-wrap");
+  const pros = result.pros||[], cons = result.cons||[];
+  dw.innerHTML = `
+    <div class="dual-col" style="background:var(--green-pale);border-color:var(--green-border);border-left-color:var(--green);">
+      <div class="dual-heading" style="color:var(--green);">What's Working</div>
+      ${pros.map(p=>`<div class="dual-item"><span class="dual-icon" style="color:var(--green-mid);">▲</span><span class="dual-text" style="color:var(--text);">${p}</span></div>`).join("")||'<span style="font-size:13px;color:var(--text-faint);font-style:italic;">None identified</span>'}
+    </div>
+    <div class="dual-col" style="background:var(--red-pale);border-color:var(--red-border);border-left-color:var(--red);">
+      <div class="dual-heading" style="color:var(--red);">Opportunities to Improve</div>
+      ${cons.map(c=>`<div class="dual-item"><span class="dual-icon" style="color:var(--red-mid);">▼</span><span class="dual-text" style="color:var(--red);">${c}</span></div>`).join("")||'<span style="font-size:13px;color:var(--text-faint);font-style:italic;">None identified</span>'}
+    </div>`;
+
+  const cw = $("cat-breakdown-wrap");
+  cw.innerHTML = "";
+  Object.entries(activeGroups).forEach(([g,meta])=>{
+    const sec  = document.createElement("div");
+    sec.innerHTML = `<div class="cat-section-label" style="color:${meta.color};">${meta.label}</div>`;
+    const grid = document.createElement("div");
+    grid.className = "cat-grid";
+    activeCats.filter(c=>c.group===g).forEach(cat=>{
+      const val  = scores[cat.id]||0;
+      const sc   = getScoreColor(val, cat.max);
+      const pct  = (val/cat.max)*100;
+      const note = result.notes?.[cat.id]||"";
+      const noteCol = (val/cat.max)<0.4 ? "var(--red)" : "var(--text-mid)";
+      const card = document.createElement("div");
+      card.className = "cat-card"; card.style.borderTopColor = sc;
+      card.innerHTML = `<div class="cat-card-header"><span class="cat-card-name">${cat.label}</span><span class="cat-card-score" style="color:${sc};">${val}<span style="color:var(--text-faint);font-size:11px;font-weight:400;">/${cat.max}</span></span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${sc};"></div></div>${note?`<div class="cat-card-note" style="color:${noteCol};">${note}</div>`:""}`;
+      grid.appendChild(card);
+    });
+    sec.appendChild(grid);
+    cw.appendChild(sec);
+  });
+
+  if (result.linkedin_url) {
+    const lr = $("linkedin-row");
+    lr.classList.remove("hidden"); lr.style.display = "flex";
+    $("linkedin-link").href = result.linkedin_url;
+    $("linkedin-link").textContent = result.linkedin_url;
+  }
+  showOnly("screen-results");
+}
+
+// ── ANALYZE ──────────────────────────────────────────────────────
+$("btn-analyze").addEventListener("click", async () => {
+  const scope    = getScope();
+  const website  = $("inp-website").value.trim();
+  const linkedin = $("inp-linkedin").value.trim();
+  const errEl    = $("input-error");
+  errEl.style.display = "none";
+
+  if ((scope === "both" || scope === "website") && (!website || !website.startsWith("http"))) {
+    errEl.textContent = "Please enter a valid website URL starting with https://";
+    errEl.style.display = "block"; return;
+  }
+  if (scope === "linkedin" && !linkedin && !website) {
+    errEl.textContent = "Please enter your LinkedIn URL, or a website URL so we can search for your LinkedIn page.";
+    errEl.style.display = "block"; return;
+  }
+
+  appState.websiteUrl  = website;
+  appState.linkedinUrl = linkedin;
+  appState.scope       = scope;
+
+  $("legend-bar").classList.add("hidden");
+  $("screen-hero").classList.add("hidden");
+  showOnly("screen-progress");
+
+  try {
+    let result = {};
+
+    if (scope === "website") {
+      setProgress(10,"Evaluating your website…",["active"],"","");
+      const wr = await scoreWebsite(website);
+      setProgress(90,"Compiling report…","done","","active");
+      await new Promise(r=>setTimeout(r,600));
+      result = { ...wr, scores: wr.scores, notes: wr.notes };
+
+    } else if (scope === "linkedin") {
+      setProgress(10,"Scoring your LinkedIn presence…",["active"],"","");
+      const lr = await scoreLinkedin(linkedin, "");
+      setProgress(90,"Compiling report…","done","","active");
+      await new Promise(r=>setTimeout(r,600));
+      result = {
+        firm_name: lr.firm_name || "Your Firm",
+        summary: lr.summary || "",
+        pros: lr.pros || [],
+        cons: lr.cons || [],
+        scores: { linkedin_presence: lr.score||0 },
+        notes:  { linkedin_presence: lr.note||"" },
+        linkedin_url: lr.linkedin_url || linkedin || null,
+      };
+
+    } else {
+      // both
+      setProgress(15,"Evaluating your website…","active","","");
+      const wr = await scoreWebsite(website);
+      setProgress(60,"Scoring LinkedIn presence…","done","active","");
+      const lr = await scoreLinkedin(linkedin, wr.firm_name);
+      setProgress(92,"Compiling report…","done","done","active");
+      await new Promise(r=>setTimeout(r,600));
+      result = {
+        ...wr,
+        scores: { ...wr.scores, linkedin_presence: lr.score||0 },
+        notes:  { ...wr.notes,  linkedin_presence: lr.note||"" },
+        linkedin_url: lr.linkedin_url || linkedin || null,
+      };
+    }
+
+    appState.result = result;
+    setProgress(100,"Analysis complete.","done","done","done");
+    await new Promise(r=>setTimeout(r,400));
+    $("modal-overlay").classList.remove("hidden");
+
+  } catch(err) {
+    showOnly("screen-input");
+    $("legend-bar").classList.remove("hidden");
+    $("screen-hero").classList.remove("hidden");
+    const e=$("input-error");
+    e.textContent = err.message || "Analysis failed. Please try again.";
+    e.style.display = "block";
+  }
+});
+
+// ── GATE SUBMIT ──────────────────────────────────────────────────
+$("btn-gate-submit").addEventListener("click", async () => {
+  const name  = $("gate-name").value.trim();
+  const email = $("gate-email").value.trim();
+  const firm  = $("gate-firm").value.trim();
+  const errEl = $("gate-error");
+  errEl.style.display = "none";
+  if (!name)                    { errEl.textContent="Please enter your name.";         errEl.style.display="block"; return; }
+  if (!email||!email.includes("@")) { errEl.textContent="Please enter a valid email."; errEl.style.display="block"; return; }
+  appState.leadName=name; appState.leadEmail=email; appState.leadFirm=firm;
+  $("btn-gate-submit").textContent="Loading your results…";
+  $("btn-gate-submit").disabled=true;
+  await sendLead(name,email,firm);
+  $("modal-overlay").classList.add("hidden");
+  $("screen-progress").classList.add("hidden");
+  renderResults(appState.result, appState.scope, appState.websiteUrl);
+});
+
+// ── PDF ───────────────────────────────────────────────────────────
+function hexToRgb(hex) {
+  hex=hex.replace("#","");
+  if(hex.length===3)hex=hex.split("").map(c=>c+c).join("");
+  const n=parseInt(hex,16);
+  return[(n>>16)&255,(n>>8)&255,n&255];
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"pt",format:"letter"});
+  const result = appState.result;
+  const scope  = appState.scope;
+  const scores = result.scores;
+  const isWeb  = scope==="website"||scope==="both";
+  const isLI   = scope==="linkedin"||scope==="both";
+  let activeCats = [];
+  if (isWeb) activeCats = [...WEBSITE_CATS];
+  if (isLI)  activeCats = [...activeCats, LINKEDIN_CAT];
+  const totalMax = (isWeb?80:0)+(isLI?20:0);
+  const total = activeCats.reduce((s,c)=>s+(scores[c.id]||0),0);
+  const tier  = getTier(total, totalMax);
+  const W=612,ML=48,MR=48,CW=W-ML-MR;
+  let y=0;
+
+  doc.setFillColor(255,255,255); doc.rect(0,0,W,72,"F");
+  doc.setFillColor(31,168,168);  doc.rect(0,72,W/2,3,"F");
+  doc.setFillColor(184,134,11);  doc.rect(W/2,72,W/2,3,"F");
+  doc.setFillColor(12,31,63);    doc.rect(ML,14,42,42,"F");
+  doc.setTextColor(61,200,200);  doc.setFontSize(12); doc.setFont("helvetica","bold");
+  doc.text("SA",ML+21,42,{align:"center"});
+  doc.setTextColor(12,31,63); doc.setFontSize(16); doc.setFont("helvetica","bold");
+  doc.text("Digital Presence Scorecard",ML+52,32);
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(122,128,144);
+  const scopeStr = scope==="both"?"Website + LinkedIn Assessment":scope==="website"?"Website Assessment":"LinkedIn Assessment";
+  doc.text(`Spatacco Analytics LLC  ·  ${scopeStr}`,ML+52,46);
+  doc.setFontSize(8); doc.setTextColor(168,175,188);
+  doc.text(new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}),W-MR,24,{align:"right"});
+
+  y=96;
+  doc.setFontSize(7); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("FIRM",ML,y);
+  y+=12; doc.setFontSize(16); doc.setFont("helvetica","bold"); doc.setTextColor(12,31,63);
+  doc.text(result.firm_name||"Your Firm",ML,y);
+  y+=10; doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188);
+  doc.text(appState.websiteUrl||result.linkedin_url||"",ML,y);
+  y+=18;
+
+  doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(ML,y,W-MR,y); y+=16;
+
+  // Score box
+  const bW=110,bH=68;
+  const [tr,tg,tb]=hexToRgb(tier.color);
+  doc.setFillColor(parseInt(tier.bg.slice(1,3),16),parseInt(tier.bg.slice(3,5),16),parseInt(tier.bg.slice(5,7),16));
+  doc.rect(ML,y,bW,bH,"F");
+  doc.setDrawColor(tr,tg,tb); doc.setLineWidth(1); doc.rect(ML,y,bW,bH,"S");
+  doc.setTextColor(tr,tg,tb); doc.setFontSize(34); doc.setFont("helvetica","bold");
+  doc.text(String(total),ML+bW/2,y+28,{align:"center"});
+  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188);
+  doc.text(`/${totalMax}`,ML+bW/2,y+40,{align:"center"});
+  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(tr,tg,tb);
+  doc.text(tier.label.toUpperCase(),ML+bW/2,y+55,{align:"center"});
+
+  const bX=ML+bW+18,bW2=CW-bW-18; let by=y+8;
+  const allGroups = {...(isWeb?WEBSITE_GROUPS:{}),...(isLI?LINKEDIN_GROUP:{})};
+  Object.entries(allGroups).forEach(([g,meta])=>{
+    const cats=activeCats.filter(c=>c.group===g);
+    const gs=cats.reduce((s,c)=>s+(scores[c.id]||0),0);
+    const pct=gs/meta.max;
+    const [mr,mg,mb]=hexToRgb(meta.color);
+    doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(74,80,96); doc.text(meta.label,bX,by);
+    doc.setFillColor(240,241,238); doc.rect(bX,by+3,bW2-46,6,"F");
+    doc.setFillColor(mr,mg,mb); doc.rect(bX,by+3,(bW2-46)*pct,6,"F");
+    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(mr,mg,mb);
+    doc.text(`${gs}/${meta.max}`,bX+bW2-42,by);
+    by+=22;
+  });
+  y+=bH+18;
+
+  doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(ML,y,W-MR,y); y+=12;
+
+  // Summary
+  doc.setFillColor(234,246,246); doc.rect(ML,y-4,CW,4,"F");
+  doc.setFillColor(31,168,168); doc.rect(ML,y-4,3,30,"F");
+  doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(31,168,168); doc.text("EXECUTIVE SUMMARY",ML+8,y+6);
+  y+=16; doc.setFontSize(10); doc.setFont("helvetica","bolditalic"); doc.setTextColor(12,31,63);
+  const sl=doc.splitTextToSize(result.summary||"",CW-12); doc.text(sl,ML+8,y);
+  y+=sl.length*13+16;
+
+  // Pros/Cons
+  doc.setDrawColor(226,228,222); doc.line(ML,y,W-MR,y); y+=12;
+  const colW=(CW-10)/2;
+  doc.setFillColor(234,245,238); doc.rect(ML,y,colW,14,"F");
+  doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(26,107,64); doc.text("WHAT'S WORKING",ML+6,y+9);
+  doc.setFillColor(253,240,240); doc.rect(ML+colW+10,y,colW,14,"F");
+  doc.setTextColor(184,50,50); doc.text("OPPORTUNITIES TO IMPROVE",ML+colW+16,y+9);
+  y+=20;
+  const pros=result.pros||[],cons=result.cons||[],mx=Math.max(pros.length,cons.length);
+  for(let i=0;i<mx;i++){
+    doc.setFontSize(9); doc.setFont("helvetica","normal");
+    let rowH=12;
+    if(pros[i]){ doc.setTextColor(42,148,88); doc.text("▲",ML+2,y); doc.setTextColor(26,30,40); const pl=doc.splitTextToSize(pros[i],colW-16); doc.text(pl,ML+11,y); rowH=Math.max(rowH,pl.length*12); }
+    if(cons[i]){ doc.setTextColor(184,50,50); doc.text("▼",ML+colW+12,y); const cl=doc.splitTextToSize(cons[i],colW-16); doc.text(cl,ML+colW+22,y); rowH=Math.max(rowH,cl.length*12); }
+    y+=rowH+4;
+  }
+  y+=10;
+
+  // Categories
+  doc.setDrawColor(226,228,222); doc.line(ML,y,W-MR,y); y+=12;
+  doc.setFontSize(7); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("CATEGORY BREAKDOWN",ML,y); y+=11;
+  activeCats.forEach(cat=>{
+    if(y>720){doc.addPage();y=48;}
+    const val=scores[cat.id]||0,pct=val/cat.max,sc=getScoreColor(val,cat.max);
+    const [scr,scg,scb]=hexToRgb(sc);
+    const note=result.notes?.[cat.id]||"";
+    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(74,80,96); doc.text(cat.label,ML,y);
+    doc.setTextColor(scr,scg,scb); doc.text(`${val}/${cat.max}`,W-MR,y,{align:"right"});
+    y+=4; doc.setFillColor(240,241,238); doc.rect(ML,y,CW-46,5,"F");
+    doc.setFillColor(scr,scg,scb); doc.rect(ML,y,(CW-46)*pct,5,"F");
+    y+=9;
+    if(note){ doc.setFontSize(8.5); doc.setFont("helvetica","italic"); doc.setTextColor(pct<0.4?184:122,pct<0.4?50:128,pct<0.4?50:144); const nl=doc.splitTextToSize(note,CW); doc.text(nl,ML,y); y+=nl.length*11+3; } else y+=4;
+  });
+
+  // Footer
+  doc.setFillColor(246,247,245); doc.rect(0,758,W,52,"F");
+  doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(0,758,W,758);
+  doc.setFillColor(31,168,168); doc.rect(0,758,W/2,2,"F");
+  doc.setFillColor(184,134,11); doc.rect(W/2,758,W/2,2,"F");
+  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(12,31,63); doc.text("SPATACCO ANALYTICS LLC",ML,774);
+  doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("spataccoanalytics.com  ·  CRM · DATA · WEB · STRATEGY",ML,786);
+  doc.setTextColor(200,204,210); doc.text("For informational purposes only.",W-MR,774,{align:"right"});
+
+  const fn=`${(result.firm_name||"Digital-Presence").replace(/[^a-z0-9]/gi,"-")}_Scorecard_${new Date().toISOString().slice(0,10)}.pdf`;
+  doc.save(fn);
+}
+
+// ── LEAD CAPTURE ─────────────────────────────────────────────────
+async function sendLead(name,email,firm) {
+  if(!EMAILJS_SERVICE_ID||!EMAILJS_TEMPLATE_ID||!EMAILJS_PUBLIC_KEY)return;
+  try {
+    if(!window.emailjs){ await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); emailjs.init(EMAILJS_PUBLIC_KEY); }
+    await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{ lead_name:name, lead_email:email, lead_firm:firm||"(not provided)", scored_url:appState.websiteUrl, scope:appState.scope, scored_date:new Date().toLocaleDateString() });
+  } catch(e){ console.warn("EmailJS:",e); }
+}
+
+$("btn-pdf").addEventListener("click", generatePDF);
+$("btn-restart").addEventListener("click", ()=>{
+  appState={websiteUrl:"",linkedinUrl:"",scope:"both",result:null,leadName:"",leadEmail:"",leadFirm:""};
+  ["inp-website","inp-linkedin","gate-name","gate-email","gate-firm"].forEach(id=>$(id).value="");
+  document.getElementById("scope-both").checked=true;
+  updateFormForScope();
+  $("gate-error").style.display="none"; $("input-error").style.display="none";
+  $("btn-gate-submit").textContent="Unlock My Results →"; $("btn-gate-submit").disabled=false;
+  $("linkedin-row").classList.add("hidden");
+  $("legend-bar").classList.remove("hidden"); $("screen-hero").classList.remove("hidden");
+  showOnly("screen-input");
+});
+["gate-name","gate-email","gate-firm"].forEach(id=>{ $(id).addEventListener("keydown",e=>{ if(e.key==="Enter") $("btn-gate-submit").click(); }); });
+</script>
+<footer style="text-align:center;padding:24px 16px;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;letter-spacing:1px;color:#7A8090;border-top:1px solid rgba(0,0,0,0.08);margin-top:48px">
+  Built by <a href="https://spataccoanalytics.com" style="color:#7A8090 !important;text-decoration:none;border-bottom:1px solid #7A8090" target="_blank" rel="noopener">Spatacco Analytics</a> &middot; &copy; 2026
+</footer>
+</body>
+</html>

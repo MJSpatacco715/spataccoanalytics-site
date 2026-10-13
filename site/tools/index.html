@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tools | Spatacco Analytics</title>
+<meta name="description" content="Custom-built tools from Spatacco Analytics — financial services scoring, AI-powered parsing, sports explainers, and film trackers. Built for curiosity, available for you.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/shared.css">
+<style>
+/* ===== TOOLS PAGE STYLES ===== */
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:28px;margin-top:48px}
+.tool-card{background:var(--navy-light);border:1px solid rgba(61,216,216,0.08);padding:36px;position:relative;overflow:hidden;transition:border-color .4s,transform .3s}
+.tool-card:hover{border-color:rgba(61,216,216,0.25);transform:translateY(-4px)}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(135deg,var(--cyan),var(--purple));opacity:0;transition:opacity .4s}
+.tool-card:hover::before{opacity:1}
+.tool-icon{font-size:28px;margin-bottom:16px;display:inline-block}
+.tool-card h3{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--white);margin-bottom:10px}
+.tool-card p{font-size:14px;line-height:1.7;color:var(--text-light);margin-bottom:20px}
+.tool-badge{display:inline-block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;padding:4px 12px;border-radius:2px;margin-bottom:16px}
+.tool-badge.fs{background:rgba(61,216,216,0.12);color:var(--cyan)}
+.tool-badge.fun{background:rgba(123,92,255,0.12);color:var(--purple-light)}
+.tool-badge.coming{background:rgba(91,141,239,0.12);color:var(--blue)}
+.tool-link{display:inline-block;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--cyan);text-decoration:none;transition:color .3s}
+.tool-link:hover{color:var(--cyan-light)}
+.tool-link::after{content:' →'}
+.tool-caveat{font-size:12px;color:var(--slate);font-style:italic;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)}
+
+/* Featured (financial services) cards — ~10% scale-up of heading/badge/icon, bolder */
+.tool-card.featured h3{font-size:24px;font-weight:600;letter-spacing:-0.005em}
+.tool-card.featured .tool-icon{font-size:31px}
+.tool-card.featured .tool-badge{font-size:11px;letter-spacing:1.7px;padding:5px 13px}
+.tool-card.featured p{font-size:15px}
+
+/* ===== THEMED SUBGROUPS ===== */
+.subgroup{margin-top:56px;border-radius:8px;position:relative;overflow:hidden}
+.subgroup-header{padding:36px 36px 0}
+.subgroup-eyebrow{font-size:10px;letter-spacing:5px;text-transform:uppercase;font-weight:700;display:inline-block;padding:6px 14px;border-radius:2px;margin-bottom:16px}
+.subgroup-title{font-family:'Cormorant Garamond',serif;font-size:32px;line-height:1.15;font-weight:600;margin-bottom:8px}
+.subgroup-tagline{font-size:13px;line-height:1.6;max-width:520px}
+.subgroup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;padding:28px 36px 36px}
+
+/* ===== SPORTS — stadium scorecard ===== */
+.subgroup-stadium{background:linear-gradient(180deg,#F0F1EE 0%,#E5E7E0 100%);border:1px solid #D4D6CE}
+.subgroup-stadium::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg,#1A4D3A 0,#1A4D3A 14px,#235847 14px,#235847 28px)}
+.subgroup-stadium .subgroup-eyebrow{background:#1A4D3A;color:#F4D744;letter-spacing:6px;font-family:'DM Sans',sans-serif}
+.subgroup-stadium .subgroup-title{color:#0C1F3F}
+.subgroup-stadium .subgroup-tagline{color:#3A4150;font-style:italic}
+.scorecard{background:linear-gradient(170deg,#0C1F3F 0%,#0A1626 100%);border:1px solid rgba(61,216,216,0.18);border-radius:6px;padding:28px 24px 22px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;text-decoration:none;display:block}
+.scorecard:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,0.25);border-color:rgba(61,216,216,0.4)}
+.scorecard::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#3DD8D8 0%,#F4D744 100%)}
+.scorecard-num{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:3px;color:rgba(244,215,68,0.85);text-transform:uppercase;margin-bottom:10px;display:block}
+.scorecard-icon{font-size:38px;margin-bottom:12px;display:block;line-height:1}
+.scorecard h4{font-family:'DM Sans',sans-serif;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.05em;line-height:1.25;margin-bottom:10px;text-transform:uppercase}
+.scorecard p{font-size:13px;line-height:1.65;color:rgba(255,255,255,0.7);margin-bottom:18px}
+.scorecard-foot{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px dashed rgba(61,216,216,0.25)}
+.scorecard-stat{font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.45);text-transform:uppercase}
+.scorecard-launch{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;color:#F4D744;text-transform:uppercase}
+.scorecard:hover .scorecard-launch{color:#fff}
+
+/* ===== CINEMA — red velvet curtain ===== */
+.subgroup-cinema{background:radial-gradient(ellipse at 30% 20%,#7A1F2B 0%,#4A0F1A 75%);border:2px solid #C9A961}
+.subgroup-cinema::before{content:"";display:block;height:18px;background:radial-gradient(circle at 8px 50%,#F4D744 4px,transparent 4.5px);background-size:24px 18px;background-color:#3A0A12;border-bottom:1px solid #C9A961;box-shadow:inset 0 -8px 16px rgba(244,215,68,0.08)}
+.subgroup-cinema .subgroup-header{padding-top:32px}
+.subgroup-cinema .subgroup-eyebrow{background:transparent;border:1px solid #C9A961;color:#C9A961;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:600;letter-spacing:4px}
+.subgroup-cinema .subgroup-title{color:#F4E4B8;font-style:italic}
+.subgroup-cinema .subgroup-tagline{color:rgba(244,228,184,0.75)}
+.playbill{background:linear-gradient(180deg,#F4ECD8 0%,#EDE0BD 100%);border:2px solid #1A1310;border-radius:4px;padding:24px;position:relative;transition:transform .3s,box-shadow .3s;text-decoration:none;display:block}
+.playbill:hover{transform:translateY(-3px) rotate(-0.4deg);box-shadow:0 16px 36px rgba(0,0,0,0.45)}
+.playbill::before{content:"";position:absolute;top:6px;left:6px;right:6px;bottom:6px;border:1px solid #C9A961;border-radius:2px;pointer-events:none}
+.playbill-ticket{font-family:'DM Sans',sans-serif;font-size:9px;letter-spacing:3px;color:#F4ECD8;background:#7A1F2B;padding:4px 10px;border-radius:2px;text-transform:uppercase;font-weight:700;display:inline-block;margin-bottom:14px;position:relative;z-index:1}
+.playbill-icon{font-size:36px;margin-bottom:10px;display:block;position:relative;z-index:1;line-height:1}
+.playbill h4{font-family:'Cormorant Garamond',serif;font-size:23px;line-height:1.15;font-weight:700;color:#1A1310;margin-bottom:4px;position:relative;z-index:1}
+.playbill-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:#7A1F2B;margin-bottom:12px;position:relative;z-index:1}
+.playbill p{font-size:13px;line-height:1.65;color:#3A2818;margin-bottom:18px;position:relative;z-index:1}
+.playbill-launch{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;color:#7A1F2B;text-transform:uppercase;position:relative;z-index:1}
+.playbill-launch::after{content:" ★"}
+.playbill:hover .playbill-launch{color:#1A1310}
+
+/* ===== COLLECTIBLES — trading card ===== */
+.subgroup-collectibles{background:#F0F1EE;border:1px solid #D4D6CE;background-image:linear-gradient(rgba(12,31,63,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(12,31,63,0.04) 1px,transparent 1px);background-size:32px 32px}
+.subgroup-collectibles .subgroup-eyebrow{background:#0C1F3F;color:#3DD8D8;letter-spacing:5px;font-family:'DM Sans',sans-serif}
+.subgroup-collectibles .subgroup-title{color:#0C1F3F}
+.subgroup-collectibles .subgroup-tagline{color:#4A5060}
+.subgroup-collectibles .subgroup-grid{grid-template-columns:1fr;max-width:440px;margin:0 auto}
+.tradingcard{background:linear-gradient(135deg,#fff 0%,#FAFBF8 100%);border:6px solid #0C1F3F;border-radius:10px;padding:0;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s;text-decoration:none;display:block}
+.tradingcard:hover{transform:translateY(-4px) rotate(-0.8deg);box-shadow:0 20px 44px rgba(0,0,0,0.28)}
+.tradingcard-holo{height:8px;background:linear-gradient(90deg,#ff5e7d 0%,#ffaa3d 22%,#5fdb86 48%,#3dc8c8 72%,#7b5cff 100%);position:relative}
+.tradingcard-holo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0) 50%,rgba(255,255,255,0.55) 100%)}
+.tradingcard-inner{padding:22px}
+.tradingcard-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-family:'Courier Prime',monospace;font-size:9px;letter-spacing:2px;color:#7A8090;text-transform:uppercase}
+.tradingcard-meta strong{color:#0C1F3F;font-weight:700}
+.tradingcard-icon{font-size:46px;margin-bottom:8px;display:block;text-align:center;line-height:1}
+.tradingcard h4{font-family:'Cormorant Garamond',serif;font-size:26px;text-align:center;font-weight:700;color:#0C1F3F;line-height:1.15;margin-bottom:14px;letter-spacing:-0.005em}
+.tradingcard-stats{background:#0C1F3F;color:#fff;padding:14px 16px;border-radius:4px;margin-bottom:14px;font-family:'Courier Prime',monospace;font-size:11px;line-height:1.85}
+.tradingcard-stat{display:flex;justify-content:space-between}
+.tradingcard-stat-label{color:rgba(255,255,255,0.55);letter-spacing:1px;text-transform:uppercase}
+.tradingcard-stat-value{color:#3DD8D8;font-weight:700}
+.tradingcard p{font-size:13px;line-height:1.6;color:#3A4150;margin-bottom:16px}
+.tradingcard-fineprint{font-size:10px;color:#7A8090;font-style:italic;margin-bottom:14px;text-align:center}
+.tradingcard-launch{display:block;text-align:center;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;color:#fff;background:#0C1F3F;padding:12px;border-radius:4px;text-transform:uppercase;transition:background .3s}
+.tradingcard:hover .tradingcard-launch{background:#1E3A6E}
+
+@media(max-width:600px){
+  .subgroup-grid{grid-template-columns:1fr;padding:24px}
+  .subgroup-header{padding:28px 24px 0}
+  .subgroup-title{font-size:26px}
+}
+
+.category-label{font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:600;margin-bottom:8px;padding-bottom:12px;border-bottom:1px solid rgba(61,216,216,0.15)}
+.category-label.fs{color:var(--cyan)}
+.category-label.fun{color:var(--purple-light)}
+
+.tools-intro{font-size:16px;line-height:1.8;color:var(--text-light);max-width:700px;margin-bottom:24px;opacity:0;animation:fadeUp .9s .55s forwards}
+.tools-intro em{color:var(--cyan);font-style:normal;font-weight:500}
+</style>
+</head>
+<body>
+
+<nav id="main-nav">
+  <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="logo"></a>
+  <div class="nav-links">
+    <a href="/#services">Services</a>
+    <a href="/#approach">Approach</a>
+    <a href="/#about">About</a>
+    <a href="/tools/" class="active">Tools</a>
+    <a href="/contact/">Contact</a>
+  </div>
+</nav>
+
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div class="page-hero-tag">Tools &amp; Projects</div>
+    <h1>Built for <em>curiosity.</em> Available for you.</h1>
+    <p class="tools-intro">Custom tools and interactive projects &mdash; some built for financial services, some built for fun. All built to show what&rsquo;s possible when you pair <em>good data</em> with <em>smart design</em>.</p>
+    <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The four projects in the lower section started as personal builds &mdash; curiosity, a desire to learn new frameworks, and in the case of the two movie trackers, a better way to keep track of what I&rsquo;ve actually watched than a half-remembered mental list. Take a look around.</p>
+  </div>
+</section>
+
+<!-- ===== FINANCIAL SERVICES TOOLS ===== -->
+<section class="section-dark">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="category-label fs">Financial Services</div>
+      <h2 class="section-heading section-heading-dark">Tools built for the industry we know.</h2>
+      <div class="accent-line"></div>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card featured reveal d05">
+        <span class="tool-badge fs">Financial Services</span>
+        <div class="tool-icon">&#128200;</div>
+        <h3>RIA Digital Presence Scorecard</h3>
+        <p><p>Score your firm&rsquo;s website and LinkedIn presence across six dimensions &mdash; design, messaging, navigation, credibility, team visibility, and contact accessibility. Choose what to evaluate, enter your URL, and receive a scored report card with a downloadable PDF. No account required.</p> visual design, content quality, navigation, credibility signals, team visibility, contact accessibility, and LinkedIn presence. Outputs a scored report with actionable breakdowns. Personal advisor / BD profile scoring coming soon.</p>
+        <a href="/tools/website-scorer.html" class="tool-link">Launch Tool</a>
+      </div>
+      <div class="tool-card featured reveal d10">
+        <span class="tool-badge fs">Financial Services</span>
+        <div class="tool-icon">&#128196;</div>
+        <h3>Resume Parser</h3>
+        <p><p>Upload a resume and let AI extract structured data &mdash; experience, skills, education, certifications &mdash; into clean, organized output. Powered by Claude, built for speed.</p> experience history, skills, education, certifications, and licensing. Outputs clean, structured data ready for Salesforce import or update.</p>
+        <a href="/tools/resume-parser/" class="tool-link">Launch Tool</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FUN / PERSONAL PROJECTS ===== -->
+<section class="section-light">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="category-label fun">Just for Fun</div>
+      <h2 class="section-heading section-heading-light">Projects built out of curiosity and stubbornness.</h2>
+      <div class="accent-line"></div>
+    </div>
+    <div class="tools-grid" style="display:block;margin-top:40px">
+
+      <!-- ===== SPORTS — STADIUM SCORECARD ===== -->
+      <div class="subgroup subgroup-stadium reveal d05">
+        <div class="subgroup-header">
+          <span class="subgroup-eyebrow">Sports Desk</span>
+          <h3 class="subgroup-title">Things I tried to understand.</h3>
+          <p class="subgroup-tagline">Two attempts at making foreign sports make sense to American eyes.</p>
+        </div>
+        <div class="subgroup-grid">
+          <a href="/tools/cricket-explainer.html" class="scorecard">
+            <span class="scorecard-num">Sport &middot; 01</span>
+            <span class="scorecard-icon">&#127951;</span>
+            <h4>Cricket vs. Baseball</h4>
+            <p>An interactive visual guide that maps cricket concepts to baseball equivalents. Built for Americans who keep hearing about cricket and want to finally understand what&rsquo;s going on.</p>
+            <div class="scorecard-foot">
+              <span class="scorecard-stat">Interactive</span>
+              <span class="scorecard-launch">Launch</span>
+            </div>
+          </a>
+          <a href="/tools/curling-explainer.html" class="scorecard">
+            <span class="scorecard-num">Sport &middot; 02</span>
+            <span class="scorecard-icon">&#129482;</span>
+            <h4>Curling Explainer</h4>
+            <p>An interactive visual guide that demystifies curling &mdash; the sweeping, the hammer, the house, the bonspiel. Built for casual viewers who tune in every Olympics and want to actually follow the action.</p>
+            <div class="scorecard-foot">
+              <span class="scorecard-stat">Interactive</span>
+              <span class="scorecard-launch">Launch</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- ===== CINEMA — RED VELVET PLAYBILL ===== -->
+      <div class="subgroup subgroup-cinema reveal d10">
+        <div class="subgroup-header">
+          <span class="subgroup-eyebrow">Now Showing</span>
+          <h3 class="subgroup-title">Films I&rsquo;m trying to track.</h3>
+          <p class="subgroup-tagline">A better recordkeeping system for the canon than a half-remembered mental list.</p>
+        </div>
+        <div class="subgroup-grid">
+          <a href="/tools/oscar-tracker.html" class="playbill">
+            <span class="playbill-ticket">Feature 01</span>
+            <span class="playbill-icon">&#127942;</span>
+            <h4>Best Picture Tracker</h4>
+            <div class="playbill-tagline">Ninety-five years of golden statues.</div>
+            <p>Track your progress through every Best Picture winner in Academy Awards history. Check them off, see what&rsquo;s left, and find out just how many you haven&rsquo;t seen.</p>
+            <span class="playbill-launch">Enter</span>
+          </a>
+          <a href="/tools/afi-tracker.html" class="playbill">
+            <span class="playbill-ticket">Feature 02</span>
+            <span class="playbill-icon">&#127916;</span>
+            <h4>AFI 100 Tracker</h4>
+            <div class="playbill-tagline">The American canon, checklist style.</div>
+            <p>Work your way through the American Film Institute&rsquo;s 100 greatest American films of all time. A checklist with context for the cinephile and the casually curious alike.</p>
+            <span class="playbill-launch">Enter</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- ===== COLLECTIBLES — TRADING CARD ===== -->
+      <div class="subgroup subgroup-collectibles reveal d15">
+        <div class="subgroup-header">
+          <span class="subgroup-eyebrow">From the Collection</span>
+          <h3 class="subgroup-title">Cards I&rsquo;m trying to organize.</h3>
+          <p class="subgroup-tagline">A photo-driven inventory tool for sports cards. Eventual home: TaccoShop.</p>
+        </div>
+        <div class="subgroup-grid">
+          <a href="/tools/card-evaluator.html" class="tradingcard">
+            <div class="tradingcard-holo"></div>
+            <div class="tradingcard-inner">
+              <div class="tradingcard-meta">
+                <span><strong>Series</strong> 2026</span>
+                <span><strong>Card</strong> #001</span>
+              </div>
+              <span class="tradingcard-icon">&#127183;</span>
+              <h4>Card Evaluator</h4>
+              <div class="tradingcard-stats">
+                <div class="tradingcard-stat"><span class="tradingcard-stat-label">Input</span><span class="tradingcard-stat-value">Photo</span></div>
+                <div class="tradingcard-stat"><span class="tradingcard-stat-label">Output</span><span class="tradingcard-stat-value">XLSX / ZIP</span></div>
+                <div class="tradingcard-stat"><span class="tradingcard-stat-label">Status</span><span class="tradingcard-stat-value">Active</span></div>
+                <div class="tradingcard-stat"><span class="tradingcard-stat-label">Linked To</span><span class="tradingcard-stat-value">TaccoShop *</span></div>
+              </div>
+              <p>A photo-driven sports card evaluation and inventory tool. Catalog cards by year, type, and condition with photo capture, then export the full inventory as a spreadsheet or zip package.</p>
+              <div class="tradingcard-fineprint">* TaccoShop integration coming soon.</div>
+              <span class="tradingcard-launch">Open Pack</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMING SOON ===== -->
+<section class="section-dark">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="category-label" style="color:var(--blue);border-color:rgba(91,141,239,0.15)">On the Workbench</div>
+      <h2 class="section-heading section-heading-dark">More in the works.</h2>
+      <div class="accent-line"></div>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card reveal d05" style="opacity:0.7">
+        <span class="tool-badge coming">Coming Soon</span>
+        <div class="tool-icon">&#9971;</div>
+        <h3>PGA Fantasy Pick &rsquo;Em</h3>
+        <p>A live fantasy golf game with ESPN-integrated scoring, weekly picks, and full-season standings. Currently in beta &mdash; coming to the tools page once it&rsquo;s polished.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="section-light" style="text-align:center;padding:80px 48px">
+  <div class="section-inner reveal">
+    <h2 class="section-heading section-heading-light">Have an idea for a custom tool?</h2>
+    <p style="font-size:16px;line-height:1.7;color:var(--text);max-width:540px;margin:0 auto 32px">If you can describe it, we can probably build it. Data dashboards, interactive calculators, client-facing portals &mdash; we love this kind of work.</p>
+    <a href="/contact/" class="btn-primary">Let&rsquo;s Talk</a>
+  </div>
+</section>
+
+<footer>
+  <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="footer-logo"></a>
+  <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC</div>
+</footer>
+
+<script src="/js/shared.js"></script>
+</body>
+</html>
