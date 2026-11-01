@@ -517,7 +517,7 @@ async function callWorker(payload) {
 
 async function scoreWebsite(url) {
   const data = await callWorker({
-    model:"claude-sonnet-4-20250514", max_tokens:1400,
+    model:"claude-sonnet-5-5", max_tokens:1400,
     tools:[{type:"web_search_20250305",name:"web_search"}],
     messages:[{role:"user",content:`You are a knowledgeable digital marketing consultant helping a financial advisor or RIA understand how their website compares to best practices. Be constructive, specific, and actionable.
 
@@ -559,7 +559,7 @@ Rubrics:
 async function scoreLinkedin(linkedinUrl, firmName) {
   const urlLine = linkedinUrl ? `LinkedIn URL: ${linkedinUrl}` : `Search for the LinkedIn company page for "${firmName}" (financial advisory firm)`;
   const data = await callWorker({
-    model:"claude-sonnet-4-20250514", max_tokens:400,
+    model:"claude-sonnet-5-5", max_tokens:400,
     tools:[{type:"web_search_20250305",name:"web_search"}],
     messages:[{role:"user",content:`Evaluate LinkedIn presence for a financial advisory firm.\n\n${urlLine}\nFirm: ${firmName||"unknown"}\n\nUse web search. Find follower count, last post date, posting frequency, content quality.\n\nReturn ONLY valid JSON:\n{"firm_name":"string","linkedin_url":"url or null","score":<0-20>,"summary":"1 sentence summary","pros":["strength 1","strength 2"],"cons":["opportunity 1","opportunity 2"],"note":"follower count if found, last post date, cadence, one actionable recommendation"}\n\nScoring:\n0-3: No page or last post 1+ year ago\n4-7: <500 followers, posts <monthly\n8-11: 500-2k followers, semi-regular monthly posts\n12-15: 2k-5k followers, consistent weekly posts\n16-20: 5k+ followers, frequent high-quality thought leadership`}]
   });
