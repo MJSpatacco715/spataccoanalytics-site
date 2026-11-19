@@ -508,18 +508,58 @@ function setProgress(pct, label, s1, s2, s3) {
 }
 
 // ── API ──────────────────────────────────────────────────────────
-async function callWorker(payload) {
+const MODEL = "claude-sonnet-5-5";
+const WEB_SEARCH_TOOL = { type:"web_search_20260209", name:"web_search", max_uses:6 };
+
+async function postWorker(payload) {
   const res = await fetch(WORKER_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-  const data = await res.json();
+  let data;
+  try { data = await res.json(); } catch { throw new Error(`The scoring service answered HTTP ${res.status} with no readable body.`); }
   if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
   return data;
 }
 
+// Runs one scoring request to completion. Web search turns can come back
+// with stop_reason "pause_turn"; those are resent with the partial answer
+// so the model can finish. Returns the text written after the last search.
+async function askClaude(prompt) {
+  const messages = [{ role:"user", content:prompt }];
+  for (let turn = 0; turn < 4; turn++) {
+    const data = await postWorker({
+      model: MODEL,
+      max_tokens: 16000,
+      output_config: { effort:"medium" },
+      tools: [WEB_SEARCH_TOOL],
+      messages,
+    });
+    if (data.stop_reason === "pause_turn") {
+      messages.push({ role:"assistant", content:data.content });
+      continue;
+    }
+    if (data.stop_reason === "refusal") {
+      throw new Error("The analysis was declined for this site. Please check the URL and try again.");
+    }
+    if (data.stop_reason === "max_tokens") {
+      throw new Error("The analysis ran long and was cut off. Please try again.");
+    }
+    const blocks = data.content || [];
+    let lastTool = -1;
+    blocks.forEach((b, i) => { if (b.type !== "text" && b.type !== "thinking") lastTool = i; });
+    const tail = blocks.slice(lastTool + 1).filter(b => b.type === "text").map(b => b.text).join("\n");
+    return tail || blocks.filter(b => b.type === "text").map(b => b.text).join("\n");
+  }
+  throw new Error("The analysis took too many steps. Please try again.");
+}
+
+function extractJson(text) {
+  const clean = (text || "").replace(/```json|```/g, "").trim();
+  const match = clean.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch { return null; }
+}
+
 async function scoreWebsite(url) {
-  const data = await callWorker({
-    model:"claude-sonnet-5-5", max_tokens:1400,
-    tools:[{type:"web_search_20250305",name:"web_search"}],
-    messages:[{role:"user",content:`You are a knowledgeable digital marketing consultant helping a financial advisor or RIA understand how their website compares to best practices. Be constructive, specific, and actionable.
+  const text = await askClaude(`You are a knowledgeable digital marketing consultant helping a financial advisor or RIA understand how their website compares to best practices. Be constructive, specific, and actionable.
 
 Website: ${url}
 
@@ -548,25 +588,18 @@ Rubrics:
 - navigation_ux: 0-2=broken, 3-4=confusing, 5-6=functional, 7-8=intuitive, 9-10=seamless mobile-optimized
 - credibility_signals: 0-2=none, 3-4=vague, 5-6=minimal, 7-8=several strong signals, 9-10=comprehensive
 - team_leadership: 0-3=no bio, 4-6=names+titles, 7-9=brief bios, 10-12=full bios+photos, 13-15=rich narrative+LinkedIn
-- contact_availability: 0-3=nothing, 4-6=form only, 7-9=form+phone, 10-12=direct contacts prominent, 13-15=multiple easy options throughout`}]
-  });
-  const text = data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").replace(/```json|```/g,"").trim();
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Could not parse website analysis. Please check the URL and try again.");
-  return JSON.parse(match[0]);
+- contact_availability: 0-3=nothing, 4-6=form only, 7-9=form+phone, 10-12=direct contacts prominent, 13-15=multiple easy options throughout`);
+  const parsed = extractJson(text);
+  if (!parsed || !parsed.scores) throw new Error("Could not parse website analysis. Please check the URL and try again.");
+  return parsed;
 }
 
 async function scoreLinkedin(linkedinUrl, firmName) {
   const urlLine = linkedinUrl ? `LinkedIn URL: ${linkedinUrl}` : `Search for the LinkedIn company page for "${firmName}" (financial advisory firm)`;
-  const data = await callWorker({
-    model:"claude-sonnet-5-5", max_tokens:400,
-    tools:[{type:"web_search_20250305",name:"web_search"}],
-    messages:[{role:"user",content:`Evaluate LinkedIn presence for a financial advisory firm.\n\n${urlLine}\nFirm: ${firmName||"unknown"}\n\nUse web search. Find follower count, last post date, posting frequency, content quality.\n\nReturn ONLY valid JSON:\n{"firm_name":"string","linkedin_url":"url or null","score":<0-20>,"summary":"1 sentence summary","pros":["strength 1","strength 2"],"cons":["opportunity 1","opportunity 2"],"note":"follower count if found, last post date, cadence, one actionable recommendation"}\n\nScoring:\n0-3: No page or last post 1+ year ago\n4-7: <500 followers, posts <monthly\n8-11: 500-2k followers, semi-regular monthly posts\n12-15: 2k-5k followers, consistent weekly posts\n16-20: 5k+ followers, frequent high-quality thought leadership`}]
-  });
-  const text = data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").replace(/```json|```/g,"").trim();
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return { firm_name:firmName||"Your Firm", linkedin_url:linkedinUrl||null, score:0, summary:"Could not evaluate LinkedIn presence.", pros:[], cons:[], note:"Could not evaluate LinkedIn presence." };
-  return JSON.parse(match[0]);
+  const text = await askClaude(`Evaluate LinkedIn presence for a financial advisory firm.\n\n${urlLine}\nFirm: ${firmName||"unknown"}\n\nUse web search. Find follower count, last post date, posting frequency, content quality.\n\nReturn ONLY valid JSON:\n{"firm_name":"string","linkedin_url":"url or null","score":<0-20>,"summary":"1 sentence summary","pros":["strength 1","strength 2"],"cons":["opportunity 1","opportunity 2"],"note":"follower count if found, last post date, cadence, one actionable recommendation"}\n\nScoring:\n0-3: No page or last post 1+ year ago\n4-7: <500 followers, posts <monthly\n8-11: 500-2k followers, semi-regular monthly posts\n12-15: 2k-5k followers, consistent weekly posts\n16-20: 5k+ followers, frequent high-quality thought leadership`);
+  const parsed = extractJson(text);
+  if (!parsed) return { firm_name:firmName||"Your Firm", linkedin_url:linkedinUrl||null, score:0, summary:"Could not evaluate LinkedIn presence.", pros:[], cons:[], note:"Could not evaluate LinkedIn presence." };
+  return parsed;
 }
 
 // ── RENDER ───────────────────────────────────────────────────────
