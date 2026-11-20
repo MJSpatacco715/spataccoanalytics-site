@@ -3,6 +3,28 @@
 The source of spataccoanalytics.com's main pages, and the pipeline that keeps
 the live NFL tools on [/tools/](https://spataccoanalytics.com/tools/) current.
 
+## Where everything lives
+
+This repository is the one place the site is changed. Work goes on one branch
+and one pull request at a time; merging to `main` is what publishes.
+
+| Piece | Where it lives | Notes |
+|---|---|---|
+| Site pages, styles, scripts | `site/` here | The only source. A hand edit on the host is overwritten on the next Publish. |
+| Website Scorer | `site/tools/website-scorer.html` | Public at `/tools/website-scorer.html`. |
+| Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
+| Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
+| QR code for the menu | `menu/qr-score.svg`, `menu/qr-score.png` | Encodes `https://spataccoanalytics.com/score/`. Regenerate only if that address changes. |
+| Service menu (one page, print and PDF) | Claude Design canvas "Service Menu" | Not in this repo: it is edited on the canvas. Its QR code and its link both go to `/score/`. |
+| Scoring relay (`ria-scorer` Cloudflare Worker) | Cloudflare account | **Not in this repo yet.** Holds the API key and passes the scorer's and resume parser's requests through. |
+| Contact form handler (`/contact/submit.php`) | Host only | **Not in this repo yet.** The import skipped it; the deploy leaves it alone. |
+| NFL tools | Source platform's repository, built here by `live/` | Read-only. See below. |
+| Plan and decisions | Roadmap and Business Plan docs, Notion Session Log | Reference, not source. Where they disagree with this repo, this repo is what is live. |
+
+How a visitor moves: printed menu (QR) or PDF menu (link) > `/score/` >
+scorer, website-only > overall score > name and email > full breakdown and
+PDF. The lead is recorded when the email is given.
+
 ## What it does
 
 ```
@@ -54,6 +76,8 @@ the live NFL tools on [/tools/](https://spataccoanalytics.com/tools/) current.
 | `showcase/tools.json` | Each NFL tool's copy: name, tagline, summary, highlights, stack. Metrics with a `key` are filled with live numbers at build time. |
 | `showcase/img/` | Baseline screenshots, used when the live tools and a fresh capture both fail. |
 | `live/` | The working tools: `build.mjs` (public editions from the source), `shim.js` (stands in for the platform behind the pages), `feed.php` (the live data relay), `smoke.mjs` (the browser check). |
+| `site/score/` | The short address a printed QR code points at (`index.html`) and the scorer's lead endpoint (`lead.php`). |
+| `menu/` | The QR code used on the service menu. |
 | `site-edits.json` | The approved copy edits and the card markers on `tools/index.html`. They are applied at build time and are safe to re-run. |
 | `scripts/build_site.py` | Builds `dist/`: site files, edits, NFL cards, tool pages, images. |
 | `scripts/source_metrics.py` | Live numbers and "last improved" / "data as of" dates from the source repo. |
@@ -111,9 +135,10 @@ python3 scripts/build_site.py --site reference/live --out dist && \
   python3 scripts/validate_showcase.py --html dist/tools/football
 bash tests/remote_deploy_test.sh                            # the deploy never leaves its lane
 bash tests/feed_test.sh                                     # the relay passes on only what it should
+bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
 npm install --prefix live && \
   node live/build.mjs --source <source checkout> --out build/live && \
   node live/smoke.mjs --live build/live                     # the working tools, built and opened
 ```
 
-CI runs the first four on every push, and the last when it has the source token.
+CI runs the first five on every push, and the last when it has the source token.

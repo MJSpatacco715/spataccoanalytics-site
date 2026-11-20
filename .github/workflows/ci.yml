@@ -44,10 +44,14 @@ jobs:
       - name: The live relay passes on only what it should, and no member
         run: bash tests/feed_test.sh
 
+      - name: The scorer's lead endpoint keeps real leads and nothing else
+        run: bash tests/lead_test.sh
+
       - name: Lint
         run: |
           php -l capture/stub_api.php
           php -l live/feed.php
+          php -l site/score/lead.php
           node --check capture/capture.mjs
           node --check live/build.mjs
           node --check live/smoke.mjs
