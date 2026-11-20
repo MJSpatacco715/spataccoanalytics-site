@@ -206,6 +206,13 @@
   .footer-right { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
 
   .hidden { display: none !important; }
+  #screen-results.locked .gated { display: none !important; }
+  #screen-results:not(.locked) #unlock-card { display: none; }
+  #screen-results:not(.locked) .lock-note { display: none; }
+  .lock-note { flex: 1; align-self: center; font-family: var(--serif); font-size: 20px; line-height: 1.5; color: var(--navy); }
+  .unlock-card { background: var(--white); border: 1px solid var(--border); border-top: 4px solid var(--teal); border-radius: var(--radius); padding: 32px 30px; margin-bottom: 20px; box-shadow: var(--shadow-lg); }
+  .unlock-list { margin: 0 0 22px 18px; font-size: 14px; color: var(--text-mid); line-height: 1.8; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
   @media (max-width: 640px) {
     .masthead-pts { display: none; }
@@ -351,31 +358,51 @@
           <div class="score-big-denom" id="score-big-denom">/100</div>
           <div class="score-big-tier" id="score-big-tier"></div>
         </div>
-        <div class="score-groups" id="score-groups-wrap"></div>
+        <div class="score-groups gated" id="score-groups-wrap"></div>
+        <div class="lock-note">This is your overall score. The score for each category, with what is working and what to fix, is ready below.</div>
       </div>
     </div>
 
-    <div class="summary-block">
+    <!-- EMAIL GATE: the overall score shows first, the email unlocks the rest -->
+    <div class="unlock-card" id="unlock-card">
+      <div class="modal-eyebrow">Your Full Breakdown Is Ready</div>
+      <h2 class="modal-heading">See what is behind the score.</h2>
+      <p class="modal-body" style="margin-bottom:12px;">Enter your details to unlock:</p>
+      <ul class="unlock-list">
+        <li>A score and a specific note for each category</li>
+        <li>What is working and where to improve</li>
+        <li>A PDF scorecard you can download and share</li>
+      </ul>
+      <div class="field"><label for="gate-name">Your Name <span style="color:var(--red)">*</span></label><input type="text" id="gate-name" placeholder="First and last name" autocomplete="name" /></div>
+      <div class="field"><label for="gate-email">Email Address <span style="color:var(--red)">*</span></label><input type="email" id="gate-email" placeholder="you@yourfirm.com" autocomplete="email" /></div>
+      <div class="field"><label for="gate-firm">Firm Name <span class="opt">(optional)</span></label><input type="text" id="gate-firm" placeholder="Your firm or practice name" autocomplete="organization" /></div>
+      <div class="hp" aria-hidden="true"><label for="gate-website2">Leave this empty</label><input type="text" id="gate-website2" tabindex="-1" autocomplete="off" /></div>
+      <div class="error-msg" id="gate-error" style="margin-top:0;margin-bottom:14px;"></div>
+      <button class="btn-primary" id="btn-gate-submit" style="width:100%;padding:15px;font-size:15px;">Unlock My Results →</button>
+      <div class="modal-legal">We use your email to follow up on your results. No spam.</div>
+    </div>
+
+    <div class="summary-block gated">
       <div class="summary-label">Executive Summary</div>
       <div class="summary-text" id="res-summary">—</div>
     </div>
 
-    <div class="card" style="margin-bottom:20px;">
+    <div class="card gated" style="margin-bottom:20px;">
       <div class="card-label">Analysis</div>
       <div class="dual-panel" id="dual-panel-wrap"></div>
     </div>
 
-    <div class="card" style="margin-bottom:20px;">
+    <div class="card gated" style="margin-bottom:20px;">
       <div class="card-label">Category Breakdown</div>
       <div id="cat-breakdown-wrap"></div>
     </div>
 
-    <div id="linkedin-row" class="hidden" style="margin-bottom:20px;padding:12px 18px;background:var(--white);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;gap:10px;">
+    <div id="linkedin-row" class="hidden gated" style="margin-bottom:20px;padding:12px 18px;background:var(--white);border:1px solid var(--border);border-radius:4px;display:flex;align-items:center;gap:10px;">
       <span style="font-size:11px;font-weight:700;letter-spacing:0.14em;color:var(--teal);text-transform:uppercase;">LinkedIn</span>
       <a id="linkedin-link" href="#" target="_blank" style="font-size:13px;color:var(--navy-mid);font-family:var(--mono);text-decoration:none;border-bottom:1px solid var(--border);">—</a>
     </div>
 
-    <div class="action-bar">
+    <div class="action-bar gated">
       <button class="btn-gold" id="btn-pdf">↓ &nbsp;Download PDF Scorecard</button>
       <button class="btn-outline" id="btn-restart">Score Another Site</button>
     </div>
@@ -387,26 +414,10 @@
   </footer>
 </main>
 
-<!-- EMAIL GATE -->
-<div class="modal-overlay hidden" id="modal-overlay">
-  <div class="modal">
-    <div class="modal-eyebrow">Your Results Are Ready</div>
-    <h2 class="modal-heading">Where should we<br>send your scorecard?</h2>
-    <p class="modal-body">Enter your details to unlock your full report and receive a PDF copy by email.</p>
-    <div class="field"><label>Your Name <span style="color:var(--red)">*</span></label><input type="text" id="gate-name" placeholder="First and last name" /></div>
-    <div class="field"><label>Email Address <span style="color:var(--red)">*</span></label><input type="email" id="gate-email" placeholder="you@yourfirm.com" /></div>
-    <div class="field"><label>Firm Name <span class="opt">(optional)</span></label><input type="text" id="gate-firm" placeholder="Your firm or practice name" /></div>
-    <div class="error-msg" id="gate-error" style="margin-top:0;margin-bottom:14px;"></div>
-    <button class="btn-primary" id="btn-gate-submit" style="width:100%;padding:15px;font-size:15px;">Unlock My Results →</button>
-    <div class="modal-legal">We'll send you a copy of your scorecard. No spam. Unsubscribe anytime.</div>
-  </div>
-</div>
-
 <script>
 const WORKER_URL = "https://ria-scorer.spatacco-analytics.workers.dev";
-const EMAILJS_SERVICE_ID  = "";
-const EMAILJS_TEMPLATE_ID = "";
-const EMAILJS_PUBLIC_KEY  = "";
+// Where a lead is recorded: site/score/lead.php, on this site.
+const LEAD_URL = "/score/lead.php";
 
 // ── SCHEMA ──────────────────────────────────────────────────────
 const WEBSITE_CATS = [
@@ -444,6 +455,21 @@ function getScoreColor(val, max) {
 // ── STATE ────────────────────────────────────────────────────────
 let appState = { websiteUrl:"", linkedinUrl:"", scope:"both", result:null, leadName:"", leadEmail:"", leadFirm:"" };
 const $ = id => document.getElementById(id);
+
+// Anything the analysis wrote is text, never markup.
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+function safeUrl(v) {
+  try { const u = new URL(String(v)); return (u.protocol === "https:" || u.protocol === "http:") ? u.href : null; } catch { return null; }
+}
+
+// How the visitor arrived: /score/ (the printed QR code) adds these.
+const ARRIVED = (() => {
+  const q = new URLSearchParams(location.search);
+  const pick = k => (q.get(k) || "").slice(0, 60);
+  return { source: pick("utm_source"), medium: pick("utm_medium"), campaign: pick("utm_campaign"), scope: pick("scope") };
+})();
 
 // ── SCOPE LOGIC ──────────────────────────────────────────────────
 function getScope() {
@@ -490,6 +516,8 @@ function updateFormForScope() {
 document.querySelectorAll('input[name="scope"]').forEach(el => {
   el.addEventListener("change", updateFormForScope);
 });
+// A link can choose what is scored: ?scope=website (the QR code does).
+if (["both","website","linkedin"].includes(ARRIVED.scope)) $("scope-" + ARRIVED.scope).checked = true;
 updateFormForScope();
 
 // ── HELPERS ──────────────────────────────────────────────────────
@@ -508,18 +536,100 @@ function setProgress(pct, label, s1, s2, s3) {
 }
 
 // ── API ──────────────────────────────────────────────────────────
-async function callWorker(payload) {
+const MODEL = "claude-sonnet-5-5";
+const WEB_SEARCH_TOOL = { type:"web_search_20260209", name:"web_search", max_uses:6 };
+
+async function postWorker(payload) {
   const res = await fetch(WORKER_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-  const data = await res.json();
+  let data;
+  try { data = await res.json(); } catch { throw new Error(`The scoring service answered HTTP ${res.status} with no readable body.`); }
   if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`);
   return data;
 }
 
+// Runs one scoring request to completion. Web search turns can come back
+// with stop_reason "pause_turn"; those are resent with the partial answer
+// so the model can finish. Returns the text written after the last search.
+async function askClaude(prompt) {
+  const messages = [{ role:"user", content:prompt }];
+  for (let turn = 0; turn < 4; turn++) {
+    const data = await postWorker({
+      model: MODEL,
+      max_tokens: 16000,
+      output_config: { effort:"medium" },
+      tools: [WEB_SEARCH_TOOL],
+      messages,
+    });
+    if (data.stop_reason === "pause_turn") {
+      messages.push({ role:"assistant", content:data.content });
+      continue;
+    }
+    if (data.stop_reason === "refusal") {
+      throw new Error("The analysis was declined for this site. Please check the URL and try again.");
+    }
+    if (data.stop_reason === "max_tokens") {
+      throw new Error("The analysis ran long and was cut off. Please try again.");
+    }
+    const blocks = data.content || [];
+    let lastTool = -1;
+    blocks.forEach((b, i) => { if (b.type !== "text" && b.type !== "thinking") lastTool = i; });
+    const tail = blocks.slice(lastTool + 1).filter(b => b.type === "text").map(b => b.text).join("\n");
+    return tail || blocks.filter(b => b.type === "text").map(b => b.text).join("\n");
+  }
+  throw new Error("The analysis took too many steps. Please try again.");
+}
+
+function extractJson(text) {
+  const clean = (text || "").replace(/```json|```/g, "").trim();
+  const match = clean.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch { return null; }
+}
+
+// The shapes the two checks answer in.
+const STR = { type:"string" };
+const STR_LIST = { type:"array", items:STR };
+const obj = (properties) => ({ type:"object", properties, required:Object.keys(properties), additionalProperties:false });
+const WEBSITE_KEYS = ["visual_design","content_messaging","navigation_ux","credibility_signals","team_leadership","contact_availability"];
+const WEBSITE_SCHEMA = obj({
+  firm_name:STR, summary:STR, pros:STR_LIST, cons:STR_LIST,
+  scores: obj(Object.fromEntries(WEBSITE_KEYS.map(k => [k, { type:"integer" }]))),
+  notes:  obj(Object.fromEntries(WEBSITE_KEYS.map(k => [k, STR]))),
+});
+const LINKEDIN_SCHEMA = obj({
+  firm_name:STR, linkedin_url:{ anyOf:[STR, { type:"null" }] }, score:{ type:"integer" },
+  summary:STR, pros:STR_LIST, cons:STR_LIST, note:STR,
+});
+
+// An answer that does not parse (a stray quote inside a note is enough) is
+// sent back once, without search, to be rewritten in the exact shape. The
+// shape is enforced by the API, so what comes back always parses.
+async function readAnswer(text, schema) {
+  const first = extractJson(text);
+  if (first) return first;
+  if (!text || !text.trim()) return null;
+  try {
+    const data = await postWorker({
+      model: MODEL,
+      max_tokens: 8000,
+      output_config: { effort:"low", format:{ type:"json_schema", schema } },
+      messages: [{ role:"user", content:`The assessment below was meant to be a JSON object but does not parse. Rewrite it as JSON in the required shape. Keep every score and every observation exactly as written. Do not add, drop or change findings.\n\n<assessment>\n${text}\n</assessment>` }],
+    });
+    if (data.stop_reason !== "end_turn") return null;
+    return extractJson((data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n"));
+  } catch { return null; }
+}
+
+// Scores stay whole numbers inside their range, whatever came back.
+function clampScore(v, max) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(0, n)) : 0;
+}
+const textOf = v => (typeof v === "string" ? v : v == null ? "" : String(v));
+const listOf = v => (Array.isArray(v) ? v.map(textOf).filter(Boolean).slice(0, 6) : []);
+
 async function scoreWebsite(url) {
-  const data = await callWorker({
-    model:"claude-sonnet-5-5", max_tokens:1400,
-    tools:[{type:"web_search_20250305",name:"web_search"}],
-    messages:[{role:"user",content:`You are a knowledgeable digital marketing consultant helping a financial advisor or RIA understand how their website compares to best practices. Be constructive, specific, and actionable.
+  const text = await askClaude(`You are a knowledgeable digital marketing consultant helping a financial advisor or RIA understand how their website compares to best practices. Be constructive, specific, and actionable.
 
 Website: ${url}
 
@@ -548,25 +658,21 @@ Rubrics:
 - navigation_ux: 0-2=broken, 3-4=confusing, 5-6=functional, 7-8=intuitive, 9-10=seamless mobile-optimized
 - credibility_signals: 0-2=none, 3-4=vague, 5-6=minimal, 7-8=several strong signals, 9-10=comprehensive
 - team_leadership: 0-3=no bio, 4-6=names+titles, 7-9=brief bios, 10-12=full bios+photos, 13-15=rich narrative+LinkedIn
-- contact_availability: 0-3=nothing, 4-6=form only, 7-9=form+phone, 10-12=direct contacts prominent, 13-15=multiple easy options throughout`}]
-  });
-  const text = data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").replace(/```json|```/g,"").trim();
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Could not parse website analysis. Please check the URL and try again.");
-  return JSON.parse(match[0]);
+- contact_availability: 0-3=nothing, 4-6=form only, 7-9=form+phone, 10-12=direct contacts prominent, 13-15=multiple easy options throughout`);
+  const parsed = await readAnswer(text, WEBSITE_SCHEMA);
+  if (!parsed || typeof parsed.scores !== "object" || !parsed.scores) throw new Error("We could not read the analysis for this site. Please check the URL and try again.");
+  const scores = {}, notes = {};
+  WEBSITE_CATS.forEach(c => { scores[c.id] = clampScore(parsed.scores[c.id], c.max); notes[c.id] = textOf(parsed.notes?.[c.id]); });
+  return { firm_name:textOf(parsed.firm_name), summary:textOf(parsed.summary), pros:listOf(parsed.pros), cons:listOf(parsed.cons), scores, notes };
 }
 
 async function scoreLinkedin(linkedinUrl, firmName) {
   const urlLine = linkedinUrl ? `LinkedIn URL: ${linkedinUrl}` : `Search for the LinkedIn company page for "${firmName}" (financial advisory firm)`;
-  const data = await callWorker({
-    model:"claude-sonnet-5-5", max_tokens:400,
-    tools:[{type:"web_search_20250305",name:"web_search"}],
-    messages:[{role:"user",content:`Evaluate LinkedIn presence for a financial advisory firm.\n\n${urlLine}\nFirm: ${firmName||"unknown"}\n\nUse web search. Find follower count, last post date, posting frequency, content quality.\n\nReturn ONLY valid JSON:\n{"firm_name":"string","linkedin_url":"url or null","score":<0-20>,"summary":"1 sentence summary","pros":["strength 1","strength 2"],"cons":["opportunity 1","opportunity 2"],"note":"follower count if found, last post date, cadence, one actionable recommendation"}\n\nScoring:\n0-3: No page or last post 1+ year ago\n4-7: <500 followers, posts <monthly\n8-11: 500-2k followers, semi-regular monthly posts\n12-15: 2k-5k followers, consistent weekly posts\n16-20: 5k+ followers, frequent high-quality thought leadership`}]
-  });
-  const text = data.content.filter(b=>b.type==="text").map(b=>b.text).join("\n").replace(/```json|```/g,"").trim();
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return { firm_name:firmName||"Your Firm", linkedin_url:linkedinUrl||null, score:0, summary:"Could not evaluate LinkedIn presence.", pros:[], cons:[], note:"Could not evaluate LinkedIn presence." };
-  return JSON.parse(match[0]);
+  const text = await askClaude(`Evaluate LinkedIn presence for a financial advisory firm.\n\n${urlLine}\nFirm: ${firmName||"unknown"}\n\nUse web search. Find follower count, last post date, posting frequency, content quality.\n\nReturn ONLY valid JSON:\n{"firm_name":"string","linkedin_url":"url or null","score":<0-20>,"summary":"1 sentence summary","pros":["strength 1","strength 2"],"cons":["opportunity 1","opportunity 2"],"note":"follower count if found, last post date, cadence, one actionable recommendation"}\n\nScoring:\n0-3: No page or last post 1+ year ago\n4-7: <500 followers, posts <monthly\n8-11: 500-2k followers, semi-regular monthly posts\n12-15: 2k-5k followers, consistent weekly posts\n16-20: 5k+ followers, frequent high-quality thought leadership`);
+  const parsed = await readAnswer(text, LINKEDIN_SCHEMA);
+  if (!parsed) return { firm_name:firmName||"Your Firm", linkedin_url:linkedinUrl||null, score:0, summary:"Could not evaluate LinkedIn presence.", pros:[], cons:[], note:"Could not evaluate LinkedIn presence." };
+  return { firm_name:textOf(parsed.firm_name)||firmName||"Your Firm", linkedin_url:safeUrl(parsed.linkedin_url), score:clampScore(parsed.score, LINKEDIN_CAT.max),
+    summary:textOf(parsed.summary), pros:listOf(parsed.pros), cons:listOf(parsed.cons), note:textOf(parsed.note) };
 }
 
 // ── RENDER ───────────────────────────────────────────────────────
@@ -616,11 +722,11 @@ function renderResults(result, scope, websiteUrl) {
   dw.innerHTML = `
     <div class="dual-col" style="background:var(--green-pale);border-color:var(--green-border);border-left-color:var(--green);">
       <div class="dual-heading" style="color:var(--green);">What's Working</div>
-      ${pros.map(p=>`<div class="dual-item"><span class="dual-icon" style="color:var(--green-mid);">▲</span><span class="dual-text" style="color:var(--text);">${p}</span></div>`).join("")||'<span style="font-size:13px;color:var(--text-faint);font-style:italic;">None identified</span>'}
+      ${pros.map(p=>`<div class="dual-item"><span class="dual-icon" style="color:var(--green-mid);">▲</span><span class="dual-text" style="color:var(--text);">${esc(p)}</span></div>`).join("")||'<span style="font-size:13px;color:var(--text-faint);font-style:italic;">None identified</span>'}
     </div>
     <div class="dual-col" style="background:var(--red-pale);border-color:var(--red-border);border-left-color:var(--red);">
       <div class="dual-heading" style="color:var(--red);">Opportunities to Improve</div>
-      ${cons.map(c=>`<div class="dual-item"><span class="dual-icon" style="color:var(--red-mid);">▼</span><span class="dual-text" style="color:var(--red);">${c}</span></div>`).join("")||'<span style="font-size:13px;color:var(--text-faint);font-style:italic;">None identified</span>'}
+      ${cons.map(c=>`<div class="dual-item"><span class="dual-icon" style="color:var(--red-mid);">▼</span><span class="dual-text" style="color:var(--red);">${esc(c)}</span></div>`).join("")||'<span style="font-size:13px;color:var(--text-faint);font-style:italic;">None identified</span>'}
     </div>`;
 
   const cw = $("cat-breakdown-wrap");
@@ -638,19 +744,22 @@ function renderResults(result, scope, websiteUrl) {
       const noteCol = (val/cat.max)<0.4 ? "var(--red)" : "var(--text-mid)";
       const card = document.createElement("div");
       card.className = "cat-card"; card.style.borderTopColor = sc;
-      card.innerHTML = `<div class="cat-card-header"><span class="cat-card-name">${cat.label}</span><span class="cat-card-score" style="color:${sc};">${val}<span style="color:var(--text-faint);font-size:11px;font-weight:400;">/${cat.max}</span></span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${sc};"></div></div>${note?`<div class="cat-card-note" style="color:${noteCol};">${note}</div>`:""}`;
+      card.innerHTML = `<div class="cat-card-header"><span class="cat-card-name">${cat.label}</span><span class="cat-card-score" style="color:${sc};">${val}<span style="color:var(--text-faint);font-size:11px;font-weight:400;">/${cat.max}</span></span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${sc};"></div></div>${note?`<div class="cat-card-note" style="color:${noteCol};">${esc(note)}</div>`:""}`;
       grid.appendChild(card);
     });
     sec.appendChild(grid);
     cw.appendChild(sec);
   });
 
-  if (result.linkedin_url) {
+  const liUrl = safeUrl(result.linkedin_url);
+  if (liUrl) {
     const lr = $("linkedin-row");
     lr.classList.remove("hidden"); lr.style.display = "flex";
-    $("linkedin-link").href = result.linkedin_url;
-    $("linkedin-link").textContent = result.linkedin_url;
+    $("linkedin-link").href = liUrl;
+    $("linkedin-link").rel = "noopener";
+    $("linkedin-link").textContent = liUrl;
   }
+  appState.total = total; appState.totalMax = totalMax; appState.tier = tier.label;
   showOnly("screen-results");
 }
 
@@ -723,7 +832,9 @@ $("btn-analyze").addEventListener("click", async () => {
     appState.result = result;
     setProgress(100,"Analysis complete.","done","done","done");
     await new Promise(r=>setTimeout(r,400));
-    $("modal-overlay").classList.remove("hidden");
+    $("screen-results").classList.add("locked");
+    renderResults(result, scope, website);
+    window.scrollTo({ top:0, behavior:"smooth" });
 
   } catch(err) {
     showOnly("screen-input");
@@ -743,14 +854,13 @@ $("btn-gate-submit").addEventListener("click", async () => {
   const errEl = $("gate-error");
   errEl.style.display = "none";
   if (!name)                    { errEl.textContent="Please enter your name.";         errEl.style.display="block"; return; }
-  if (!email||!email.includes("@")) { errEl.textContent="Please enter a valid email."; errEl.style.display="block"; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent="Please enter a valid email."; errEl.style.display="block"; return; }
   appState.leadName=name; appState.leadEmail=email; appState.leadFirm=firm;
   $("btn-gate-submit").textContent="Loading your results…";
   $("btn-gate-submit").disabled=true;
   await sendLead(name,email,firm);
-  $("modal-overlay").classList.add("hidden");
-  $("screen-progress").classList.add("hidden");
-  renderResults(appState.result, appState.scope, appState.websiteUrl);
+  $("screen-results").classList.remove("locked");
+  $("res-summary").scrollIntoView({ behavior:"smooth", block:"center" });
 });
 
 // ── PDF ───────────────────────────────────────────────────────────
@@ -889,18 +999,32 @@ function generatePDF() {
 }
 
 // ── LEAD CAPTURE ─────────────────────────────────────────────────
+// Records the lead on this site (score/lead.php). The visitor is never held
+// up by it: after eight seconds, or on any failure, the results open anyway.
 async function sendLead(name,email,firm) {
-  if(!EMAILJS_SERVICE_ID||!EMAILJS_TEMPLATE_ID||!EMAILJS_PUBLIC_KEY)return;
+  const r = appState.result || {};
+  const body = {
+    name, email, firm,
+    website: appState.websiteUrl, linkedin: r.linkedin_url || appState.linkedinUrl || "",
+    scope: appState.scope, firm_scored: r.firm_name || "",
+    score: appState.total, score_max: appState.totalMax, tier: appState.tier,
+    scores: r.scores || {},
+    utm_source: ARRIVED.source, utm_medium: ARRIVED.medium, utm_campaign: ARRIVED.campaign,
+    company: $("gate-website2").value,
+  };
   try {
-    if(!window.emailjs){ await new Promise((res,rej)=>{ const s=document.createElement("script"); s.src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); emailjs.init(EMAILJS_PUBLIC_KEY); }
-    await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{ lead_name:name, lead_email:email, lead_firm:firm||"(not provided)", scored_url:appState.websiteUrl, scope:appState.scope, scored_date:new Date().toLocaleDateString() });
-  } catch(e){ console.warn("EmailJS:",e); }
+    const stop = new AbortController();
+    const timer = setTimeout(() => stop.abort(), 8000);
+    await fetch(LEAD_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body), signal:stop.signal });
+    clearTimeout(timer);
+  } catch(e){ console.warn("Lead not recorded:", e); }
 }
 
 $("btn-pdf").addEventListener("click", generatePDF);
 $("btn-restart").addEventListener("click", ()=>{
   appState={websiteUrl:"",linkedinUrl:"",scope:"both",result:null,leadName:"",leadEmail:"",leadFirm:""};
-  ["inp-website","inp-linkedin","gate-name","gate-email","gate-firm"].forEach(id=>$(id).value="");
+  ["inp-website","inp-linkedin","gate-name","gate-email","gate-firm","gate-website2"].forEach(id=>$(id).value="");
+  $("screen-results").classList.remove("locked");
   document.getElementById("scope-both").checked=true;
   updateFormForScope();
   $("gate-error").style.display="none"; $("input-error").style.display="none";
