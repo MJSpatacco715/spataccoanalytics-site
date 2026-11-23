@@ -26,10 +26,12 @@ lives and says which pieces are not in this repo yet.
   does not go on the site.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
-- The scorer talks to the `ria-scorer` Cloudflare Worker, which is not in
-  this repo. A change to the request shape must work through a plain
-  pass-through relay, and cannot be confirmed live from a cloud session
-  whose network does not allow that host.
+- The scorer and the resume parser talk to the `ria-scorer` Cloudflare
+  Worker. Its source is `worker/ria-scorer.js`, and it refuses any request
+  it does not recognise. Change a tool's instructions, reader, tools or
+  sizes and the relay must change with it: `tests/worker_test.mjs` fails
+  until it does. The Worker is deployed by hand (`worker/README.md`), so a
+  relay change is not live until the owner has pasted it in. Say so.
 
 ## Checks before a push
 
@@ -40,5 +42,6 @@ bash tests/remote_deploy_test.sh
 bash tests/feed_test.sh
 bash tests/lead_test.sh
 bash tests/pricing_test.sh
+node tests/worker_test.mjs
 for f in site/score/lead.php site/lib/leads.php site/services/pricing.php; do php -l "$f"; done
 ```

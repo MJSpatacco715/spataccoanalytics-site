@@ -1272,7 +1272,7 @@ async function parseClaudeResponse(r) {
     try { const j = await r.json(); errMsg = j.error?.message || JSON.stringify(j); }
     catch { errMsg = await r.text(); }
     if (r.status === 401 || r.status === 403) throw new Error("The reading service is not available right now. Please try again later.");
-    if (r.status === 429) throw new Error("The reading service is busy. Wait a moment and try again.");
+    if (r.status === 429) throw new Error(errMsg && errMsg.length < 400 && !errMsg.startsWith("{") ? errMsg : "The reading service is busy. Wait a moment and try again.");
     throw new Error("The reading service answered with an error (" + r.status + "). Please try again.");
   }
 

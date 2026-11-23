@@ -50,6 +50,9 @@ jobs:
       - name: Project prices go only to a visitor who left an email
         run: bash tests/pricing_test.sh
 
+      - name: The relay passes on the tools' own requests and nothing else
+        run: node tests/worker_test.mjs
+
       - name: No project price is in the site's files
         run: |
           # Hosting prices are public. A project price in a page would defeat
@@ -68,6 +71,7 @@ jobs:
           node --check live/build.mjs
           node --check live/smoke.mjs
           node --check live/shim.js
+          node --check worker/ria-scorer.js
           bash -n scripts/remote_deploy.sh scripts/ssh_key.sh
 
   # The working tools, built from the source platform's current code and
