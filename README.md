@@ -14,6 +14,9 @@ and one pull request at a time; merging to `main` is what publishes.
 | Website Scorer | `site/tools/website-scorer.html` | Public at `/tools/website-scorer.html`. |
 | Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
+| Services page | `site/services/index.html` | Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page. |
+| Project prices | The `SERVICE_PRICING` secret | **Never in this repo, which is public.** Publish writes them to `sa-pricing.json` beside the web root. `site/services/pricing.php` gives them out only after it has kept the visitor's name and email in `sa-leads/pricing.jsonl`. |
+| What both lead forms share | `site/lib/leads.php` | The checks, the storage and the notice mail. |
 | QR code for the menu | `menu/qr-score.svg`, `menu/qr-score.png` | Encodes `https://spataccoanalytics.com/score/`. Regenerate only if that address changes. |
 | Service menu (one page, print and PDF) | Claude Design canvas "Service Menu" | Not in this repo: it is edited on the canvas. Its QR code and its link both go to `/score/`. |
 | Scoring relay (`ria-scorer` Cloudflare Worker) | Cloudflare account | **Not in this repo yet.** Holds the API key and passes the scorer's and resume parser's requests through. |
@@ -23,7 +26,10 @@ and one pull request at a time; merging to `main` is what publishes.
 
 How a visitor moves: printed menu (QR) or PDF menu (link) > `/score/` >
 scorer, website-only > overall score > name and email > full breakdown and
-PDF. The lead is recorded when the email is given.
+PDF > `/services/`. The lead is recorded when the email is given. On
+`/services/` a visitor builds a plan, and a name and email bring the project
+prices onto the page. Someone who has given an email on either page is not
+asked again on the other for 30 days.
 
 ## What it does
 
@@ -89,7 +95,7 @@ PDF. The lead is recorded when the email is given.
 
 The repository is public, which is what makes the scheduled runs free.
 
-1. **Add four secrets** (Settings > Secrets and variables > Actions). GitHub
+1. **Add five secrets** (Settings > Secrets and variables > Actions). GitHub
    never lets one repository read another's secrets, so the SSH key is pasted
    here once even though the Saratoga repository already holds it. Everything
    else (SSH host, user and port, the source repository's name, the denylist)
@@ -102,6 +108,7 @@ The repository is public, which is what makes the scheduled runs free.
    | `DEPLOY_SSH_PASSPHRASE` | That key's passphrase |
    | `SOURCE_REPO_TOKEN` | Fine-grained token: the source repository only, Contents read-only (the token the source server already pulls with works) |
    | `SOURCE_SITE_URL` | The source platform's public address, ending in `/`. A secret only so the address is not published here |
+| `SERVICE_PRICING` | The project prices as JSON, whole dollars: `{"audit":{"professional":0,"complete":0},"design":{"essential":0,"professional":0,"complete":0},"crm":{"essential":0,"professional":0,"complete":0}}`. Without it the services page still takes pricing requests and says pricing follows by email |
 
 2. **Import the live site.** Actions > Import live site > Run workflow. It
    copies the main site's pages, styles, scripts and images into `site/`,
@@ -136,9 +143,10 @@ python3 scripts/build_site.py --site reference/live --out dist && \
 bash tests/remote_deploy_test.sh                            # the deploy never leaves its lane
 bash tests/feed_test.sh                                     # the relay passes on only what it should
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
+bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
 npm install --prefix live && \
   node live/build.mjs --source <source checkout> --out build/live && \
   node live/smoke.mjs --live build/live                     # the working tools, built and opened
 ```
 
-CI runs the first five on every push, and the last when it has the source token.
+CI runs the first six on every push, and the last when it has the source token.

@@ -12,6 +12,7 @@ trap cleanup EXIT
 
 mkdir -p "$t/home/public_html/score"
 cp "$here/site/score/lead.php" "$t/home/public_html/score/lead.php"
+mkdir -p "$t/home/public_html/lib" && cp "$here/site/lib/leads.php" "$t/home/public_html/lib/leads.php"
 SA_LEADS_NO_MAIL=1 php -S 127.0.0.1:18741 -t "$t/home/public_html" >/dev/null 2>&1 & pid=$!
 url=http://127.0.0.1:18741/score/lead.php
 for i in $(seq 1 50); do curl -s -o /dev/null "$url" && break; sleep 0.1; done

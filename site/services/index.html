@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services | Spatacco Analytics</title>
+<meta name="description" content="Website audits, website design, CRM diagnostics and repair, and managed hosting for independent financial advisors. Build a plan and see what it involves.">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/shared.css">
+<style>
+.sv-wrap{max-width:1100px;margin:0 auto}
+.sv-lead{font-size:17px;line-height:1.7;color:var(--text);max-width:720px;margin-bottom:40px}
+.sv-start{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;background:var(--navy);color:var(--white);padding:26px 30px;margin-bottom:56px}
+.sv-start h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:28px;line-height:1.2;margin-bottom:6px}
+.sv-start p{font-size:15px;color:#CBD5E1;line-height:1.6}
+.sv-tiers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:10px}
+.sv-tiers div{padding:8px 16px;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--charcoal)}
+.sv-tiers .rec{background:var(--cyan);color:var(--navy);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sv-card{background:var(--white);border:1px solid var(--navy);margin-bottom:22px}
+.sv-card-head{padding:14px 18px;border-bottom:1px solid var(--navy)}
+.sv-card-head h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;color:var(--navy);line-height:1.2}
+.sv-card-head p{font-size:14px;color:var(--slate);margin-top:4px;line-height:1.6}
+.sv-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.sv-opt{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px 16px 14px;cursor:pointer;min-height:190px;transition:box-shadow .2s}
+.sv-opt.rec{background:#E6F9F9;border-left:2px solid var(--navy);border-right:2px solid var(--navy)}
+.sv-opt input{position:absolute;opacity:0;pointer-events:none}
+.sv-opt:has(input:focus-visible){outline:3px solid var(--purple);outline-offset:-3px}
+.sv-opt:has(input:checked){box-shadow:inset 0 0 0 3px var(--purple)}
+.sv-name{font-size:16px;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:8px}
+.sv-tick{width:16px;height:16px;border:1.5px solid var(--navy);border-radius:50%;flex-shrink:0;background:var(--white)}
+.sv-opt:has(input:checked) .sv-tick{background:var(--purple);border-color:var(--purple);box-shadow:inset 0 0 0 3px var(--white)}
+.sv-desc{font-size:14px;line-height:1.55;color:var(--text)}
+.sv-foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-top:12px}
+.sv-price{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);line-height:1;font-variant-numeric:lining-nums;white-space:nowrap}
+.sv-price small{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500}
+.sv-price.locked{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);border:1px dashed var(--slate);padding:6px 9px}
+.sv-time{font-size:13px;color:var(--slate);white-space:nowrap}
+.sv-clear{background:none;border:none;font-family:inherit;font-size:13px;color:var(--slate);text-decoration:underline;cursor:pointer;padding:10px 18px}
+.sv-clear:hover{color:var(--navy)}
+.sv-host-lead{font-size:17px;line-height:1.7;color:#CBD5E1;max-width:720px;margin-bottom:36px}
+.sv-host{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.sv-plan{position:relative;display:flex;flex-direction:column;gap:8px;padding:22px 22px 20px;border:1px solid rgba(61,216,216,0.3);background:rgba(255,255,255,0.04);cursor:pointer;min-height:200px}
+.sv-plan.rec{border-color:var(--cyan);background:rgba(61,216,216,0.08)}
+.sv-plan input{position:absolute;opacity:0;pointer-events:none}
+.sv-plan:has(input:focus-visible){outline:3px solid var(--purple-light);outline-offset:2px}
+.sv-plan:has(input:checked){box-shadow:inset 0 0 0 3px var(--cyan)}
+.sv-plan .sv-name{color:var(--white);font-size:18px}
+.sv-plan .sv-tick{border-color:var(--cyan);background:transparent}
+.sv-plan:has(input:checked) .sv-tick{background:var(--cyan);box-shadow:inset 0 0 0 3px var(--navy)}
+.sv-plan .sv-desc{color:#CBD5E1}
+.sv-plan .sv-price{color:var(--white);font-size:34px}
+.sv-plan .sv-time{color:var(--text-light)}
+.sv-badge{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan)}
+.sv-host-note{font-size:14px;color:var(--text-light);margin-top:20px;line-height:1.6}
+.sv-host .sv-clear,.sv-host-clear{color:var(--text-light);padding-left:0}
+.sv-host-clear:hover{color:var(--white)}
+.sv-plan-box{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px;align-items:start}
+.sv-sum{background:var(--white);border:1px solid var(--navy);padding:26px 28px}
+.sv-sum h3,.sv-gate h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;color:var(--navy);margin-bottom:14px;line-height:1.2}
+.sv-line{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--text)}
+.sv-line span:last-child{font-weight:600;color:var(--navy);white-space:nowrap;font-variant-numeric:lining-nums}
+.sv-line.credit span:last-child{color:#0B7A5B}
+.sv-line.total{border-bottom:none;border-top:2px solid var(--navy);margin-top:6px;padding-top:12px;font-weight:600;color:var(--navy);font-size:16px}
+.sv-line.total span:last-child{font-family:'Cormorant Garamond',serif;font-size:26px}
+.sv-empty{font-size:15px;color:var(--slate);line-height:1.6}
+.sv-fine{font-size:13px;color:var(--slate);line-height:1.6;margin-top:12px}
+.sv-gate{background:var(--navy);padding:26px 28px}
+.sv-gate h3{color:var(--white)}
+.sv-gate p{font-size:15px;line-height:1.6;color:#CBD5E1;margin-bottom:18px}
+.sv-gate label{display:block;font-size:13px;font-weight:600;color:var(--white);margin:12px 0 6px}
+.sv-gate input{width:100%;font-family:'DM Sans',sans-serif;font-size:16px;color:var(--white);background:rgba(255,255,255,0.06);border:1px solid rgba(61,216,216,0.3);padding:12px 14px;outline:none}
+.sv-gate input:focus{border-color:var(--cyan)}
+.sv-gate button.go{width:100%;margin-top:20px;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:var(--navy);background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 50%,var(--purple) 100%);padding:16px;border:none;cursor:pointer}
+.sv-gate button.go:disabled{opacity:.6;cursor:default}
+.sv-gate .sv-err{display:none;color:#FFB4B4;font-size:14px;margin-top:12px}
+.sv-gate .sv-fine{color:var(--text-light)}
+.sv-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.sv-terms{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 40px;margin-top:8px}
+.sv-terms li{font-size:15px;line-height:1.6;color:#CBD5E1;padding-left:18px;position:relative}
+.sv-terms li::before{content:'';position:absolute;left:0;top:10px;width:8px;height:2px;background:var(--cyan)}
+.sv-cta{margin-top:44px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.sv-cta a.plain{color:var(--cyan);font-size:15px}
+[hidden]{display:none !important}
+@media(max-width:860px){
+  .sv-tiers{display:none}
+  .sv-row,.sv-host,.sv-plan-box,.sv-terms{grid-template-columns:1fr}
+  .sv-opt{min-height:0;border-top:1px solid var(--border)}
+  .sv-opt.rec{border-left:none;border-right:none;border-top:2px solid var(--navy);border-bottom:2px solid var(--navy)}
+  .sv-opt .sv-tier-tag{display:inline}
+  .sv-plan{min-height:0}
+}
+.sv-tier-tag{display:none;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);margin-left:auto}
+</style>
+</head>
+<body>
+
+<nav id="main-nav">
+  <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="logo"></a>
+  <div class="nav-links">
+    <a href="/services/" class="active">Services</a>
+    <a href="/#approach">Approach</a>
+    <a href="/#about">About</a>
+    <a href="/tools/">Tools</a>
+    <a href="/contact/">Contact</a>
+  </div>
+</nav>
+
+<section class="page-hero">
+  <div class="page-hero-inner">
+    <div class="page-hero-tag">Services</div>
+    <h1>Websites, CRM, and data for independent advisors. <em>Scoped before you commit.</em></h1>
+    <p class="page-hero-sub">Four services, three levels each. Pick what fits your practice and see what it involves, how long it takes, and what it costs.</p>
+  </div>
+</section>
+
+<section class="section-light">
+  <div class="sv-wrap">
+
+    <div class="sv-start reveal">
+      <div>
+        <h2>Start with a free website score.</h2>
+        <p>Enter your site and see how it measures up. No call, no commitment.</p>
+      </div>
+      <a class="btn-primary" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">Score my website</a>
+    </div>
+
+    <div class="reveal">
+      <div class="section-tag">Project work</div>
+      <h2 class="section-heading section-heading-light">Fixed scope, fixed timeline.</h2>
+      <div class="accent-line"></div>
+      <p class="sv-lead">Each project is quoted to your firm. Choose a level in any service to build a plan, then ask for pricing below and it appears on this page right away.</p>
+    </div>
+
+    <div class="sv-tiers" aria-hidden="true">
+      <div>Essential</div>
+      <div class="rec"><span>Professional</span><span>Recommended</span></div>
+      <div>Complete</div>
+    </div>
+
+    <fieldset class="sv-card reveal" data-service="audit" style="padding:0;min-width:0">
+      <legend class="sv-hp">Website and AI Audit</legend>
+      <div class="sv-card-head">
+        <h3>Website &amp; AI Audit</h3>
+        <p>How your firm shows up on its own site, in search, and in AI answers, and what to fix first.</p>
+      </div>
+      <div class="sv-row">
+        <label class="sv-opt"><input type="radio" name="audit" value="essential">
+          <span class="sv-name"><span class="sv-tick"></span>Website Score<span class="sv-tier-tag">Essential</span></span>
+          <span class="sv-desc">Instant overall score for your site.</span>
+          <span class="sv-foot"><span class="sv-price">Free</span><span class="sv-time">Instant</span></span>
+        </label>
+        <label class="sv-opt rec"><input type="radio" name="audit" value="professional">
+          <span class="sv-name"><span class="sv-tick"></span>Audit Report<span class="sv-tier-tag">Professional</span></span>
+          <span class="sv-desc">Site, search, and AI-visibility review with prioritized fixes, about 5 pages.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="audit.professional">Pricing on request</span><span class="sv-time">1 week</span></span>
+        </label>
+        <label class="sv-opt"><input type="radio" name="audit" value="complete">
+          <span class="sv-name"><span class="sv-tick"></span>Practice Audit<span class="sv-tier-tag">Complete</span></span>
+          <span class="sv-desc">Audit Report plus full CRM Diagnostic.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="audit.complete">Pricing on request</span><span class="sv-time">2 weeks</span></span>
+        </label>
+      </div>
+      <button type="button" class="sv-clear" data-clear="audit" hidden>Remove from plan</button>
+    </fieldset>
+
+    <fieldset class="sv-card reveal" data-service="design" style="padding:0;min-width:0">
+      <legend class="sv-hp">Website Design</legend>
+      <div class="sv-card-head">
+        <h3>Website Design</h3>
+        <p>A site built to pass compliance review. Every level includes the audit.</p>
+      </div>
+      <div class="sv-row">
+        <label class="sv-opt"><input type="radio" name="design" value="essential">
+          <span class="sv-name"><span class="sv-tick"></span>Refresh<span class="sv-tier-tag">Essential</span></span>
+          <span class="sv-desc">Up to 5 pages, audit included.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="design.essential">Pricing on request</span><span class="sv-time">2 weeks</span></span>
+        </label>
+        <label class="sv-opt rec"><input type="radio" name="design" value="professional">
+          <span class="sv-name"><span class="sv-tick"></span>Redesign<span class="sv-tier-tag">Professional</span></span>
+          <span class="sv-desc">Up to 10 pages, audit included, compliance-ready structure.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="design.professional">Pricing on request</span><span class="sv-time">3 weeks</span></span>
+        </label>
+        <label class="sv-opt"><input type="radio" name="design" value="complete">
+          <span class="sv-name"><span class="sv-tick"></span>Rebuild<span class="sv-tier-tag">Complete</span></span>
+          <span class="sv-desc">Full rebuild with content migration, audit included.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="design.complete">Pricing on request</span><span class="sv-time">4 weeks</span></span>
+        </label>
+      </div>
+      <button type="button" class="sv-clear" data-clear="design" hidden>Remove from plan</button>
+    </fieldset>
+
+    <fieldset class="sv-card reveal" data-service="crm" style="padding:0;min-width:0">
+      <legend class="sv-hp">CRM Diagnostic and Repair</legend>
+      <div class="sv-card-head">
+        <h3>CRM Diagnostic &amp; Repair</h3>
+        <p>Any CRM that can export its data. Salesforce specialists.</p>
+      </div>
+      <div class="sv-row">
+        <label class="sv-opt"><input type="radio" name="crm" value="essential">
+          <span class="sv-name"><span class="sv-tick"></span>Diagnostic<span class="sv-tier-tag">Essential</span></span>
+          <span class="sv-desc">Data gaps, duplicates, broken components, unused paid features, plus a fixed repair quote.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="crm.essential">Pricing on request</span><span class="sv-time">1 to 2 weeks</span></span>
+        </label>
+        <label class="sv-opt rec"><input type="radio" name="crm" value="professional">
+          <span class="sv-name"><span class="sv-tick"></span>Repair<span class="sv-tier-tag">Professional</span></span>
+          <span class="sv-desc">Cleanup, fixes, custom reports and workflows, priced from the Diagnostic.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="crm.professional" data-from="1">Pricing on request</span><span class="sv-time">2 to 6 weeks</span></span>
+        </label>
+        <label class="sv-opt"><input type="radio" name="crm" value="complete">
+          <span class="sv-name"><span class="sv-tick"></span>Rebuild or Migration<span class="sv-tier-tag">Complete</span></span>
+          <span class="sv-desc">New build or platform move with full data migration.</span>
+          <span class="sv-foot"><span class="sv-price locked" data-price="crm.complete" data-from="1">Pricing on request</span><span class="sv-time">4 to 8 weeks</span></span>
+        </label>
+      </div>
+      <button type="button" class="sv-clear" data-clear="crm" hidden>Remove from plan</button>
+    </fieldset>
+
+  </div>
+</section>
+
+<section class="section-dark" id="hosting">
+  <div class="sv-wrap">
+    <div class="reveal">
+      <div class="section-tag">Ongoing</div>
+      <h2 class="section-heading section-heading-dark">Managed Hosting. Flat monthly plans.</h2>
+      <div class="accent-line"></div>
+      <p class="sv-host-lead">Hosting is the same for every firm, so its prices are published. No quote needed.</p>
+    </div>
+    <fieldset class="reveal" style="border:none;padding:0;min-width:0">
+      <legend class="sv-hp">Managed Hosting</legend>
+      <div class="sv-host">
+        <label class="sv-plan"><input type="radio" name="hosting" value="hosted" data-monthly="160">
+          <span class="sv-name"><span class="sv-tick"></span>Hosted</span>
+          <span class="sv-desc">Hosting, SSL, daily backups, uptime monitoring.</span>
+          <span class="sv-foot"><span class="sv-price">$160<small>/mo</small></span><span class="sv-time">Ongoing</span></span>
+        </label>
+        <label class="sv-plan rec"><input type="radio" name="hosting" value="managed" data-monthly="240">
+          <span class="sv-badge">Recommended</span>
+          <span class="sv-name"><span class="sv-tick"></span>Managed</span>
+          <span class="sv-desc">Hosted plus updates, security patching, monthly report.</span>
+          <span class="sv-foot"><span class="sv-price">$240<small>/mo</small></span><span class="sv-time">Ongoing</span></span>
+        </label>
+        <label class="sv-plan"><input type="radio" name="hosting" value="plus" data-monthly="440">
+          <span class="sv-name"><span class="sv-tick"></span>Managed Plus</span>
+          <span class="sv-desc">Managed plus quarterly re-score and small content edits.</span>
+          <span class="sv-foot"><span class="sv-price">$440<small>/mo</small></span><span class="sv-time">Ongoing</span></span>
+        </label>
+      </div>
+      <p class="sv-host-note">25% off for website design clients, 10% off for audit clients. The discount is applied in your plan below.</p>
+      <button type="button" class="sv-clear sv-host-clear" data-clear="hosting" hidden>Remove hosting from plan</button>
+    </fieldset>
+  </div>
+</section>
+
+<section class="section-light" id="plan">
+  <div class="sv-wrap">
+    <div class="reveal">
+      <div class="section-tag">Your plan</div>
+      <h2 class="section-heading section-heading-light">What you picked, added up.</h2>
+      <div class="accent-line"></div>
+    </div>
+    <div class="sv-plan-box reveal">
+      <div class="sv-sum" aria-live="polite">
+        <h3>Plan summary</h3>
+        <div id="sv-lines"><p class="sv-empty">Nothing picked yet. Choose a level in any service above and it shows up here.</p></div>
+        <p class="sv-fine" id="sv-note"></p>
+      </div>
+
+      <div class="sv-gate" id="sv-gate">
+        <h3>See project pricing</h3>
+        <p>Tell us where to reach you and every project price appears on this page right away, with your plan totaled.</p>
+        <label for="sv-name">Your name</label>
+        <input type="text" id="sv-name" autocomplete="name">
+        <label for="sv-email">Email address</label>
+        <input type="email" id="sv-email" autocomplete="email">
+        <label for="sv-firm">Firm name (optional)</label>
+        <input type="text" id="sv-firm" autocomplete="organization">
+        <div class="sv-hp" aria-hidden="true"><label for="sv-company">Leave this empty</label><input type="text" id="sv-company" tabindex="-1" autocomplete="off"></div>
+        <div class="sv-err" id="sv-err" role="alert"></div>
+        <button type="button" class="go" id="sv-go">Show pricing</button>
+        <p class="sv-fine">We use your email to follow up on your plan. No spam.</p>
+      </div>
+
+      <div class="sv-gate" id="sv-open" hidden>
+        <h3 id="sv-open-title">Pricing is unlocked.</h3>
+        <p id="sv-open-text">Every project price is now shown above, and your plan is totaled on the left. Change your picks and the total follows.</p>
+        <a class="btn-primary" href="/contact/">Talk it through</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section-dark">
+  <div class="sv-wrap">
+    <div class="reveal">
+      <div class="section-tag">The terms</div>
+      <h2 class="section-heading section-heading-dark">Worth knowing before you start.</h2>
+      <div class="accent-line"></div>
+    </div>
+    <ul class="sv-terms reveal">
+      <li>Audit and Diagnostic fees are credited in full toward a project signed within 30 days.</li>
+      <li>Hosting: 25% off for website design clients, 10% off for audit clients.</li>
+      <li>Any CRM that can export its data. Salesforce specialists.</li>
+      <li>Built to pass compliance review; your CCO has final approval. Third-party costs (licenses, stock assets, archiving) billed at cost.</li>
+    </ul>
+    <div class="sv-cta reveal">
+      <a class="btn-primary" href="/contact/">Start a conversation</a>
+      <a class="plain" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">Or score your website first</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="footer-logo"></a>
+  <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC</div>
+</footer>
+
+<script src="/js/shared.js"></script>
+<script>
+(function () {
+  var PRICING_URL = '/services/pricing.php';
+  var KEEP_DAYS = 30;
+  var SERVICES = { audit: 'Website & AI Audit', design: 'Website Design', crm: 'CRM Diagnostic & Repair' };
+  var prices = null;      // project prices, once the server has given them
+  var pending = false;    // asked, lead kept, but prices could not be read
+
+  var $ = function (id) { return document.getElementById(id); };
+  var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
+  function store(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+  function load(key) { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { return null; } }
+  function fresh(o) { return o && typeof o.at === 'number' && Date.now() - o.at < KEEP_DAYS * 864e5; }
+  var q = new URLSearchParams(location.search);
+  var arrived = function (k) { return (q.get(k) || '').slice(0, 60); };
+
+  function picked(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.value : '';
+  }
+  function optionName(name) {
+    var el = document.querySelector('input[name="' + name + '"]:checked');
+    return el ? el.closest('label').querySelector('.sv-name').childNodes[1].textContent.trim() : '';
+  }
+
+  // Fill every price slot once the prices are in hand.
+  function showPrices() {
+    document.querySelectorAll('[data-price]').forEach(function (el) {
+      var p = el.getAttribute('data-price').split('.');
+      var v = prices && prices[p[0]] ? prices[p[0]][p[1]] : null;
+      if (typeof v !== 'number') return;
+      el.classList.remove('locked');
+      el.textContent = '';
+      if (el.getAttribute('data-from')) { var s = document.createElement('small'); s.textContent = 'From '; el.appendChild(s); }
+      el.appendChild(document.createTextNode(money(v)));
+    });
+  }
+
+  function line(label, value, cls) {
+    var d = document.createElement('div'); d.className = 'sv-line' + (cls ? ' ' + cls : '');
+    var a = document.createElement('span'); a.textContent = label;
+    var b = document.createElement('span'); b.textContent = value;
+    d.appendChild(a); d.appendChild(b); return d;
+  }
+
+  // The plan, added up. Project prices appear only when unlocked; hosting is
+  // always shown, since its prices are public.
+  function render() {
+    var box = $('sv-lines'); box.textContent = '';
+    var note = [];
+    var audit = picked('audit'), design = picked('design'), crm = picked('crm'), host = picked('hosting');
+    ['audit', 'design', 'crm', 'hosting'].forEach(function (n) {
+      var b = document.querySelector('[data-clear="' + n + '"]'); if (b) b.hidden = !picked(n);
+    });
+    if (!audit && !design && !crm && !host) {
+      var p = document.createElement('p'); p.className = 'sv-empty';
+      p.textContent = 'Nothing picked yet. Choose a level in any service above and it shows up here.';
+      box.appendChild(p); $('sv-note').textContent = ''; return;
+    }
+    var oneTime = 0, anyFrom = false, anyProject = false, priced = !!prices;
+    function cost(service, tier) {
+      if (service === 'audit' && tier === 'essential') return 0;
+      return prices ? prices[service][tier] : null;
+    }
+    [['audit', audit], ['design', design], ['crm', crm]].forEach(function (pair) {
+      var service = pair[0], tier = pair[1]; if (!tier) return;
+      var c = cost(service, tier);
+      var from = service === 'crm' && tier !== 'essential';
+      if (from) anyFrom = true;
+      var label = SERVICES[service] + ': ' + optionName(service);
+      var value = c === 0 ? 'Free' : (c === null ? 'On request' : (from ? 'From ' : '') + money(c));
+      box.appendChild(line(label, value));
+      if (c) oneTime += c;
+    });
+    // Audit and Diagnostic fees are credited toward a project.
+    var project = (design ? 1 : 0) + (crm && crm !== 'essential' ? 1 : 0);
+    if (priced && project) {
+      var projectSum = (design ? prices.design[design] : 0) + (crm && crm !== 'essential' ? prices.crm[crm] : 0);
+      var fees = (audit && audit !== 'essential' ? prices.audit[audit] : 0) + (crm === 'essential' ? prices.crm.essential : 0);
+      var credit = Math.min(fees, projectSum);
+      if (credit > 0) {
+        box.appendChild(line('Audit and Diagnostic fees credited toward your project', '-' + money(credit), 'credit'));
+        oneTime -= credit;
+        note.push('The credit applies when the project is signed within 30 days.');
+      }
+    }
+    if (audit || design || crm) {
+      box.appendChild(line('Estimated one-time total', priced ? (anyFrom ? 'From ' : '') + money(oneTime) : 'On request', 'total'));
+    }
+    if (host) {
+      var base = Number(document.querySelector('input[name="hosting"]:checked').getAttribute('data-monthly'));
+      var off = design ? 0.25 : (audit && audit !== 'essential' ? 0.10 : 0);
+      box.appendChild(line('Managed Hosting: ' + optionName('hosting'), money(base) + '/mo'));
+      if (off) box.appendChild(line((off === 0.25 ? 'Website design client' : 'Audit client') + ' discount, ' + Math.round(off * 100) + '% off', '-' + money(base * off) + '/mo', 'credit'));
+      box.appendChild(line('Hosting, monthly', money(base * (1 - off)) + '/mo', 'total'));
+    }
+    if (!priced && (audit && audit !== 'essential' || design || crm)) {
+      note.push(pending ? 'Your project pricing is on its way by email.' : 'Project prices fill in here once you ask for pricing.');
+    }
+    if (anyFrom && priced) note.push('"From" prices are set by the Diagnostic.');
+    note.push('An estimate, not a quote. Third-party costs are billed at cost.');
+    $('sv-note').textContent = note.join(' ');
+  }
+
+  function unlocked(mode) {
+    $('sv-gate').hidden = true; $('sv-open').hidden = false;
+    if (mode === 'pending') {
+      $('sv-open-title').textContent = 'Thank you. Pricing is on its way.';
+      $('sv-open-text').textContent = 'We have your request and will email your project pricing shortly.';
+    }
+    showPrices(); render();
+  }
+
+  function ask(person, knownFrom) {
+    var body = {
+      name: person.name, email: person.email, firm: person.firm || '',
+      picks: { audit: picked('audit'), design: picked('design'), crm: picked('crm'), hosting: picked('hosting') },
+      known_from: knownFrom || '',
+      utm_source: arrived('utm_source'), utm_medium: arrived('utm_medium'), utm_campaign: arrived('utm_campaign'),
+      company: $('sv-company').value
+    };
+    return fetch(PRICING_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); });
+  }
+
+  $('sv-go').addEventListener('click', function () {
+    var err = $('sv-err'); err.style.display = 'none';
+    var person = { name: $('sv-name').value.trim(), email: $('sv-email').value.trim(), firm: $('sv-firm').value.trim() };
+    function fail(msg) { err.textContent = msg; err.style.display = 'block'; }
+    if (!person.name) return fail('Please enter your name.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email)) return fail('Please enter a valid email address.');
+    var btn = $('sv-go'); btn.disabled = true; btn.textContent = 'One moment';
+    ask(person).then(function (res) {
+      if (res.status === 429) throw new Error('Too many requests from this connection. Please try again in an hour.');
+      if (!res.data || !res.data.ok) throw new Error('That did not go through. Please check your email address and try again.');
+      store('sa_lead', { name: person.name, email: person.email, firm: person.firm, at: Date.now() });
+      if (res.data.prices) { prices = res.data.prices; store('sa_pricing', { prices: prices, at: Date.now() }); unlocked(); }
+      else { pending = true; unlocked('pending'); }
+    }).catch(function (e) {
+      btn.disabled = false; btn.textContent = 'Show pricing';
+      fail(e && e.message && e.message.indexOf('Failed') !== 0 ? e.message : 'We could not reach the server. Please try again, or email mike@spataccoanalytics.com.');
+    });
+  });
+  ['sv-name', 'sv-email', 'sv-firm'].forEach(function (id) {
+    $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') $('sv-go').click(); });
+  });
+
+  document.querySelectorAll('input[type="radio"]').forEach(function (el) { el.addEventListener('change', render); });
+  document.querySelectorAll('[data-clear]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('input[name="' + b.getAttribute('data-clear') + '"]').forEach(function (r) { r.checked = false; });
+      render();
+    });
+  });
+
+  // A visitor who unlocked here before sees prices again for 30 days. One who
+  // already left an email at the scorer is not asked twice: the request is
+  // made for them, and recorded as a pricing request.
+  var kept = load('sa_pricing'), known = load('sa_lead');
+  if (fresh(kept) && kept.prices) { prices = kept.prices; unlocked(); }
+  else if (fresh(known) && known.email && known.name) {
+    ask(known, 'scorer').then(function (res) {
+      if (res.data && res.data.ok && res.data.prices) { prices = res.data.prices; store('sa_pricing', { prices: prices, at: Date.now() }); unlocked(); }
+    }).catch(function () {});
+  }
+  render();
+})();
+</script>
+</body>
+</html>

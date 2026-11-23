@@ -16,6 +16,10 @@ lives and says which pieces are not in this repo yet.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.
+- Project prices never go in this repository: not in a page, a test, a
+  commit message or a pull request. The repository is public. They live in
+  the `SERVICE_PRICING` secret only. Hosting prices are public and are in
+  `site/services/index.html`.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer talks to the `ria-scorer` Cloudflare Worker, which is not in
@@ -31,5 +35,6 @@ python3 scripts/build_site.py --site site --out dist
 bash tests/remote_deploy_test.sh
 bash tests/feed_test.sh
 bash tests/lead_test.sh
-php -l site/score/lead.php
+bash tests/pricing_test.sh
+for f in site/score/lead.php site/lib/leads.php site/services/pricing.php; do php -l "$f"; done
 ```

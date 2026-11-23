@@ -159,6 +159,28 @@ jobs:
                 "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
           echo "Relay config written beside the web root."
 
+      - name: Project pricing
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          PRICING: ${{ secrets.SERVICE_PRICING }}
+        run: |
+          # The project prices the services page gives out after an email is
+          # left. They are not in this repository: they come from a secret and
+          # are written one level above the web root, where pricing.php reads
+          # them and the web cannot. Sent on stdin; readable by this account alone.
+          [ -n "$PRICING" ] || { echo "::warning::SERVICE_PRICING is not set; the services page will take pricing requests and say pricing follows by email."; exit 0; }
+          shape='(.audit | has("professional") and has("complete")) and ([.design, .crm] | all(has("essential") and has("professional") and has("complete"))) and ([.audit[], .design[], .crm[]] | all(type == "number" and . == floor and . > 0))'
+          printf '%s' "$PRICING" | jq -e "$shape" >/dev/null 2>&1 || { echo "::error::SERVICE_PRICING is not the expected JSON (audit: professional, complete; design and crm: essential, professional, complete; whole dollars)."; exit 1; }
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          cfg="$(dirname "$web")/sa-pricing.json"
+          printf '%s' "$PRICING" | jq -c '{audit: {professional: .audit.professional, complete: .audit.complete}, design: {essential: .design.essential, professional: .design.professional, complete: .design.complete}, crm: {essential: .crm.essential, professional: .crm.professional, complete: .crm.complete}}' \
+            | ssh -o ConnectionAttempts=8 -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" \
+                "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
+          echo "Project pricing written beside the web root."
+
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'
         run: |
