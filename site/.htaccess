@@ -1,0 +1,20 @@
+# Managed in the repository (site/.htaccess). A change made on the host is
+# overwritten on the next publish.
+
+DirectoryIndex index.html index.php
+
+RewriteEngine On
+
+# One address: www goes to the bare domain.
+RewriteCond %{HTTP_HOST} ^www\.spataccoanalytics\.com$ [NC]
+RewriteRule ^ https://spataccoanalytics.com%{REQUEST_URI} [R=301,L]
+
+# The earlier site's pages are still on the host. Each goes to the page that
+# replaced it, so search engines stop listing the old copies.
+RewriteCond %{THE_REQUEST} \s/index\.php[\s?]
+RewriteRule ^index\.php$ https://spataccoanalytics.com/ [R=301,L]
+RewriteRule ^services\.php$ https://spataccoanalytics.com/services/ [R=301,L]
+RewriteRule ^contact\.php$ https://spataccoanalytics.com/contact/ [R=301,L]
+RewriteRule ^about\.php$ https://spataccoanalytics.com/#about [R=301,NE,L]
+RewriteRule ^approach\.php$ https://spataccoanalytics.com/#approach [R=301,NE,L]
+RewriteRule ^_(header|footer)\.php$ https://spataccoanalytics.com/ [R=301,L]
