@@ -22,7 +22,7 @@ and one pull request at a time; merging to `main` is what publishes.
 | Redirects | `site/.htaccess` | Sends `www` to the bare domain, and the earlier site's PHP pages (still on the host, not in this repo) to the pages that replaced them. |
 | QR code for the menu | `menu/qr-score.svg`, `menu/qr-score.png` | Encodes `https://spataccoanalytics.com/score/`. Regenerate only if that address changes. |
 | Service menu (one page, print and PDF) | Claude Design canvas "Service Menu" | Not in this repo: it is edited on the canvas. Its QR code and its link both go to `/score/`. |
-| Scoring relay (`ria-scorer` Cloudflare Worker) | Cloudflare account | **Not in this repo yet.** Holds the API key and passes the scorer's and resume parser's requests through. |
+| Scoring relay (`ria-scorer` Cloudflare Worker) | `worker/ria-scorer.js` | Holds the API key. Passes on only the four requests the scorer and the resume parser make, counts each visitor per day and caps the day. Cloudflare runs what was last pasted into its editor: deploy steps are in `worker/README.md`. |
 | Contact form handler (`/contact/submit.php`) | Host only | **Not in this repo yet.** The import skipped it; the deploy leaves it alone. |
 | NFL tools | Source platform's repository, built here by `live/` | Read-only. See below. |
 | Plan and decisions | Roadmap and Business Plan docs, Notion Session Log | Reference, not source. Where they disagree with this repo, this repo is what is live. |
@@ -147,9 +147,10 @@ bash tests/remote_deploy_test.sh                            # the deploy never l
 bash tests/feed_test.sh                                     # the relay passes on only what it should
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
 bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
+node tests/worker_test.mjs                                  # the relay passes on the tools' own requests and nothing else
 npm install --prefix live && \
   node live/build.mjs --source <source checkout> --out build/live && \
   node live/smoke.mjs --live build/live                     # the working tools, built and opened
 ```
 
-CI runs the first six on every push, and the last when it has the source token.
+CI runs the first seven on every push, and the last when it has the source token.
