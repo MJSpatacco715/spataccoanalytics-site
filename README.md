@@ -12,6 +12,7 @@ and one pull request at a time; merging to `main` is what publishes.
 |---|---|---|
 | Site pages, styles, scripts | `site/` here | The only source. A hand edit on the host is overwritten on the next Publish. |
 | Website Scorer | `site/tools/website-scorer.html` | Public at `/tools/website-scorer.html`. |
+| Resume Parser | `site/tools/resume-parser/index.html` | Public tool: a resume in, structured data out, as Excel or CSV. Two free reads per browser, then an invitation to get it for the visitor's firm. Holds no client's records or field names. |
 | Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
 | Services page | `site/services/index.html` | Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page. |
