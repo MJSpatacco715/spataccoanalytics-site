@@ -17,4 +17,7 @@ RewriteRule ^services\.php$ https://spataccoanalytics.com/services/ [R=301,L]
 RewriteRule ^contact\.php$ https://spataccoanalytics.com/contact/ [R=301,L]
 RewriteRule ^about\.php$ https://spataccoanalytics.com/#about [R=301,NE,QSD,L]
 RewriteRule ^approach\.php$ https://spataccoanalytics.com/#approach [R=301,NE,QSD,L]
+# the resume parser has one address
+RewriteRule ^tools/resume-parser\.html$ https://spataccoanalytics.com/tools/resume-parser/ [R=301,L]
+
 RewriteRule ^_(header|footer)\.php$ https://spataccoanalytics.com/ [R=301,L]
