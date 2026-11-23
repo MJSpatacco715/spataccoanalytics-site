@@ -406,6 +406,12 @@
       <button class="btn-gold" id="btn-pdf">↓ &nbsp;Download PDF Scorecard</button>
       <button class="btn-outline" id="btn-restart">Score Another Site</button>
     </div>
+
+    <div class="card card-accent-top gated" style="margin-top:20px;">
+      <div class="card-label">What to do about it</div>
+      <p style="font-size:15px;color:var(--text-mid);line-height:1.7;margin-bottom:18px;">A score shows where a site stands. An Audit Report shows what to fix first, and a redesign fixes it. See each service, how long it takes, and what it costs.</p>
+      <a class="btn-primary" href="/services/?utm_source=scorer" style="display:inline-block;text-decoration:none;">See services and pricing →</a>
+    </div>
   </div>
 
   <footer class="footer">
@@ -462,6 +468,19 @@ function esc(v) {
 }
 function safeUrl(v) {
   try { const u = new URL(String(v)); return (u.protocol === "https:" || u.protocol === "http:") ? u.href : null; } catch { return null; }
+}
+
+// Someone who has already left a name and email, here or on the services
+// page, is not asked a second time for 30 days.
+const KNOWN_KEY = "sa_lead";
+function knownLead() {
+  try {
+    const k = JSON.parse(localStorage.getItem(KNOWN_KEY) || "null");
+    return k && k.name && k.email && Date.now() - k.at < 30 * 864e5 ? k : null;
+  } catch { return null; }
+}
+function rememberLead(name, email, firm) {
+  try { localStorage.setItem(KNOWN_KEY, JSON.stringify({ name, email, firm, at:Date.now() })); } catch {}
 }
 
 // How the visitor arrived: /score/ (the printed QR code) adds these.
@@ -832,8 +851,10 @@ $("btn-analyze").addEventListener("click", async () => {
     appState.result = result;
     setProgress(100,"Analysis complete.","done","done","done");
     await new Promise(r=>setTimeout(r,400));
-    $("screen-results").classList.add("locked");
+    const known = knownLead();
+    $("screen-results").classList.toggle("locked", !known);
     renderResults(result, scope, website);
+    if (known) { appState.leadName=known.name; appState.leadEmail=known.email; appState.leadFirm=known.firm||""; sendLead(known.name, known.email, known.firm||""); }
     window.scrollTo({ top:0, behavior:"smooth" });
 
   } catch(err) {
@@ -859,6 +880,7 @@ $("btn-gate-submit").addEventListener("click", async () => {
   $("btn-gate-submit").textContent="Loading your results…";
   $("btn-gate-submit").disabled=true;
   await sendLead(name,email,firm);
+  rememberLead(name,email,firm);
   $("screen-results").classList.remove("locked");
   $("res-summary").scrollIntoView({ behavior:"smooth", block:"center" });
 });
