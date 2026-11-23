@@ -1,0 +1,24 @@
+# Spatacco Analytics
+
+> Spatacco Analytics LLC builds and fixes the digital front office of independent financial advisors and RIAs: websites, CRM, and data. Based in Bala Cynwyd, Pennsylvania.
+
+Spatacco Analytics was founded by a business development and M&A professional with years of experience across financial services: RIAs, PE firms, insurance companies, investment banks, broker-dealers, banks, and trust companies. It works with independent financial advisors, RIAs, and small business owners.
+
+## Services
+
+- [Website & AI Audit](https://spataccoanalytics.com/services/): a free instant website score; an Audit Report covering site, search, and AI visibility with prioritized fixes; a Practice Audit that adds a full CRM Diagnostic.
+- [Website Design](https://spataccoanalytics.com/services/): refresh, redesign, or full rebuild of an advisory firm's website, built to pass compliance review.
+- [CRM Diagnostic & Repair](https://spataccoanalytics.com/services/): diagnostic, repair, and rebuild or migration for any CRM that can export its data. Salesforce specialists.
+- [Managed Hosting](https://spataccoanalytics.com/services/#hosting): flat monthly plans at $160, $240, and $440 per month.
+
+Project pricing is given on request at https://spataccoanalytics.com/services/.
+
+## Tools
+
+- [Free Website Score](https://spataccoanalytics.com/tools/website-scorer.html): scores an advisory firm's website on design, content, navigation, credibility, team, and contact.
+- [All tools](https://spataccoanalytics.com/tools/)
+
+## Contact
+
+- [Contact form](https://spataccoanalytics.com/contact/)
+- Email: mike@spataccoanalytics.com
