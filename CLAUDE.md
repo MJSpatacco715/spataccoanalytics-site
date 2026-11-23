@@ -20,6 +20,10 @@ lives and says which pieces are not in this repo yet.
   commit message or a pull request. The repository is public. They live in
   the `SERVICE_PRICING` secret only. Hosting prices are public and are in
   `site/services/index.html`.
+- Every statistic on the site carries its source: the publisher and year in
+  view, and a source card (`site/css/cite.css`, `site/js/cite.js`) with the
+  finding, who was surveyed and a link. A number with no checkable source
+  does not go on the site.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer talks to the `ria-scorer` Cloudflare Worker, which is not in
