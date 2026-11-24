@@ -1,0 +1,33 @@
+/* The Insights section: the feed, a post, and the homepage teaser. */
+.page-hero-tag a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(61,216,216,.4)}
+.in-feed{max-width:1100px;margin:0 auto}
+.in-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
+.in-card{display:flex;flex-direction:column;gap:10px;padding:26px 24px;background:#FFFFFF;border:1px solid #0F1B2D;text-decoration:none;color:#334155;transition:transform .2s,box-shadow .2s}
+.in-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(15,27,45,.12)}
+.in-card[hidden]{display:none}
+.in-card h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:25px;line-height:1.2;color:#0F1B2D}
+.in-card p{font-size:15px;line-height:1.6}
+.in-tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;color:#0B7A7A}
+.in-date{margin-top:auto;font-size:13px;color:#64748B}
+.in-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
+.in-filters button{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:10px 16px;min-height:44px;background:#FFFFFF;color:#0F1B2D;border:1px solid #0F1B2D;cursor:pointer}
+.in-filters button.on{background:#0F1B2D;color:#FFFFFF}
+.in-follow{margin-top:28px;font-size:15px;color:#475569}
+.in-follow a,.in-link{color:#0F1B2D;font-weight:600;text-underline-offset:3px}
+.in-more{margin-top:28px}
+.in-post{max-width:720px;margin:0 auto;font-size:18px;line-height:1.75;color:#334155}
+.in-post>*+*{margin-top:22px}
+.in-summary{font-family:'Cormorant Garamond',serif;font-size:26px;line-height:1.4;color:#0F1B2D}
+.in-post h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:30px;line-height:1.25;color:#0F1B2D;margin-top:40px}
+.in-post ul{padding-left:22px}
+.in-post li+li{margin-top:8px}
+.in-post blockquote{border-left:3px solid #3DD8D8;padding:4px 0 4px 22px;font-family:'Cormorant Garamond',serif;font-size:26px;line-height:1.4;color:#0F1B2D}
+.in-post blockquote cite{display:block;margin-top:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-style:normal;color:#64748B}
+.in-post figure img{max-width:100%;height:auto;display:block}
+.in-post figcaption{font-size:14px;color:#64748B;margin-top:8px}
+.in-stat{padding:22px 24px;background:#0F1B2D;color:#FFFFFF}
+.in-stat-num{font-family:'Cormorant Garamond',serif;font-size:52px;line-height:1;color:#3DD8D8}
+.in-stat-label{font-size:16px;line-height:1.5;margin-top:8px;color:#E2E8F0}
+.in-end{margin-top:48px;padding-top:28px;border-top:1px solid #0F1B2D;font-size:16px}
+.in-end p+p{margin-top:16px}
+.in-end .btn-primary{margin-right:16px}
