@@ -77,7 +77,7 @@ def load(posts_dir: Path, drafts: bool = False) -> list[dict]:
         date.fromisoformat(p["date"])
         if p["category"] not in CATEGORIES:
             fail(f"{f.name}: category must be one of {', '.join(CATEGORIES)}")
-        if "—" in json.dumps(p, ensure_ascii=False):
+        if "\u2014" in json.dumps(p, ensure_ascii=False):
             fail(f"{f.name}: no em dashes on the site")
         for i, b in enumerate(p["blocks"]):
             if b.get("type") == "stat":
