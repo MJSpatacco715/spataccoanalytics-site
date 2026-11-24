@@ -9,9 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }, { threshold: 0.12 });
   reveals.forEach(function(el) { observer.observe(el); });
   var u='mike',d='spataccoanalytics.com',addr=u+'@'+d;
-  var cta=document.getElementById('cta-email');
   var disp=document.getElementById('email-display');
-  if(cta){cta.href='mail'+'to:'+addr;cta.onclick=null;}
   if(disp){disp.textContent=addr;}
   var path = window.location.pathname.replace(/\/$/,'');
   var page = path.split('/').pop() || 'index';
