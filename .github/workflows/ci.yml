@@ -53,6 +53,9 @@ jobs:
       - name: The relay passes on the tools' own requests and nothing else
         run: node tests/worker_test.mjs
 
+      - name: Insights posts build into pages, sourced and escaped
+        run: bash tests/insights_test.sh
+
       - name: No project price is in the site's files
         run: |
           # Hosting prices are public. A project price in a page would defeat

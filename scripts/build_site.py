@@ -343,6 +343,7 @@ def main() -> None:
     ap.add_argument("--out", default=str(ROOT / "dist"))
     ap.add_argument("--metrics", default=str(ROOT / "build" / "metrics.json"))
     ap.add_argument("--shots", default=str(ROOT / "build" / "shots"))
+    ap.add_argument("--posts", default=str(ROOT / "content" / "posts"), help="the Insights posts")
     ap.add_argument("--live", default=str(ROOT / "build" / "live"),
                     help="the public editions built by live/build.mjs; without them each page shows its screenshot")
     a = ap.parse_args()
@@ -384,6 +385,9 @@ def main() -> None:
         live = live_all.get(t["id"], {})
         img = image_for(t, shots, football / "img")
         (football / f"{t['id']}.html").write_text(page(t, live, img, desk, head, nav, foot, apps.get(t["id"])))
+    import build_insights
+    posts = build_insights.build(out, Path(a.posts))
+    print(f"built {out}: {posts} insights post(s)")
     print(f"built {out}: {len(tools)} cards on tools/index.html, {len(tools)} tool pages, {len(apps)} running live")
 
 

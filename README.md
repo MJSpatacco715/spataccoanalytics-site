@@ -12,6 +12,8 @@ and one pull request at a time; merging to `main` is what publishes.
 |---|---|---|
 | Site pages, styles, scripts | `site/` here | The only source. A hand edit on the host is overwritten on the next Publish. |
 | Website Scorer | `site/tools/website-scorer.html` | Public at `/tools/website-scorer.html`. |
+| Insights (posts) | `content/posts/*.json`, built by `scripts/build_insights.py` | One file per post. Merging a post publishes it: a page, the feed at `/insights/`, an RSS feed, and (for the advisor category only) a teaser on the homepage. Statistics must carry a source. No posts yet, so the section does not exist on the live site. |
+| LinkedIn page address | `content/site.json` | Once set, every page that signs off links to it and the homepage tells search engines it belongs to the firm. |
 | Resume Parser | `site/tools/resume-parser/index.html` | Public tool: a resume in, structured data out, as Excel or CSV. Two free reads per browser, then an invitation to get it for the visitor's firm. Holds no client's records or field names. |
 | Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
@@ -148,9 +150,10 @@ bash tests/feed_test.sh                                     # the relay passes o
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
 bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
 node tests/worker_test.mjs                                  # the relay passes on the tools' own requests and nothing else
+bash tests/insights_test.sh                                 # posts build into pages, sourced and escaped
 npm install --prefix live && \
   node live/build.mjs --source <source checkout> --out build/live && \
   node live/smoke.mjs --live build/live                     # the working tools, built and opened
 ```
 
-CI runs the first seven on every push, and the last when it has the source token.
+CI runs the first eight on every push, and the last when it has the source token.

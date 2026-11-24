@@ -24,6 +24,10 @@ lives and says which pieces are not in this repo yet.
   view, and a source card (`site/css/cite.css`, `site/js/cite.js`) with the
   finding, who was surveyed and a link. A number with no checkable source
   does not go on the site.
+- A post is a file in `content/posts/` (format at the top of
+  `scripts/build_insights.py`). The site is where a piece is published;
+  LinkedIn gets its words from `build_insights.py --linkedin SLUG` and a
+  link back. Only the `practice` category appears on the homepage.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
@@ -43,5 +47,6 @@ bash tests/feed_test.sh
 bash tests/lead_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
+bash tests/insights_test.sh
 for f in site/score/lead.php site/lib/leads.php site/services/pricing.php; do php -l "$f"; done
 ```
