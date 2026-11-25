@@ -20,7 +20,8 @@
  * web root as sa-market.json from the EIA_API_KEY secret. Without it the
  * strip shows the other four.
  *
- * Every figure goes out with the words for its source card, so the page
+ * Every figure goes out with the words for its source card, and the feed
+ * names each publisher once for the strip's own "about" card, so the page
  * prints text only and nothing a source sends is ever treated as markup.
  *
  * Opened directly, this file does nothing: it only defines functions.
@@ -38,30 +39,40 @@ const MARKET_SOURCES = [
     'treasury' => [
         'ttl' => 1800,
         'short' => 'Treasury',
+        'publisher' => 'U.S. Department of the Treasury',
+        'home' => 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve',
         'name' => 'U.S. Department of the Treasury, Daily Treasury Par Yield Curve Rates',
         'url' => 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve',
     ],
     'ecb' => [
         'ttl' => 1800,
         'short' => 'ECB',
+        'publisher' => 'European Central Bank',
+        'home' => 'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html',
         'name' => 'European Central Bank, euro foreign exchange reference rates',
         'url' => 'https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/eurofxref-graph-usd.en.html',
     ],
     'coingecko' => [
         'ttl' => 300,
         'short' => 'CoinGecko',
-        'name' => 'Data provided by CoinGecko',
+        'publisher' => 'CoinGecko',
+        'home' => 'https://www.coingecko.com/en/coins/bitcoin',
+        'name' => 'CoinGecko',
         'url' => 'https://www.coingecko.com/en/coins/bitcoin',
     ],
     'eia_spot' => [
         'ttl' => 10800,
         'short' => 'EIA',
+        'publisher' => 'U.S. Energy Information Administration',
+        'home' => 'https://www.eia.gov/petroleum/',
         'name' => 'U.S. Energy Information Administration, spot prices for crude oil',
         'url' => 'https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm',
     ],
     'eia_gas' => [
         'ttl' => 10800,
         'short' => 'EIA',
+        'publisher' => 'U.S. Energy Information Administration',
+        'home' => 'https://www.eia.gov/petroleum/',
         'name' => 'U.S. Energy Information Administration, Gasoline and Diesel Fuel Update',
         'url' => 'https://www.eia.gov/petroleum/gasdiesel/',
     ],
@@ -518,7 +529,7 @@ function market_item(string $id, array $held, int $now): ?array
             $text = 'Euro reference rate for ' . $long . ': one euro bought ' . $shown . ' U.S. dollars.' . $was('business day') . ' The rate is set once each business day.';
             break;
         case 'btc':
-            $text = 'Price in U.S. dollars at ' . $long . '.' . ($delta !== '' && $delta !== 'unch' ? ' Change over the 24 hours before: ' . $delta . '.' : '');
+            $text = 'Price in U.S. dollars at ' . $long . '.' . ($delta !== '' && $delta !== 'unch' ? ' Change over the 24 hours before: ' . $delta . '.' : '') . ' Data provided by CoinGecko.';
             break;
         case 'brent':
             $text = 'Europe Brent spot price for ' . $long . ', in dollars a barrel.' . $was('trading day') . ' The daily prices are released once a week.';
@@ -554,12 +565,15 @@ function market_snapshot(): array
     $dir = market_dir();
     $cache = $dir === '' ? ['sources' => []] : market_refresh($dir, $now);
     $items = [];
+    $sources = [];                  // who published what is showing, once each
     foreach (MARKET_ITEMS as $id => $spec) {
         $held = $cache['sources'][$spec['src']]['items'][$id] ?? null;
         $one = is_array($held) ? market_item($id, $held, $now) : null;
         if ($one !== null) {
             $items[] = $one;
+            $src = MARKET_SOURCES[$spec['src']];
+            $sources[$src['publisher']] = ['name' => $src['publisher'], 'url' => $src['home']];
         }
     }
-    return ['ok' => $items !== [], 'at' => gmdate('Y-m-d\TH:i:s\Z', $now), 'items' => $items];
+    return ['ok' => $items !== [], 'at' => gmdate('Y-m-d\TH:i:s\Z', $now), 'items' => $items, 'sources' => array_values($sources)];
 }
