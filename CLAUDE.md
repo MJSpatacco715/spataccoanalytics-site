@@ -55,7 +55,10 @@ lives and says which pieces are not in this repo yet.
   this repository.
   The RIA deal count on it is DeVoe & Company's, the same source as the
   record in the stat row, typed into `MARKET_DEALS` each quarter
-  (`docs/stat-bank.md`).
+  (`docs/stat-bank.md`). Its card is drawn, not written out: the count, a bar
+  toward the record, and the year beside the record year quarter by quarter,
+  all from numbers in that same place. The energy figures are asked for
+  hourly, because their publisher releases the daily oil prices once a week.
   Its hover cards name the source with a link and end on the owner's line:
   "This tool runs entirely on free public data. Yours could too." That is as
   far as the hover sells: no link and no direct pitch. The owner wants the

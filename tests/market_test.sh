@@ -59,6 +59,14 @@ feed $NOW
 check "eight figures, in the order they scroll" '[ "$(ok)" = true ] && [ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ]'
 check "the RIA deal count, against the record" '[ "$(of ria label)" = "RIA Deals 2026" ] && [ "$(of ria value)" = 244 ] && [ "$(of ria delta)" = "78 to tie record" ] && [ "$(of ria by)" = DeVoe ] && [ "$(of ria when)" = "Q1-Q3" ]'
 check "its card says what is counted, the record and how far off it is" '[ "$(of ria card.title)" = "RIA deals announced in 2026: 244 through September" ] && [[ "$(of ria card.text)" == *"January through September 2026"*"322, set in 2025"*"Another 78 "*"the next count is the full year, early in 2027."* ]]'
+check "the card is drawn too: the count, large, and what it covers" '[ "$(of ria card.eyebrow)" = "RIA deals announced in 2026" ] && [ "$(of ria card.hero.value)" = 244 ] && [ "$(of ria card.hero.label)" = "January through September" ]'
+check "a bar toward the record" '[ "$(of ria card.meter.pct)" = 76 ] && [ "$(of ria card.meter.left)" = "76% of the record" ] && [ "$(of ria card.meter.right)" = "322 in 2025" ]'
+check "the year beside the record year, quarter by quarter, and what the last quarter needs" '[ "$(of ria card.chart.rows)" = "[{\"q\":\"Q1\",\"then\":75,\"now\":93},{\"q\":\"Q2\",\"then\":73,\"now\":74},{\"q\":\"Q3\",\"then\":93,\"now\":77},{\"q\":\"Q4\",\"then\":81,\"need\":78}]" ] && [ "$(of ria card.chart.now)" = 2026 ] && [ "$(of ria card.chart.then)" = 2025 ] && [ "$(of ria card.chart.need)" = "needed to tie" ]'
+check "the chart says in words what it shows, for a reader who cannot see it" '[[ "$(of ria card.chart.label)" == "Deals by quarter. 2026: Q1 93, Q2 74, Q3 77. 2025: Q1 75, Q2 73, Q3 93, Q4 81. 78 in the fourth quarter of 2026 would tie the record." ]]'
+check "and what a repeat of last year would do" '[ "$(of ria card.chart.note)" = "A fourth quarter like 2025'"'"'s (81) would end 2026 at 325, a new record." ]'
+check "two more facts from the Deal Book, and when the next count is due" '[[ "$(of ria card.facts)" == *"Q3 fell 17% from a year earlier"*"Consolidators made 129 of the 244 deals (53%)"* ]] && [ "$(of ria card.next)" = "Next count: the full year, early in 2027." ]'
+quarters=$(php -r 'require $argv[1]; $d=MARKET_DEALS; echo (array_sum($d["quarters"])===$d["count"] && array_sum($d["record_quarters"])===$d["record"] && count($d["record_quarters"])===4) ? "ok" : "no";' "$web/lib/market.php")
+check "the quarters typed in add up to the counts" '[ "$quarters" = ok ]'
 check "and names the Deal Book, with a link to it" '[[ "$(of ria card.source)" == "DeVoe & Company RIA Deal Book"* ]] && [[ "$(of ria card.url)" == https://www.devoeandcompany.com/* ]]'
 check "the 30-year yield, and its move in basis points" '[ "$(of ust30 value)" = "5.30%" ] && [ "$(of ust30 delta)" = "+1 bp" ] && [ "$(of ust30 dir)" = up ]'
 check "the 10-year yield" '[ "$(of ust10 value)" = "4.91%" ] && [ "$(of ust10 delta)" = "-1 bp" ] && [ "$(of ust10 dir)" = dn ]'
@@ -71,7 +79,7 @@ check "a source card names the figure and its day" '[ "$(of ust10 card.title)" =
 check "and its publisher, with a link to them" '[[ "$(of ust10 card.source)" == "U.S. Department of the Treasury"* ]] && [[ "$(of ust10 card.url)" == https://home.treasury.gov/* ]] && [[ "$(of eurusd card.url)" == https://www.ecb.europa.eu/* ]] && [[ "$(of gas card.url)" == https://www.eia.gov/* ]]'
 check "CoinGecko is credited the way it asks" '[ "$(of btc card.source)" = CoinGecko ] && [[ "$(of btc card.text)" == *"Data provided by CoinGecko." ]] && [[ "$(of btc card.url)" == https://www.coingecko.com/* ]]'
 check "each publisher is named once, with a link, for the strip's own card" '[ "$(srcs)" = "DeVoe & Company|U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration" ]'
-check "the oil card says the prices come out weekly" '[[ "$(of brent card.text)" == *"released once a week"* ]]'
+check "the oil card says the prices come out weekly, and on which day" '[[ "$(of brent card.text)" == *"released once a week, usually on Wednesday."* ]] && [[ "$(of wti card.text)" == *"released once a week, usually on Wednesday."* ]]'
 check "the gas card says which week" '[[ "$(of gas card.text)" == *"week of November 23, 2026"*"\$3.805"* ]]'
 check "no markup and no long dash in what the page is given" '[[ "$BODY" != *"<"* ]] && [[ "$BODY" != *$'"'"'\xe2\x80\x94'"'"'* ]]'
 check "the answers are kept beside the web root, not in it" '[ -s "$t/home/sa-market/cache.json" ] && [ -z "$(find "$web" -type f ! -name feed.php ! -name market.php)" ]'
@@ -110,6 +118,9 @@ feed $((NOW + 2500))
 check "and it is left alone for five minutes" '[ "$(asked coingecko)" = 4 ]'
 feed $((NOW + 2800))
 check "then tried again" '[ "$(asked coingecko)" = 5 ]'
+check "the energy source has been left alone for the hour" '[ "$(asked eia.gov)" = 2 ]'
+feed $((NOW + 3700))
+check "and is asked again after it, so its weekly release shows the afternoon it is out" '[ "$(asked eia.gov)" = 4 ]'
 feed $((NOW + 7 * 3600))
 check "after six hours a bitcoin price is too old to show" '[ "$(ids)" = "ust30,ust10,eurusd,brent,wti,gas" ]'
 all_sources

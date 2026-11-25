@@ -126,7 +126,16 @@ When the weekly run falls after a new Deal Book is out:
    compares, or empty), `book` and `url`. In January the full-year count goes
    in with `through` set to December 31; if it is a new record, the stat row
    on the homepage changes too.
-3. Change the expected figures in `tests/market_test.sh` and
+3. The card draws the year beside the record year, so bring these up to date
+   in the same place: `quarters` (the year so far, a number a quarter, which
+   must add up to `count`), `record_quarters` (the record year's four
+   quarters, which must add up to `record`; they change only when a year sets
+   a new record) and `notes` (one or two plain sentences of what else the
+   book says, each a fact in the book with its number). The check fails when
+   the quarters do not add up. With three quarters in, the card works out by
+   itself what the fourth needs and what a repeat of the record year's fourth
+   would do.
+4. Change the expected figures in `tests/market_test.sh` and
    `tests/ticker_browser.cjs`, run the checks, and open the pull request.
    This one needs no approval to merge: it is a number from an agreed source.
 

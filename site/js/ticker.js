@@ -183,12 +183,106 @@
     card.style.left = Math.min(Math.max(12, b.left - box.left), most) + 'px';
   }
 
-  // The card for one figure: what it is, and where it comes from.
+  // A whole number from the feed, or null. Sizes are worked out from these
+  // and from nothing else the feed sends.
+  function whole(v) {
+    return typeof v === 'number' && isFinite(v) && v >= 0 && v < 1e6 ? Math.round(v) : null;
+  }
+
+  // How far a count is toward its limit: a bar, with a line under each end.
+  function meter(m) {
+    var pct = whole(m.pct);
+    if (pct === null) return;
+    var box = el('div', 'sa-tk-meter');
+    var bar = el('div', 'sa-tk-bar');
+    bar.setAttribute('role', 'img');
+    bar.setAttribute('aria-label', String(m.label || ''));
+    var fill = el('span');
+    fill.style.width = Math.min(100, pct) + '%';
+    bar.appendChild(fill);
+    box.appendChild(bar);
+    var ends = el('div', 'sa-tk-ends');
+    ends.appendChild(el('span', '', m.left));
+    ends.appendChild(el('span', '', m.right));
+    box.appendChild(ends);
+    card.appendChild(box);
+  }
+
+  // Two years side by side, a pair of columns a quarter, each with its number
+  // on top. A quarter still to come shows what it would need, drawn hollow.
+  var TALL = 58;            // pixels: the tallest column
+  function chart(ch) {
+    var rows = Array.isArray(ch.rows) ? ch.rows.slice(0, 4) : [];
+    var top = 0, needs = false;
+    rows.forEach(function (r) {
+      ['then', 'now', 'need'].forEach(function (k) { var n = whole(r && r[k]); if (n !== null && n > top) top = n; });
+      if (r && whole(r.need) !== null) needs = true;
+    });
+    if (!rows.length || top <= 0) return;
+    var fig = el('div', 'sa-tk-chart');
+    var head = el('div', 'sa-tk-chead');
+    head.appendChild(el('span', 'sa-tk-ctitle', ch.title));
+    var key = el('span', 'sa-tk-key');
+    [['then', ch.then], ['now', ch.now], ['need', needs ? ch.need : '']].forEach(function (k) {
+      if (k[1]) key.appendChild(el('span', 'sa-tk-k ' + k[0], k[1]));
+    });
+    head.appendChild(key);
+    fig.appendChild(head);
+    var plot = el('div', 'sa-tk-plot');
+    plot.setAttribute('role', 'img');
+    plot.setAttribute('aria-label', String(ch.label || ''));
+    rows.forEach(function (r) {
+      var grp = el('div', 'sa-tk-grp');
+      var cols = el('div', 'sa-tk-cols');
+      ['then', 'now', 'need'].forEach(function (k) {
+        var n = whole(r && r[k]);
+        if (n === null) return;
+        var col = el('span', 'sa-tk-col ' + k);
+        col.appendChild(el('span', 'sa-tk-n', String(n)));
+        var bar = el('i');
+        bar.style.height = Math.max(2, Math.round(n / top * TALL)) + 'px';
+        col.appendChild(bar);
+        cols.appendChild(col);
+      });
+      grp.appendChild(cols);
+      grp.appendChild(el('span', 'sa-tk-q', r && r.q));
+      plot.appendChild(grp);
+    });
+    fig.appendChild(plot);
+    if (typeof ch.note === 'string' && ch.note) fig.appendChild(el('p', 'sa-tk-take', ch.note));
+    card.appendChild(fig);
+  }
+
+  // The card for one figure: what it is, and where it comes from. A figure
+  // that sends a picture of itself (the deal count) is drawn: the number, how
+  // far it is to the record, the year beside the record year, a few facts.
   function figureCard(it) {
-    card.appendChild(el('strong', '', it.card.title));
-    card.appendChild(el('p', '', it.card.text));
+    var c = it.card;
+    var drawn = !!(c.hero && typeof c.hero === 'object' && c.hero.value);
+    card.classList.toggle('sa-tk-wide', drawn);
+    if (drawn) {
+      card.appendChild(el('strong', 'sa-tk-eye', c.eyebrow || c.title));
+      var hero = el('p', 'sa-tk-hero');
+      hero.appendChild(el('span', 'sa-tk-big', c.hero.value));
+      hero.appendChild(el('span', 'sa-tk-cap', c.hero.label));
+      card.appendChild(hero);
+      if (c.meter && typeof c.meter === 'object') meter(c.meter);
+      if (c.chart && typeof c.chart === 'object') chart(c.chart);
+      var facts = Array.isArray(c.facts) ? c.facts.slice(0, 4).filter(function (f) { return typeof f === 'string' && f; }) : [];
+      if (facts.length) {
+        var ul = el('ul', 'sa-tk-facts');
+        facts.forEach(function (f) { ul.appendChild(el('li', '', f)); });
+        card.appendChild(ul);
+      } else if (!c.chart) {
+        card.appendChild(el('p', '', c.text));
+      }
+    } else {
+      card.appendChild(el('strong', '', c.title));
+      card.appendChild(el('p', '', c.text));
+    }
     var src = el('p', 'sa-tk-from', 'Source: ');
-    src.appendChild(out(it.card.source, it.card.url) || document.createTextNode(it.card.source));
+    src.appendChild(out(c.source, c.url) || document.createTextNode(c.source));
+    if (drawn && typeof c.next === 'string' && c.next) src.appendChild(document.createTextNode('. ' + c.next));
     card.appendChild(src);
   }
 
@@ -218,8 +312,14 @@
     btn.classList.add('open');
     btn.setAttribute('aria-expanded', 'true');
     card.textContent = '';
+    card.classList.remove('sa-tk-wide');
     if (it) figureCard(it); else aboutCard();
-    card.appendChild(el('p', 'sa-tk-free', FREE));   // at the foot of every card
+    // at the foot of every card; its second sentence is kept on one line
+    var free = el('p', 'sa-tk-free');
+    var cut = FREE.indexOf('. ') + 2;
+    free.appendChild(document.createTextNode(FREE.slice(0, cut)));
+    free.appendChild(el('span', 'sa-tk-nb', FREE.slice(cut)));
+    card.appendChild(free);
     card.hidden = false;
     under(btn);
     requestAnimationFrame(function () { if (openItem === btn) under(btn); });
