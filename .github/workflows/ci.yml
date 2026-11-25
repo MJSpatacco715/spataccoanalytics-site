@@ -50,6 +50,9 @@ jobs:
       - name: The contact form keeps real messages and nothing else
         run: bash tests/contact_test.sh
 
+      - name: The notice mail goes out as the firm, and a visitor cannot add to it
+        run: bash tests/notice_test.sh
+
       - name: Project prices go only to a visitor who left an email
         run: bash tests/pricing_test.sh
 
