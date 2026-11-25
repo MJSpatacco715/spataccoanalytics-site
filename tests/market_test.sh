@@ -57,8 +57,8 @@ check "so the next visitor gets its figures, and nothing is asked twice" '[ "$(e
 all_sources; with_key; forget
 feed $NOW
 check "eight figures, in the order they scroll" '[ "$(ok)" = true ] && [ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ]'
-check "the RIA deal count, against the record" '[ "$(of ria label)" = "RIA Deals 2026" ] && [ "$(of ria value)" = 244 ] && [ "$(of ria delta)" = "record 322" ] && [ "$(of ria by)" = DeVoe ] && [ "$(of ria when)" = "thru Sep" ]'
-check "its card says what is counted, the record and how far off it is" '[ "$(of ria card.title)" = "RIA deals announced in 2026: 244 through September" ] && [[ "$(of ria card.text)" == *"January through September 2026"*"322, set in 2025"*"Another 78 "* ]]'
+check "the RIA deal count, against the record" '[ "$(of ria label)" = "RIA Deals 2026" ] && [ "$(of ria value)" = 244 ] && [ "$(of ria delta)" = "78 to tie record" ] && [ "$(of ria by)" = DeVoe ] && [ "$(of ria when)" = "Q1-Q3" ]'
+check "its card says what is counted, the record and how far off it is" '[ "$(of ria card.title)" = "RIA deals announced in 2026: 244 through September" ] && [[ "$(of ria card.text)" == *"January through September 2026"*"322, set in 2025"*"Another 78 "*"the next count is the full year, early in 2027."* ]]'
 check "and names the Deal Book, with a link to it" '[[ "$(of ria card.source)" == "DeVoe & Company RIA Deal Book"* ]] && [[ "$(of ria card.url)" == https://www.devoeandcompany.com/* ]]'
 check "the 30-year yield, and its move in basis points" '[ "$(of ust30 value)" = "5.30%" ] && [ "$(of ust30 delta)" = "+1 bp" ] && [ "$(of ust30 dir)" = up ]'
 check "the 10-year yield" '[ "$(of ust10 value)" = "4.91%" ] && [ "$(of ust10 delta)" = "-1 bp" ] && [ "$(of ust10 dir)" = dn ]'
@@ -139,6 +139,16 @@ if command -v flock >/dev/null; then
   wait "$holder"
   feed $((NOW + 2000))
   check "and the next one asks" '[ "$(wc -l < "$fx/requests.log")" -gt "$before" ]'
+  # a slow source that is taking its time does not hold up the quick ones
+  all_sources; forget
+  feed $NOW
+  before=$(asked coingecko)
+  ( exec 9>"$t/home/sa-market/lock-slow"; flock -x 9; sleep 2 ) &
+  holder=$!
+  sleep 0.4
+  feed1 $((NOW + 400))
+  check "while the energy source is still being asked, bitcoin is brought up to date" '[ "$(asked coingecko)" -gt "$before" ] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ]'
+  wait "$holder"
 fi
 
 # --- answers that are not what they should be
@@ -198,7 +208,7 @@ check "and its script, tagged with its version (now ?v=$vjs)" 'grep -q "<script 
 check "the homepage is the only page with it" '[ "$(grep -rl "sa-ticker" "$here/site" --include=*.html | wc -l)" = 1 ]'
 check "the script writes text, never markup" '! grep -nE "innerHTML|outerHTML|insertAdjacentHTML|document\.write" "$js"'
 check "and asks only the site's own feed" '[ "$(grep -c "fetch(" "$js")" = 1 ] && grep -q "var FEED = ./market/feed.php.;" "$js" && ! grep -qE "https?://" "$js"'
-check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live quotes\." "$js" && grep -q "This tool runs entirely on free public data\. Yours could too\." "$js"'
+check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live\.." "$js" && ! grep -q "live quotes" "$js" && grep -q "This tool runs entirely on free public data\. Yours could too\." "$js"'
 check "the hover makes no pitch and links only to sources" '! grep -qiE "working for you|/contact|mailto:" "$js"'
 check "it has a pause button and respects reduced motion" 'grep -q "sa-tk-pause" "$js" && grep -q "prefers-reduced-motion" "$js" && grep -q "prefers-reduced-motion" "$here/site/css/ticker.css"'
 check "no long dash in any of it" '! grep -l $'"'"'\xe2\x80\x94'"'"' "$js" "$here/site/css/ticker.css" "$here/site/lib/market.php" "$here/site/market/feed.php"'

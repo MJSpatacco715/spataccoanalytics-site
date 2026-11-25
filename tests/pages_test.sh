@@ -75,6 +75,8 @@ check "the place posts are added to the home page is still there, above the clos
 for id in crm audit design; do
   check "a pillar links to the $id service, and the services page has it" 'grep -q "<a class=\"service-card [a-z]* reveal d[0-9]*\" href=\"/services/#$id\">" "$home" && grep -q "<fieldset class=\"sv-card reveal\" id=\"$id\" data-service=\"$id\"" "$site/services/index.html"'
 done
+check "the first screen says what we do in the owner's softer words" 'grep -q "We help advisory firms get their CRM, data and website ready before anyone asks." "$home"'
+check "the pillars are one height with their links on one line" 'grep -q "a.service-card{display:flex;flex-direction:column;" "$home" && grep -q "\.service-go{display:block;margin-top:auto;" "$home"'
 check "there are three pillars and each is a link" '[ "$(grep -o "<a class=\"service-card " "$home" | wc -l)" = 3 ] && ! grep -q "<div class=\"service-card" "$home"'
 
 # --- every statistic carries its source

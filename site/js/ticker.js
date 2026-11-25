@@ -20,7 +20,7 @@
   var EVERY = 120000;       // ask again every two minutes while the page is in view
   var SPEED = 38;           // pixels a second
   var MIN_ITEMS = 3;
-  var NOTE = 'These quotes are latest published figures and not necessarily live quotes.';
+  var NOTE = 'These quotes are latest published figures and not necessarily live.';
   var FREE = 'This tool runs entirely on free public data. Yours could too.';
   var still = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
@@ -116,7 +116,7 @@
     btn.appendChild(el('span', 'sa-tk-when', it.by + ', ' + it.when));
   }
 
-  function oneSet(real) {
+  function oneSet(real, withNote) {
     var ul = el('ul', 'sa-tk-set');
     if (!real) ul.setAttribute('aria-hidden', 'true');
     function add(cls, id) {
@@ -136,23 +136,27 @@
       return btn;
     }
     data.forEach(function (it) { fill(add('sa-tk-item', it.id), it); });
-    add('sa-tk-item sa-tk-note', 'about').textContent = NOTE;
+    if (withNote) add('sa-tk-item sa-tk-note', 'about').textContent = NOTE;
     return ul;
   }
 
-  // Enough copies of the set to fill the strip twice over, so the loop has no seam.
+  // The note on what the figures are rides along on every other pass, not
+  // every one: a round is the figures with the note, then the figures alone.
+  // Enough rounds to fill the strip twice over, so the loop has no seam.
   function lay() {
     shut();
     track.textContent = '';
-    var first = oneSet(true);
+    var first = oneSet(true, true);
     track.appendChild(first);
     lastWidth = view.clientWidth;
     if (still) return;
-    var w = first.getBoundingClientRect().width;
-    if (!w || !lastWidth) return;
-    var half = Math.max(1, Math.ceil(lastWidth / w));
-    for (var i = 1; i < half * 2; i++) track.appendChild(oneSet(false));
-    track.style.setProperty('--sa-tk-dur', Math.max(20, Math.round((half * w) / SPEED)) + 's');
+    var plain = oneSet(false, false);
+    track.appendChild(plain);
+    var round = first.getBoundingClientRect().width + plain.getBoundingClientRect().width;
+    if (!round || !lastWidth) return;
+    var half = Math.max(1, Math.ceil(lastWidth / round));
+    for (var i = 1; i < half * 2; i++) { track.appendChild(oneSet(false, true)); track.appendChild(oneSet(false, false)); }
+    track.style.setProperty('--sa-tk-dur', Math.max(20, Math.round((half * round) / SPEED)) + 's');
   }
 
   // The strip sits just under the menu, whatever height the menu is. Where the

@@ -59,15 +59,18 @@ function spot(page, id) {
         trackWide: track.getBoundingClientRect().width >= 2 * r.querySelector('.sa-tk-view').clientWidth,
         text: sets[0].textContent,
         note: !!r.querySelector('.sa-tk-note'),
+        notes: sets.map((x) => (x.querySelector('.sa-tk-note') ? 'n' : '-')).join(''),
+        noWordTwice: !/quotes[^.]*quotes/.test((r.querySelector('.sa-tk-note') || {}).textContent || 'quotes quotes'),
         pageWide: document.documentElement.scrollWidth <= window.innerWidth,
       };
     });
-    check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('record 322') && s.text.includes('DeVoe, thru Sep'));
+    check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('78 to tie record') && s.text.includes('DeVoe, Q1-Q3'));
     check('the copies are hidden from assistive technology and from the Tab key', s.sets >= 2 && s.firstHidden === null && s.copiesHidden && s.copiesOutOfTabs);
     check('it sits directly under the menu and above the headline', s.top === s.navBottom && s.bottom < s.heroTop && s.height <= 36);
     check('it scrolls, with no seam', s.moving && s.trackWide);
     check('a figure shows its value, its move, who published it and for when', s.text.includes('US 10-Yr') && s.text.includes('4.91%') && s.text.includes('-1 bp') && s.text.includes('Treasury, Nov 24') && s.text.includes('EIA, Nov 17'));
-    check('it says what the figures are', s.note && s.text.includes('These quotes are latest published figures and not necessarily live quotes.'));
+    check('it says what the figures are', s.note && s.text.includes('These quotes are latest published figures and not necessarily live.'));
+    check('the note rides on every other pass of the figures, not every one', /^(n-)+$/.test(s.notes) && s.sets % 4 === 0 && s.noWordTwice);
     check('the page is no wider than the window', s.pageWide);
     const h = await page.evaluate(() => { const m = document.querySelector('.hero h1 .h1-main').getBoundingClientRect(), e = document.querySelector('.hero h1 em').getBoundingClientRect(); return { below: e.top >= m.bottom - 2, left: Math.abs(e.left - m.left) < 2, text: document.querySelector('.hero h1').textContent }; });
     check('the headline is two lines: the statement, then the ask beneath it', h.below && h.left && h.text === 'Buyers will look at your data. Make sure it is ready.');
@@ -82,7 +85,7 @@ function spot(page, id) {
       return { open: !card.hidden, title: (card.querySelector('strong') || {}).textContent, text: card.textContent, names: links.map((a) => a.textContent).join('|'), https: links.every((a) => /^https:\/\//.test(a.href) && a.target === '_blank' && a.rel === 'noopener'), paused: getComputedStyle(document.querySelector('.sa-tk-track')).animationPlayState === 'paused' };
     });
     check('the Markets label opens a card about the whole strip', about.open && about.title === 'About these figures' && about.paused);
-    check('with the note on what the figures are', about.text.includes('These quotes are latest published figures and not necessarily live quotes.'));
+    check('with the note on what the figures are', about.text.includes('These quotes are latest published figures and not necessarily live.'));
     check('every source, each a link to its publisher', about.names === 'DeVoe & Company|U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration' && about.https);
     check('and the line that the tool runs on free public data', about.text.includes('This tool runs entirely on free public data. Yours could too.'));
     const p = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));

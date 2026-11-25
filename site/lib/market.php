@@ -452,6 +452,24 @@ function market_cache_write(string $dir, array $cache): void
     }
 }
 
+// Put one source's answer into what is held, leaving the others as they are
+// on disk now. Two requests may be asking different sources at once.
+function market_cache_merge(string $dir, string $source, array $held): array
+{
+    $w = @fopen($dir . '/lock-write', 'c');
+    if ($w !== false) {
+        flock($w, LOCK_EX);
+    }
+    $cache = market_cache_read($dir);
+    $cache['sources'][$source] = $held;
+    market_cache_write($dir, $cache);
+    if ($w !== false) {
+        flock($w, LOCK_UN);
+        fclose($w);
+    }
+    return $cache;
+}
+
 // The sources whose answers have run out and may be asked again: the quick
 // ones, or the slow ones.
 function market_due(array $cache, int $now, string $eiaKey, bool $slow = false): array
@@ -479,7 +497,9 @@ function market_refresh(string $dir, int $now, bool $slow = false): array
     if (market_due($cache, $now, $key, $slow) === []) {
         return $cache;
     }
-    $lock = @fopen($dir . '/lock', 'c');
+    // The quick sources and the slow ones each have their own turn, so a slow
+    // one that takes a minute never keeps the quick ones waiting.
+    $lock = @fopen($dir . ($slow ? '/lock-slow' : '/lock'), 'c');
     if ($lock === false) {
         return $cache;
     }
@@ -489,7 +509,6 @@ function market_refresh(string $dir, int $now, bool $slow = false): array
     }
     $cache = market_cache_read($dir);       // someone may have just finished
     $began = microtime(true);
-    $changed = false;
     foreach (market_due($cache, $now, $key, $slow) as $source) {
         if (microtime(true) - $began > ($slow ? MARKET_BUDGET_SLOW : MARKET_BUDGET)) {
             break;                           // the rest wait for the next visitor
@@ -509,11 +528,8 @@ function market_refresh(string $dir, int $now, bool $slow = false): array
         } else {
             $held['why'] = market_why() !== '' ? market_why() : 'an answer with no figures in it';
         }
-        $cache['sources'][$source] = $held;
-        $changed = true;
-    }
-    if ($changed) {
-        market_cache_write($dir, $cache);
+        // kept at once, and laid over whatever the other turn wrote meanwhile
+        $cache = market_cache_merge($dir, $source, $held);
     }
     flock($lock, LOCK_UN);
     fclose($lock);
@@ -657,15 +673,19 @@ function market_deals_item(int $now): ?array
         $left = $d['record'] - $d['count'];
         $text = 'DeVoe & Company counted ' . $count . ' announced RIA transactions from January through ' . $month->format('F') . ' ' . $d['year']
             . ($d['pace'] !== '' ? ', ' . $d['pace'] : '') . '. The record for a full year is ' . $record . ', set in ' . $d['record_year'] . '. '
-            . ($left > 0 ? 'Another ' . number_format($left) . ' before the year ends would match it.' : 'This year has already passed it.');
-        $when = 'thru ' . $month->format('M');
+            . ($left > 0 ? 'Another ' . number_format($left) . ' before the year ends would match it.' : 'This year has already passed it.')
+            . ' DeVoe counts by the quarter, so the next count is the full year, early in ' . ($d['year'] + 1) . '.';
+        $m = (int)$month->format('n');
+        $when = $m % 3 === 0 ? ($m === 3 ? 'Q1' : 'Q1-Q' . intdiv($m, 3)) : 'thru ' . $month->format('M');
     }
+    $short = $d['record'] - $d['count'];
     return [
         'id' => 'ria',
         'label' => 'RIA Deals ' . $d['year'],
         'value' => $count,
-        'delta' => ($d['count'] > $d['record'] ? 'new record, was ' : 'record ') . $record,
-        'dir' => $d['count'] > $d['record'] ? 'up' : '',
+        // through the year: how many more would tie the record. Once it is beaten, or the year is in: the record itself
+        'delta' => $short < 0 ? 'new record, was ' . $record : ($whole || $short === 0 ? 'record ' . $record : number_format($short) . ' to tie record'),
+        'dir' => $short < 0 ? 'up' : '',
         'by' => 'DeVoe',
         'when' => $when,
         'card' => ['title' => $title, 'text' => $text, 'source' => $d['book'], 'url' => $d['url']],
