@@ -65,6 +65,7 @@ function spot(page, id) {
       };
     });
     check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('78 to tie record') && s.text.includes('DeVoe, Q1-Q3'));
+    check('the dollar is quoted in euros, as what one dollar buys', s.text.includes('USD/EUR') && s.text.includes('$1 = \u20AC0.9122') && !s.text.includes('EUR/USD'));
     check('the copies are hidden from assistive technology and from the Tab key', s.sets >= 2 && s.firstHidden === null && s.copiesHidden && s.copiesOutOfTabs);
     check('it sits directly under the menu and above the headline', s.top === s.navBottom && s.bottom < s.heroTop && s.height <= 36);
     check('it scrolls, with no seam', s.moving && s.trackWide);
@@ -97,7 +98,7 @@ function spot(page, id) {
       const b = card.getBoundingClientRect();
       return { open: !card.hidden, text: card.textContent, links: card.querySelectorAll('a').length, linkText: a && a.textContent, href: a && a.href, target: a && a.target, rel: a && a.rel, inside: b.left >= 0 && b.right <= window.innerWidth, below: b.top >= document.getElementById('sa-ticker').getBoundingClientRect().bottom, paused: getComputedStyle(document.querySelector('.sa-tk-track')).animationPlayState === 'paused', kids: card.querySelectorAll('script,img,iframe').length };
     });
-    check('hover opens the source card', c.open && /Treasury yield|Euro in U\.S\. dollars/.test(c.text) && c.text.includes('Source: '));
+    check('hover opens the source card', c.open && /Treasury yield|U\.S\. dollar in euros/.test(c.text) && c.text.includes('Source: '));
     // a market figure draws itself: the value and its change, a line of its history, three tiles
     const L = await page.evaluate(() => {
       const card = document.getElementById('sa-tk-card');
@@ -114,10 +115,10 @@ function spot(page, id) {
         inCard: gb.left >= b.left && gb.left + gb.width <= b.right + 1, gx: gb.left, gw: gb.width, gy: gb.top + gb.height / 2,
       };
     });
-    check('a market figure leads its card with the value and its change', /^(4\.91%|1\.0963)$/.test(L.big || '') && /^[\u25B2\u25BC] [+-]/.test(L.chip || '') && /^from Nov \d+$/.test(L.vs || ''));
-    check('and draws its history as a line, with the high and low marked and the days underneath', L.segs >= 37 && /^(5\.31%\|4\.84%|1\.1411\|1\.0963)$/.test(L.ticks) && /^(Oct 1\|Nov 24|Sep 23\|Nov 24)$/.test(L.days) && L.inCard && L.fits);
+    check('a market figure leads its card with the value and its change', /^(4\.91%|\u20AC0\.9122)$/.test(L.big || '') && /^[\u25B2\u25BC] [+-]/.test(L.chip || '') && /^from Nov \d+$/.test(L.vs || ''));
+    check('and draws its history as a line, with the high and low marked and the days underneath', L.segs >= 37 && /^(5\.31%\|4\.84%|\u20AC0\.9142\|\u20AC0\.8763)$/.test(L.ticks) && /^(Oct 1\|Nov 24|Sep 23\|Nov 24)$/.test(L.days) && L.inCard && L.fits);
     check('the chart is described for a reader who cannot see it', /, \d+ days from .* Low .* high .* latest /.test(L.says || ''));
-    check('it reads out the latest day until someone moves along it', /^Nov 24: (4\.91%|1\.0963)$/.test(L.read || ''));
+    check('it reads out the latest day until someone moves along it', /^Nov 24: (4\.91%|\u20AC0\.9122)$/.test(L.read || ''));
     check('three tiles: the low, the high and the change', /^Low=.+\|High=.+\|Change=[+-]/.test(L.tiles) && /set (once )?each business day\.$/.test(L.about || ''));
     await page.mouse.move(L.gx + L.gw * 0.25, L.gy, { steps: 2 });
     await page.waitForTimeout(80);
@@ -306,6 +307,8 @@ function spot(page, id) {
     const draw = (i) => page.evaluate((i) => { document.querySelectorAll('.sa-tk-item')[i].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); const card = document.getElementById('sa-tk-card'); const p = card.querySelector('.sa-tk-path'); return { hit: window.__hit === 1, imgs: card.querySelectorAll('img,script,iframe').length, line: !!card.querySelector('svg.sa-tk-line'), segs: p ? p.getAttribute('d').split('L').length : 0, chip: (card.querySelector('.sa-tk-chip') || {}).className, tiles: card.querySelectorAll('.sa-tk-tile').length, shown: card.textContent.includes('<img src=x') }; }, i);
     const v = await draw(1);
     check('a market figure with markup in it: shown as text, and only real days with real values are drawn', !v.hit && v.imgs === 0 && v.line && v.segs === 5 && v.chip === 'sa-tk-chip flat' && v.tiles === 1 && v.shown);
+    const fxCard = await page.evaluate(() => { const i = [...document.querySelectorAll('.sa-tk-item')].findIndex((e) => e.getAttribute('data-id') === 'eurusd'); document.querySelectorAll('.sa-tk-item')[i].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); const card = document.getElementById('sa-tk-card'); return { pair: [...card.querySelectorAll('.sa-tk-pair span')].map((e) => e.textContent).join('|'), verdict: (card.querySelector('.sa-tk-verdict') || {}).textContent, big: (card.querySelector('.sa-tk-big') || {}).textContent, fits: card.scrollWidth <= card.clientWidth + 1 && [...card.querySelectorAll('.sa-tk-pair span')].every((e) => e.scrollWidth <= e.clientWidth + 1) }; });
+    check('the dollar card gives the rate both ways round and says which is worth more', fxCard.pair === '$1 = \u20AC0.9122|\u20AC1 = $1.0963' && fxCard.verdict === 'The euro is worth more: one euro buys $1.10.' && fxCard.big === '\u20AC0.9122' && fxCard.fits);
     const w = await draw(2);
     check('a unit the strip does not know draws no chart', !w.hit && w.imgs === 0 && !w.line);
     await page.evaluate(() => { document.querySelector('.sa-tk-tag').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
