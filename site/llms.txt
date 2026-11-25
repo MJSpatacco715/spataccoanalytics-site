@@ -2,7 +2,7 @@
 
 > Spatacco Analytics LLC builds and fixes the digital front office of independent financial advisors and RIAs: websites, CRM, and data. Based in Bala Cynwyd, Pennsylvania.
 
-Spatacco Analytics was founded by a business development and M&A professional with years of experience across financial services: RIAs, PE firms, insurance companies, investment banks, broker-dealers, banks, and trust companies. It works with independent financial advisors, RIAs, and small business owners.
+Spatacco Analytics was founded by a business development and M&A professional with years of experience across financial services: RIAs, PE firms, insurance companies, investment banks, broker-dealers, banks, and trust companies. It works with independent financial advisors, RIAs, and small business owners. The firm runs on Microsoft 365 Business Premium and is fluent in setting it up.
 
 ## Services
 

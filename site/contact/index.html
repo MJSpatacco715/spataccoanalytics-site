@@ -80,7 +80,8 @@
   <div class="page-hero-inner">
     <div class="page-hero-tag">Let&rsquo;s Talk</div>
     <h1>Tell us where you are. <em>We&rsquo;ll meet you there.</em></h1>
-    <p class="page-hero-sub">No pitch deck. No pressure. No judgment about how you&rsquo;re managing things today. Answer a few questions so we come to the conversation prepared &mdash; not asking you to explain things we should already know.</p>
+    <p class="page-hero-sub">No pitch deck. No pressure. No judgment about how you&rsquo;re managing things today. Answer a few questions so we come to the conversation prepared, not asking you to explain things we should already know.</p>
+    <p class="page-hero-sub" id="about-note" hidden style="margin-top:14px;color:var(--cyan)"></p>
   </div>
 </section>
 
@@ -109,13 +110,13 @@
       <div class="form-section reveal d05">
         <div class="form-step-num">02</div>
         <label class="form-label">Where does your client data live today?</label>
-        <span class="form-sublabel">Be honest &mdash; we&rsquo;ve seen every starting line.</span>
+        <span class="form-sublabel">Be honest. We&rsquo;ve seen every starting line.</span>
         <div class="chip-group" id="data-chips">
           <div class="chip" data-value="My head / paper / nowhere organized" onclick="selectChip(this,'data-chips','dataLocation')">My head / paper</div>
           <div class="chip" data-value="Spreadsheets (Excel, Google Sheets)" onclick="selectChip(this,'data-chips','dataLocation')">Spreadsheets</div>
           <div class="chip" data-value="A CRM I don't really use" onclick="selectChip(this,'data-chips','dataLocation')">A CRM I don&rsquo;t really use</div>
           <div class="chip" data-value="A CRM I use actively" onclick="selectChip(this,'data-chips','dataLocation')">A CRM I use well</div>
-          <div class="chip" data-value="Not sure / it's everywhere" onclick="selectChip(this,'data-chips','dataLocation')">Not sure &mdash; it&rsquo;s everywhere</div>
+          <div class="chip" data-value="Not sure / it's everywhere" onclick="selectChip(this,'data-chips','dataLocation')">Not sure, it&rsquo;s everywhere</div>
         </div>
         <input type="hidden" id="dataLocation" name="dataLocation">
       </div>
@@ -134,7 +135,7 @@
           <option value="HubSpot">HubSpot</option>
           <option value="Microsoft Dynamics">Microsoft Dynamics</option>
           <option value="Other">Other</option>
-          <option value="None">None &mdash; no CRM</option>
+          <option value="None">None (no CRM)</option>
         </select>
       </div>
 
@@ -181,7 +182,7 @@
           <input type="tel" class="form-input" id="contactPhone" name="contactPhone" placeholder="Phone (optional)">
         </div>
         <label class="form-label" style="margin-top:16px;font-size:14px">Anything else you want us to know?</label>
-        <textarea class="form-textarea" id="contactNotes" name="contactNotes" placeholder="Current pain points, timeline, specific questions &mdash; whatever's on your mind."></textarea>
+        <textarea class="form-textarea" id="contactNotes" name="contactNotes" placeholder="Current pain points, timeline, specific questions, whatever's on your mind."></textarea>
       </div>
 
       <div class="reveal" style="text-align:center">
@@ -194,7 +195,7 @@
     <!-- ===== THANK YOU STATE ===== -->
     <div class="thank-you" id="thank-you">
       <h2>We got it. Thank you.</h2>
-      <p>We&rsquo;ll review your answers and get back to you within one business day with a straightforward response &mdash; not a sales pitch.<br><br><a href="/" style="color:var(--cyan);text-decoration:none">&larr; Back to Spatacco Analytics</a></p>
+      <p>We&rsquo;ll review your answers and get back to you within one business day with a straightforward response, not a sales pitch.<br><br><a href="/" style="color:var(--cyan);text-decoration:none">&larr; Back to Spatacco Analytics</a></p>
     </div>
 
   </div>
@@ -262,6 +263,18 @@ function submitForm() {
   };
   xhr.send(JSON.stringify(data));
 }
+
+/* A "walkthrough" link on the tools page says which build it is about.
+   Only the builds named here are recognised; anything else is ignored. */
+(function () {
+  var builds = { crm: 'the custom CRM', league: 'the fantasy league platform', golf: 'the golf pool' };
+  var about = new URLSearchParams(window.location.search).get('about');
+  if (!about || !Object.prototype.hasOwnProperty.call(builds, about)) return;
+  var note = document.getElementById('about-note');
+  if (note) { note.textContent = 'You asked for a walkthrough of ' + builds[about] + '. Skip any question below that does not fit you.'; note.hidden = false; }
+  var notes = document.getElementById('contactNotes');
+  if (notes && !notes.value) notes.value = 'I would like a walkthrough of ' + builds[about] + '.';
+})();
 </script>
 </body>
 </html>
