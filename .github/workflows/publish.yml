@@ -206,6 +206,32 @@ jobs:
                 "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
           echo "Stat bank access written beside the web root."
 
+      - name: Market strip key
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
+        run: |
+          # The homepage's market strip takes its oil and gasoline prices from
+          # the Energy Information Administration, which asks for a free key.
+          # The key is not in this repository: it comes from a secret and is
+          # written one level above the web root, where lib/market.php reads
+          # it and the web cannot. Sent on stdin; readable by this account
+          # alone. Without it the strip shows its other figures.
+          [ -n "$EIA_API_KEY" ] || { echo "::notice::EIA_API_KEY is not set; the market strip shows no oil or gasoline price."; exit 0; }
+          if ! printf '%s' "$EIA_API_KEY" | grep -Eq '^[A-Za-z0-9]{20,80}$'; then
+            echo "::warning::EIA_API_KEY is not in the form of a key (letters and digits only); the market strip shows no oil or gasoline price."
+            exit 0
+          fi
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          cfg="$(dirname "$web")/sa-market.json"
+          jq -n --arg k "$EIA_API_KEY" '{eia_key: $k}' \
+            | ssh -o ConnectionAttempts=8 -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" \
+                "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
+          echo "Market strip key written beside the web root."
+
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'
         run: |
@@ -246,6 +272,13 @@ jobs:
               *'"ok":true'*) echo "The live relay answers." ;;
               *) echo "::warning::The live relay did not answer with data: ${out:0:80}" ;;
             esac
+          fi
+          # The market strip, from the server: which figures its sources gave.
+          if [ -f "$root/market/feed.php" ]; then
+            out=$(cd "$root/market" && php -r '$_SERVER["DOCUMENT_ROOT"] = $argv[1]; $_SERVER["REQUEST_METHOD"] = "GET"; include "feed.php";' "$root" 2>/dev/null \
+              | php -r '$d = json_decode(stream_get_contents(STDIN), true); echo is_array($d) ? implode(" ", array_column($d["items"] ?? [], "id")) : "";' 2>/dev/null)
+            n=$(printf '%s' "$out" | wc -w)
+            if [ "$n" -ge 3 ]; then echo "The market strip has $n figures: $out"; else echo "::warning::The market strip has only $n figures ($out); it stays hidden under three."; fi
           fi
           echo "Verified on the server."
           REMOTE
