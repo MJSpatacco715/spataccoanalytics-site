@@ -26,6 +26,18 @@
  * web root as sa-market.json from the EIA_API_KEY secret. Without it the
  * strip shows the other four.
  *
+ * Each figure also carries its recent history, from the same feed that gives
+ * the figure, for the chart on its card: about two months of days (half a
+ * year of weeks for gasoline). The days a source sends are added to the days
+ * already held, so a feed that carries only this month still builds a longer
+ * line. Two requests exist only for history: last month's Treasury feed,
+ * asked for until enough days are held, and CoinGecko's day-by-day prices,
+ * asked for a few times a day.
+ *
+ * Brent and WTI are prices the Energy Information Administration buys from
+ * Refinitiv and republishes with permission. The owner was told and chose to
+ * keep them (CLAUDE.md).
+ *
  * Every figure goes out with the words for its source card, and the feed
  * names each publisher once for the strip's own "about" card, so the page
  * prints text only and nothing a source sends is ever treated as markup.
@@ -67,6 +79,15 @@ const MARKET_SOURCES = [
         'name' => 'CoinGecko',
         'url' => 'https://www.coingecko.com/en/coins/bitcoin',
     ],
+    // bitcoin day by day, for the chart on its card: asked a few times a day
+    'coingecko_days' => [
+        'ttl' => 21600,
+        'short' => 'CoinGecko',
+        'publisher' => 'CoinGecko',
+        'home' => 'https://www.coingecko.com/en/coins/bitcoin',
+        'name' => 'CoinGecko',
+        'url' => 'https://www.coingecko.com/en/coins/bitcoin',
+    ],
     'eia_spot' => [
         'ttl' => 3600,
         'slow' => true,             // asked after the visitor has been answered
@@ -94,20 +115,26 @@ const MARKET_SOURCES = [
 // the figures, in the order they scroll. fresh is how old (in days) a figure
 // may be and still be shown; lo and hi are the range a real value sits in.
 const MARKET_ITEMS = [
-    'ust30' => ['src' => 'treasury', 'label' => 'US 30-Yr', 'name' => 'U.S. 30-year Treasury yield', 'unit' => 'pct', 'fresh' => 10, 'lo' => 0.01, 'hi' => 25],
-    'ust10' => ['src' => 'treasury', 'label' => 'US 10-Yr', 'name' => 'U.S. 10-year Treasury yield', 'unit' => 'pct', 'fresh' => 10, 'lo' => 0.01, 'hi' => 25],
-    'eurusd' => ['src' => 'ecb', 'label' => 'EUR/USD', 'name' => 'Euro in U.S. dollars', 'unit' => 'fx', 'fresh' => 10, 'lo' => 0.3, 'hi' => 3],
-    'btc' => ['src' => 'coingecko', 'label' => 'Bitcoin', 'name' => 'Bitcoin', 'unit' => 'usd0', 'fresh' => 0.25, 'lo' => 1, 'hi' => 100000000],
-    'brent' => ['src' => 'eia_spot', 'label' => 'Brent', 'name' => 'Brent crude oil', 'unit' => 'usd2', 'fresh' => 21, 'lo' => 1, 'hi' => 1000],
-    'wti' => ['src' => 'eia_spot', 'label' => 'WTI', 'name' => 'WTI crude oil', 'unit' => 'usd2', 'fresh' => 21, 'lo' => 1, 'hi' => 1000],
-    'gas' => ['src' => 'eia_gas', 'label' => 'US Regular Gas', 'name' => 'U.S. regular gasoline', 'unit' => 'usd3', 'fresh' => 21, 'lo' => 0.2, 'hi' => 50],
+    'ust30' => ['src' => 'treasury', 'label' => 'US 30-Yr', 'name' => 'U.S. 30-year Treasury yield', 'unit' => 'pct', 'fresh' => 10, 'lo' => 0.01, 'hi' => 25,
+        'span' => 45, 'what' => 'Daily par yield curve rate, set each business day.'],
+    'ust10' => ['src' => 'treasury', 'label' => 'US 10-Yr', 'name' => 'U.S. 10-year Treasury yield', 'unit' => 'pct', 'fresh' => 10, 'lo' => 0.01, 'hi' => 25,
+        'span' => 45, 'what' => 'Daily par yield curve rate, set each business day.'],
+    'eurusd' => ['src' => 'ecb', 'label' => 'EUR/USD', 'name' => 'Euro in U.S. dollars', 'unit' => 'fx', 'fresh' => 10, 'lo' => 0.3, 'hi' => 3,
+        'span' => 45, 'what' => 'Euro reference rate: U.S. dollars to one euro, set once each business day.'],
+    'btc' => ['src' => 'coingecko', 'label' => 'Bitcoin', 'name' => 'Bitcoin', 'unit' => 'usd0', 'fresh' => 0.25, 'lo' => 1, 'hi' => 100000000,
+        'span' => 61, 'days' => 'coingecko_days', 'what' => 'Price in U.S. dollars: one point a day, then the latest. Data provided by CoinGecko.'],
+    'brent' => ['src' => 'eia_spot', 'label' => 'Brent', 'name' => 'Brent crude oil', 'unit' => 'usd2', 'fresh' => 21, 'lo' => 1, 'hi' => 1000,
+        'span' => 45, 'what' => 'Europe Brent spot price, in dollars a barrel. The daily prices are released once a week, usually on Wednesday.'],
+    'wti' => ['src' => 'eia_spot', 'label' => 'WTI', 'name' => 'WTI crude oil', 'unit' => 'usd2', 'fresh' => 21, 'lo' => 1, 'hi' => 1000,
+        'span' => 45, 'what' => 'West Texas Intermediate spot price at Cushing, Oklahoma, in dollars a barrel. The daily prices are released once a week, usually on Wednesday.'],
+    'gas' => ['src' => 'eia_gas', 'label' => 'US Regular Gas', 'name' => 'U.S. regular gasoline', 'unit' => 'usd3', 'fresh' => 21, 'lo' => 0.2, 'hi' => 50,
+        'span' => 26, 'what' => 'U.S. average retail price of regular gasoline, all formulations, in dollars a gallon. One survey a week.'],
 ];
 
 // The RIA deal count comes out once a quarter, in DeVoe & Company's RIA Deal
 // Book, so it is typed in here when a new book is published
-// (docs/stat-bank.md). It is the same count as the record in the homepage's
-// stat row. Left alone, it drops off the strip by itself: MARKET_DEALS_FRESH
-// days after the last day it covers.
+// (docs/stat-bank.md). Left alone, it drops off the strip by itself:
+// MARKET_DEALS_FRESH days after the last day it covers.
 const MARKET_DEALS = [
     'year' => 2026,
     'count' => 244,                 // announced RIA transactions, January through 'through'
@@ -128,6 +155,13 @@ const MARKET_DEALS = [
     'home' => 'https://www.devoeandcompany.com/ria-ma-deal-books',
 ];
 const MARKET_DEALS_FRESH = 150;
+
+// history for the charts on the cards: how many days of a figure are kept,
+// how many are enough to stop asking Treasury for last month, and the fewest
+// a chart is drawn from
+const MARKET_DAYS_KEEP = 70;
+const MARKET_DAYS_ENOUGH = 30;
+const MARKET_DAYS_CHART = 5;
 
 const MARKET_EIA_SERIES = ['RBRTE' => 'brent', 'RWTC' => 'wti', 'EMM_EPMR_PTE_NUS_DPG' => 'gas'];
 
@@ -230,6 +264,21 @@ function market_latest(array $byDay): ?array
     return $out;
 }
 
+// A figure's history as day => value, oldest first: only real days and real
+// values, and no more than are kept.
+function market_days($byDay, string $id, int $keep = MARKET_DAYS_KEEP): array
+{
+    $out = [];
+    foreach (is_array($byDay) ? $byDay : [] as $day => $v) {
+        $n = market_num($v, $id);
+        if ($n !== null && market_is_day((string)$day)) {
+            $out[(string)$day] = $n;
+        }
+    }
+    ksort($out, SORT_STRING);
+    return count($out) > $keep ? array_slice($out, -$keep, null, true) : $out;
+}
+
 // Treasury's daily yield curve feed: day => [ust10, ust30].
 function market_treasury_rows(string $xml): array
 {
@@ -262,6 +311,7 @@ function market_treasury_items(array $rows): array
         }
         $one = market_latest($byDay);
         if ($one !== null) {
+            $one['days'] = market_days($byDay, $id);
             $items[$id] = $one;
         }
     }
@@ -283,7 +333,11 @@ function market_parse_ecb(string $xml): array
         }
     }
     $one = market_latest($byDay);
-    return $one === null ? [] : ['eurusd' => $one];
+    if ($one === null) {
+        return [];
+    }
+    $one['days'] = market_days($byDay, 'eurusd');
+    return ['eurusd' => $one];
 }
 
 // CoinGecko's simple price: bitcoin in dollars, its change over a day, and when.
@@ -305,6 +359,22 @@ function market_parse_coingecko(string $json): array
         $one['change_pct'] = round((float)$chg, 2);
     }
     return ['btc' => $one];
+}
+
+// CoinGecko's market chart: bitcoin in dollars, a price a day (at midnight
+// UTC) for the last two months. Only the days: the price now is asked for
+// apart, and far more often.
+function market_parse_coingecko_days(string $json): array
+{
+    $d = json_decode($json, true);
+    $byDay = [];
+    foreach (is_array($d) && is_array($d['prices'] ?? null) ? $d['prices'] : [] as $p) {
+        if (is_array($p) && isset($p[0], $p[1]) && is_numeric($p[0]) && $p[0] > 1000000000000) {
+            $byDay[gmdate('Y-m-d', (int)($p[0] / 1000))] = $p[1];
+        }
+    }
+    $days = market_days($byDay, 'btc');
+    return count($days) < 2 ? [] : ['btc' => ['days' => $days]];
 }
 
 // The Energy Information Administration's answer: rows of period, series, value.
@@ -331,6 +401,7 @@ function market_parse_eia(string $json): array
     foreach ($by as $id => $byDay) {
         $one = market_latest($byDay);
         if ($one !== null) {
+            $one['days'] = market_days($byDay, $id);
             $items[$id] = $one;
         }
     }
@@ -408,15 +479,18 @@ function market_eia_url(string $route, string $frequency, array $series, int $ro
 }
 
 // Ask one source. The figures it gave, or [] when it gave none.
-function market_fetch(string $source, int $now, string $eiaKey): array
+function market_fetch(string $source, int $now, string $eiaKey, array $held = []): array
 {
     if ($source === 'treasury') {
         $ny = new DateTimeImmutable('@' . $now);
         $ny = $ny->setTimezone(new DateTimeZone('America/New_York'));
         $base = 'https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=';
         $rows = market_treasury_rows((string)market_get('treasury.xml', $base . $ny->format('Ym')));
-        if (count($rows) < 2) {
-            // the first days of a month: the day before is in last month's feed
+        // the first days of a month: the day before is in last month's feed.
+        // And until enough days are held to draw a chart, last month's are
+        // fetched too; after that this month's feed is all that is asked for.
+        $have = is_array($held['items']['ust10']['days'] ?? null) ? $held['items']['ust10']['days'] : [];
+        if (count($rows) < 2 || count($have + $rows) < MARKET_DAYS_ENOUGH) {
             $last = $ny->modify('first day of last month');
             $rows += market_treasury_rows((string)market_get('treasury-prev.xml', $base . $last->format('Ym')));
         }
@@ -428,12 +502,16 @@ function market_fetch(string $source, int $now, string $eiaKey): array
     if ($source === 'coingecko') {
         return market_parse_coingecko((string)market_get('coingecko.json', 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true'));
     }
+    if ($source === 'coingecko_days') {
+        return market_parse_coingecko_days((string)market_get('coingecko_days.json', 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=60&interval=daily'));
+    }
     if ($source === 'eia_spot' && $eiaKey !== '') {
-        $got = market_parse_eia((string)market_get('eia_spot.json', market_eia_url('petroleum/pri/spt', 'daily', ['RBRTE', 'RWTC'], 12, $eiaKey), MARKET_SOURCES[$source]['timeout']));
+        // two series, newest first: a hundred rows is about fifty trading days of each
+        $got = market_parse_eia((string)market_get('eia_spot.json', market_eia_url('petroleum/pri/spt', 'daily', ['RBRTE', 'RWTC'], 100, $eiaKey), MARKET_SOURCES[$source]['timeout']));
         return array_intersect_key($got, ['brent' => 1, 'wti' => 1]);
     }
     if ($source === 'eia_gas' && $eiaKey !== '') {
-        $got = market_parse_eia((string)market_get('eia_gas.json', market_eia_url('petroleum/pri/gnd', 'weekly', ['EMM_EPMR_PTE_NUS_DPG'], 4, $eiaKey), MARKET_SOURCES[$source]['timeout']));
+        $got = market_parse_eia((string)market_get('eia_gas.json', market_eia_url('petroleum/pri/gnd', 'weekly', ['EMM_EPMR_PTE_NUS_DPG'], 30, $eiaKey), MARKET_SOURCES[$source]['timeout']));
         return array_intersect_key($got, ['gas' => 1]);
     }
     return [];
@@ -522,12 +600,19 @@ function market_refresh(string $dir, int $now, bool $slow = false): array
         }
         $items = [];
         try {
-            $items = market_fetch($source, $now, $key);
+            $items = market_fetch($source, $now, $key, is_array($cache['sources'][$source] ?? null) ? $cache['sources'][$source] : []);
         } catch (Throwable $e) {
             $items = [];
         }
         $held = is_array($cache['sources'][$source] ?? null) ? $cache['sources'][$source] : [];
         $held['tried'] = $now;
+        // the days a source sends are added to the days already held, so a
+        // feed that only carries this month still builds a longer history
+        foreach ($items as $id => $one) {
+            if (isset(MARKET_ITEMS[$id])) {
+                $items[$id]['days'] = market_days(market_days($one['days'] ?? [], $id) + market_days($held['items'][$id]['days'] ?? [], $id), $id);
+            }
+        }
         if ($items !== []) {
             $held['at'] = $now;
             $held['items'] = $items;
@@ -569,7 +654,7 @@ function market_day(string $day, bool $short = false): string
 }
 
 // One held figure as the page shows it, or null when it is too old to show.
-function market_item(string $id, array $held, int $now): ?array
+function market_item(string $id, array $held, int $now, array $days = []): ?array
 {
     $spec = MARKET_ITEMS[$id];
     $src = MARKET_SOURCES[$spec['src']];
@@ -654,8 +739,88 @@ function market_item(string $id, array $held, int $now): ?array
             'text' => $text,
             'source' => $src['name'],
             'url' => $src['url'],
-        ],
+        ] + market_line_picture($id, $value, $asOf, $days, $shown, $delta, $dir, $long, $prevDay),
     ];
+}
+
+// A value rounded the way its unit is shown, for a point on a chart.
+function market_point(float $v, string $unit): float
+{
+    return round($v, ['pct' => 2, 'fx' => 4, 'usd0' => 0, 'usd3' => 3][$unit] ?? 2);
+}
+
+// The same figure drawn (js/ticker.js): the value, large, with its change;
+// a line of its recent history; the low, the high and the change over that
+// stretch; and one plain line on what it is. The card's title and text above
+// say it in words. With too few days held there is no chart, only the value.
+function market_line_picture(string $id, float $value, string $asOf, array $days, string $shown, string $delta, string $dir, string $long, string $prevDay): array
+{
+    $spec = MARKET_ITEMS[$id];
+    $unit = $spec['unit'];
+    $isMoment = strlen($asOf) > 10;
+    $today = substr($asOf, 0, 10);
+
+    $hero = ['value' => $shown, 'label' => $long];
+    if ($delta !== '') {
+        $hero['delta'] = $delta;
+        $hero['dir'] = $dir;
+        $hero['vs'] = $isMoment ? 'in 24 hours' : ($prevDay !== '' ? 'from ' . market_day($prevDay, true) : '');
+    }
+    $out = ['eyebrow' => $spec['name'], 'hero' => $hero, 'about' => $spec['what']];
+
+    // the days up to the figure's own, and the figure itself as the last point
+    $pts = [];
+    foreach (market_days($days, $id) as $day => $v) {
+        if (strcmp($day, $today) < 0) {
+            $pts[$day] = $v;
+        }
+    }
+    $pts[$today] = $value;
+    $pts = array_slice($pts, -$spec['span'], null, true);
+    if (count($pts) < MARKET_DAYS_CHART) {
+        return $out;
+    }
+
+    $first = (string)array_key_first($pts);
+    $start = $pts[$first];
+    $loDay = $hiDay = $first;
+    foreach ($pts as $day => $v) {
+        if ($v < $pts[$loDay]) {
+            $loDay = (string)$day;
+        }
+        if ($v > $pts[$hiDay]) {
+            $hiDay = (string)$day;
+        }
+    }
+    if ($unit === 'pct') {
+        $bp = (int)round(($value - $start) * 100);
+        $change = $bp === 0 ? 'unch' : ($bp > 0 ? '+' : '') . $bp . ' bp';
+        $way = $bp === 0 ? 'flat' : ($bp > 0 ? 'up' : 'dn');
+    } else {
+        $pct = round(($value / $start - 1) * 100, 2);
+        $change = $pct == 0.0 ? 'unch' : ($pct > 0 ? '+' : '') . number_format($pct, 2) . '%';
+        $way = $pct == 0.0 ? 'flat' : ($pct > 0 ? 'up' : 'dn');
+    }
+    $since = 'since ' . market_day($first, true);
+    $step = $id === 'gas' ? 'Week by week' : 'Day by day';
+    $points = [];
+    foreach ($pts as $day => $v) {
+        $points[] = [(string)$day, market_point($v, $unit)];
+    }
+    $out['line'] = [
+        'title' => $step . ', ' . $since,
+        'unit' => $unit,
+        'points' => $points,
+        'label' => $spec['name'] . ', ' . count($pts) . ($id === 'gas' ? ' weeks' : ' days') . ' from ' . market_day($first) . ' to ' . market_day($today)
+            . '. Low ' . market_show($pts[$loDay], $unit) . ' on ' . market_day($loDay, true) . ', high ' . market_show($pts[$hiDay], $unit) . ' on ' . market_day($hiDay, true)
+            . ', latest ' . $shown . '.',
+    ];
+    $out['tiles'] = [
+        ['label' => 'Low', 'value' => market_show($pts[$loDay], $unit), 'note' => market_day($loDay, true)],
+        ['label' => 'High', 'value' => market_show($pts[$hiDay], $unit), 'note' => market_day($hiDay, true)],
+        ['label' => 'Change', 'value' => $change, 'note' => $since, 'dir' => $way],
+    ];
+    return $out;
 }
 
 // The year's RIA deal count as a figure, or null once it is too old to show.
@@ -823,7 +988,8 @@ function market_snapshot(): array
     }
     foreach (MARKET_ITEMS as $id => $spec) {
         $held = $cache['sources'][$spec['src']]['items'][$id] ?? null;
-        $one = is_array($held) ? market_item($id, $held, $now) : null;
+        $days = $cache['sources'][$spec['days'] ?? $spec['src']]['items'][$id]['days'] ?? [];
+        $one = is_array($held) ? market_item($id, $held, $now, is_array($days) ? $days : []) : null;
         if ($one !== null) {
             $items[] = $one;
             $src = MARKET_SOURCES[$spec['src']];

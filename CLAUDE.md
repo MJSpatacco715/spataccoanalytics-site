@@ -64,9 +64,12 @@ lives and says which pieces are not in this repo yet.
   raise it again. Its weekly gasoline price is its own survey.
   The RIA deal count on it is DeVoe & Company's, typed into `MARKET_DEALS`
   each quarter
-  (`docs/stat-bank.md`). Its card is drawn, not written out: the count, a bar
-  toward the record, and the year beside the record year quarter by quarter,
-  all from numbers in that same place. The energy figures are asked for
+  (`docs/stat-bank.md`). Every card is drawn, not written out. The deal
+  count: the count, a bar toward the record, and the year beside the record
+  year quarter by quarter, all from numbers in that same place. A market
+  figure: its value and change, a line of its recent history, the low, the
+  high and the change. The history comes from the same publisher's feed as
+  the figure and is kept with it; a chart needs five days of it. The energy figures are asked for
   hourly, because their publisher releases the daily oil prices once a week.
   Its hover cards name the source with a link and end on the owner's line:
   "This tool runs entirely on free public data. Yours could too." That is as

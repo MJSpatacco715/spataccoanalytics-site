@@ -97,7 +97,32 @@ function spot(page, id) {
       const b = card.getBoundingClientRect();
       return { open: !card.hidden, text: card.textContent, links: card.querySelectorAll('a').length, linkText: a && a.textContent, href: a && a.href, target: a && a.target, rel: a && a.rel, inside: b.left >= 0 && b.right <= window.innerWidth, below: b.top >= document.getElementById('sa-ticker').getBoundingClientRect().bottom, paused: getComputedStyle(document.querySelector('.sa-tk-track')).animationPlayState === 'paused', kids: card.querySelectorAll('script,img,iframe').length };
     });
-    check('hover opens the source card', c.open && /Treasury yield: |Euro in U\.S\. dollars: /.test(c.text) && c.text.includes('Source: '));
+    check('hover opens the source card', c.open && /Treasury yield|Euro in U\.S\. dollars/.test(c.text) && c.text.includes('Source: '));
+    // a market figure draws itself: the value and its change, a line of its history, three tiles
+    const L = await page.evaluate(() => {
+      const card = document.getElementById('sa-tk-card');
+      const g = card.querySelector('svg.sa-tk-line');
+      const path = g && g.querySelector('.sa-tk-path');
+      const b = card.getBoundingClientRect();
+      const gb = g ? g.getBoundingClientRect() : { left: 0, width: 0, top: 0, height: 0 };
+      return {
+        big: (card.querySelector('.sa-tk-big') || {}).textContent, chip: (card.querySelector('.sa-tk-chip') || {}).textContent, vs: (card.querySelector('.sa-tk-vs') || {}).textContent,
+        segs: path ? path.getAttribute('d').split('L').length : 0, says: g && g.getAttribute('aria-label'), read: (card.querySelector('.sa-tk-read') || {}).textContent,
+        ticks: g ? [...g.querySelectorAll('.sa-tk-tick')].map((t) => t.textContent).join('|') : '', days: [...card.querySelectorAll('.sa-tk-days span')].map((e) => e.textContent).join('|'),
+        tiles: [...card.querySelectorAll('.sa-tk-tile')].map((t) => t.querySelector('.sa-tk-tl').textContent + '=' + t.querySelector('.sa-tk-tv').textContent).join('|'),
+        about: (card.querySelector('.sa-tk-about') || {}).textContent, fits: card.scrollWidth <= card.clientWidth + 1 && b.right <= window.innerWidth && b.bottom <= window.innerHeight,
+        inCard: gb.left >= b.left && gb.left + gb.width <= b.right + 1, gx: gb.left, gw: gb.width, gy: gb.top + gb.height / 2,
+      };
+    });
+    check('a market figure leads its card with the value and its change', /^(4\.91%|1\.0963)$/.test(L.big || '') && /^[\u25B2\u25BC] [+-]/.test(L.chip || '') && /^from Nov \d+$/.test(L.vs || ''));
+    check('and draws its history as a line, with the high and low marked and the days underneath', L.segs >= 37 && /^(5\.31%\|4\.84%|1\.1411\|1\.0963)$/.test(L.ticks) && /^(Oct 1\|Nov 24|Sep 23\|Nov 24)$/.test(L.days) && L.inCard && L.fits);
+    check('the chart is described for a reader who cannot see it', /, \d+ days from .* Low .* high .* latest /.test(L.says || ''));
+    check('it reads out the latest day until someone moves along it', /^Nov 24: (4\.91%|1\.0963)$/.test(L.read || ''));
+    check('three tiles: the low, the high and the change', /^Low=.+\|High=.+\|Change=[+-]/.test(L.tiles) && /set (once )?each business day\.$/.test(L.about || ''));
+    await page.mouse.move(L.gx + L.gw * 0.25, L.gy, { steps: 2 });
+    await page.waitForTimeout(80);
+    const R = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); const g = card.querySelector('svg.sa-tk-line'); return { open: !card.hidden, read: card.querySelector('.sa-tk-read').textContent, reading: g.classList.contains('reading'), cross: getComputedStyle(g.querySelector('.sa-tk-cross')).visibility }; });
+    check('moving along the line reads out that day, and the card stays open', R.open && R.reading && R.cross === 'visible' && /^(Oct|Sep|Nov) \d+: /.test(R.read) && R.read !== L.read);
     check('the source is named, and its name is the link to the publisher, in a new tab', /^https:\/\/(home\.treasury\.gov|www\.ecb\.europa\.eu)\//.test(c.href || '') && c.target === '_blank' && c.rel === 'noopener' && /Treasury|European Central Bank/.test(c.linkText || ''));
     check('it says the tool runs on free public data, and makes no pitch', c.text.includes('This tool runs entirely on free public data. Yours could too.') && c.links === 1 && !/working for you/i.test(c.text));
     check('the card is under the strip and inside the window', c.inside && c.below);
@@ -159,6 +184,20 @@ function spot(page, id) {
     check('Enter goes to the source link', await page.evaluate(() => document.activeElement.tagName === 'A' && document.activeElement.closest('#sa-tk-card') !== null));
     await page.keyboard.press('Tab');
     check('Tab goes on to the next figure', await page.evaluate(() => document.activeElement.getAttribute('data-id') === 'ust30' && document.querySelector('#sa-tk-card strong').textContent.startsWith('U.S. 30-year')));
+    await page.keyboard.press('Enter');
+    const K1 = await page.evaluate(() => ({ onChart: document.activeElement.matches('svg.sa-tk-line'), read: document.querySelector('#sa-tk-card .sa-tk-read').textContent }));
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
+    const K2 = await page.evaluate(() => ({ read: document.querySelector('#sa-tk-card .sa-tk-read').textContent, open: !document.getElementById('sa-tk-card').hidden }));
+    check('Enter on a market figure goes to its chart, and the arrow keys read it day by day', K1.onChart && /^Nov 24: 5\.30%$/.test(K1.read) && K2.open && /^Nov 20: /.test(K2.read));
+    await page.keyboard.press('Tab');
+    check('Tab goes from the chart to the source link', await page.evaluate(() => document.activeElement.tagName === 'A' && !!document.activeElement.closest('#sa-tk-card')));
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Shift+Tab');
+    check('and Shift+Tab from the chart goes back to the figure', await page.evaluate(() => document.activeElement.getAttribute('data-id') === 'ust30' && document.getElementById('sa-tk-card').hidden));
+    await page.evaluate(() => { document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); });
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Escape');
     check('Escape closes the card', await page.evaluate(() => document.getElementById('sa-tk-card').hidden));
     await page.focus('.sa-tk-tag');
@@ -247,6 +286,12 @@ function spot(page, id) {
         d.items[0].card.chart = { title: bad, now: bad, then: bad, need: bad, note: bad, label: bad, rows: [{ q: bad, then: bad, now: '9;background:url(x)' }, { q: 'Q2', then: 4, now: 1e9, need: -3 }] };
         d.items[0].card.facts = [bad, { a: 1 }, 7];
         d.items[0].card.next = bad;
+        d.items[1].card.eyebrow = bad;
+        d.items[1].card.hero = { value: bad, label: bad, delta: bad, dir: '"><img src=x onerror="window.__hit=1">', vs: bad };
+        d.items[1].card.line = { title: bad, unit: 'pct', label: bad, points: [[bad, 1], ['2026-11-01', bad], ['2026-11-02', 1], ['2026-11-03', 2], ['2026-11-04', 3], ['2026-11-05', 4], ['2026-11-06', 5]] };
+        d.items[1].card.tiles = [{ label: bad, value: bad, note: bad, dir: bad }, bad, 7];
+        d.items[1].card.about = bad;
+        d.items[2].card.line = { title: 'x', unit: bad, points: d.items[2].card.line.points };
         d.items[0].card.url = 'javascript:window.__hit=1';
         d.sources[0] = { name: '<img src=x onerror="window.__hit=1">', url: 'javascript:window.__hit=1' };
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(d) });
@@ -258,6 +303,11 @@ function spot(page, id) {
     check('markup in the feed is shown as text and a link that is not https is dropped', !s.hit && s.imgs === 0 && s.open && !s.link);
     const u = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); return { cols: card.querySelectorAll('.sa-tk-col').length, bar: card.querySelectorAll('.sa-tk-bar').length, shown: card.textContent.includes('<img src=x'), styled: [...card.querySelectorAll('[style]')].every((e) => /^(width|height): \d+(px|%);$/.test(e.getAttribute('style'))) }; });
     check('a drawn card takes only whole numbers as sizes: a bad one draws nothing', u.cols === 1 && u.bar === 0 && u.shown && u.styled);
+    const draw = (i) => page.evaluate((i) => { document.querySelectorAll('.sa-tk-item')[i].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); const card = document.getElementById('sa-tk-card'); const p = card.querySelector('.sa-tk-path'); return { hit: window.__hit === 1, imgs: card.querySelectorAll('img,script,iframe').length, line: !!card.querySelector('svg.sa-tk-line'), segs: p ? p.getAttribute('d').split('L').length : 0, chip: (card.querySelector('.sa-tk-chip') || {}).className, tiles: card.querySelectorAll('.sa-tk-tile').length, shown: card.textContent.includes('<img src=x') }; }, i);
+    const v = await draw(1);
+    check('a market figure with markup in it: shown as text, and only real days with real values are drawn', !v.hit && v.imgs === 0 && v.line && v.segs === 5 && v.chip === 'sa-tk-chip flat' && v.tiles === 1 && v.shown);
+    const w = await draw(2);
+    check('a unit the strip does not know draws no chart', !w.hit && w.imgs === 0 && !w.line);
     await page.evaluate(() => { document.querySelector('.sa-tk-tag').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
     const t = await page.evaluate(() => ({ hit: window.__hit === 1, imgs: document.querySelectorAll('#sa-ticker img, #sa-ticker script').length, links: document.querySelectorAll('#sa-tk-card a').length, items: document.querySelectorAll('#sa-tk-card li').length, bad: [...document.querySelectorAll('#sa-tk-card a')].some((a) => !/^https:/.test(a.href)) }));
     check('and the same holds for the list of sources', !t.hit && t.imgs === 0 && t.items === t.links + 1 && !t.bad);
