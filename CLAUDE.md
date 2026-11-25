@@ -21,9 +21,11 @@ lives and says which pieces are not in this repo yet.
   `tests/pages_test.sh` holds the shape, a word limit, that each pillar links
   to a real service, and that every menu reaches every page.
   It is short in height too (the owner again, in November 2026: "main page
-  still too scrolley"): from 1080px wide the website screen, How We Work and
-  the closing band are laid out side by side, and no section is padded more
-  than it needs. A change that adds a section or a tall block has to take as
+  still too scrolley"): from 1080px wide the first screen, the website screen,
+  How We Work and the closing band are laid out side by side (copy on the
+  left; figures, steps or the button on the right), and no section is padded
+  more than it needs. On a phone everything is one vertical stack, section by
+  section: nothing sits side by side there. A change that adds a section or a tall block has to take as
   much height out somewhere else.
 - Pages are never kept by the host's page cache (`site/.htaccess` marks
   every `.html` file `private, no-cache`), so a publish shows without anyone
