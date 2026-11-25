@@ -113,7 +113,8 @@ the same way whenever he asks.
 The homepage's market strip carries the year's RIA deal count against the
 record. The count is DeVoe & Company's, from its RIA Deal Book, which comes
 out about a month after each quarter ends (late January, April, July and
-October). It is the same count as the record in the homepage's stat row.
+October). The strip is the one place the count shows: the homepage's stat
+row gave its place to a figure on advisors' data in November 2026.
 
 When the weekly run falls after a new Deal Book is out:
 
@@ -124,8 +125,8 @@ When the weekly run falls after a new Deal Book is out:
 2. Change `MARKET_DEALS` in `site/lib/market.php`: `count`, `through` (the
    last day the count covers), `pace` (DeVoe's own words on how the year
    compares, or empty), `book` and `url`. In January the full-year count goes
-   in with `through` set to December 31; if it is a new record, the stat row
-   on the homepage changes too.
+   in with `through` set to December 31; if it is a new record, `record`,
+   `record_year` and `record_quarters` change with it.
 3. The card draws the year beside the record year, so bring these up to date
    in the same place: `quarters` (the year so far, a number a quarter, which
    must add up to `count`), `record_quarters` (the record year's four

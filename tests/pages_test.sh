@@ -68,7 +68,7 @@ check "the first screen warns that a slow answer draws a harder look" 'grep -q "
 check "the second screen is about the website, in the first screen's two lines" 'grep -q "<h2 class=\"screen-title\"><span class=\"h1-main\">Prospects will look at your website.</span> <em>Make sure it works for you.</em></h2>" "$home"'
 check "and sends the visitor to the website scorer" 'grep -q "<a href=\"/tools/website-scorer.html?scope=website&amp;utm_source=home\" class=\"screen-cta\">Score Your Website</a>" "$home" && [ -s "$dist/tools/website-scorer.html" ]'
 check "it does not call the website the number one way advisors are checked (no study says so)" '! ask "$home" said | grep -qiE "number one|#1|no\. 1|top way|most important"'
-check "How We Work keeps its headline and its line, and leads to its own page" 'grep -q "A messy system that gets used beats a clean system that doesn&rsquo;t." "$home" && grep -q "<p class=\"approach-kicker reveal d05\">Adoption isn&rsquo;t a fight. It&rsquo;s a non-event.</p>" "$home" && grep -q "<a href=\"/approach/\" class=\"section-go\">Read how we work</a>" "$home"'
+check "How We Work keeps its headline and its line, and leads to its own page" 'ask "$home" said | grep -qE "Keep the way you work\. +Lose the mess\." && ! grep -qi "messy system" "$home" "$here/site/approach/index.html" && grep -q "<p class=\"approach-kicker reveal d05\">Adoption isn&rsquo;t a fight. It&rsquo;s a non-event.</p>" "$home" && grep -q "<a href=\"/approach/\" class=\"section-go\">Read how we work</a>" "$home"'
 check "the place posts are added to the home page is still there, above the closing band" 'grep -q "<!-- sa-insights -->" "$home" && [ "$(grep -bo "<!-- sa-insights -->" "$home" | cut -d: -f1)" -lt "$(grep -bo "class=\"contact-section\"" "$home" | cut -d: -f1)" ]'
 
 # --- every pillar leads somewhere real
@@ -81,9 +81,11 @@ check "there are three pillars and each is a link" '[ "$(grep -o "<a class=\"ser
 
 # --- every statistic carries its source
 read -r total sourced nums <<<"$(ask "$home" stats)"
-check "five statistics on the home page: $nums" '[ "$total" = 5 ] && [ "$nums" = "35%,322,96%,72%,62%" ]'
+check "six statistics on the home page: $nums" '[ "$total" = 6 ] && [ "$nums" = "35%,63%,3%,96%,72%,62%" ]'
 check "each with its source in view and a card that links to it" '[ "$sourced" = "$total" ]'
 check "the figure that did not hold up is not on the site" '! grep -rq "38%" "$home" "$site/approach/index.html" "$site/about/index.html"'
+check "the first screen has three figures: who is retiring, how many say their data is unified, and how few say fully" 'grep -q "<div class=\"stat-num\">63%</div><div class=\"stat-label\">of advisors say their firm&rsquo;s data is unified</div><span class=\"sa-cite-src\">Source: Orion, 2026</span>" "$home" && grep -q "<div class=\"stat-num\">3%</div><div class=\"stat-label\">say it is fully unified, with no manual steps</div><span class=\"sa-cite-src\">Source: Orion, 2026</span>" "$home" && [ "$(grep -o "Orion sells technology to advisors." "$home" | wc -l)" = 2 ]'
+check "the card behind 63% says what it is made of" 'grep -q "That is 3% who said fully unified and 60% who said mostly unified but still needing manual steps." "$home"'
 check "a publisher that sells to advisors is named as one" '[ "$(grep -o "sells marketing services to advisors\|sells websites and marketing to advisors" "$home" | wc -l)" = 3 ]'
 
 # --- the two pages that took the long sections
