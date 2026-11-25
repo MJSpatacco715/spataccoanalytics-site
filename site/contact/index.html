@@ -61,6 +61,8 @@
 .thank-you p{font-size:16px;color:var(--text-light);line-height:1.7}
 
 .form-note{font-size:12px;color:var(--slate);margin-top:24px;line-height:1.6;text-align:center}
+.form-error{font-size:14px;color:#FFB4A8;margin:20px auto 0;line-height:1.6;text-align:center;max-width:520px}
+.form-submit[disabled]{opacity:.6;cursor:default;transform:none;box-shadow:none}
 </style>
 </head>
 <body>
@@ -186,7 +188,9 @@
       </div>
 
       <div class="reveal" style="text-align:center">
-        <button class="form-submit" onclick="submitForm()">Send It Over</button>
+        <input type="text" id="contactCompany" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+        <button class="form-submit" id="form-send" onclick="submitForm()">Send It Over</button>
+        <div class="form-error" id="form-error" role="alert" hidden></div>
         <div class="form-note">We&rsquo;ll respond within one business day. Your information stays between us.</div>
       </div>
 
@@ -229,38 +233,70 @@ function toggleChip(el, hiddenId) {
 }
 
 /* ===== FORM SUBMISSION ===== */
+var sending = false;
+function formError(msg) {
+  var e = document.getElementById('form-error');
+  e.textContent = msg;
+  e.hidden = false;
+}
 function submitForm() {
+  if (sending) return;
+  document.getElementById('form-error').hidden = true;
   var name = document.getElementById('contactName').value.trim();
   var email = document.getElementById('contactEmail').value.trim();
   if (!name || !email) {
-    alert('Please enter your name and email so we can get back to you.');
+    formError('Please enter your name and email so we can get back to you.');
     return;
   }
 
+  var q = new URLSearchParams(window.location.search);
   var data = {
-    role: document.getElementById('role').value || 'Not specified',
-    dataLocation: document.getElementById('dataLocation').value || 'Not specified',
-    crm: document.getElementById('crm').value || 'Not specified',
-    painPoints: document.getElementById('painPoints').value || 'Not specified',
-    firmSize: document.getElementById('firmSize').value || 'Not specified',
+    role: document.getElementById('role').value,
+    dataLocation: document.getElementById('dataLocation').value,
+    crm: document.getElementById('crm').value,
+    painPoints: document.getElementById('painPoints').value,
+    firmSize: document.getElementById('firmSize').value,
     name: name,
     firm: document.getElementById('contactFirm').value.trim(),
     email: email,
     phone: document.getElementById('contactPhone').value.trim(),
-    notes: document.getElementById('contactNotes').value.trim()
+    notes: document.getElementById('contactNotes').value.trim(),
+    about: q.get('about') || '',
+    utm_source: q.get('utm_source') || '',
+    utm_medium: q.get('utm_medium') || '',
+    utm_campaign: q.get('utm_campaign') || '',
+    company: document.getElementById('contactCompany').value
   };
 
-  // Send to PHP handler
+  var btn = document.getElementById('form-send');
+  sending = true;
+  btn.disabled = true;
+  btn.textContent = 'Sending';
+
+  // The thank-you shows only when the message was kept. Anything else says so.
+  function failed(status) {
+    sending = false;
+    btn.disabled = false;
+    btn.textContent = 'Send It Over';
+    var addr = 'mike' + '@' + 'spataccoanalytics.com';
+    formError(status === 422 ? 'That email address does not look right. Please check it and send again.'
+      : status === 413 ? 'That message is too long to send. Please shorten the notes and send again.'
+      : status === 429 ? 'Too many messages from this connection in the last hour. Please email ' + addr + ' instead.'
+      : 'That did not go through. Please try again, or email ' + addr + '.');
+  }
+
   var xhr = new XMLHttpRequest();
   xhr.open('POST', '/contact/submit.php', true);
   xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      // Show thank you regardless (graceful degradation)
-      document.getElementById('intake-form').style.display = 'none';
-      document.getElementById('thank-you').style.display = 'block';
-    }
+  xhr.timeout = 20000;
+  xhr.onload = function() {
+    var ok = false;
+    try { ok = xhr.status === 200 && JSON.parse(xhr.responseText).ok === true; } catch (e) {}
+    if (!ok) { failed(xhr.status); return; }
+    document.getElementById('intake-form').style.display = 'none';
+    document.getElementById('thank-you').style.display = 'block';
   };
+  xhr.onerror = xhr.ontimeout = function() { failed(0); };
   xhr.send(JSON.stringify(data));
 }
 

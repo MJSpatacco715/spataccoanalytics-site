@@ -45,8 +45,9 @@ python3 scripts/build_site.py --site site --out dist
 bash tests/remote_deploy_test.sh
 bash tests/feed_test.sh
 bash tests/lead_test.sh
+bash tests/contact_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
 bash tests/insights_test.sh
-for f in site/score/lead.php site/lib/leads.php site/services/pricing.php; do php -l "$f"; done
+for f in site/score/lead.php site/contact/submit.php site/lib/leads.php site/services/pricing.php; do php -l "$f"; done
 ```
