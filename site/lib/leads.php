@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 const LEAD_NOTIFY = 'mike@spataccoanalytics.com';
 const LEAD_FROM = 'mike@spataccoanalytics.com';
+// The envelope sender handed to the host with -f. Empty leaves it to the host.
+const LEAD_ENVELOPE = '';
 const LEAD_MAX_BYTES = 8192;
 const LEAD_PER_HOUR = 10;
 
@@ -145,11 +147,16 @@ function lead_keep(string $file, array $lead): void
 // The notice. Every value is already one line, and the reply address has
 // passed validation, so none of it can add a header.
 //
-// The mail is handed over with the firm's own address as its envelope sender
-// (the -f below), not the web server's. The domain's mail lives elsewhere and
-// its DMARC policy quarantines anything that claims the domain without
-// proving it, so the envelope has to be the domain's for SPF to count toward
-// it. The host must also be named in the domain's SPF record.
+// How it has to be sent, learned the hard way (2026-11-25). The domain's mail
+// lives at Microsoft 365, and two of its rules decide whether a notice from
+// this web host arrives:
+//   1. Microsoft refuses outright ("550 5.7.68 Direct Send not allowed") any
+//      outside mail whose ENVELOPE sender is at the firm's own domain. So the
+//      envelope sender is left to the host (LEAD_ENVELOPE empty): never pass
+//      -f with an address at the firm's domain.
+//   2. The domain's DMARC policy quarantines mail whose From claims the domain
+//      without proof. The proof is the host's DKIM signature, whose key is
+//      published in the domain's DNS as default._domainkey.
 function lead_notice(string $subject, array $lines, string $replyTo): void
 {
     if (getenv('SA_LEADS_NO_MAIL') === '1') {
@@ -160,5 +167,12 @@ function lead_notice(string $subject, array $lines, string $replyTo): void
         'Reply-To: ' . $replyTo,
         'Content-Type: text/plain; charset=utf-8',
     ]);
-    @mail(LEAD_NOTIFY, mb_encode_mimeheader($subject, 'UTF-8'), implode("\n", $lines), $headers, '-f' . LEAD_FROM);
+    $to = LEAD_NOTIFY;
+    $subject = mb_encode_mimeheader($subject, 'UTF-8');
+    $body = implode("\n", $lines);
+    if (LEAD_ENVELOPE !== '') {
+        @mail($to, $subject, $body, $headers, '-f' . LEAD_ENVELOPE);
+    } else {
+        @mail($to, $subject, $body, $headers);
+    }
 }

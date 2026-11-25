@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # The notice mail a lead or a contact message sends (site/lib/leads.php
-# lead_notice): it goes to the firm, with the firm's own address as its
-# envelope sender, the visitor as Reply-To, and nothing a visitor typed in a
-# header. A stand-in for sendmail records what PHP hands it.
+# lead_notice): it goes to the firm, From the firm's address, with the visitor
+# as Reply-To, the envelope sender left to the host (Microsoft refuses outside
+# mail whose envelope sender is at the firm's own domain) and nothing a visitor
+# typed in a header. A stand-in for sendmail records what PHP hands it.
 #   bash tests/notice_test.sh
 set -uo pipefail
 here=$(cd "$(dirname "$0")/.." && pwd)
@@ -38,7 +39,7 @@ post /score/lead.php '{"name":"Pat Advisor","email":"pat@example.com","firm":"Ex
 check "a scorer lead is accepted" '[ "$CODE" = 200 ]'
 check "and one notice is sent" '[ "$(msgs)" = 1 ]'
 m=$(last)
-check "with the firm's address as the envelope sender" 'head -1 "$m" | grep -q -- "-fmike@spataccoanalytics.com"'
+check "with the envelope sender left to the host" '! head -1 "$m" | grep -q -- "-f"'
 check "to the firm" 'grep -q "^To: mike@spataccoanalytics.com" "$m"'
 check "from the firm's own address" 'grep -q "^From: Spatacco Analytics Website <mike@spataccoanalytics.com>" "$m"'
 check "with the visitor as Reply-To" 'grep -q "^Reply-To: pat@example.com" "$m"'
@@ -49,7 +50,7 @@ post /contact/submit.php '{"name":"Pat Advisor","email":"pat@example.com","firm"
 check "a contact message is accepted" '[ "$CODE" = 200 ]'
 check "and sends its own notice" '[ "$(msgs)" = 2 ]'
 m=$(last)
-check "with the same envelope sender" 'head -1 "$m" | grep -q -- "-fmike@spataccoanalytics.com"'
+check "with the envelope sender left to the host too" '! head -1 "$m" | grep -q -- "-f"'
 check "its subject says it is the contact form" 'grep -q "^Subject: Contact form: Example Wealth" "$m"'
 check "and carries the notes and the build asked about" 'grep -q "Looking at a rebuild." "$m" && grep -q "a walkthrough (golf)" "$m"'
 
@@ -57,7 +58,7 @@ check "and carries the notes and the build asked about" 'grep -q "Looking at a r
 post /contact/submit.php '{"name":"Pat\r\nBcc: x@example.com","email":"pat@example.com","firm":"A\r\nCc: y@example.com","notes":"hello\r\nBcc: z@example.com -fevil@example.com","company":""}'
 m=$(last)
 check "a line break in a field adds no header" '[ "$(msgs)" = 3 ] && ! grep -q -i "^Bcc:" "$m" && ! grep -q -i "^Cc:" "$m"'
-check "and the envelope sender is still the firm's alone" 'head -1 "$m" | grep -q -- "-fmike@spataccoanalytics.com" && ! head -1 "$m" | grep -q "evil"'
+check "and nothing typed reaches the command line" '! head -1 "$m" | grep -q -e "evil" -e "-f"'
 
 post /contact/submit.php '{"name":"Bot","email":"bot@example.com","company":"Acme"}'
 check "a bot's message sends no notice" '[ "$CODE" = 200 ] && [ "$(msgs)" = 3 ]'
