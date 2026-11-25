@@ -473,13 +473,27 @@ function market_get(string $file, string $url, int $timeout = MARKET_TIMEOUT): ?
     return $body;
 }
 
-function market_eia_url(string $route, string $frequency, array $series, int $rows, string $key): string
+// $start bounds the question to recent months. Without it the source goes
+// through each series back to the 1980s to answer, says so in its own reply
+// ("consider constraining your request with facet, start, or end"), and a
+// request for chart history timed out the first time it was made.
+function market_eia_url(string $route, string $frequency, array $series, int $rows, string $key, string $start = ''): string
 {
     $q = 'api_key=' . rawurlencode($key) . '&frequency=' . $frequency . '&data[0]=value';
     foreach ($series as $s) {
         $q .= '&facets[series][]=' . rawurlencode($s);
     }
+    if (market_is_day($start)) {
+        $q .= '&start=' . $start;
+    }
     return 'https://api.eia.gov/v2/' . $route . '/data/?' . $q . '&sort[0][column]=period&sort[0][direction]=desc&length=' . $rows;
+}
+
+// The first day of the month so many months back: a start that stays the
+// same all month, so the same question is asked each time.
+function market_months_back(int $now, int $months): string
+{
+    return (new DateTimeImmutable('@' . $now))->setTimezone(new DateTimeZone('UTC'))->modify('first day of this month')->modify('-' . $months . ' months')->format('Y-m-d');
 }
 
 // Ask one source. The figures it gave, or [] when it gave none.
@@ -511,11 +525,11 @@ function market_fetch(string $source, int $now, string $eiaKey, array $held = []
     }
     if ($source === 'eia_spot' && $eiaKey !== '') {
         // two series, newest first: a hundred rows is about fifty trading days of each
-        $got = market_parse_eia((string)market_get('eia_spot.json', market_eia_url('petroleum/pri/spt', 'daily', ['RBRTE', 'RWTC'], 100, $eiaKey), MARKET_SOURCES[$source]['timeout']));
+        $got = market_parse_eia((string)market_get('eia_spot.json', market_eia_url('petroleum/pri/spt', 'daily', ['RBRTE', 'RWTC'], 100, $eiaKey, market_months_back($now, 3)), MARKET_SOURCES[$source]['timeout']));
         return array_intersect_key($got, ['brent' => 1, 'wti' => 1]);
     }
     if ($source === 'eia_gas' && $eiaKey !== '') {
-        $got = market_parse_eia((string)market_get('eia_gas.json', market_eia_url('petroleum/pri/gnd', 'weekly', ['EMM_EPMR_PTE_NUS_DPG'], 30, $eiaKey), MARKET_SOURCES[$source]['timeout']));
+        $got = market_parse_eia((string)market_get('eia_gas.json', market_eia_url('petroleum/pri/gnd', 'weekly', ['EMM_EPMR_PTE_NUS_DPG'], 30, $eiaKey, market_months_back($now, 8)), MARKET_SOURCES[$source]['timeout']));
         return array_intersect_key($got, ['gas' => 1]);
     }
     return [];
