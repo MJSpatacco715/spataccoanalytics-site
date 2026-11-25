@@ -139,6 +139,16 @@ if command -v flock >/dev/null; then
   wait "$holder"
   feed $((NOW + 2000))
   check "and the next one asks" '[ "$(wc -l < "$fx/requests.log")" -gt "$before" ]'
+  # a slow source that is taking its time does not hold up the quick ones
+  all_sources; forget
+  feed $NOW
+  before=$(asked coingecko)
+  ( exec 9>"$t/home/sa-market/lock-slow"; flock -x 9; sleep 2 ) &
+  holder=$!
+  sleep 0.4
+  feed1 $((NOW + 400))
+  check "while the energy source is still being asked, bitcoin is brought up to date" '[ "$(asked coingecko)" -gt "$before" ] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ]'
+  wait "$holder"
 fi
 
 # --- answers that are not what they should be
