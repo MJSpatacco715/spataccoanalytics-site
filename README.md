@@ -19,7 +19,7 @@ and one pull request at a time; merging to `main` is what publishes.
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
 | Services page | `site/services/index.html` | Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page. |
 | Project prices | The `SERVICE_PRICING` secret | **Never in this repo, which is public.** Publish writes them to `sa-pricing.json` beside the web root. `site/services/pricing.php` gives them out only after it has kept the visitor's name and email in `sa-leads/pricing.jsonl`. |
-| What the lead forms and the contact form share | `site/lib/leads.php` | The checks, the storage and the notice mail. |
+| What the lead forms and the contact form share | `site/lib/leads.php` | The checks, the storage and the notice mail. The notice is sent by the web host as the firm's own address, so the domain's SPF record (in Cloudflare) must name the host, or the domain's DMARC policy quarantines it. |
 | How the site appears in search and AI answers | `site/favicon*`, `site/img/logo-square.png`, `site/img/social-card.png`, the head tags and JSON-LD on each page, `site/sitemap.xml`, `site/robots.txt`, `site/llms.txt` | The favicon and square logo are the SA mark (`site/img/sa-mark.png`). The canonical address is `https://spataccoanalytics.com` without `www`. Search engines decide what they show and can take weeks to pick up a change. |
 | Redirects | `site/.htaccess` | Sends `www` to the bare domain, and the earlier site's PHP pages (still on the host, not in this repo) to the pages that replaced them. |
 | QR code for the menu | `menu/qr-score.svg`, `menu/qr-score.png` | Encodes `https://spataccoanalytics.com/score/`. Regenerate only if that address changes. |
@@ -149,6 +149,7 @@ bash tests/remote_deploy_test.sh                            # the deploy never l
 bash tests/feed_test.sh                                     # the relay passes on only what it should
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
 bash tests/contact_test.sh                                  # the contact form keeps real messages and nothing else
+bash tests/notice_test.sh                                   # the notice mail goes out as the firm, and a visitor cannot add to it
 bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
 node tests/worker_test.mjs                                  # the relay passes on the tools' own requests and nothing else
 bash tests/insights_test.sh                                 # posts build into pages, sourced and escaped

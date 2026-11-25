@@ -144,6 +144,12 @@ function lead_keep(string $file, array $lead): void
 
 // The notice. Every value is already one line, and the reply address has
 // passed validation, so none of it can add a header.
+//
+// The mail is handed over with the firm's own address as its envelope sender
+// (the -f below), not the web server's. The domain's mail lives elsewhere and
+// its DMARC policy quarantines anything that claims the domain without
+// proving it, so the envelope has to be the domain's for SPF to count toward
+// it. The host must also be named in the domain's SPF record.
 function lead_notice(string $subject, array $lines, string $replyTo): void
 {
     if (getenv('SA_LEADS_NO_MAIL') === '1') {
@@ -154,5 +160,5 @@ function lead_notice(string $subject, array $lines, string $replyTo): void
         'Reply-To: ' . $replyTo,
         'Content-Type: text/plain; charset=utf-8',
     ]);
-    @mail(LEAD_NOTIFY, mb_encode_mimeheader($subject, 'UTF-8'), implode("\n", $lines), $headers);
+    @mail(LEAD_NOTIFY, mb_encode_mimeheader($subject, 'UTF-8'), implode("\n", $lines), $headers, '-f' . LEAD_FROM);
 }
