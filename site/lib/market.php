@@ -16,6 +16,11 @@
  * source last said is kept one level above the web root in sa-market/, and a
  * figure is dropped, not shown stale, once it is older than it should be.
  *
+ * The Energy Information Administration takes fifteen to twenty seconds to
+ * answer a question it has not been asked lately (measured), and half a
+ * second after that. Nobody waits for it: a source marked slow is asked only
+ * after the visitor has been answered (market_after), with time to finish.
+ *
  * The energy figures need a free key from the Energy Information
  * Administration. It is not in this repository: Publish writes it beside the
  * web root as sa-market.json from the EIA_API_KEY secret. Without it the
@@ -30,8 +35,9 @@
 declare(strict_types=1);
 
 const MARKET_TIMEOUT = 5;            // seconds one source may take, unless it says otherwise
-const MARKET_BUDGET = 14;            // seconds one request may spend asking
-const MARKET_RETRY = 300;            // a source that failed is left alone this long
+const MARKET_BUDGET = 14;            // seconds a visitor's request may spend asking
+const MARKET_BUDGET_SLOW = 110;      // seconds the asking after the answer may take
+const MARKET_RETRY = 300;            // a source that failed is left alone this long, unless it says otherwise
 const MARKET_MAX_BYTES = 3145728;    // the most one answer may be
 const MARKET_AGENT = 'spataccoanalytics.com market strip';
 
@@ -63,7 +69,9 @@ const MARKET_SOURCES = [
     ],
     'eia_spot' => [
         'ttl' => 10800,
-        'timeout' => 12,            // slow to answer from the web host
+        'slow' => true,             // asked after the visitor has been answered
+        'timeout' => 50,
+        'retry' => 900,
         'short' => 'EIA',
         'publisher' => 'U.S. Energy Information Administration',
         'home' => 'https://www.eia.gov/petroleum/',
@@ -72,7 +80,9 @@ const MARKET_SOURCES = [
     ],
     'eia_gas' => [
         'ttl' => 10800,
-        'timeout' => 12,
+        'slow' => true,
+        'timeout' => 50,
+        'retry' => 900,
         'short' => 'EIA',
         'publisher' => 'U.S. Energy Information Administration',
         'home' => 'https://www.eia.gov/petroleum/',
@@ -114,14 +124,31 @@ const MARKET_DEALS_FRESH = 150;
 
 const MARKET_EIA_SERIES = ['RBRTE' => 'brent', 'RWTC' => 'wti', 'EMM_EPMR_PTE_NUS_DPG' => 'gas'];
 
-function market_out(int $code, array $body, int $keep = 0): void
+// Answer the visitor and let him go, without ending the request: what is
+// slow to fetch is fetched after this.
+function market_send(int $code, array $body, int $keep = 0): void
 {
+    $json = (string)json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     header('X-Content-Type-Options: nosniff');
     header('X-Robots-Tag: noindex, nofollow');
     header('Cache-Control: ' . ($keep > 0 ? 'public, max-age=' . $keep : 'no-store'));
-    echo json_encode($body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    header('Content-Length: ' . strlen($json));
+    echo $json;
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+    } else {
+        while (ob_get_level() > 0) {
+            ob_end_flush();
+        }
+        flush();
+    }
+}
+
+function market_out(int $code, array $body, int $keep = 0): void
+{
+    market_send($code, $body, $keep);
     exit;
 }
 
@@ -425,16 +452,17 @@ function market_cache_write(string $dir, array $cache): void
     }
 }
 
-// The sources whose answers have run out and may be asked again.
-function market_due(array $cache, int $now, string $eiaKey): array
+// The sources whose answers have run out and may be asked again: the quick
+// ones, or the slow ones.
+function market_due(array $cache, int $now, string $eiaKey, bool $slow = false): array
 {
     $due = [];
     foreach (MARKET_SOURCES as $key => $src) {
-        if (strncmp($key, 'eia_', 4) === 0 && $eiaKey === '') {
+        if ((bool)($src['slow'] ?? false) !== $slow || (strncmp($key, 'eia_', 4) === 0 && $eiaKey === '')) {
             continue;
         }
         $c = is_array($cache['sources'][$key] ?? null) ? $cache['sources'][$key] : [];
-        if ($now - (int)($c['at'] ?? 0) >= $src['ttl'] && $now - (int)($c['tried'] ?? 0) >= MARKET_RETRY) {
+        if ($now - (int)($c['at'] ?? 0) >= $src['ttl'] && $now - (int)($c['tried'] ?? 0) >= ($src['retry'] ?? MARKET_RETRY)) {
             $due[] = $key;
         }
     }
@@ -442,12 +470,13 @@ function market_due(array $cache, int $now, string $eiaKey): array
 }
 
 // What is held, brought up to date where it has run out. One visitor at a
-// time asks the sources; the rest take what is held.
-function market_refresh(string $dir, int $now): array
+// time asks the sources; the rest take what is held. The quick sources are
+// asked while the visitor waits; the slow ones only once he has his answer.
+function market_refresh(string $dir, int $now, bool $slow = false): array
 {
     $key = market_eia_key();
     $cache = market_cache_read($dir);
-    if (market_due($cache, $now, $key) === []) {
+    if (market_due($cache, $now, $key, $slow) === []) {
         return $cache;
     }
     $lock = @fopen($dir . '/lock', 'c');
@@ -461,8 +490,8 @@ function market_refresh(string $dir, int $now): array
     $cache = market_cache_read($dir);       // someone may have just finished
     $began = microtime(true);
     $changed = false;
-    foreach (market_due($cache, $now, $key) as $source) {
-        if (microtime(true) - $began > MARKET_BUDGET) {
+    foreach (market_due($cache, $now, $key, $slow) as $source) {
+        if (microtime(true) - $began > ($slow ? MARKET_BUDGET_SLOW : MARKET_BUDGET)) {
             break;                           // the rest wait for the next visitor
         }
         $items = [];
@@ -663,6 +692,15 @@ function market_status(): array
     }
     $out['key'] = market_eia_key() !== '' ? 'present' : 'absent or not in the form of a key';
     return $out;
+}
+
+// Once the visitor has his answer: ask the slow sources that are due.
+function market_after(): void
+{
+    $dir = market_dir();
+    if ($dir !== '') {
+        market_refresh($dir, market_now(), true);
+    }
 }
 
 // What the strip is given.

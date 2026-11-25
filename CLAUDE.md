@@ -13,6 +13,13 @@ lives and says which pieces are not in this repo yet.
 - Merging to `main` publishes (`.github/workflows/publish.yml`). Nothing is
   live until then, so say "merged" and "live" separately.
 - Site copy and pages are edited in `site/` only. Never on the host.
+- The home page is short on purpose: five screens (buyers and your data,
+  prospects and your website, the three pillars, how we work, contact), each
+  sending a visitor on to a page of its own. The owner asked for this after
+  the page had grown to seven long sections. Long copy goes on `/approach/`,
+  `/about/` or `/services/`, not back onto the home page.
+  `tests/pages_test.sh` holds the shape, a word limit, that each pillar links
+  to a real service, and that every menu reaches every page.
 - Pages are never kept by the host's page cache (`site/.htaccess` marks
   every `.html` file `private, no-cache`), so a publish shows without anyone
   clearing a cache. Scripts, styles and images are kept for a year: when one
@@ -79,6 +86,7 @@ bash tests/notice_test.sh
 bash tests/bank_test.sh
 bash tests/card_test.sh
 bash tests/market_test.sh
+bash tests/pages_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
 bash tests/insights_test.sh
