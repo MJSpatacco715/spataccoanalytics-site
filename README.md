@@ -13,6 +13,9 @@ and one pull request at a time; merging to `main` is what publishes.
 | Site pages, styles, scripts | `site/` here | The only source. A hand edit on the host is overwritten on the next Publish. |
 | Website Scorer | `site/tools/website-scorer.html` | Public at `/tools/website-scorer.html`. |
 | Insights (posts) | `content/posts/*.json`, built by `scripts/build_insights.py` | One file per post. Merging a post publishes it: a page, the feed at `/insights/`, an RSS feed, and (for the advisor category only) a teaser on the homepage. Statistics must carry a source. No posts yet, so the section does not exist on the live site. |
+| Stat bank (private) | `site/bank/`, `site/lib/bank.php` | The owner's private drop zone at `/bank/`: links, words, screenshots and files worth posting. Items and uploads are kept in `sa-bank/` beside the web root, never here. Opens with the `BANK_PASSWORD` secret; the weekly routine reads it with `BANK_TOKEN`. |
+| Weekly statistic | `docs/stat-bank.md` | The routine: next item from the bank, traced to its source, a post and a card, the owner's approval, then live. |
+| Statistic cards | `scripts/stat_card.cjs`, `brand/fonts/` | One statistic drawn in the site's colours and fonts, square and portrait, for LinkedIn and as a post's share image (`card` in the post file). |
 | LinkedIn page address | `content/site.json` | Once set, every page that signs off links to it and the homepage tells search engines it belongs to the firm. |
 | Resume Parser | `site/tools/resume-parser/index.html` | Public tool: a resume in, structured data out, as Excel or CSV. Two free reads per browser, then an invitation to get it for the visitor's firm. Holds no client's records or field names. |
 | Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
@@ -114,6 +117,8 @@ The repository is public, which is what makes the scheduled runs free.
    | `SOURCE_REPO_TOKEN` | Fine-grained token: the source repository only, Contents read-only (the token the source server already pulls with works) |
    | `SOURCE_SITE_URL` | The source platform's public address, ending in `/`. A secret only so the address is not published here |
 | `SERVICE_PRICING` | The project prices as JSON, whole dollars: `{"audit":{"professional":0,"complete":0},"design":{"essential":0,"professional":0,"complete":0},"crm":{"essential":0,"professional":0,"complete":0}}`. Without it the services page still takes pricing requests and says pricing follows by email |
+| `BANK_PASSWORD` | What the owner types to open the stat bank at `/bank/`. At least 10 characters. Without it the bank is closed to everyone |
+| `BANK_TOKEN` | A long random string (24 characters or more) the weekly routine sends to read the bank. The same value is saved once on the cloud environment as the credential for `spataccoanalytics.com`, header `X-Bank-Token` |
 
 2. **Import the live site.** Actions > Import live site > Run workflow. It
    copies the main site's pages, styles, scripts and images into `site/`,
@@ -150,6 +155,8 @@ bash tests/feed_test.sh                                     # the relay passes o
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
 bash tests/contact_test.sh                                  # the contact form keeps real messages and nothing else
 bash tests/notice_test.sh                                   # the notice mail goes out as the firm, and a visitor cannot add to it
+bash tests/bank_test.sh                                     # the stat bank is private, and keeps only pictures, PDFs and text
+bash tests/card_test.sh                                     # a statistic card is drawn only for a number with a source
 bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
 node tests/worker_test.mjs                                  # the relay passes on the tools' own requests and nothing else
 bash tests/insights_test.sh                                 # posts build into pages, sourced and escaped

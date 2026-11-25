@@ -28,6 +28,12 @@ lives and says which pieces are not in this repo yet.
   `scripts/build_insights.py`). The site is where a piece is published;
   LinkedIn gets its words from `build_insights.py --linkedin SLUG` and a
   link back. Only the `practice` category appears on the homepage.
+- The weekly statistic follows `docs/stat-bank.md`: the next item from the
+  private stat bank (`/bank/`), traced to its real source, drawn as a card
+  (`scripts/stat_card.cjs`) and written as a post. Nothing from the bank is
+  published, on the site or anywhere else, until the owner says so. What is
+  in the bank is private: never copy an item, a file or the bank's password
+  or token into this repository, a commit or a pull request.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
@@ -47,8 +53,10 @@ bash tests/feed_test.sh
 bash tests/lead_test.sh
 bash tests/contact_test.sh
 bash tests/notice_test.sh
+bash tests/bank_test.sh
+bash tests/card_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
 bash tests/insights_test.sh
-for f in site/score/lead.php site/contact/submit.php site/lib/leads.php site/services/pricing.php; do php -l "$f"; done
+for f in site/score/lead.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/bank/api.php site/lib/bank.php; do php -l "$f"; done
 ```
