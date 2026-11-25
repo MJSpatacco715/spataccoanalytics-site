@@ -66,9 +66,11 @@ jpost login '{"password":"not it"}'
 check "a wrong password is refused" '[ "$CODE" = 401 ] && [ "$(field error)" = "wrong password" ]'
 req status -b "$jar"
 check "and signs nobody in" '[ "$(field signed_in)" = false ]'
-jpost login "{\"password\":\"$PW\"}"
+jpost login "{\"password\":\"$PW\"}" -D "$t/hdr"
 check "the right password signs in" '[ "$CODE" = 200 ] && [ "$(field ok)" = true ]'
-check "with a cookie the page's scripts cannot read, for /bank/ only" 'grep -q "#HttpOnly_" "$jar" && grep -q "/bank/" "$jar"'
+# read off the server's own header: how a client files a cookie's path differs between curl versions
+SETC=$(grep -i '^set-cookie: sa_bank=' "$t/hdr" | tr -d '\r')
+check "with a cookie the page's scripts cannot read, for /bank/ only, never sent from another site" '[[ "${SETC,,}" == *"; httponly"* ]] && [[ "${SETC,,}" == *"; path=/bank/;"* ]] && [[ "${SETC,,}" == *"samesite=strict"* ]]'
 page status
 check "the owner is signed in" '[ "$(field signed_in)" = true ]'
 page list
