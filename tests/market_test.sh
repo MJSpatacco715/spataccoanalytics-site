@@ -198,7 +198,7 @@ check "and its script, tagged with its version (now ?v=$vjs)" 'grep -q "<script 
 check "the homepage is the only page with it" '[ "$(grep -rl "sa-ticker" "$here/site" --include=*.html | wc -l)" = 1 ]'
 check "the script writes text, never markup" '! grep -nE "innerHTML|outerHTML|insertAdjacentHTML|document\.write" "$js"'
 check "and asks only the site's own feed" '[ "$(grep -c "fetch(" "$js")" = 1 ] && grep -q "var FEED = ./market/feed.php.;" "$js" && ! grep -qE "https?://" "$js"'
-check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live quotes\." "$js" && grep -q "This tool runs entirely on free public data\. Yours could too\." "$js"'
+check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live\.." "$js" && ! grep -q "live quotes" "$js" && grep -q "This tool runs entirely on free public data\. Yours could too\." "$js"'
 check "the hover makes no pitch and links only to sources" '! grep -qiE "working for you|/contact|mailto:" "$js"'
 check "it has a pause button and respects reduced motion" 'grep -q "sa-tk-pause" "$js" && grep -q "prefers-reduced-motion" "$js" && grep -q "prefers-reduced-motion" "$here/site/css/ticker.css"'
 check "no long dash in any of it" '! grep -l $'"'"'\xe2\x80\x94'"'"' "$js" "$here/site/css/ticker.css" "$here/site/lib/market.php" "$here/site/market/feed.php"'
