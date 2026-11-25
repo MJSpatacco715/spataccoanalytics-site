@@ -4,7 +4,7 @@
    figures and scrolls them slowly. Every figure shows who published it and
    for when, and opens a card on hover, keyboard focus or tap: the figure, its
    source with a link, and one plain line that the tool runs on free public
-   data. The "Markets" label and the note at the end of the scroll open a card
+   data and the visitor's could too (a soft sell: no link, no pitch). The "Markets" label and the note at the end of the scroll open a card
    about the whole strip, with every source linked. The strip stays hidden
    until it has at least three figures, so a source that is down never leaves
    an empty bar. Everything is written as text, never as markup.
@@ -21,7 +21,7 @@
   var SPEED = 38;           // pixels a second
   var MIN_ITEMS = 3;
   var NOTE = 'These quotes are latest published figures and not necessarily live quotes.';
-  var FREE = 'This tool runs entirely on free public data.';
+  var FREE = 'This tool runs entirely on free public data. Yours could too.';
   var still = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   var view, track, card, pause, tag;
