@@ -23,7 +23,7 @@ cp "$here/site/lib/market.php" "$web/lib/market.php"
 
 NOW=1795616700                      # November 25, 2026, 9:25 AM Eastern
 KEY='abcdefghijklmnopqrstuvwxyz0123456789ABCD'
-all_sources() { cp "$src/treasury.xml" "$src/ecb.xml" "$src/coingecko.json" "$src/eia_spot.json" "$src/eia_gas.json" "$fx/"; rm -f "$fx/treasury-prev.xml"; }
+all_sources() { cp "$src/treasury.xml" "$src/ecb.xml" "$src/coingecko.json" "$src/coingecko_days.json" "$src/eia_spot.json" "$src/eia_gas.json" "$fx/"; cp "$src/treasury-october.xml" "$fx/treasury-prev.xml"; }
 with_key() { printf '{"eia_key":"%s"}' "$KEY" > "$t/home/sa-market.json"; }
 forget() { rm -rf "$t/home/sa-market" "$fx/requests.log"; }
 
@@ -49,9 +49,9 @@ BODY=
 all_sources; with_key; forget
 feed1 $NOW
 check "the first visitor is answered without waiting for the energy source" '[ "$(ok)" = true ] && [ "$(every)" = "ria,ust30,ust10,eurusd,btc" ]'
-check "which was asked once he had his answer" '[ "$(asked "https://api.eia.gov/v2/")" = 2 ] && [ "$(wc -l < "$fx/requests.log")" = 5 ]'
+check "which was asked once he had his answer" '[ "$(asked "https://api.eia.gov/v2/")" = 2 ] && [ "$(wc -l < "$fx/requests.log")" = 7 ]'
 feed1 $NOW
-check "so the next visitor gets its figures, and nothing is asked twice" '[ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ] && [ "$(wc -l < "$fx/requests.log")" = 5 ]'
+check "so the next visitor gets its figures, and nothing is asked twice" '[ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ] && [ "$(wc -l < "$fx/requests.log")" = 7 ]'
 
 # --- every source answers
 all_sources; with_key; forget
@@ -81,6 +81,19 @@ check "CoinGecko is credited the way it asks" '[ "$(of btc card.source)" = CoinG
 check "each publisher is named once, with a link, for the strip's own card" '[ "$(srcs)" = "DeVoe & Company|U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration" ]'
 check "the oil card says the prices come out weekly, and on which day" '[[ "$(of brent card.text)" == *"released once a week, usually on Wednesday."* ]] && [[ "$(of wti card.text)" == *"released once a week, usually on Wednesday."* ]]'
 check "the gas card says which week" '[[ "$(of gas card.text)" == *"week of November 23, 2026"*"\$3.805"* ]]'
+
+# --- every figure is drawn on its card: the value, its history, low, high and change
+pts() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); foreach(($d["items"]??[]) as $i){ if($i["id"]===$argv[1]){ $p=$i["card"]["line"]["points"]??[]; echo count($p), " ", json_encode($p[0]??null), " ", json_encode(end($p)); } }' "$1"; }
+check "a yield leads its card with the value, its change and the day before" '[ "$(of ust10 card.eyebrow)" = "U.S. 10-year Treasury yield" ] && [ "$(of ust10 card.hero)" = "{\"value\":\"4.91%\",\"label\":\"November 24, 2026\",\"delta\":\"-1 bp\",\"dir\":\"dn\",\"vs\":\"from Nov 23\"}" ]'
+check "and draws every business day held: this month and last" '[ "$(pts ust10)" = "37 [\"2026-10-01\",5.24] [\"2026-11-24\",4.91]" ] && [ "$(of ust10 card.line.title)" = "Day by day, since Oct 1" ] && [ "$(of ust10 card.line.unit)" = pct ]'
+check "with the low, the high and the change over that stretch" '[ "$(of ust10 card.tiles)" = "[{\"label\":\"Low\",\"value\":\"4.84%\",\"note\":\"Nov 5\"},{\"label\":\"High\",\"value\":\"5.31%\",\"note\":\"Oct 5\"},{\"label\":\"Change\",\"value\":\"-33 bp\",\"note\":\"since Oct 1\",\"dir\":\"dn\"}]" ]'
+check "the chart says in words what it shows" '[ "$(of ust10 card.line.label)" = "U.S. 10-year Treasury yield, 37 days from October 1, 2026 to November 24, 2026. Low 4.84% on Nov 5, high 5.31% on Oct 5, latest 4.91%." ]'
+check "one plain line says what the figure is" '[ "$(of ust10 card.about)" = "Daily par yield curve rate, set each business day." ] && [[ "$(of btc card.about)" == *"Data provided by CoinGecko." ]] && [[ "$(of brent card.about)" == *"released once a week, usually on Wednesday." ]]'
+check "the euro: the last 45 business days of the ninety it is sent" '[ "$(pts eurusd)" = "45 [\"2026-09-23\",1.1411] [\"2026-11-24\",1.0963]" ] && [ "$(of eurusd card.line.unit)" = fx ]'
+check "bitcoin: a point a day, and the price now as the last" '[ "$(pts btc)" = "60 [\"2026-09-27\",84417] [\"2026-11-25\",58349]" ] && [ "$(of btc card.hero.vs)" = "in 24 hours" ] && [ "$(of btc card.tiles.1.value)" = "\$86,490" ]'
+check "oil: forty-five trading days, asked for in the same request" '[ "$(pts brent | cut -d" " -f1)" = 45 ] && [ "$(pts wti | cut -d" " -f3)" = "[\"2026-11-17\",89.53]" ] && [ "$(asked "length=100")" = 1 ]'
+check "gasoline: week by week for half a year" '[ "$(pts gas | cut -d" " -f1)" = 26 ] && [ "$(of gas card.line.title)" = "Week by week, since Jun 1" ] && [[ "$(of gas card.line.label)" == "U.S. regular gasoline, 26 weeks from June 1, 2026 to November 23, 2026."* ]] && [ "$(asked "length=30")" = 1 ]'
+check "the history is kept beside the figures, and no key is in it" 'grep -q "\"days\":{\"2026-10-01\"" "$t/home/sa-market/cache.json" && ! grep -q "$KEY" "$t/home/sa-market/cache.json"'
 check "no markup and no long dash in what the page is given" '[[ "$BODY" != *"<"* ]] && [[ "$BODY" != *$'"'"'\xe2\x80\x94'"'"'* ]]'
 check "the answers are kept beside the web root, not in it" '[ -s "$t/home/sa-market/cache.json" ] && [ -z "$(find "$web" -type f ! -name feed.php ! -name market.php)" ]'
 check "and only this account can read them" '[ "$(stat -c %a "$t/home/sa-market")" = 700 ] && [ "$(stat -c %a "$t/home/sa-market/cache.json")" = 600 ]'
@@ -103,21 +116,23 @@ all_sources; with_key; forget
 feed $NOW
 first=$(wc -l < "$fx/requests.log")
 feed $((NOW + 60))
-check "five requests fill the strip" '[ "$first" = 5 ]'
-check "a minute later nothing is asked again" '[ "$(wc -l < "$fx/requests.log")" = 5 ] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ]'
+check "seven requests fill the strip and its charts" '[ "$first" = 7 ]'
+check "two of them for history: last month of yields, and bitcoin day by day" '[ "$(asked value_month=202610)" = 1 ] && [ "$(asked market_chart)" = 1 ]'
+check "a minute later nothing is asked again" '[ "$(wc -l < "$fx/requests.log")" = 7 ] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ]'
 feed $((NOW + 400))
-check "bitcoin is asked again after five minutes, the rest are not" '[ "$(wc -l < "$fx/requests.log")" = 6 ] && [ "$(asked coingecko)" = 2 ]'
+check "bitcoin is asked again after five minutes, the rest are not" '[ "$(wc -l < "$fx/requests.log")" = 8 ] && [ "$(asked simple/price)" = 2 ]'
 feed $((NOW + 2000))
-check "Treasury and the ECB after half an hour" '[ "$(asked home.treasury.gov)" = 2 ] && [ "$(asked ecb.europa.eu)" = 2 ] && [ "$(asked eia.gov)" = 2 ]'
+check "Treasury and the ECB after half an hour" '[ "$(asked value_month=202611)" = 2 ] && [ "$(asked ecb.europa.eu)" = 2 ] && [ "$(asked eia.gov)" = 2 ]'
+check "with enough days held, last month of yields is not asked for again, and bitcoin's days keep for hours" '[ "$(asked value_month=202610)" = 1 ] && [ "$(asked market_chart)" = 1 ]'
 
 # --- a source that stops answering
 rm -f "$fx/coingecko.json"
 feed $((NOW + 2400))
-check "a silent source: the last answer is still shown" '[ "$(of btc value)" = "\$58,349" ] && [ "$(asked coingecko)" = 4 ]'
+check "a silent source: the last answer is still shown" '[ "$(of btc value)" = "\$58,349" ] && [ "$(asked simple/price)" = 4 ]'
 feed $((NOW + 2500))
-check "and it is left alone for five minutes" '[ "$(asked coingecko)" = 4 ]'
+check "and it is left alone for five minutes" '[ "$(asked simple/price)" = 4 ]'
 feed $((NOW + 2800))
-check "then tried again" '[ "$(asked coingecko)" = 5 ]'
+check "then tried again" '[ "$(asked simple/price)" = 5 ]'
 check "the energy source has been left alone for the hour" '[ "$(asked eia.gov)" = 2 ]'
 feed $((NOW + 3700))
 check "and is asked again after it, so its weekly release shows the afternoon it is out" '[ "$(asked eia.gov)" = 4 ]'
@@ -187,6 +202,24 @@ cp "$src/treasury-december.xml" "$fx/treasury.xml"; cp "$src/treasury.xml" "$fx/
 feed $((NOW + 7 * 86400))                      # December 2
 check "the day before comes from last month's feed" '[ "$(of ust10 value)" = "4.95%" ] && [ "$(of ust10 delta)" = "+4 bp" ] && [ "$(of ust10 when)" = "Dec 1" ] && [ "$(asked value_month=202612)" = 1 ] && [ "$(asked value_month=202611)" = 1 ]'
 check "and the card names both days" '[[ "$(of ust10 card.text)" == *"December 1, 2026"*"4.91% on November 24, 2026"* ]]'
+check "and the chart runs across the two months" '[ "$(pts ust10)" = "17 [\"2026-11-02\",4.91] [\"2026-12-01\",4.95]" ] && [ "$(of ust10 card.line.title)" = "Day by day, since Nov 2" ]'
+
+# --- history is added to, never replaced, and too little of it draws nothing
+all_sources; forget
+feed $NOW
+php -r '$d=json_decode(file_get_contents($argv[1]),true); $d["response"]["data"]=array_slice($d["response"]["data"],0,3); file_put_contents($argv[1],json_encode($d));' "$fx/eia_gas.json"
+feed $((NOW + 3700))
+check "a later answer with only three weeks in it leaves the chart its twenty-six" '[ "$(asked EMM_EPMR_PTE_NUS_DPG)" = 2 ] && [ "$(pts gas | cut -d" " -f1)" = 26 ]'
+forget
+feed $NOW
+check "three weeks and nothing held: the value and its change, and no chart" '[ "$(of gas card.hero.value)" = "\$3.642" ] && [ "$(of gas card.line)" = null ] && [ "$(of gas card.tiles)" = null ] && [ "$(of gas value)" = "\$3.642" ]'
+all_sources; forget
+php -r '$d=json_decode(file_get_contents($argv[1]),true); $d["prices"][10][1]="<script>alert(1)</script>"; $d["prices"][11][1]=-5; $d["prices"][12][0]="soon"; file_put_contents($argv[1],json_encode($d));' "$fx/coingecko_days.json"
+feed $NOW
+check "a day that is not a price is left out of the chart, the rest stay" '[ "$(pts btc | cut -d" " -f1)" = 57 ] && [[ "$BODY" != *"<"* ]]'
+rm -f "$fx/coingecko_days.json"; forget
+feed $NOW
+check "with no history at all bitcoin still shows, without a chart" '[ "$(of btc value)" = "\$58,349" ] && [ "$(of btc card.line)" = null ]'
 
 # --- over the web
 all_sources; with_key; forget
@@ -218,7 +251,7 @@ check "with its stylesheet, tagged with its version (now ?v=$vcss)" 'grep -q "<l
 check "and its script, tagged with its version (now ?v=$vjs)" 'grep -q "<script src=\"/js/ticker.js?v=$vjs\" defer></script>" "$home"'
 check "the homepage is the only page with it" '[ "$(grep -rl "sa-ticker" "$here/site" --include=*.html | wc -l)" = 1 ]'
 check "the script writes text, never markup" '! grep -nE "innerHTML|outerHTML|insertAdjacentHTML|document\.write" "$js"'
-check "and asks only the site's own feed" '[ "$(grep -c "fetch(" "$js")" = 1 ] && grep -q "var FEED = ./market/feed.php.;" "$js" && ! grep -qE "https?://" "$js"'
+check "and asks only the site's own feed" '[ "$(grep -c "fetch(" "$js")" = 1 ] && grep -q "var FEED = ./market/feed.php.;" "$js" && ! grep -vF "var SVG = '"'"'http://www.w3.org/2000/svg'"'"';" "$js" | grep -qE "https?://"'
 check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live\.." "$js" && ! grep -q "live quotes" "$js" && grep -q "This tool runs entirely on free public data\. Yours could too\." "$js"'
 check "the hover makes no pitch and links only to sources" '! grep -qiE "working for you|/contact|mailto:" "$js"'
 check "it has a pause button and respects reduced motion" 'grep -q "sa-tk-pause" "$js" && grep -q "prefers-reduced-motion" "$js" && grep -q "prefers-reduced-motion" "$here/site/css/ticker.css"'

@@ -2,8 +2,10 @@
 
    It asks the site's own feed (market/feed.php) for a handful of market
    figures and scrolls them slowly. Every figure shows who published it and
-   for when, and opens a card on hover, keyboard focus or tap: the figure, its
-   source with a link, and one plain line that the tool runs on free public
+   for when, and opens a card on hover, keyboard focus or tap: the figure
+   drawn (its value and change, a line of its recent history that reads out
+   any day, the low, the high and the change; for the deal count, the year
+   beside the record year), its source with a link, and one plain line that the tool runs on free public
    data and the visitor's could too (a soft sell: no link, no pitch). The "Markets" label and the note at the end of the scroll open a card
    about the whole strip, with every source linked. The strip stays hidden
    until it has at least three figures, so a source that is down never leaves
@@ -61,7 +63,7 @@
     btn.addEventListener('click', function (e) {
       if (e.detail === 0) {                        // Enter or Space: into the card, to its first link
         show(btn);
-        var a = card.querySelector('a');
+        var a = card.querySelector('svg[tabindex], a');   // the chart when there is one, then the source
         if (a) a.focus();
       } else if (pointer !== 'mouse' && openItem === btn) {
         shut();                                    // a second tap closes it
@@ -253,8 +255,127 @@
     card.appendChild(fig);
   }
 
+  // A value as its unit is written, and a day as "Nov 24". The chart's own
+  // numbers are written here: nothing in it comes from the feed as markup.
+  var UNITS = {
+    pct: function (v) { return v.toFixed(2) + '%'; },
+    fx: function (v) { return v.toFixed(4); },
+    usd0: function (v) { return '$' + Math.round(v).toLocaleString('en-US'); },
+    usd2: function (v) { return '$' + v.toFixed(2); },
+    usd3: function (v) { return '$' + v.toFixed(3); }
+  };
+  var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function dayText(d) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d);
+    return m && MONTHS[+m[2] - 1] ? MONTHS[+m[2] - 1] + ' ' + (+m[3]) : '';
+  }
+  var SVG = 'http://www.w3.org/2000/svg';
+  function shape(tag, attrs) {
+    var e = document.createElementNS(SVG, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  // A figure's recent history as a line: the high and the low marked at the
+  // side, the first and last day underneath, a dot on the latest. Moving
+  // along it (mouse, finger or the arrow keys) reads out any day.
+  var LW = 336, LH = 104, LTOP = 18, LBOT = 16, LPAD = 6;
+  function line(ln) {
+    var fmt = UNITS[ln.unit];
+    var pts = [];
+    (Array.isArray(ln.points) ? ln.points.slice(-90) : []).forEach(function (p) {
+      if (Array.isArray(p) && typeof p[1] === 'number' && isFinite(p[1]) && dayText(p[0])) pts.push({ d: p[0], v: p[1] });
+    });
+    if (!fmt || pts.length < 5) return false;
+    var lo = pts[0].v, hi = pts[0].v;
+    pts.forEach(function (p) { if (p.v < lo) lo = p.v; if (p.v > hi) hi = p.v; });
+    var range = hi - lo || 1;
+    var last = pts.length - 1;
+    function x(i) { return LPAD + i / last * (LW - 2 * LPAD); }
+    function y(v) { return LTOP + (hi - v) / range * (LH - LTOP - LBOT); }
+    function r(n) { return Math.round(n * 10) / 10; }
+
+    var fig = el('div', 'sa-tk-chart');
+    var head = el('div', 'sa-tk-chead');
+    head.appendChild(el('span', 'sa-tk-ctitle', ln.title));
+    var read = el('span', 'sa-tk-read');
+    head.appendChild(read);
+    fig.appendChild(head);
+
+    var g = shape('svg', { viewBox: '0 0 ' + LW + ' ' + LH, 'class': 'sa-tk-line', role: 'img', tabindex: '0', 'aria-label': String(ln.label || '') });
+    g.appendChild(shape('line', { x1: 0, x2: LW, y1: r(y(hi)), y2: r(y(hi)), 'class': 'sa-tk-rule' }));
+    g.appendChild(shape('line', { x1: 0, x2: LW, y1: r(y(lo)), y2: r(y(lo)), 'class': 'sa-tk-rule' }));
+    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + r(x(i)) + ' ' + r(y(p.v)); }).join(' ');
+    g.appendChild(shape('path', { d: d + ' L' + r(x(last)) + ' ' + (LH - LBOT + 6) + ' L' + r(x(0)) + ' ' + (LH - LBOT + 6) + ' Z', 'class': 'sa-tk-wash' }));
+    g.appendChild(shape('path', { d: d, 'class': 'sa-tk-path' }));
+    var hiText = shape('text', { x: 0, y: r(y(hi)) - 5, 'class': 'sa-tk-tick' });
+    hiText.textContent = fmt(hi);
+    g.appendChild(hiText);
+    if (hi !== lo) {
+      var loText = shape('text', { x: 0, y: r(y(lo)) + 12, 'class': 'sa-tk-tick' });
+      loText.textContent = fmt(lo);
+      g.appendChild(loText);
+    }
+    var rule = shape('line', { y1: LTOP - 6, y2: LH - LBOT + 6, 'class': 'sa-tk-cross' });
+    var spot = shape('circle', { r: 4, 'class': 'sa-tk-spot' });
+    g.appendChild(rule);
+    g.appendChild(shape('circle', { cx: r(x(last)), cy: r(y(pts[last].v)), r: 4, 'class': 'sa-tk-dot' }));
+    g.appendChild(spot);
+    fig.appendChild(g);
+
+    var ends = el('div', 'sa-tk-days');
+    ends.appendChild(el('span', '', dayText(pts[0].d)));
+    ends.appendChild(el('span', '', dayText(pts[last].d)));
+    fig.appendChild(ends);
+
+    var at = last;
+    function point(i, on) {
+      at = Math.max(0, Math.min(last, i));
+      read.textContent = dayText(pts[at].d) + ': ' + fmt(pts[at].v);
+      g.classList.toggle('reading', !!on);
+      rule.setAttribute('x1', r(x(at)));
+      rule.setAttribute('x2', r(x(at)));
+      spot.setAttribute('cx', r(x(at)));
+      spot.setAttribute('cy', r(y(pts[at].v)));
+    }
+    function follow(e) {
+      var b = g.getBoundingClientRect();
+      if (b.width) point(Math.round(((e.clientX - b.left) / b.width * LW - LPAD) / (LW - 2 * LPAD) * last), true);
+    }
+    g.addEventListener('pointermove', follow);
+    g.addEventListener('pointerdown', follow);
+    g.addEventListener('pointerleave', function () { point(last, false); });
+    g.addEventListener('blur', function () { point(last, false); });
+    g.addEventListener('keydown', function (e) {
+      var step = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+      if (!step) return;
+      e.preventDefault();
+      e.stopPropagation();
+      point(at + step, true);
+    });
+    point(last, false);
+    card.appendChild(fig);
+    return true;
+  }
+
+  // The low, the high and the change over the stretch drawn: three small tiles.
+  function tiles(list) {
+    var row = el('div', 'sa-tk-tiles');
+    list.slice(0, 3).forEach(function (t) {
+      if (!t || typeof t !== 'object') return;
+      var tile = el('div', 'sa-tk-tile');
+      tile.appendChild(el('span', 'sa-tk-tl', t.label));
+      tile.appendChild(el('span', 'sa-tk-tv' + (t.dir === 'up' ? ' up' : t.dir === 'dn' ? ' dn' : ''), t.value));
+      tile.appendChild(el('span', 'sa-tk-tn', t.note));
+      row.appendChild(tile);
+    });
+    if (row.firstChild) card.appendChild(row);
+  }
+
   // The card for one figure: what it is, and where it comes from. A figure
-  // that sends a picture of itself (the deal count) is drawn: the number, how
+  // that sends a picture of itself is drawn. A market figure: the value with
+  // its change, a line of its history, the low, high and change, and a line
+  // on what it is. The deal count: the number, how
   // far it is to the record, the year beside the record year, a few facts.
   function figureCard(it) {
     var c = it.card;
@@ -264,16 +385,30 @@
       card.appendChild(el('strong', 'sa-tk-eye', c.eyebrow || c.title));
       var hero = el('p', 'sa-tk-hero');
       hero.appendChild(el('span', 'sa-tk-big', c.hero.value));
-      hero.appendChild(el('span', 'sa-tk-cap', c.hero.label));
+      if (typeof c.hero.delta === 'string' && c.hero.delta) {
+        // the change, with an arrow so the direction is not left to color
+        var way = c.hero.dir === 'up' ? 'up' : c.hero.dir === 'dn' ? 'dn' : 'flat';
+        var side = el('span', 'sa-tk-side');
+        var moved = el('span', 'sa-tk-moved');
+        moved.appendChild(el('span', 'sa-tk-chip ' + way, (way === 'up' ? '\u25B2 ' : way === 'dn' ? '\u25BC ' : '') + c.hero.delta));
+        if (typeof c.hero.vs === 'string' && c.hero.vs) moved.appendChild(el('span', 'sa-tk-vs', c.hero.vs));
+        side.appendChild(moved);
+        side.appendChild(el('span', 'sa-tk-cap', c.hero.label));
+        hero.appendChild(side);
+      } else {
+        hero.appendChild(el('span', 'sa-tk-cap', c.hero.label));
+      }
       card.appendChild(hero);
       if (c.meter && typeof c.meter === 'object') meter(c.meter);
       if (c.chart && typeof c.chart === 'object') chart(c.chart);
+      if (c.line && typeof c.line === 'object' && line(c.line) && Array.isArray(c.tiles)) tiles(c.tiles);
+      if (typeof c.about === 'string' && c.about) card.appendChild(el('p', 'sa-tk-about', c.about));
       var facts = Array.isArray(c.facts) ? c.facts.slice(0, 4).filter(function (f) { return typeof f === 'string' && f; }) : [];
       if (facts.length) {
         var ul = el('ul', 'sa-tk-facts');
         facts.forEach(function (f) { ul.appendChild(el('li', '', f)); });
         card.appendChild(ul);
-      } else if (!c.chart) {
+      } else if (!c.chart && !c.about) {
         card.appendChild(el('p', '', c.text));
       }
     } else {
@@ -344,12 +479,13 @@
     }, 220);
   }
 
-  // In the card with the keyboard: Tab walks its links and then goes on to
-  // the next figure; Shift+Tab from the first link, or Escape, goes back.
+  // In the card with the keyboard: Tab walks its chart and its links and then
+  // goes on to the next figure; Shift+Tab from the first of them, or Escape,
+  // goes back.
   function cardKeys(e) {
     if (!openItem) return;
     var from = openItem;
-    var links = Array.prototype.slice.call(card.querySelectorAll('a'));
+    var links = Array.prototype.slice.call(card.querySelectorAll('svg[tabindex], a'));   // a chart is a stop too: the arrow keys read it
     var at = links.indexOf(document.activeElement);
     if (e.key === 'Escape' || (e.key === 'Tab' && e.shiftKey && at <= 0)) {
       e.preventDefault();
