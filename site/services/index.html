@@ -26,6 +26,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/shared.css">
 <style>
+/* a link from the home page lands on its service, clear of the menu */
+.sv-card,#hosting{scroll-margin-top:96px}
 .sv-wrap{max-width:1100px;margin:0 auto}
 .sv-lead{font-size:17px;line-height:1.7;color:var(--text);max-width:720px;margin-bottom:40px}
 .sv-start{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;background:var(--navy);color:var(--white);padding:26px 30px;margin-bottom:56px}
@@ -116,8 +118,8 @@
   <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="logo"></a>
   <div class="nav-links">
     <a href="/services/" class="active">Services</a>
-    <a href="/#approach">Approach</a>
-    <a href="/#about">About</a>
+    <a href="/approach/">Approach</a>
+    <a href="/about/">About</a>
     <a href="/tools/">Tools</a>
     <a href="/contact/">Contact</a>
   </div>
@@ -155,7 +157,7 @@
       <div>Complete</div>
     </div>
 
-    <fieldset class="sv-card reveal" data-service="audit" style="padding:0;min-width:0">
+    <fieldset class="sv-card reveal" id="audit" data-service="audit" style="padding:0;min-width:0">
       <legend class="sv-hp">Website and AI Audit</legend>
       <div class="sv-card-head">
         <h3>Website &amp; AI Audit</h3>
@@ -181,7 +183,7 @@
       <button type="button" class="sv-clear" data-clear="audit" hidden>Remove from plan</button>
     </fieldset>
 
-    <fieldset class="sv-card reveal" data-service="design" style="padding:0;min-width:0">
+    <fieldset class="sv-card reveal" id="design" data-service="design" style="padding:0;min-width:0">
       <legend class="sv-hp">Website Design</legend>
       <div class="sv-card-head">
         <h3>Website Design</h3>
@@ -207,7 +209,7 @@
       <button type="button" class="sv-clear" data-clear="design" hidden>Remove from plan</button>
     </fieldset>
 
-    <fieldset class="sv-card reveal" data-service="crm" style="padding:0;min-width:0">
+    <fieldset class="sv-card reveal" id="crm" data-service="crm" style="padding:0;min-width:0">
       <legend class="sv-hp">CRM Diagnostic and Repair</legend>
       <div class="sv-card-head">
         <h3>CRM Diagnostic &amp; Repair</h3>

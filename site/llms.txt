@@ -13,6 +13,11 @@ Spatacco Analytics was founded by a business development and M&A professional wi
 
 Project pricing is given on request at https://spataccoanalytics.com/services/.
 
+## How the firm works
+
+- [How we work](https://spataccoanalytics.com/approach/): a messy system that gets used beats a clean system that doesn't. Four steps: listen, diagnose, build, transfer.
+- [About](https://spataccoanalytics.com/about/): who founded the firm and who it works with.
+
 ## Tools
 
 - [Free Website Score](https://spataccoanalytics.com/tools/website-scorer.html): scores an advisory firm's website on design, content, navigation, credibility, team, and contact.

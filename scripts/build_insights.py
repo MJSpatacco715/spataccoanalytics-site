@@ -163,8 +163,8 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
   <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="logo"></a>
   <div class="nav-links">
     <a href="/services/">Services</a>
-    <a href="/#approach">Approach</a>
-    <a href="/#about">About</a>
+    <a href="/approach/">Approach</a>
+    <a href="/about/">About</a>
     <a href="/tools/">Tools</a>
     <a href="/contact/">Contact</a>
   </div>

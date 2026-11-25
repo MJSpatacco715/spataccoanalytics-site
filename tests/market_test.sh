@@ -29,8 +29,11 @@ forget() { rm -rf "$t/home/sa-market" "$fx/requests.log"; }
 
 fails=0; n=0
 check() { n=$((n+1)); if eval "$2"; then :; else fails=$((fails+1)); echo "FAIL $1 (body=${BODY:0:200})"; fi; }
-# feed TIME -> BODY, as the page would get it
-feed() { BODY=$(SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW="$1" php -r '$_SERVER["DOCUMENT_ROOT"]=$argv[1]; $_SERVER["REQUEST_METHOD"]="GET"; include $argv[1]."/market/feed.php";' "$web" 2>&1); }
+# feed1 TIME -> BODY, as one visit gets it. The slow sources are asked after
+# the answer has gone out, so what they say shows on the next visit.
+feed1() { BODY=$(SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW="$1" php -r '$_SERVER["DOCUMENT_ROOT"]=$argv[1]; $_SERVER["REQUEST_METHOD"]="GET"; include $argv[1]."/market/feed.php";' "$web" 2>&1); }
+# feed TIME -> BODY once everything due at that time has been asked (two visits)
+feed() { feed1 "$1"; feed1 "$1"; }
 # every: all the figures. ids: the ones that come from a live source (not the quarterly deal count)
 every() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)?implode(",",array_column($d["items"]??[],"id")):"NOT JSON";'; }
 ids() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)?implode(",",array_diff(array_column($d["items"]??[],"id"),["ria"])):"NOT JSON";'; }
@@ -41,6 +44,14 @@ srcs() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN)
 ok() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)&&array_key_exists("ok",$d)?json_encode($d["ok"]):"NOT JSON";'; }
 asked() { awk -v p="$1" 'index($0,p){c++} END{print c+0}' "$fx/requests.log" 2>/dev/null || echo 0; }
 BODY=
+
+# --- nobody waits for a slow source
+all_sources; with_key; forget
+feed1 $NOW
+check "the first visitor is answered without waiting for the energy source" '[ "$(ok)" = true ] && [ "$(every)" = "ria,ust30,ust10,eurusd,btc" ]'
+check "which was asked once he had his answer" '[ "$(asked "https://api.eia.gov/v2/")" = 2 ] && [ "$(wc -l < "$fx/requests.log")" = 5 ]'
+feed1 $NOW
+check "so the next visitor gets its figures, and nothing is asked twice" '[ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ] && [ "$(wc -l < "$fx/requests.log")" = 5 ]'
 
 # --- every source answers
 all_sources; with_key; forget
@@ -161,10 +172,12 @@ all_sources; with_key; forget
 SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW=$NOW php -S 127.0.0.1:18746 -t "$web" >/dev/null 2>&1 & pid=$!
 base=http://127.0.0.1:18746/market/feed.php
 for i in $(seq 1 50); do curl -s -o /dev/null "$base" && break; sleep 0.1; done
+curl -s -o /dev/null "$base"                    # by now the slow sources have been asked
 H=$(curl -s -D - -o "$t/body" "$base"); BODY=$(cat "$t/body")
 check "the feed answers as JSON" '[[ "$H" == *"200 OK"* ]] && [[ "${H,,}" == *"content-type: application/json"* ]] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ]'
 check "may be kept for a minute, and is not for search engines" '[[ "${H,,}" == *"cache-control: public, max-age=60"* ]] && [[ "${H,,}" == *"x-robots-tag: noindex"* ]] && [[ "${H,,}" == *"x-content-type-options: nosniff"* ]]'
 check "it sets no cookie" '[[ "${H,,}" != *"set-cookie"* ]]'
+check "it says how long the answer is, so a visitor is let go before the slow asking starts" '[[ "${H,,}" == *"content-length: $(wc -c < "$t/body" | tr -d " ")"* ]]'
 again=$(curl -s "$base?x=%3Cscript%3E&id=btc" -H 'Cookie: a=b')
 check "nothing a visitor sends changes the answer" '[ "$again" = "$BODY" ]'
 code=$(curl -s -o "$t/post" -w '%{http_code}' -X POST --data 'a=1' "$base")
@@ -202,6 +215,7 @@ if node -e "require('playwright')" 2>/dev/null && [ -d "$t/dist" ]; then
   rm -rf "$web"; cp -r "$t/dist" "$web"; all_sources; with_key; forget
   SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW=$NOW php -S 127.0.0.1:18746 -t "$web" >/dev/null 2>&1 & pid=$!
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18746/" && break; sleep 0.1; done
+  curl -s -o /dev/null "http://127.0.0.1:18746/market/feed.php"; curl -s -o /dev/null "http://127.0.0.1:18746/market/feed.php"   # every source asked before the browser looks
   out=$(node "$here/tests/ticker_browser.cjs" http://127.0.0.1:18746/ 2>&1); code=$?
   BODY=$out
   check "the strip works in a browser: $(printf '%s' "$out" | tail -1)" '[ $code -eq 0 ]'

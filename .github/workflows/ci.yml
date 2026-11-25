@@ -62,6 +62,9 @@ jobs:
       - name: The market strip shows only sourced, fresh figures, and keeps its key
         run: bash tests/market_test.sh
 
+      - name: The home page is short, and every page reaches every other
+        run: bash tests/pages_test.sh
+
       - name: Project prices go only to a visitor who left an email
         run: bash tests/pricing_test.sh
 
