@@ -59,6 +59,9 @@ jobs:
       - name: A statistic card is drawn only for a number with a source
         run: bash tests/card_test.sh
 
+      - name: The market strip shows only sourced, fresh figures, and keeps its key
+        run: bash tests/market_test.sh
+
       - name: Project prices go only to a visitor who left an email
         run: bash tests/pricing_test.sh
 
@@ -84,12 +87,16 @@ jobs:
           php -l site/bank/api.php
           php -l site/lib/bank.php
           php -l site/lib/leads.php
+          php -l site/lib/market.php
+          php -l site/market/feed.php
           php -l site/services/pricing.php
           node --check capture/capture.mjs
           node --check live/build.mjs
           node --check live/smoke.mjs
           node --check live/shim.js
           node --check worker/ria-scorer.js
+          node --check site/js/ticker.js
+          node --check tests/ticker_browser.cjs
           bash -n scripts/remote_deploy.sh scripts/ssh_key.sh
 
   # The working tools, built from the source platform's current code and

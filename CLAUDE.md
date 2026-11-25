@@ -34,6 +34,13 @@ lives and says which pieces are not in this repo yet.
   published, on the site or anywhere else, until the owner says so. What is
   in the bank is private: never copy an item, a file or the bank's password
   or token into this repository, a commit or a pull request.
+- The market strip on the homepage (`site/js/ticker.js`, `site/market/feed.php`,
+  `site/lib/market.php`) shows only figures the site may show: each comes
+  from its publisher's own free feed and says in view who published it and
+  for when. The S&P 500, the Dow and gold are licensed data. They do not go
+  on the strip from a free or scraped feed: only from a source the owner has
+  a licence for. The energy key is the `EIA_API_KEY` secret and is never in
+  this repository.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
@@ -55,8 +62,9 @@ bash tests/contact_test.sh
 bash tests/notice_test.sh
 bash tests/bank_test.sh
 bash tests/card_test.sh
+bash tests/market_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
 bash tests/insights_test.sh
-for f in site/score/lead.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/bank/api.php site/lib/bank.php; do php -l "$f"; done
+for f in site/score/lead.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/bank/api.php site/lib/bank.php site/market/feed.php site/lib/market.php; do php -l "$f"; done
 ```
