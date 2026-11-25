@@ -20,6 +20,11 @@ lives and says which pieces are not in this repo yet.
   `/about/` or `/services/`, not back onto the home page.
   `tests/pages_test.sh` holds the shape, a word limit, that each pillar links
   to a real service, and that every menu reaches every page.
+  It is short in height too (the owner again, in November 2026: "main page
+  still too scrolley"): from 1080px wide the website screen, How We Work and
+  the closing band are laid out side by side, and no section is padded more
+  than it needs. A change that adds a section or a tall block has to take as
+  much height out somewhere else.
 - Pages are never kept by the host's page cache (`site/.htaccess` marks
   every `.html` file `private, no-cache`), so a publish shows without anyone
   clearing a cache. Scripts, styles and images are kept for a year: when one
@@ -57,8 +62,8 @@ lives and says which pieces are not in this repo yet.
   Refinitiv and republishes them with permission. The owner was told this and
   ruled on 2026-11-25 to keep both on the strip, so do not take them off or
   raise it again. Its weekly gasoline price is its own survey.
-  The RIA deal count on it is DeVoe & Company's, the same source as the
-  record in the stat row, typed into `MARKET_DEALS` each quarter
+  The RIA deal count on it is DeVoe & Company's, typed into `MARKET_DEALS`
+  each quarter
   (`docs/stat-bank.md`). Its card is drawn, not written out: the count, a bar
   toward the record, and the year beside the record year quarter by quarter,
   all from numbers in that same place. The energy figures are asked for
