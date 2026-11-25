@@ -88,11 +88,16 @@ const MARKET_SOURCES = [
         'name' => 'CoinGecko',
         'url' => 'https://www.coingecko.com/en/coins/bitcoin',
     ],
+    // Its answers sometimes take longer than the fifty seconds they are given
+    // (on 2026-11-25 the tries at 1:29, 2:29 and 3:01 PM Eastern timed out;
+    // 1:45 and 2:44 PM got through). A failed try is repeated after three
+    // minutes, not fifteen, so a slow spell costs the strip minutes, not an
+    // hour. One try at a time, and only after a visitor has been answered.
     'eia_spot' => [
         'ttl' => 3600,
         'slow' => true,             // asked after the visitor has been answered
         'timeout' => 50,
-        'retry' => 900,
+        'retry' => 180,
         'short' => 'EIA',
         'publisher' => 'U.S. Energy Information Administration',
         'home' => 'https://www.eia.gov/petroleum/',
@@ -103,7 +108,7 @@ const MARKET_SOURCES = [
         'ttl' => 3600,
         'slow' => true,
         'timeout' => 50,
-        'retry' => 900,
+        'retry' => 180,
         'short' => 'EIA',
         'publisher' => 'U.S. Energy Information Administration',
         'home' => 'https://www.eia.gov/petroleum/',
