@@ -290,6 +290,25 @@ jobs:
           echo "Verified on the server."
           REMOTE
 
+      - name: Tell Bing what changed
+        # IndexNow: Bing, and the engines that share it, fetch a changed page
+        # at once. Only pages the sitemap lists are named. Google does not
+        # take part: it reads the sitemap. This never fails a publish.
+        if: steps.gate.outputs.skip != 'true' && github.event_name == 'push'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/compare/$BEFORE...$AFTER" --jq '.files[].filename' > changed.txt
+          python scripts/indexnow.py --site site --dist dist < changed.txt > indexnow.json
+          if [ ! -s indexnow.json ]; then echo "No page changed: nothing to tell."; exit 0; fi
+          code=$(curl -s -m 30 -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json; charset=utf-8' \
+            --data-binary @indexnow.json https://api.indexnow.org/indexnow)
+          echo "IndexNow answered $code for: $(jq -r '.urlList | join(" ")' indexnow.json)"
+          case "$code" in 200|202) ;; *) exit 1 ;; esac
+
       - name: Keep the schedule alive
         if: steps.gate.outputs.skip != 'true' && github.event_name == 'schedule'
         run: |

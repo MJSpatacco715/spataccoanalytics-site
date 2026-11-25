@@ -120,6 +120,46 @@ for u in $(grep -o '<loc>[^<]*</loc>' "$site/sitemap.xml" | sed 's#<loc>https://
 done
 check "every address in the sitemap is a page that is built" '[ "$missing" = 0 ]'
 check "the summary for AI tools lists both new pages" 'grep -q "https://spataccoanalytics.com/approach/" "$site/llms.txt" && grep -q "https://spataccoanalytics.com/about/" "$site/llms.txt"'
+long=0; hidden=0
+for u in $(grep -o '<loc>[^<]*</loc>' "$site/sitemap.xml" | sed 's#<loc>https://spataccoanalytics.com##; s#</loc>##'); do
+  p="$dist$u"; [ "${u: -1}" = / ] && p="${p}index.html"
+  d=$(ask "$p" desc); { [ "$d" -ge 80 ] && [ "$d" -le 160 ]; } || { long=$((long+1)); echo "  description of $u is $d characters"; }
+  grep -q '<meta name="robots" content="noindex' "$p" && { hidden=$((hidden+1)); echo "  $u is in the sitemap and marked noindex"; }
+done
+check "every page in the sitemap has a description a results page shows whole" '[ "$long" = 0 ]'
+check "no page in the sitemap is kept out of search" '[ "$hidden" = 0 ]'
+check "the services page is titled with what it sells, not the word Services" 'grep -q "<title>CRM Repair, Websites and Audits for RIAs | Spatacco Analytics</title>" "$site/services/index.html" && grep -q "<meta property=\"og:title\" content=\"CRM Repair, Websites and Audits for RIAs | Spatacco Analytics\">" "$site/services/index.html"'
+check "the resume parser is titled with what it does" 'grep -q "<title>Resume Parser: Resume to Excel or CSV | Spatacco Analytics</title>" "$site/tools/resume-parser/index.html"'
+for f in unleash/index.html unleash/kraken.html; do
+  check "the delisted page /$f is kept out of search and out of the sitemap" 'grep -q "<meta name=\"robots\" content=\"noindex\">" "$dist/$f" && ! grep -q "unleash" "$site/sitemap.xml"'
+done
+
+# --- Bing is told what a publish changed (IndexNow)
+key=$(cd "$site" && ls | grep -E '^[0-9a-f]{32}\.txt$' | sed 's/\.txt$//')
+check "the site serves one IndexNow key, and the file holds its own name" '[ "$(printf "%s\n" "$key" | grep -c .)" = 1 ] && [ "$(cat "$site/$key.txt")" = "$key" ] && [ -s "$dist/$key.txt" ]'
+tell() { printf '%s\n' "$@" | python3 "$here/scripts/indexnow.py" --site "$site" --dist "$dist"; }
+told=$(tell site/services/index.html site/index.html site/tools/website-scorer.html site/services/index.html)
+check "a changed page is named once, by its own address, with the key and where to read it" 'python3 - "$told" "$key" <<'"'"'PY'"'"'
+import json, sys
+d = json.loads(sys.argv[1]); k = sys.argv[2]
+ok = (d["host"] == "spataccoanalytics.com" and d["key"] == k and d["keyLocation"] == "https://spataccoanalytics.com/%s.txt" % k
+      and d["urlList"] == ["https://spataccoanalytics.com/services/", "https://spataccoanalytics.com/", "https://spataccoanalytics.com/tools/website-scorer.html"])
+sys.exit(0 if ok else 1)
+PY'
+check "a style, a script, a picture or a test changing names nothing" '[ -z "$(tell site/css/ticker.css site/js/ticker.js site/img/logo-square.png tests/pages_test.sh site/lib/market.php README.md)" ]'
+check "a page kept out of search is never named" '[ -z "$(tell site/unleash/index.html site/unleash/kraken.html site/score/index.html site/bank/index.html)" ]'
+check "a post is named only once the sitemap lists it" '[ -z "$(tell content/posts/not-published-yet.json)" ]'
+check "the showcase file names the tools page" '[[ "$(tell showcase/tools.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/tools/\"]"* ]]'
+wf="$here/.github/workflows/publish.yml"
+check "the publish tells Bing after a merge only, and can never fail on it" 'python3 - "$wf" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+m = re.search(r"      - name: Tell Bing what changed\n(.*?)\n      - name: ", s, re.S)
+step = m.group(1) if m else ""
+ok = ("github.event_name == '"'"'push'"'"'" in step and "continue-on-error: true" in step and "scripts/indexnow.py --site site --dist dist" in step
+      and "https://api.indexnow.org/indexnow" in step and s.index("- name: Verify on the server") < s.index("- name: Tell Bing what changed"))
+sys.exit(0 if ok else 1)
+PY'
 
 # --- house rules
 check "no long dash on the home page or the two new pages" '! grep -lE "&mdash;|"$'"'"'\xe2\x80\x94'"'"' "$home" "$site/approach/index.html" "$site/about/index.html"'
