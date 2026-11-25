@@ -47,6 +47,9 @@ jobs:
       - name: The scorer's lead endpoint keeps real leads and nothing else
         run: bash tests/lead_test.sh
 
+      - name: The contact form keeps real messages and nothing else
+        run: bash tests/contact_test.sh
+
       - name: Project prices go only to a visitor who left an email
         run: bash tests/pricing_test.sh
 
@@ -68,6 +71,7 @@ jobs:
           php -l capture/stub_api.php
           php -l live/feed.php
           php -l site/score/lead.php
+          php -l site/contact/submit.php
           php -l site/lib/leads.php
           php -l site/services/pricing.php
           node --check capture/capture.mjs

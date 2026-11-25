@@ -19,13 +19,13 @@ and one pull request at a time; merging to `main` is what publishes.
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
 | Services page | `site/services/index.html` | Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page. |
 | Project prices | The `SERVICE_PRICING` secret | **Never in this repo, which is public.** Publish writes them to `sa-pricing.json` beside the web root. `site/services/pricing.php` gives them out only after it has kept the visitor's name and email in `sa-leads/pricing.jsonl`. |
-| What both lead forms share | `site/lib/leads.php` | The checks, the storage and the notice mail. |
+| What the lead forms and the contact form share | `site/lib/leads.php` | The checks, the storage and the notice mail. |
 | How the site appears in search and AI answers | `site/favicon*`, `site/img/logo-square.png`, `site/img/social-card.png`, the head tags and JSON-LD on each page, `site/sitemap.xml`, `site/robots.txt`, `site/llms.txt` | The favicon and square logo are the SA mark (`site/img/sa-mark.png`). The canonical address is `https://spataccoanalytics.com` without `www`. Search engines decide what they show and can take weeks to pick up a change. |
 | Redirects | `site/.htaccess` | Sends `www` to the bare domain, and the earlier site's PHP pages (still on the host, not in this repo) to the pages that replaced them. |
 | QR code for the menu | `menu/qr-score.svg`, `menu/qr-score.png` | Encodes `https://spataccoanalytics.com/score/`. Regenerate only if that address changes. |
 | Service menu (one page, print and PDF) | Claude Design canvas "Service Menu" | Not in this repo: it is edited on the canvas. Its QR code and its link both go to `/score/`. |
 | Scoring relay (`ria-scorer` Cloudflare Worker) | `worker/ria-scorer.js` | Holds the API key. Passes on only the four requests the scorer and the resume parser make, counts each visitor per day and caps the day. Cloudflare runs what was last pasted into its editor: deploy steps are in `worker/README.md`. |
-| Contact form handler (`/contact/submit.php`) | Host only | **Not in this repo yet.** The import skipped it; the deploy leaves it alone. |
+| Contact form | `site/contact/index.html`, `site/contact/submit.php` | Keeps every message in `sa-leads/contact.jsonl` and mails a notice, with the same checks as the scorer's gate. The form thanks the visitor only when the message was kept. A link with `?about=crm`, `league` or `golf` (the Built to Order cards on the tools page) names the build asked about. |
 | NFL tools | Source platform's repository, built here by `live/` | Read-only. See below. |
 | Plan and decisions | Roadmap and Business Plan docs, Notion Session Log | Reference, not source. Where they disagree with this repo, this repo is what is live. |
 
@@ -148,6 +148,7 @@ python3 scripts/build_site.py --site reference/live --out dist && \
 bash tests/remote_deploy_test.sh                            # the deploy never leaves its lane
 bash tests/feed_test.sh                                     # the relay passes on only what it should
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
+bash tests/contact_test.sh                                  # the contact form keeps real messages and nothing else
 bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
 node tests/worker_test.mjs                                  # the relay passes on the tools' own requests and nothing else
 bash tests/insights_test.sh                                 # posts build into pages, sourced and escaped

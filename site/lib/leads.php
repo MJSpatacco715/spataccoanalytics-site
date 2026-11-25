@@ -1,8 +1,8 @@
 <?php
 /*
- * What the site's two lead forms share: the Website Scorer's gate
- * (score/lead.php) and the pricing request on the services page
- * (services/pricing.php).
+ * What the site's forms share: the Website Scorer's gate (score/lead.php),
+ * the pricing request on the services page (services/pricing.php) and the
+ * contact form (contact/submit.php).
  *
  * A lead is one line of JSON appended to a file in sa-leads/, one level above
  * the web root where the web cannot read it, and a short notice mailed to
@@ -12,7 +12,7 @@
  * Only a same-site JSON POST with a name and a valid email is kept. Every
  * field is cut to a length and stripped of control characters, so nothing a
  * visitor types can reach a mail header or break the one-lead-per-line shape.
- * One address can leave ten leads an hour across both forms.
+ * One address can leave ten leads an hour across all of them.
  *
  * Opened directly, this file does nothing: it only defines functions.
  */
