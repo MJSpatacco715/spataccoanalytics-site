@@ -673,15 +673,19 @@ function market_deals_item(int $now): ?array
         $left = $d['record'] - $d['count'];
         $text = 'DeVoe & Company counted ' . $count . ' announced RIA transactions from January through ' . $month->format('F') . ' ' . $d['year']
             . ($d['pace'] !== '' ? ', ' . $d['pace'] : '') . '. The record for a full year is ' . $record . ', set in ' . $d['record_year'] . '. '
-            . ($left > 0 ? 'Another ' . number_format($left) . ' before the year ends would match it.' : 'This year has already passed it.');
-        $when = 'thru ' . $month->format('M');
+            . ($left > 0 ? 'Another ' . number_format($left) . ' before the year ends would match it.' : 'This year has already passed it.')
+            . ' DeVoe counts by the quarter, so the next count is the full year, early in ' . ($d['year'] + 1) . '.';
+        $m = (int)$month->format('n');
+        $when = $m % 3 === 0 ? ($m === 3 ? 'Q1' : 'Q1-Q' . intdiv($m, 3)) : 'thru ' . $month->format('M');
     }
+    $short = $d['record'] - $d['count'];
     return [
         'id' => 'ria',
         'label' => 'RIA Deals ' . $d['year'],
         'value' => $count,
-        'delta' => ($d['count'] > $d['record'] ? 'new record, was ' : 'record ') . $record,
-        'dir' => $d['count'] > $d['record'] ? 'up' : '',
+        // through the year: how many more would tie the record. Once it is beaten, or the year is in: the record itself
+        'delta' => $short < 0 ? 'new record, was ' . $record : ($whole || $short === 0 ? 'record ' . $record : number_format($short) . ' to tie record'),
+        'dir' => $short < 0 ? 'up' : '',
         'by' => 'DeVoe',
         'when' => $when,
         'card' => ['title' => $title, 'text' => $text, 'source' => $d['book'], 'url' => $d['url']],

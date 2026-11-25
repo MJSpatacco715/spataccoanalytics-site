@@ -57,8 +57,8 @@ check "so the next visitor gets its figures, and nothing is asked twice" '[ "$(e
 all_sources; with_key; forget
 feed $NOW
 check "eight figures, in the order they scroll" '[ "$(ok)" = true ] && [ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ]'
-check "the RIA deal count, against the record" '[ "$(of ria label)" = "RIA Deals 2026" ] && [ "$(of ria value)" = 244 ] && [ "$(of ria delta)" = "record 322" ] && [ "$(of ria by)" = DeVoe ] && [ "$(of ria when)" = "thru Sep" ]'
-check "its card says what is counted, the record and how far off it is" '[ "$(of ria card.title)" = "RIA deals announced in 2026: 244 through September" ] && [[ "$(of ria card.text)" == *"January through September 2026"*"322, set in 2025"*"Another 78 "* ]]'
+check "the RIA deal count, against the record" '[ "$(of ria label)" = "RIA Deals 2026" ] && [ "$(of ria value)" = 244 ] && [ "$(of ria delta)" = "78 to tie record" ] && [ "$(of ria by)" = DeVoe ] && [ "$(of ria when)" = "Q1-Q3" ]'
+check "its card says what is counted, the record and how far off it is" '[ "$(of ria card.title)" = "RIA deals announced in 2026: 244 through September" ] && [[ "$(of ria card.text)" == *"January through September 2026"*"322, set in 2025"*"Another 78 "*"the next count is the full year, early in 2027."* ]]'
 check "and names the Deal Book, with a link to it" '[[ "$(of ria card.source)" == "DeVoe & Company RIA Deal Book"* ]] && [[ "$(of ria card.url)" == https://www.devoeandcompany.com/* ]]'
 check "the 30-year yield, and its move in basis points" '[ "$(of ust30 value)" = "5.30%" ] && [ "$(of ust30 delta)" = "+1 bp" ] && [ "$(of ust30 dir)" = up ]'
 check "the 10-year yield" '[ "$(of ust10 value)" = "4.91%" ] && [ "$(of ust10 delta)" = "-1 bp" ] && [ "$(of ust10 dir)" = dn ]'
