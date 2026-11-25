@@ -82,7 +82,7 @@ function spot(page, id) {
     check('the Markets label opens a card about the whole strip', about.open && about.title === 'About these figures' && about.paused);
     check('with the note on what the figures are', about.text.includes('These quotes are latest published figures and not necessarily live quotes.'));
     check('every source, each a link to its publisher', about.names === 'U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration' && about.https);
-    check('and the line that the tool runs on free public data', about.text.includes('This tool runs entirely on free public data.'));
+    check('and the line that the tool runs on free public data', about.text.includes('This tool runs entirely on free public data. Yours could too.'));
     const p = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
     await page.mouse.move(p.x, p.y, { steps: 3 });
     await page.waitForTimeout(250);
@@ -94,7 +94,7 @@ function spot(page, id) {
     });
     check('hover opens the source card', c.open && /Treasury yield: |Euro in U\.S\. dollars: /.test(c.text) && c.text.includes('Source: '));
     check('the source is named, and its name is the link to the publisher, in a new tab', /^https:\/\/(home\.treasury\.gov|www\.ecb\.europa\.eu)\//.test(c.href || '') && c.target === '_blank' && c.rel === 'noopener' && /Treasury|European Central Bank/.test(c.linkText || ''));
-    check('it says the tool runs on free public data, and makes no pitch', c.text.includes('This tool runs entirely on free public data.') && c.links === 1 && !/working for you/i.test(c.text));
+    check('it says the tool runs on free public data, and makes no pitch', c.text.includes('This tool runs entirely on free public data. Yours could too.') && c.links === 1 && !/working for you/i.test(c.text));
     check('the card is under the strip and inside the window', c.inside && c.below);
     check('the strip stands still while it is read', c.paused);
     check('the card holds text and a link, nothing else', c.kids === 0);
