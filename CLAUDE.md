@@ -81,6 +81,14 @@ lives and says which pieces are not in this repo yet.
   and styles for a year, so the strip's two tags in `site/index.html` carry
   `?v=` and the first eight characters of each file's SHA-1.
   `tests/market_test.sh` fails until they match.
+- Search: a page's title says what the page sells or does, not its menu name
+  ("Services" alone told a search engine nothing). Every page in the sitemap
+  has a description of 80 to 160 characters and is not `noindex`; a delisted or
+  private page is `noindex` and not in the sitemap. After a merge, the publish
+  sends the pages that merge changed to IndexNow (`scripts/indexnow.py`), for
+  Bing. Its key is the 32-character `.txt` file in `site/`, public by design:
+  do not treat it as a secret or delete it. Google is reached through Search
+  Console and the sitemap, which only the owner's account can do.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
