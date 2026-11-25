@@ -44,7 +44,8 @@ def key_of(site: Path) -> str:
 def pages_for(path: str) -> list[str]:
     """The addresses a changed repository path can change."""
     path = path.strip()
-    m = re.fullmatch(r"content/posts/([a-z0-9]+(?:-[a-z0-9]+)*)\.json", path)
+    # a post file is YYYY-MM-DD-slug.json and is published at /insights/slug/
+    m = re.fullmatch(r"content/posts/\d{4}-\d{2}-\d{2}-([a-z0-9]+(?:-[a-z0-9]+)*)\.json", path)
     if m:
         return [f"/insights/{m.group(1)}/", "/insights/"]
     if path.startswith("showcase/"):

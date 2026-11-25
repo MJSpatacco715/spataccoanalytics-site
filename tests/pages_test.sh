@@ -148,7 +148,9 @@ sys.exit(0 if ok else 1)
 PY'
 check "a style, a script, a picture or a test changing names nothing" '[ -z "$(tell site/css/ticker.css site/js/ticker.js site/img/logo-square.png tests/pages_test.sh site/lib/market.php README.md)" ]'
 check "a page kept out of search is never named" '[ -z "$(tell site/unleash/index.html site/unleash/kraken.html site/score/index.html site/bank/index.html)" ]'
-check "a post is named only once the sitemap lists it" '[ -z "$(tell content/posts/not-published-yet.json)" ]'
+check "a post is named only once the sitemap lists it" '[ -z "$(tell content/posts/2026-12-01-not-published-yet.json)" ]'
+python3 "$here/scripts/build_site.py" --site "$site" --out "$t/withposts" --posts "$here/tests/fixtures/posts" >/dev/null 2>&1
+check "a published post is named by its own address, without the date in its file name, with the Insights page" '[[ "$(printf "%s\n" content/posts/2026-01-05-sample-practice.json content/posts/2026-01-07-sample-draft.json | python3 "$here/scripts/indexnow.py" --site "$site" --dist "$t/withposts")" == *"\"urlList\": [\"https://spataccoanalytics.com/insights/sample-practice/\", \"https://spataccoanalytics.com/insights/\"]"* ]]'
 check "the site settings file names the home page, where search engines read the firm's details" '[[ "$(tell content/site.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/\"]"* ]]'
 check "the showcase file names the tools page" '[[ "$(tell showcase/tools.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/tools/\"]"* ]]'
 wf="$here/.github/workflows/publish.yml"
