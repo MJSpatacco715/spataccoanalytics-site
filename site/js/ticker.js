@@ -260,6 +260,7 @@
   var UNITS = {
     pct: function (v) { return v.toFixed(2) + '%'; },
     fx: function (v) { return v.toFixed(4); },
+    eur4: function (v) { return '\u20AC' + v.toFixed(4); },
     usd0: function (v) { return '$' + Math.round(v).toLocaleString('en-US'); },
     usd2: function (v) { return '$' + v.toFixed(2); },
     usd3: function (v) { return '$' + v.toFixed(3); }
@@ -399,6 +400,13 @@
         hero.appendChild(el('span', 'sa-tk-cap', c.hero.label));
       }
       card.appendChild(hero);
+      if (Array.isArray(c.pair)) {
+        // a rate both ways round, and one line on which side is worth more
+        var pair = el('div', 'sa-tk-pair');
+        c.pair.slice(0, 2).forEach(function (t) { if (typeof t === 'string' && t) pair.appendChild(el('span', '', t)); });
+        if (pair.firstChild) card.appendChild(pair);
+      }
+      if (typeof c.verdict === 'string' && c.verdict) card.appendChild(el('p', 'sa-tk-verdict', c.verdict));
       if (c.meter && typeof c.meter === 'object') meter(c.meter);
       if (c.chart && typeof c.chart === 'object') chart(c.chart);
       if (c.line && typeof c.line === 'object' && line(c.line) && Array.isArray(c.tiles)) tiles(c.tiles);

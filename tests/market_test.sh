@@ -70,7 +70,9 @@ check "the quarters typed in add up to the counts" '[ "$quarters" = ok ]'
 check "and names the Deal Book, with a link to it" '[[ "$(of ria card.source)" == "DeVoe & Company RIA Deal Book"* ]] && [[ "$(of ria card.url)" == https://www.devoeandcompany.com/* ]]'
 check "the 30-year yield, and its move in basis points" '[ "$(of ust30 value)" = "5.30%" ] && [ "$(of ust30 delta)" = "+1 bp" ] && [ "$(of ust30 dir)" = up ]'
 check "the 10-year yield" '[ "$(of ust10 value)" = "4.91%" ] && [ "$(of ust10 delta)" = "-1 bp" ] && [ "$(of ust10 dir)" = dn ]'
-check "the euro in dollars, to four places" '[ "$(of eurusd value)" = "1.0963" ] && [ "$(of eurusd delta)" = "+0.22%" ]'
+check "the dollar in euros, to four places, said as what a dollar buys" '[ "$(of eurusd label)" = "USD/EUR" ] && [ "$(of eurusd value)" = "\$1 = €0.9122" ] && [ "$(of eurusd delta)" = "-0.22%" ] && [ "$(of eurusd dir)" = dn ]'
+check "its card gives the rate both ways round and says which is worth more" '[ "$(of eurusd card.pair.0)" = "\$1 = €0.9122" ] && [ "$(of eurusd card.pair.1)" = "€1 = \$1.0963" ] && [ "$(of eurusd card.verdict)" = "The euro is worth more: one euro buys \$1.10." ] && [ "$(of eurusd card.hero.value)" = "€0.9122" ]'
+check "and that it is worked out from the ECB's euro rate" '[[ "$(of eurusd card.text)" == "One U.S. dollar bought €0.9122 on November 24, 2026, and one euro bought \$1.0963."*"It was €0.9142 on November 23, 2026"*"Worked out from the European Central Bank"* ]] && [ "$(of eurusd card.about)" = "Worked out from the European Central Bank'"'"'s euro reference rate, set once each business day." ]'
 check "bitcoin, with the change its source gives" '[ "$(of btc value)" = "\$58,349" ] && [ "$(of btc delta)" = "-3.31%" ] && [ "$(of btc dir)" = dn ]'
 check "Brent and WTI" '[ "$(of brent value)" = "\$92.94" ] && [ "$(of wti value)" = "\$89.53" ] && [ "$(of wti delta)" = "+0.32%" ]'
 check "regular gasoline, to the tenth of a cent" '[ "$(of gas value)" = "\$3.642" ] && [ "$(of gas delta)" = "-4.28%" ]'
@@ -89,7 +91,7 @@ check "and draws every business day held: this month and last" '[ "$(pts ust10)"
 check "with the low, the high and the change over that stretch" '[ "$(of ust10 card.tiles)" = "[{\"label\":\"Low\",\"value\":\"4.84%\",\"note\":\"Nov 5\"},{\"label\":\"High\",\"value\":\"5.31%\",\"note\":\"Oct 5\"},{\"label\":\"Change\",\"value\":\"-33 bp\",\"note\":\"since Oct 1\",\"dir\":\"dn\"}]" ]'
 check "the chart says in words what it shows" '[ "$(of ust10 card.line.label)" = "U.S. 10-year Treasury yield, 37 days from October 1, 2026 to November 24, 2026. Low 4.84% on Nov 5, high 5.31% on Oct 5, latest 4.91%." ]'
 check "one plain line says what the figure is" '[ "$(of ust10 card.about)" = "Daily par yield curve rate, set each business day." ] && [[ "$(of btc card.about)" == *"Data provided by CoinGecko." ]] && [[ "$(of brent card.about)" == *"released once a week, usually on Wednesday." ]]'
-check "the euro: the last 45 business days of the ninety it is sent" '[ "$(pts eurusd)" = "45 [\"2026-09-23\",1.1411] [\"2026-11-24\",1.0963]" ] && [ "$(of eurusd card.line.unit)" = fx ]'
+check "the dollar in euros: the last 45 business days of the ninety the ECB sends, each turned round" '[ "$(pts eurusd)" = "45 [\"2026-09-23\",0.8763] [\"2026-11-24\",0.9122]" ] && [ "$(of eurusd card.line.unit)" = eur4 ] && [ "$(of eurusd card.tiles.1.value)" = "€0.9142" ]'
 check "bitcoin: a point a day, and the price now as the last" '[ "$(pts btc)" = "60 [\"2026-09-27\",84417] [\"2026-11-25\",58349]" ] && [ "$(of btc card.hero.vs)" = "in 24 hours" ] && [ "$(of btc card.tiles.1.value)" = "\$86,490" ]'
 check "oil: forty-five trading days, asked for in the same request" '[ "$(pts brent | cut -d" " -f1)" = 45 ] && [ "$(pts wti | cut -d" " -f3)" = "[\"2026-11-17\",89.53]" ] && [ "$(asked "length=100")" = 1 ]'
 check "gasoline: week by week for half a year" '[ "$(pts gas | cut -d" " -f1)" = 26 ] && [ "$(of gas card.line.title)" = "Week by week, since Jun 1" ] && [[ "$(of gas card.line.label)" == "U.S. regular gasoline, 26 weeks from June 1, 2026 to November 23, 2026."* ]] && [ "$(asked "length=30")" = 1 ]'
@@ -203,6 +205,16 @@ feed $((NOW + 7 * 86400))                      # December 2
 check "the day before comes from last month's feed" '[ "$(of ust10 value)" = "4.95%" ] && [ "$(of ust10 delta)" = "+4 bp" ] && [ "$(of ust10 when)" = "Dec 1" ] && [ "$(asked value_month=202612)" = 1 ] && [ "$(asked value_month=202611)" = 1 ]'
 check "and the card names both days" '[[ "$(of ust10 card.text)" == *"December 1, 2026"*"4.91% on November 24, 2026"* ]]'
 check "and the chart runs across the two months" '[ "$(pts ust10)" = "17 [\"2026-11-02\",4.91] [\"2026-12-01\",4.95]" ] && [ "$(of ust10 card.line.title)" = "Day by day, since Nov 2" ]'
+
+# --- which is worth more follows the rate
+all_sources; forget
+sed -i 's#currency="USD" rate="[0-9.]*"#currency="USD" rate="0.9500"#g' "$fx/ecb.xml"
+feed $NOW
+check "when a euro buys less than a dollar, the card says the dollar is worth more" '[ "$(of eurusd value)" = "\$1 = €1.0526" ] && [ "$(of eurusd card.verdict)" = "The dollar is worth more: one dollar buys €1.05." ] && [ "$(of eurusd card.pair.1)" = "€1 = \$0.9500" ]'
+all_sources; forget
+sed -i 's#currency="USD" rate="[0-9.]*"#currency="USD" rate="1.0000"#g' "$fx/ecb.xml"
+feed $NOW
+check "and at one for one, that they are worth the same" '[ "$(of eurusd card.verdict)" = "The dollar and the euro are worth the same." ] && [ "$(of eurusd delta)" = unch ]'
 
 # --- history is added to, never replaced, and too little of it draws nothing
 all_sources; forget

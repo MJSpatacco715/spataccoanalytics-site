@@ -5,7 +5,7 @@
  * Eight figures, each from the body that publishes it, each free to show:
  *   RIA deals announced this year              DeVoe & Company (typed in, quarterly)
  *   U.S. 30-year and 10-year Treasury yields   U.S. Department of the Treasury
- *   EUR/USD                                    European Central Bank
+ *   The U.S. dollar in euros (USD/EUR)         European Central Bank (its euro rate, turned round)
  *   Bitcoin                                    CoinGecko (asks for a credit)
  *   Brent, WTI, U.S. regular gasoline          U.S. Energy Information Administration
  * The S&P 500, the Dow and gold are licensed data and are not here.
@@ -119,8 +119,12 @@ const MARKET_ITEMS = [
         'span' => 45, 'what' => 'Daily par yield curve rate, set each business day.'],
     'ust10' => ['src' => 'treasury', 'label' => 'US 10-Yr', 'name' => 'U.S. 10-year Treasury yield', 'unit' => 'pct', 'fresh' => 10, 'lo' => 0.01, 'hi' => 25,
         'span' => 45, 'what' => 'Daily par yield curve rate, set each business day.'],
-    'eurusd' => ['src' => 'ecb', 'label' => 'EUR/USD', 'name' => 'Euro in U.S. dollars', 'unit' => 'fx', 'fresh' => 10, 'lo' => 0.3, 'hi' => 3,
-        'span' => 45, 'what' => 'Euro reference rate: U.S. dollars to one euro, set once each business day.'],
+    // The ECB publishes U.S. dollars to one euro, and that is what is kept
+    // (lo and hi are its range). The strip shows it turned round, what one
+    // dollar buys in euros, because the owner asked for the dollar first and
+    // for it to be plain which of the two is worth more.
+    'eurusd' => ['src' => 'ecb', 'label' => 'USD/EUR', 'name' => 'U.S. dollar in euros', 'unit' => 'eur4', 'turned' => true, 'fresh' => 10, 'lo' => 0.3, 'hi' => 3,
+        'span' => 45, 'what' => 'Worked out from the European Central Bank\'s euro reference rate, set once each business day.'],
     'btc' => ['src' => 'coingecko', 'label' => 'Bitcoin', 'name' => 'Bitcoin', 'unit' => 'usd0', 'fresh' => 0.25, 'lo' => 1, 'hi' => 100000000,
         'span' => 61, 'days' => 'coingecko_days', 'what' => 'Price in U.S. dollars: one point a day, then the latest. Data provided by CoinGecko.'],
     'brent' => ['src' => 'eia_spot', 'label' => 'Brent', 'name' => 'Brent crude oil', 'unit' => 'usd2', 'fresh' => 21, 'lo' => 1, 'hi' => 1000,
@@ -637,6 +641,8 @@ function market_show(float $v, string $unit): string
             return number_format($v, 2) . '%';
         case 'fx':
             return number_format($v, 4);
+        case 'eur4':
+            return "\u{20AC}" . number_format($v, 4);
         case 'usd0':
             return '$' . number_format($v, 0);
         case 'usd3':
@@ -668,8 +674,19 @@ function market_item(string $id, array $held, int $now, array $days = []): ?arra
     if ($at === false || $now - $at > $spec['fresh'] * 86400 || $at - $now > 172800) {
         return null;
     }
-    $shown = market_show($value, $spec['unit']);
     $prev = market_num($held['prev'] ?? null, $id);
+    $rate = $value;                 // as the source gives it
+    if (!empty($spec['turned'])) {
+        // shown the other way round: one of the second thing in the first
+        $value = 1 / $value;
+        $prev = $prev === null ? null : 1 / $prev;
+        $turned = [];
+        foreach (market_days($days, $id) as $day => $v) {
+            $turned[$day] = 1 / $v;
+        }
+        $days = $turned;
+    }
+    $shown = market_show($value, $spec['unit']);
     $prevDay = is_string($held['prev_as_of'] ?? null) && market_is_day($held['prev_as_of']) ? $held['prev_as_of'] : '';
 
     $delta = '';
@@ -711,7 +728,8 @@ function market_item(string $id, array $held, int $now, array $days = []): ?arra
             $text = 'Daily par yield curve rate for ' . $long . '.' . $was('business day');
             break;
         case 'eurusd':
-            $text = 'Euro reference rate for ' . $long . ': one euro bought ' . $shown . ' U.S. dollars.' . $was('business day') . ' The rate is set once each business day.';
+            $text = 'One U.S. dollar bought ' . $shown . ' on ' . $long . ', and one euro bought $' . market_show($rate, 'fx') . '. ' . market_fx_verdict($rate) . $was('business day')
+                . ' Worked out from the European Central Bank\'s euro reference rate, which is set once each business day.';
             break;
         case 'btc':
             $text = 'Price in U.S. dollars at ' . $long . '.' . ($delta !== '' && $delta !== 'unch' ? ' Change over the 24 hours before: ' . $delta . '.' : '') . ' Data provided by CoinGecko.';
@@ -726,10 +744,16 @@ function market_item(string $id, array $held, int $now, array $days = []): ?arra
             $text = 'U.S. average retail price of regular gasoline, all formulations, for the week of ' . $long . ', in dollars a gallon.' . $was('week');
     }
 
+    $card = [];
+    if ($id === 'eurusd') {
+        // both ways round, and which of the two is worth more
+        $card = ['pair' => ['$1 = ' . $shown, "\u{20AC}1 = $" . market_show($rate, 'fx')], 'verdict' => market_fx_verdict($rate)];
+    }
     return [
         'id' => $id,
         'label' => $spec['label'],
-        'value' => $shown,
+        // on the strip the dollar's price says what it is the price of
+        'value' => $id === 'eurusd' ? '$1 = ' . $shown : $shown,
         'delta' => $delta,
         'dir' => $dir,
         'by' => $src['short'],
@@ -739,14 +763,26 @@ function market_item(string $id, array $held, int $now, array $days = []): ?arra
             'text' => $text,
             'source' => $src['name'],
             'url' => $src['url'],
-        ] + market_line_picture($id, $value, $asOf, $days, $shown, $delta, $dir, $long, $prevDay),
+        ] + $card + market_line_picture($id, $value, $asOf, $days, $shown, $delta, $dir, $long, $prevDay),
     ];
+}
+
+// Which is worth more, the euro or the dollar, from U.S. dollars to one euro.
+function market_fx_verdict(float $rate): string
+{
+    if ($rate > 1.00005) {
+        return 'The euro is worth more: one euro buys $' . number_format($rate, 2) . '.';
+    }
+    if ($rate < 0.99995) {
+        return 'The dollar is worth more: one dollar buys ' . "\u{20AC}" . number_format(1 / $rate, 2) . '.';
+    }
+    return 'The dollar and the euro are worth the same.';
 }
 
 // A value rounded the way its unit is shown, for a point on a chart.
 function market_point(float $v, string $unit): float
 {
-    return round($v, ['pct' => 2, 'fx' => 4, 'usd0' => 0, 'usd3' => 3][$unit] ?? 2);
+    return round($v, ['pct' => 2, 'fx' => 4, 'eur4' => 4, 'usd0' => 0, 'usd3' => 3][$unit] ?? 2);
 }
 
 // The same figure drawn (js/ticker.js): the value, large, with its change;
