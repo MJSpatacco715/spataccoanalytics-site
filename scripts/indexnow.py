@@ -49,6 +49,8 @@ def pages_for(path: str) -> list[str]:
         return [f"/insights/{m.group(1)}/", "/insights/"]
     if path.startswith("showcase/"):
         return ["/tools/"]
+    if path == "content/site.json":
+        return ["/"]          # the firm's details in what search engines read on the home page
     if not path.startswith("site/") or not path.endswith(".html"):
         return []
     rel = path[len("site/"):]

@@ -149,6 +149,7 @@ PY'
 check "a style, a script, a picture or a test changing names nothing" '[ -z "$(tell site/css/ticker.css site/js/ticker.js site/img/logo-square.png tests/pages_test.sh site/lib/market.php README.md)" ]'
 check "a page kept out of search is never named" '[ -z "$(tell site/unleash/index.html site/unleash/kraken.html site/score/index.html site/bank/index.html)" ]'
 check "a post is named only once the sitemap lists it" '[ -z "$(tell content/posts/not-published-yet.json)" ]'
+check "the site settings file names the home page, where search engines read the firm's details" '[[ "$(tell content/site.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/\"]"* ]]'
 check "the showcase file names the tools page" '[[ "$(tell showcase/tools.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/tools/\"]"* ]]'
 wf="$here/.github/workflows/publish.yml"
 check "the publish tells Bing after a merge only, and can never fail on it" 'python3 - "$wf" <<'"'"'PY'"'"'
@@ -160,6 +161,17 @@ ok = ("github.event_name == '"'"'push'"'"'" in step and "continue-on-error: true
       and "https://api.indexnow.org/indexnow" in step and s.index("- name: Verify on the server") < s.index("- name: Tell Bing what changed"))
 sys.exit(0 if ok else 1)
 PY'
+
+# --- the LinkedIn page is tied to the site
+li="https://www.linkedin.com/company/spatacco-analytics/"
+check "the firm's LinkedIn page is set" '[ "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[\"linkedin_url\"])" "$here/content/site.json")" = "$li" ]'
+check "search engines are told the LinkedIn page is the firm's" 'grep -qF "\"@type\":\"ProfessionalService\",\"sameAs\":[\"$li\"]," "$dist/index.html"'
+signed=0; bare=0
+for f in $(grep -rl "&copy; 2026 Spatacco Analytics LLC" "$dist" --include=*.html); do
+  signed=$((signed+1))
+  grep -qF "<a href=\"$li\" target=\"_blank\" rel=\"noopener\" style=\"color:inherit;text-decoration:underline;text-underline-offset:3px\">LinkedIn</a>" "$f" || { bare=$((bare+1)); echo "  no readable LinkedIn link: ${f#$dist}"; }
+done
+check "every page that signs off links to it, in the colour of its own footer line and underlined" '[ "$signed" -ge 6 ] && [ "$bare" = 0 ]'
 
 # --- house rules
 check "no long dash on the home page or the two new pages" '! grep -lE "&mdash;|"$'"'"'\xe2\x80\x94'"'"' "$home" "$site/approach/index.html" "$site/about/index.html"'

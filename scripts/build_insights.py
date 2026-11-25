@@ -132,7 +132,7 @@ def block(b: dict, where: str) -> str:
 
 
 def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "", image: str = "/img/social-card.png") -> str:
-    follow = f' &middot; <a href="{esc(linkedin)}" target="_blank" rel="noopener">LinkedIn</a>' if linkedin else ""
+    follow = f' &middot; {sign_off_link(linkedin)}' if linkedin else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -186,6 +186,15 @@ def card(p: dict) -> str:
             f'<h3>{esc(p["title"])}</h3><p>{esc(p["summary"])}</p><span class="in-date">{long_date(p["date"])}</span></a>')
 
 
+def sign_off_link(linkedin: str) -> str:
+    """The LinkedIn link in a page's last line. Pages style their footers in
+    different places and some style no links there at all, where a browser
+    would draw it dark blue on the navy footer. It carries its own look: the
+    colour of the line it sits in, underlined."""
+    return (f'<a href="{esc(linkedin)}" target="_blank" rel="noopener" '
+            'style="color:inherit;text-decoration:underline;text-underline-offset:3px">LinkedIn</a>')
+
+
 def linkedin_text(p: dict) -> str:
     if p.get("linkedin"):
         return p["linkedin"].strip() + f"\n\n{BASE}{p['url']}"
@@ -212,7 +221,7 @@ def build(out: Path, posts_dir: Path | None = None, drafts: bool = False) -> int
         for f in out.rglob("*.html"):
             s = f.read_text(encoding="utf-8")
             if sign in s and "LinkedIn</a>" not in s:
-                f.write_text(s.replace(sign, f'{sign} &middot; <a href="{esc(linkedin)}" target="_blank" rel="noopener">LinkedIn</a>'), encoding="utf-8")
+                f.write_text(s.replace(sign, f'{sign} &middot; {sign_off_link(linkedin)}'), encoding="utf-8")
         home = out / "index.html"
         s = home.read_text(encoding="utf-8")
         mark = '"@type":"ProfessionalService",'
