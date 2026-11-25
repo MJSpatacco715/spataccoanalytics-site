@@ -123,6 +123,37 @@ function spot(page, id) {
     }
     const k = await page.evaluate(() => ({ id: document.activeElement.getAttribute('data-id'), open: !document.getElementById('sa-tk-card').hidden, expanded: document.activeElement.getAttribute('aria-expanded'), still: getComputedStyle(document.querySelector('.sa-tk-track')).animationName === 'none', title: document.querySelector('#sa-tk-card strong').textContent }));
     check('Tab reaches the first figure and opens its card', k.id === 'ria' && k.open && k.expanded === 'true' && k.title.startsWith('RIA deals announced in 2026'));
+    // the deal count draws itself: the number, a bar toward the record, two years by the quarter
+    const d = await page.evaluate(() => {
+      const card = document.getElementById('sa-tk-card');
+      const b = card.getBoundingClientRect();
+      const bar = card.querySelector('.sa-tk-bar'), fill = bar && bar.firstElementChild;
+      const cols = [...card.querySelectorAll('.sa-tk-col')];
+      const tall = (sel) => { const e = card.querySelector(sel + ' i'); return e ? e.getBoundingClientRect().height : 0; };
+      const plot = card.querySelector('.sa-tk-plot');
+      const free = card.querySelector('.sa-tk-free');
+      return {
+        wide: card.classList.contains('sa-tk-wide'), big: (card.querySelector('.sa-tk-big') || {}).textContent, cap: (card.querySelector('.sa-tk-cap') || {}).textContent,
+        share: bar && fill ? fill.getBoundingClientRect().width / bar.getBoundingClientRect().width : 0, barSays: bar && bar.getAttribute('aria-label'),
+        ends: [...card.querySelectorAll('.sa-tk-ends span')].map((e) => e.textContent).join('|'),
+        cols: cols.map((c) => c.className.replace('sa-tk-col ', '') + c.querySelector('.sa-tk-n').textContent).join(','),
+        key: [...card.querySelectorAll('.sa-tk-k')].map((e) => e.textContent).join('|'), quarters: [...card.querySelectorAll('.sa-tk-q')].map((e) => e.textContent).join(''),
+        t93: tall('.sa-tk-col.now'), t75: tall('.sa-tk-col.then'), t78: tall('.sa-tk-col.need'),
+        plotSays: plot && plot.getAttribute('aria-label'), take: (card.querySelector('.sa-tk-take') || {}).textContent, facts: card.querySelectorAll('.sa-tk-facts li').length,
+        from: (card.querySelector('.sa-tk-from') || {}).textContent, links: card.querySelectorAll('a').length,
+        lastLine: free && free.lastElementChild ? free.lastElementChild.textContent : '',
+        inside: b.left >= 0 && b.right <= window.innerWidth && b.bottom <= window.innerHeight, fits: card.scrollWidth <= card.clientWidth + 1,
+        clipped: cols.some((c) => { const n = c.querySelector('.sa-tk-n'); return n.scrollWidth > n.clientWidth + 1; }),
+        freeLines: free ? Math.round((free.getBoundingClientRect().height - parseFloat(getComputedStyle(free).paddingTop) - parseFloat(getComputedStyle(free).borderTopWidth)) / parseFloat(getComputedStyle(free).lineHeight)) : 0, kids: card.querySelectorAll('script,img,iframe').length,
+      };
+    });
+    check('the deal count card leads with the number', d.wide && d.big === '244' && d.cap === 'January through September');
+    check('a bar shows how far it is to the record, and says so in words', Math.abs(d.share - 0.76) < 0.02 && d.ends === '76% of the record|322 in 2025' && /244 so far, against 322 in 2025/.test(d.barSays || ''));
+    check('two years side by side by the quarter, each column with its number', d.cols === 'then75,now93,then73,now74,then93,now77,then81,need78' && d.quarters === 'Q1Q2Q3Q4' && d.key === '2025|2026|needed to tie' && !d.clipped);
+    check('the columns are as tall as their numbers say', d.t93 > d.t75 && Math.abs(d.t75 / d.t93 - 75 / 93) < 0.03 && d.t78 > 0);
+    check('the chart is described for a reader who cannot see it', /^Deals by quarter\. 2026: Q1 93, Q2 74, Q3 77\. 2025: Q1 75/.test(d.plotSays || ''));
+    check('with the takeaway, two facts, the source and when the next count is due', /would end 2026 at 325, a new record\.$/.test(d.take || '') && d.facts === 2 && /^Source: DeVoe & Company RIA Deal Book, third quarter 2026\. Next count: the full year, early in 2027\.$/.test(d.from || '') && d.links === 1);
+    check('the drawn card fits the window, and its last line is not left with one word', d.inside && d.fits && d.freeLines === 2 && d.lastLine === 'Yours could too.' && d.kids === 0);
     check('the strip stands still for the keyboard', k.still);
     await page.keyboard.press('Enter');
     check('Enter goes to the source link', await page.evaluate(() => document.activeElement.tagName === 'A' && document.activeElement.closest('#sa-tk-card') !== null));
@@ -209,6 +240,13 @@ function spot(page, id) {
         const d = await r.json();
         d.items[0].label = '<img src=x onerror="window.__hit=1">';
         d.items[0].card.text = '<script>window.__hit=1</script>';
+        const bad = '<img src=x onerror="window.__hit=1">';
+        d.items[0].card.eyebrow = bad;
+        d.items[0].card.hero = { value: bad, label: bad };
+        d.items[0].card.meter = { pct: '50%" onmouseover="window.__hit=1', left: bad, right: bad, label: bad };
+        d.items[0].card.chart = { title: bad, now: bad, then: bad, need: bad, note: bad, label: bad, rows: [{ q: bad, then: bad, now: '9;background:url(x)' }, { q: 'Q2', then: 4, now: 1e9, need: -3 }] };
+        d.items[0].card.facts = [bad, { a: 1 }, 7];
+        d.items[0].card.next = bad;
         d.items[0].card.url = 'javascript:window.__hit=1';
         d.sources[0] = { name: '<img src=x onerror="window.__hit=1">', url: 'javascript:window.__hit=1' };
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(d) });
@@ -218,6 +256,8 @@ function spot(page, id) {
     await page.evaluate(() => { document.querySelector('.sa-tk-item').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
     const s = await page.evaluate(() => ({ hit: window.__hit === 1, imgs: document.querySelectorAll('#sa-ticker img, #sa-ticker script').length, link: !!document.querySelector('#sa-tk-card a'), open: !document.getElementById('sa-tk-card').hidden }));
     check('markup in the feed is shown as text and a link that is not https is dropped', !s.hit && s.imgs === 0 && s.open && !s.link);
+    const u = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); return { cols: card.querySelectorAll('.sa-tk-col').length, bar: card.querySelectorAll('.sa-tk-bar').length, shown: card.textContent.includes('<img src=x'), styled: [...card.querySelectorAll('[style]')].every((e) => /^(width|height): \d+(px|%);$/.test(e.getAttribute('style'))) }; });
+    check('a drawn card takes only whole numbers as sizes: a bad one draws nothing', u.cols === 1 && u.bar === 0 && u.shown && u.styled);
     await page.evaluate(() => { document.querySelector('.sa-tk-tag').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
     const t = await page.evaluate(() => ({ hit: window.__hit === 1, imgs: document.querySelectorAll('#sa-ticker img, #sa-ticker script').length, links: document.querySelectorAll('#sa-tk-card a').length, items: document.querySelectorAll('#sa-tk-card li').length, bad: [...document.querySelectorAll('#sa-tk-card a')].some((a) => !/^https:/.test(a.href)) }));
     check('and the same holds for the list of sources', !t.hit && t.imgs === 0 && t.items === t.links + 1 && !t.bad);

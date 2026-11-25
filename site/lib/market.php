@@ -68,7 +68,7 @@ const MARKET_SOURCES = [
         'url' => 'https://www.coingecko.com/en/coins/bitcoin',
     ],
     'eia_spot' => [
-        'ttl' => 10800,
+        'ttl' => 3600,
         'slow' => true,             // asked after the visitor has been answered
         'timeout' => 50,
         'retry' => 900,
@@ -79,7 +79,7 @@ const MARKET_SOURCES = [
         'url' => 'https://www.eia.gov/dnav/pet/pet_pri_spt_s1_d.htm',
     ],
     'eia_gas' => [
-        'ttl' => 10800,
+        'ttl' => 3600,
         'slow' => true,
         'timeout' => 50,
         'retry' => 900,
@@ -112,9 +112,16 @@ const MARKET_DEALS = [
     'year' => 2026,
     'count' => 244,                 // announced RIA transactions, January through 'through'
     'through' => '2026-09-30',
+    'quarters' => [93, 74, 77],     // the same count quarter by quarter: they add up to 'count'
     'pace' => 'slightly ahead of the pace of 2025',
     'record' => 322,
     'record_year' => 2025,
+    'record_quarters' => [75, 73, 93, 81],   // the record year quarter by quarter: they add up to 'record'
+    // what else the Deal Book says, a plain sentence each: a short list on the card
+    'notes' => [
+        'Q3 fell 17% from a year earlier, ending a run of seven record quarters.',
+        'Consolidators made 129 of the 244 deals (53%), their largest share since 2021.',
+    ],
     'book' => 'DeVoe & Company RIA Deal Book, third quarter 2026',
     'url' => 'https://www.devoeandcompany.com/deal-books/devoe-ria-deal-book-tm---q3-2026',
     'publisher' => 'DeVoe & Company',
@@ -625,10 +632,10 @@ function market_item(string $id, array $held, int $now): ?array
             $text = 'Price in U.S. dollars at ' . $long . '.' . ($delta !== '' && $delta !== 'unch' ? ' Change over the 24 hours before: ' . $delta . '.' : '') . ' Data provided by CoinGecko.';
             break;
         case 'brent':
-            $text = 'Europe Brent spot price for ' . $long . ', in dollars a barrel.' . $was('trading day') . ' The daily prices are released once a week.';
+            $text = 'Europe Brent spot price for ' . $long . ', in dollars a barrel.' . $was('trading day') . ' The daily prices are released once a week, usually on Wednesday.';
             break;
         case 'wti':
-            $text = 'West Texas Intermediate spot price at Cushing, Oklahoma, for ' . $long . ', in dollars a barrel.' . $was('trading day') . ' The daily prices are released once a week.';
+            $text = 'West Texas Intermediate spot price at Cushing, Oklahoma, for ' . $long . ', in dollars a barrel.' . $was('trading day') . ' The daily prices are released once a week, usually on Wednesday.';
             break;
         default:
             $text = 'U.S. average retail price of regular gasoline, all formulations, for the week of ' . $long . ', in dollars a gallon.' . $was('week');
@@ -671,14 +678,16 @@ function market_deals_item(int $now): ?array
     } else {
         $title = 'RIA deals announced in ' . $d['year'] . ': ' . $count . ' through ' . $month->format('F');
         $left = $d['record'] - $d['count'];
+        $m = (int)$month->format('n');
+        $next = market_deals_next($d, $m);
         $text = 'DeVoe & Company counted ' . $count . ' announced RIA transactions from January through ' . $month->format('F') . ' ' . $d['year']
             . ($d['pace'] !== '' ? ', ' . $d['pace'] : '') . '. The record for a full year is ' . $record . ', set in ' . $d['record_year'] . '. '
             . ($left > 0 ? 'Another ' . number_format($left) . ' before the year ends would match it.' : 'This year has already passed it.')
-            . ' DeVoe counts by the quarter, so the next count is the full year, early in ' . ($d['year'] + 1) . '.';
-        $m = (int)$month->format('n');
+            . ($next !== '' ? ' DeVoe counts by the quarter, so the next count is ' . $next . '.' : '');
         $when = $m % 3 === 0 ? ($m === 3 ? 'Q1' : 'Q1-Q' . intdiv($m, 3)) : 'thru ' . $month->format('M');
     }
     $short = $d['record'] - $d['count'];
+    $card = ['title' => $title, 'text' => $text, 'source' => $d['book'], 'url' => $d['url']];
     return [
         'id' => 'ria',
         'label' => 'RIA Deals ' . $d['year'],
@@ -688,8 +697,84 @@ function market_deals_item(int $now): ?array
         'dir' => $short < 0 ? 'up' : '',
         'by' => 'DeVoe',
         'when' => $when,
-        'card' => ['title' => $title, 'text' => $text, 'source' => $d['book'], 'url' => $d['url']],
+        'card' => $card + market_deals_picture($d, $whole, $month->format('F'), $whole ? '' : market_deals_next($d, (int)$month->format('n'))),
     ];
+}
+
+// What DeVoe counts next and about when, after a count through month $m. Its
+// books come out about a month after each quarter ends.
+function market_deals_next(array $d, int $m): string
+{
+    switch ($m) {
+        case 3:
+            return 'the first half, in late July';
+        case 6:
+            return 'the first nine months, in late October';
+        case 9:
+            return 'the full year, early in ' . ($d['year'] + 1);
+        default:
+            return '';
+    }
+}
+
+// The same count drawn: the number, how far it is to the record, and the year
+// beside the record year quarter by quarter. The card's title and text above
+// say it all in words; these are what js/ticker.js draws in their place. The
+// chart is left out when the quarters typed in do not add up to the counts.
+function market_deals_picture(array $d, bool $whole, string $month, string $next = ''): array
+{
+    $count = (int)$d['count'];
+    $record = (int)$d['record'];
+    $short = $record - $count;
+    $pct = (int)round($count / $record * 100);
+    $out = [
+        'eyebrow' => 'RIA deals announced in ' . $d['year'],
+        'hero' => ['value' => number_format($count), 'label' => $whole ? 'in the full year' : 'January through ' . $month],
+        'meter' => [
+            'pct' => min(100, $pct),
+            'left' => $short > 0 ? $pct . '% of the record' : ($short === 0 ? 'Ties the record' : 'A new record'),
+            'right' => ($short < 0 ? 'was ' : '') . number_format($record) . ' in ' . $d['record_year'],
+            'label' => number_format($count) . ' so far, against ' . number_format($record) . ' in ' . $d['record_year'] . ', the record for a year.',
+        ],
+        'facts' => [],
+        'next' => $next !== '' ? 'Next count: ' . $next . '.' : '',
+    ];
+
+    $now = array_values(array_filter((array)($d['quarters'] ?? []), 'is_int'));
+    $then = array_values(array_filter((array)($d['record_quarters'] ?? []), 'is_int'));
+    $done = count($now);
+    if ($done >= 1 && $done <= 4 && count($then) === 4 && array_sum($now) === $count && array_sum($then) === $record) {
+        $rows = [];
+        $said = [];
+        for ($q = 0; $q < 4; $q++) {
+            $row = ['q' => 'Q' . ($q + 1), 'then' => $then[$q]];
+            if ($q < $done) {
+                $row['now'] = $now[$q];
+                $said[] = 'Q' . ($q + 1) . ' ' . $now[$q];
+            } elseif ($q === $done && $done === 3 && $short > 0) {
+                $row['need'] = $short;          // one quarter left: what it has to bring to tie
+            }
+            $rows[] = $row;
+        }
+        $label = 'Deals by quarter. ' . $d['year'] . ': ' . implode(', ', $said) . '. ' . $d['record_year'] . ': Q1 ' . $then[0] . ', Q2 ' . $then[1] . ', Q3 ' . $then[2] . ', Q4 ' . $then[3] . '.';
+        $chart = ['title' => 'Quarter by quarter', 'now' => (string)$d['year'], 'then' => (string)$d['record_year'], 'rows' => $rows];
+        if ($done === 3 && $short > 0) {
+            $chart['need'] = 'needed to tie';
+            $label .= ' ' . number_format($short) . ' in the fourth quarter of ' . $d['year'] . ' would tie the record.';
+            // the line under the chart: what a repeat of the record year's last quarter would do
+            $end = $count + $then[3];
+            $chart['note'] = 'A fourth quarter like ' . $d['record_year'] . '\'s (' . $then[3] . ') would end ' . $d['year'] . ' at ' . number_format($end)
+                . ($end > $record ? ', a new record.' : ($end === $record ? ', a tie with the record.' : ', ' . number_format($record - $end) . ' short of the record.'));
+        }
+        $chart['label'] = $label;
+        $out['chart'] = $chart;
+    }
+    foreach ((array)($d['notes'] ?? []) as $note) {
+        if (is_string($note) && $note !== '') {
+            $out['facts'][] = $note;
+        }
+    }
+    return $out;
 }
 
 // What each source last did, for Publish to print. Never sent to the web.
