@@ -155,10 +155,18 @@
     track.style.setProperty('--sa-tk-dur', Math.max(20, Math.round((half * w) / SPEED)) + 's');
   }
 
-  // The strip sits just under the menu, whatever height the menu is.
+  // The strip sits just under the menu, whatever height the menu is. Where the
+  // menu wraps tall (a narrow phone) the page's first line starts lower, so
+  // the strip never sits on it.
   function place() {
     var nav = document.getElementById('main-nav') || document.querySelector('nav');
-    if (nav && nav.offsetHeight) root.style.setProperty('--sa-tk-top', nav.offsetHeight + 'px');
+    if (!nav || !nav.offsetHeight) return;
+    root.style.setProperty('--sa-tk-top', nav.offsetHeight + 'px');
+    var hero = root.parentNode;
+    if (!hero || !hero.style) return;
+    hero.style.paddingTop = '';
+    var need = nav.offsetHeight + root.offsetHeight + 18;
+    if ((parseFloat(getComputedStyle(hero).paddingTop) || 0) < need) hero.style.paddingTop = need + 'px';
   }
 
   function sync() {

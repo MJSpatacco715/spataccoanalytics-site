@@ -279,6 +279,13 @@ jobs:
               | php -r '$d = json_decode(stream_get_contents(STDIN), true); echo is_array($d) ? implode(" ", array_column($d["items"] ?? [], "id")) : "";' 2>/dev/null)
             n=$(printf '%s' "$out" | wc -w)
             if [ "$n" -ge 3 ]; then echo "The market strip has $n figures: $out"; else echo "::warning::The market strip has only $n figures ($out); it stays hidden under three."; fi
+            # What each source last did (no key and no address is in this), and
+            # how the energy source answers this server with no key at all: a
+            # quick 403 means it is reachable.
+            (cd "$root/market" && php -r '$_SERVER["DOCUMENT_ROOT"] = $argv[1]; require "../lib/market.php"; foreach (market_status() as $k => $v) { echo "  ", $k, ": ", is_array($v) ? $v["figures"] . " figure(s), answered " . $v["answered"] . ", tried " . $v["tried"] . ($v["why"] !== "" ? ", last failure: " . $v["why"] : "") : $v, "\n"; }' "$root" 2>/dev/null) || true
+            for v in -4 -6; do
+              curl $v -s -m 20 -o /dev/null -w "  energy source over IPv${v#-}: HTTP %{http_code}, connect %{time_connect}s, first byte %{time_starttransfer}s, total %{time_total}s\n" https://api.eia.gov/v2/ 2>/dev/null || echo "  energy source over IPv${v#-}: no answer in 20s"
+            done
           fi
           echo "Verified on the server."
           REMOTE
