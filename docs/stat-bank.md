@@ -107,3 +107,28 @@ is not set up on the host (`BANK_PASSWORD` is not in the repository's secrets).
 
 An item the owner marks "Post this next" outside the weekly slot is handled
 the same way whenever he asks.
+
+## Once a quarter: the RIA deal count on the market strip
+
+The homepage's market strip carries the year's RIA deal count against the
+record. The count is DeVoe & Company's, from its RIA Deal Book, which comes
+out about a month after each quarter ends (late January, April, July and
+October). It is the same count as the record in the homepage's stat row.
+
+When the weekly run falls after a new Deal Book is out:
+
+1. Read the count in DeVoe's own book or in two independent reports of it
+   (InvestmentNews and WealthManagement both cover each one). The number has
+   to agree. A preliminary count published before the quarter closes is not
+   the count.
+2. Change `MARKET_DEALS` in `site/lib/market.php`: `count`, `through` (the
+   last day the count covers), `pace` (DeVoe's own words on how the year
+   compares, or empty), `book` and `url`. In January the full-year count goes
+   in with `through` set to December 31; if it is a new record, the stat row
+   on the homepage changes too.
+3. Change the expected figures in `tests/market_test.sh` and
+   `tests/ticker_browser.cjs`, run the checks, and open the pull request.
+   This one needs no approval to merge: it is a number from an agreed source.
+
+If it is not brought up to date the count leaves the strip by itself, 150 days
+after the last day it covers.

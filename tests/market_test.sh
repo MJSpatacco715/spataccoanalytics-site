@@ -31,7 +31,9 @@ fails=0; n=0
 check() { n=$((n+1)); if eval "$2"; then :; else fails=$((fails+1)); echo "FAIL $1 (body=${BODY:0:200})"; fi; }
 # feed TIME -> BODY, as the page would get it
 feed() { BODY=$(SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW="$1" php -r '$_SERVER["DOCUMENT_ROOT"]=$argv[1]; $_SERVER["REQUEST_METHOD"]="GET"; include $argv[1]."/market/feed.php";' "$web" 2>&1); }
-ids() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)?implode(",",array_column($d["items"]??[],"id")):"NOT JSON";'; }
+# every: all the figures. ids: the ones that come from a live source (not the quarterly deal count)
+every() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)?implode(",",array_column($d["items"]??[],"id")):"NOT JSON";'; }
+ids() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)?implode(",",array_diff(array_column($d["items"]??[],"id"),["ria"])):"NOT JSON";'; }
 # of ID FIELD  (FIELD may be card.title and so on)
 of() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); foreach(($d["items"]??[]) as $i){ if($i["id"]===$argv[1]){ $v=$i; foreach(explode(".",$argv[2]) as $k){ $v=is_array($v)&&array_key_exists($k,$v)?$v[$k]:null; } echo is_scalar($v)?$v:json_encode($v); } }' "$1" "$2"; }
 # the publishers the feed names for the strip's own card, as A|B|C
@@ -43,7 +45,10 @@ BODY=
 # --- every source answers
 all_sources; with_key; forget
 feed $NOW
-check "seven figures, in the order they scroll" '[ "$(ok)" = true ] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ]'
+check "eight figures, in the order they scroll" '[ "$(ok)" = true ] && [ "$(every)" = "ria,ust30,ust10,eurusd,btc,brent,wti,gas" ]'
+check "the RIA deal count, against the record" '[ "$(of ria label)" = "RIA Deals 2026" ] && [ "$(of ria value)" = 244 ] && [ "$(of ria delta)" = "record 322" ] && [ "$(of ria by)" = DeVoe ] && [ "$(of ria when)" = "thru Sep" ]'
+check "its card says what is counted, the record and how far off it is" '[ "$(of ria card.title)" = "RIA deals announced in 2026: 244 through September" ] && [[ "$(of ria card.text)" == *"January through September 2026"*"322, set in 2025"*"Another 78 "* ]]'
+check "and names the Deal Book, with a link to it" '[[ "$(of ria card.source)" == "DeVoe & Company RIA Deal Book"* ]] && [[ "$(of ria card.url)" == https://www.devoeandcompany.com/* ]]'
 check "the 30-year yield, and its move in basis points" '[ "$(of ust30 value)" = "5.30%" ] && [ "$(of ust30 delta)" = "+1 bp" ] && [ "$(of ust30 dir)" = up ]'
 check "the 10-year yield" '[ "$(of ust10 value)" = "4.91%" ] && [ "$(of ust10 delta)" = "-1 bp" ] && [ "$(of ust10 dir)" = dn ]'
 check "the euro in dollars, to four places" '[ "$(of eurusd value)" = "1.0963" ] && [ "$(of eurusd delta)" = "+0.22%" ]'
@@ -54,7 +59,7 @@ check "each figure says who published it and for when" '[ "$(of ust10 by)" = Tre
 check "a source card names the figure and its day" '[ "$(of ust10 card.title)" = "U.S. 10-year Treasury yield: 4.91%" ] && [[ "$(of ust10 card.text)" == *"November 24, 2026"*"4.92% on November 23, 2026"* ]]'
 check "and its publisher, with a link to them" '[[ "$(of ust10 card.source)" == "U.S. Department of the Treasury"* ]] && [[ "$(of ust10 card.url)" == https://home.treasury.gov/* ]] && [[ "$(of eurusd card.url)" == https://www.ecb.europa.eu/* ]] && [[ "$(of gas card.url)" == https://www.eia.gov/* ]]'
 check "CoinGecko is credited the way it asks" '[ "$(of btc card.source)" = CoinGecko ] && [[ "$(of btc card.text)" == *"Data provided by CoinGecko." ]] && [[ "$(of btc card.url)" == https://www.coingecko.com/* ]]'
-check "each publisher is named once, with a link, for the strip's own card" '[ "$(srcs)" = "U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration" ]'
+check "each publisher is named once, with a link, for the strip's own card" '[ "$(srcs)" = "DeVoe & Company|U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration" ]'
 check "the oil card says the prices come out weekly" '[[ "$(of brent card.text)" == *"released once a week"* ]]'
 check "the gas card says which week" '[[ "$(of gas card.text)" == *"week of November 23, 2026"*"\$3.805"* ]]'
 check "no markup and no long dash in what the page is given" '[[ "$BODY" != *"<"* ]] && [[ "$BODY" != *$'"'"'\xe2\x80\x94'"'"'* ]]'
@@ -69,7 +74,7 @@ check "the right series are asked for" '[ "$(asked "facets[series][]=RBRTE&facet
 rm -f "$t/home/sa-market.json"; forget
 feed $NOW
 check "with no key the strip shows the other four" '[ "$(ids)" = "ust30,ust10,eurusd,btc" ] && [ "$(asked "eia.gov")" = 0 ]'
-check "and names only the publishers of what it shows" '[ "$(srcs)" = "U.S. Department of the Treasury|European Central Bank|CoinGecko" ]'
+check "and names only the publishers of what it shows" '[ "$(srcs)" = "DeVoe & Company|U.S. Department of the Treasury|European Central Bank|CoinGecko" ]'
 printf '{"eia_key":"short&x=1"}' > "$t/home/sa-market.json"; forget
 feed $NOW
 check "a key that is not a key is no key" '[ "$(ids)" = "ust30,ust10,eurusd,btc" ] && [ "$(asked "eia.gov")" = 0 ]'
@@ -100,10 +105,15 @@ all_sources
 feed $((NOW + 12 * 86400))
 check "a yield or a rate more than ten days old is left off" '[ "$(ids)" = "brent,wti,gas" ]'
 feed $((NOW + 40 * 86400))
-check "with nothing fresh the strip gets nothing" '[ "$(ok)" = false ] && [ "$(ids)" = "" ]'
+check "with nothing fresh from a live source, only the quarterly count is left" '[ "$(ids)" = "" ] && [ "$(every)" = ria ]'
+feed $((NOW + 100 * 86400))
+check "the deal count leaves by itself when it is not brought up to date" '[ "$(ok)" = false ] && [ "$(every)" = "" ]'
 rm -f "$fx"/*.xml "$fx"/*.json; forget
 feed $NOW
-check "every source down and nothing held: nothing, and no error" '[ "$(ok)" = false ] && [ "$(ids)" = "" ]'
+check "every source down and nothing held: no live figure, and no error" '[ "$(ids)" = "" ] && [ "$(every)" = ria ]'
+status=$(SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW=$NOW php -r '$_SERVER["DOCUMENT_ROOT"]=$argv[1]; require $argv[1]."/lib/market.php"; echo json_encode(market_status());' "$web")
+check "why each source failed is kept for Publish to print" '[[ "$status" == *"\"why\":\"no answer\""* ]] && [[ "$status" == *"\"key\":\"present\""* ]]'
+check "with no key and no address in it" '[[ "$status" != *"$KEY"* ]] && [[ "$status" != *"http"* ]] && ! grep -q "$KEY" "$t/home/sa-market/cache.json"'
 
 # --- one visitor at a time asks
 if command -v flock >/dev/null; then
@@ -164,6 +174,8 @@ check "the library opened directly says nothing" '[ "$code" = 200 ] && [ ! -s "$
 
 # --- the page
 home="$here/site/index.html"; js="$here/site/js/ticker.js"
+check "the headline is two lines: the statement, then the ask" 'grep -q "<h1><span class=\"h1-main\">Buyers will look at your data.</span> <em>Make sure it is ready.</em></h1>" "$home" && grep -q "\.hero h1 \.h1-main,\.hero h1 em{display:block}" "$home"'
+check "pages are served fresh, never from the host's page cache" 'grep -A3 "<FilesMatch \"\\\\.html\$\">" "$here/site/.htaccess" | grep -q "Header set Cache-Control \"private, no-cache\""'
 check "the strip is on the homepage, hidden until it has figures" 'grep -q "<section class=\"hero\"><aside class=\"sa-tk\" id=\"sa-ticker\" aria-label=\"Market figures\" hidden></aside>" "$home"'
 # The host keeps scripts and styles for a year, so each tag carries the first
 # eight characters of its file's SHA-1: change the file and the tag must follow.

@@ -2,7 +2,8 @@
 /*
  * The market strip's figures (market/feed.php, js/ticker.js).
  *
- * Seven figures, each from the body that publishes it, each free to show:
+ * Eight figures, each from the body that publishes it, each free to show:
+ *   RIA deals announced this year              DeVoe & Company (typed in, quarterly)
  *   U.S. 30-year and 10-year Treasury yields   U.S. Department of the Treasury
  *   EUR/USD                                    European Central Bank
  *   Bitcoin                                    CoinGecko (asks for a credit)
@@ -28,8 +29,8 @@
  */
 declare(strict_types=1);
 
-const MARKET_TIMEOUT = 5;            // seconds one source may take
-const MARKET_BUDGET = 12;            // seconds one request may spend asking
+const MARKET_TIMEOUT = 5;            // seconds one source may take, unless it says otherwise
+const MARKET_BUDGET = 14;            // seconds one request may spend asking
 const MARKET_RETRY = 300;            // a source that failed is left alone this long
 const MARKET_MAX_BYTES = 3145728;    // the most one answer may be
 const MARKET_AGENT = 'spataccoanalytics.com market strip';
@@ -62,6 +63,7 @@ const MARKET_SOURCES = [
     ],
     'eia_spot' => [
         'ttl' => 10800,
+        'timeout' => 12,            // slow to answer from the web host
         'short' => 'EIA',
         'publisher' => 'U.S. Energy Information Administration',
         'home' => 'https://www.eia.gov/petroleum/',
@@ -70,6 +72,7 @@ const MARKET_SOURCES = [
     ],
     'eia_gas' => [
         'ttl' => 10800,
+        'timeout' => 12,
         'short' => 'EIA',
         'publisher' => 'U.S. Energy Information Administration',
         'home' => 'https://www.eia.gov/petroleum/',
@@ -89,6 +92,25 @@ const MARKET_ITEMS = [
     'wti' => ['src' => 'eia_spot', 'label' => 'WTI', 'name' => 'WTI crude oil', 'unit' => 'usd2', 'fresh' => 21, 'lo' => 1, 'hi' => 1000],
     'gas' => ['src' => 'eia_gas', 'label' => 'US Regular Gas', 'name' => 'U.S. regular gasoline', 'unit' => 'usd3', 'fresh' => 21, 'lo' => 0.2, 'hi' => 50],
 ];
+
+// The RIA deal count comes out once a quarter, in DeVoe & Company's RIA Deal
+// Book, so it is typed in here when a new book is published
+// (docs/stat-bank.md). It is the same count as the record in the homepage's
+// stat row. Left alone, it drops off the strip by itself: MARKET_DEALS_FRESH
+// days after the last day it covers.
+const MARKET_DEALS = [
+    'year' => 2026,
+    'count' => 244,                 // announced RIA transactions, January through 'through'
+    'through' => '2026-09-30',
+    'pace' => 'slightly ahead of the pace of 2025',
+    'record' => 322,
+    'record_year' => 2025,
+    'book' => 'DeVoe & Company RIA Deal Book, third quarter 2026',
+    'url' => 'https://www.devoeandcompany.com/deal-books/devoe-ria-deal-book-tm---q3-2026',
+    'publisher' => 'DeVoe & Company',
+    'home' => 'https://www.devoeandcompany.com/ria-ma-deal-books',
+];
+const MARKET_DEALS_FRESH = 150;
 
 const MARKET_EIA_SERIES = ['RBRTE' => 'brent', 'RWTC' => 'wti', 'EMM_EPMR_PTE_NUS_DPG' => 'gas'];
 
@@ -283,17 +305,35 @@ function market_parse_eia(string $json): array
 
 // ---------------------------------------------------------------- asking
 
+// Why the last request got nothing, in a few words with no address in them
+// (an address can carry the key). Kept beside the answers so that Publish can
+// say what the server sees.
+function market_why(?string $set = null): string
+{
+    static $why = '';
+    if ($set !== null) {
+        $why = $set;
+    }
+    return $why;
+}
+
 // One page from a source, or null. A test points this at a folder of saved
 // answers (SA_MARKET_FIXTURES) and nothing leaves the machine.
-function market_get(string $file, string $url): ?string
+function market_get(string $file, string $url, int $timeout = MARKET_TIMEOUT): ?string
 {
+    market_why('');
     $fx = getenv('SA_MARKET_FIXTURES');
     if (is_string($fx) && $fx !== '') {
         @file_put_contents($fx . '/requests.log', $url . "\n", FILE_APPEND);
         $body = @file_get_contents($fx . '/' . $file);
-        return is_string($body) && $body !== '' ? $body : null;
+        if (!is_string($body) || $body === '') {
+            market_why('no answer');
+            return null;
+        }
+        return $body;
     }
     if (!function_exists('curl_init') || strncmp($url, 'https://', 8) !== 0) {
+        market_why('cannot ask');
         return null;
     }
     $ch = curl_init($url);
@@ -303,8 +343,9 @@ function market_get(string $file, string $url): ?string
         CURLOPT_MAXREDIRS => 3,
         CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
         CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
-        CURLOPT_CONNECTTIMEOUT => 3,
-        CURLOPT_TIMEOUT => MARKET_TIMEOUT,
+        CURLOPT_CONNECTTIMEOUT => min(6, $timeout),
+        CURLOPT_TIMEOUT => $timeout,
+        CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
         CURLOPT_MAXFILESIZE => MARKET_MAX_BYTES,
         CURLOPT_USERAGENT => MARKET_AGENT,
         CURLOPT_ENCODING => '',
@@ -312,8 +353,12 @@ function market_get(string $file, string $url): ?string
     ]);
     $body = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $errno = curl_errno($ch);
+    $took = round((float)curl_getinfo($ch, CURLINFO_TOTAL_TIME), 1);
     curl_close($ch);
     if (!is_string($body) || $code !== 200 || $body === '' || strlen($body) > MARKET_MAX_BYTES) {
+        // the number and the time only: curl's own words can name the address
+        market_why(($errno !== 0 ? 'curl error ' . $errno : 'HTTP ' . $code) . ' after ' . $took . 's');
         return null;
     }
     return $body;
@@ -350,11 +395,11 @@ function market_fetch(string $source, int $now, string $eiaKey): array
         return market_parse_coingecko((string)market_get('coingecko.json', 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_last_updated_at=true'));
     }
     if ($source === 'eia_spot' && $eiaKey !== '') {
-        $got = market_parse_eia((string)market_get('eia_spot.json', market_eia_url('petroleum/pri/spt', 'daily', ['RBRTE', 'RWTC'], 12, $eiaKey)));
+        $got = market_parse_eia((string)market_get('eia_spot.json', market_eia_url('petroleum/pri/spt', 'daily', ['RBRTE', 'RWTC'], 12, $eiaKey), MARKET_SOURCES[$source]['timeout']));
         return array_intersect_key($got, ['brent' => 1, 'wti' => 1]);
     }
     if ($source === 'eia_gas' && $eiaKey !== '') {
-        $got = market_parse_eia((string)market_get('eia_gas.json', market_eia_url('petroleum/pri/gnd', 'weekly', ['EMM_EPMR_PTE_NUS_DPG'], 4, $eiaKey)));
+        $got = market_parse_eia((string)market_get('eia_gas.json', market_eia_url('petroleum/pri/gnd', 'weekly', ['EMM_EPMR_PTE_NUS_DPG'], 4, $eiaKey), MARKET_SOURCES[$source]['timeout']));
         return array_intersect_key($got, ['gas' => 1]);
     }
     return [];
@@ -431,6 +476,9 @@ function market_refresh(string $dir, int $now): array
         if ($items !== []) {
             $held['at'] = $now;
             $held['items'] = $items;
+            $held['why'] = '';
+        } else {
+            $held['why'] = market_why() !== '' ? market_why() : 'an answer with no figures in it';
         }
         $cache['sources'][$source] = $held;
         $changed = true;
@@ -558,6 +606,65 @@ function market_item(string $id, array $held, int $now): ?array
     ];
 }
 
+// The year's RIA deal count as a figure, or null once it is too old to show.
+function market_deals_item(int $now): ?array
+{
+    $d = MARKET_DEALS;
+    $end = market_is_day($d['through']) ? strtotime($d['through'] . 'T00:00:00Z') : false;
+    if ($end === false || $d['count'] < 1 || $d['record'] < 1 || $now - $end > MARKET_DEALS_FRESH * 86400 || $end - $now > 86400) {
+        return null;
+    }
+    $count = number_format($d['count']);
+    $record = number_format($d['record']);
+    $whole = substr($d['through'], 5) === '12-31';
+    $month = (new DateTimeImmutable('@' . $end))->setTimezone(new DateTimeZone('UTC'));
+    if ($whole) {
+        $title = 'RIA deals announced in ' . $d['year'] . ': ' . $count;
+        $text = 'DeVoe & Company counted ' . $count . ' announced RIA transactions in ' . $d['year'] . '. '
+            . ($d['count'] > $d['record'] ? 'That passes the record of ' . $record . ' set in ' . $d['record_year'] . '.' : 'The record for a year is ' . $record . ', set in ' . $d['record_year'] . '.');
+        $when = (string)$d['year'];
+    } else {
+        $title = 'RIA deals announced in ' . $d['year'] . ': ' . $count . ' through ' . $month->format('F');
+        $left = $d['record'] - $d['count'];
+        $text = 'DeVoe & Company counted ' . $count . ' announced RIA transactions from January through ' . $month->format('F') . ' ' . $d['year']
+            . ($d['pace'] !== '' ? ', ' . $d['pace'] : '') . '. The record for a full year is ' . $record . ', set in ' . $d['record_year'] . '. '
+            . ($left > 0 ? 'Another ' . number_format($left) . ' before the year ends would match it.' : 'This year has already passed it.');
+        $when = 'thru ' . $month->format('M');
+    }
+    return [
+        'id' => 'ria',
+        'label' => 'RIA Deals ' . $d['year'],
+        'value' => $count,
+        'delta' => ($d['count'] > $d['record'] ? 'new record, was ' : 'record ') . $record,
+        'dir' => $d['count'] > $d['record'] ? 'up' : '',
+        'by' => 'DeVoe',
+        'when' => $when,
+        'card' => ['title' => $title, 'text' => $text, 'source' => $d['book'], 'url' => $d['url']],
+    ];
+}
+
+// What each source last did, for Publish to print. Never sent to the web.
+function market_status(): array
+{
+    $dir = market_dir();
+    $cache = $dir === '' ? ['sources' => []] : market_cache_read($dir);
+    $now = market_now();
+    $out = [];
+    foreach (MARKET_SOURCES as $key => $src) {
+        $c = is_array($cache['sources'][$key] ?? null) ? $cache['sources'][$key] : [];
+        $at = (int)($c['at'] ?? 0);
+        $tried = (int)($c['tried'] ?? 0);
+        $out[$key] = [
+            'figures' => count((array)($c['items'] ?? [])),
+            'answered' => $at > 0 ? ($now - $at) . 's ago' : 'never',
+            'tried' => $tried > 0 ? ($now - $tried) . 's ago' : 'never',
+            'why' => is_string($c['why'] ?? null) ? $c['why'] : '',
+        ];
+    }
+    $out['key'] = market_eia_key() !== '' ? 'present' : 'absent or not in the form of a key';
+    return $out;
+}
+
 // What the strip is given.
 function market_snapshot(): array
 {
@@ -566,6 +673,11 @@ function market_snapshot(): array
     $cache = $dir === '' ? ['sources' => []] : market_refresh($dir, $now);
     $items = [];
     $sources = [];                  // who published what is showing, once each
+    $deals = market_deals_item($now);
+    if ($deals !== null) {
+        $items[] = $deals;
+        $sources[MARKET_DEALS['publisher']] = ['name' => MARKET_DEALS['publisher'], 'url' => MARKET_DEALS['home']];
+    }
     foreach (MARKET_ITEMS as $id => $spec) {
         $held = $cache['sources'][$spec['src']]['items'][$id] ?? null;
         $one = is_array($held) ? market_item($id, $held, $now) : null;

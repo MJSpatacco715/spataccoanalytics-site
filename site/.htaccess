@@ -3,6 +3,17 @@
 
 DirectoryIndex index.html index.php
 
+# Pages are served fresh. The host keeps a copy of every page it serves, and
+# after a publish it went on handing out the old copy until someone cleared it
+# by hand. Marked this way the host does not keep pages at all and a browser
+# checks before it reuses one. Scripts, styles and images keep their long
+# life: where one changes, its address carries a version.
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "private, no-cache"
+  </FilesMatch>
+</IfModule>
+
 RewriteEngine On
 
 # One address: www goes to the bare domain.

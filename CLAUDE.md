@@ -13,6 +13,11 @@ lives and says which pieces are not in this repo yet.
 - Merging to `main` publishes (`.github/workflows/publish.yml`). Nothing is
   live until then, so say "merged" and "live" separately.
 - Site copy and pages are edited in `site/` only. Never on the host.
+- Pages are never kept by the host's page cache (`site/.htaccess` marks
+  every `.html` file `private, no-cache`), so a publish shows without anyone
+  clearing a cache. Scripts, styles and images are kept for a year: when one
+  changes, its address must change (a `?v=`), or returning visitors never get
+  it.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.
@@ -41,6 +46,9 @@ lives and says which pieces are not in this repo yet.
   on the strip from a free or scraped feed: only from a source the owner has
   a licence for. The energy key is the `EIA_API_KEY` secret and is never in
   this repository.
+  The RIA deal count on it is DeVoe & Company's, the same source as the
+  record in the stat row, typed into `MARKET_DEALS` each quarter
+  (`docs/stat-bank.md`).
   Its hover cards name the source with a link and end on the owner's line:
   "This tool runs entirely on free public data. Yours could too." That is as
   far as the hover sells: no link and no direct pitch. The owner wants the

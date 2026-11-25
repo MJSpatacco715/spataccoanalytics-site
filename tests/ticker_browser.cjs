@@ -62,13 +62,15 @@ function spot(page, id) {
         pageWide: document.documentElement.scrollWidth <= window.innerWidth,
       };
     });
-    check('seven figures in order', s.ids === 'ust30,ust10,eurusd,btc,brent,wti,gas');
+    check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('record 322') && s.text.includes('DeVoe, thru Sep'));
     check('the copies are hidden from assistive technology and from the Tab key', s.sets >= 2 && s.firstHidden === null && s.copiesHidden && s.copiesOutOfTabs);
     check('it sits directly under the menu and above the headline', s.top === s.navBottom && s.bottom < s.heroTop && s.height <= 36);
     check('it scrolls, with no seam', s.moving && s.trackWide);
     check('a figure shows its value, its move, who published it and for when', s.text.includes('US 10-Yr') && s.text.includes('4.91%') && s.text.includes('-1 bp') && s.text.includes('Treasury, Nov 24') && s.text.includes('EIA, Nov 17'));
     check('it says what the figures are', s.note && s.text.includes('These quotes are latest published figures and not necessarily live quotes.'));
     check('the page is no wider than the window', s.pageWide);
+    const h = await page.evaluate(() => { const m = document.querySelector('.hero h1 .h1-main').getBoundingClientRect(), e = document.querySelector('.hero h1 em').getBoundingClientRect(); return { below: e.top >= m.bottom - 2, left: Math.abs(e.left - m.left) < 2, text: document.querySelector('.hero h1').textContent }; });
+    check('the headline is two lines: the statement, then the ask beneath it', h.below && h.left && h.text === 'Buyers will look at your data. Make sure it is ready.');
 
     // hover: the strip stops and the source card opens under the figure
     const tag = await page.evaluate(() => { const b = document.querySelector('.sa-tk-tag').getBoundingClientRect(); return { x: b.left + 20, y: b.top + 10 }; });
@@ -81,7 +83,7 @@ function spot(page, id) {
     });
     check('the Markets label opens a card about the whole strip', about.open && about.title === 'About these figures' && about.paused);
     check('with the note on what the figures are', about.text.includes('These quotes are latest published figures and not necessarily live quotes.'));
-    check('every source, each a link to its publisher', about.names === 'U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration' && about.https);
+    check('every source, each a link to its publisher', about.names === 'DeVoe & Company|U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration' && about.https);
     check('and the line that the tool runs on free public data', about.text.includes('This tool runs entirely on free public data. Yours could too.'));
     const p = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
     await page.mouse.move(p.x, p.y, { steps: 3 });
@@ -117,12 +119,12 @@ function spot(page, id) {
       if (await page.evaluate(() => document.activeElement && document.activeElement.classList.contains('sa-tk-item'))) break;
     }
     const k = await page.evaluate(() => ({ id: document.activeElement.getAttribute('data-id'), open: !document.getElementById('sa-tk-card').hidden, expanded: document.activeElement.getAttribute('aria-expanded'), still: getComputedStyle(document.querySelector('.sa-tk-track')).animationName === 'none', title: document.querySelector('#sa-tk-card strong').textContent }));
-    check('Tab reaches the first figure and opens its card', k.id === 'ust30' && k.open && k.expanded === 'true' && k.title.startsWith('U.S. 30-year'));
+    check('Tab reaches the first figure and opens its card', k.id === 'ria' && k.open && k.expanded === 'true' && k.title.startsWith('RIA deals announced in 2026'));
     check('the strip stands still for the keyboard', k.still);
     await page.keyboard.press('Enter');
     check('Enter goes to the source link', await page.evaluate(() => document.activeElement.tagName === 'A' && document.activeElement.closest('#sa-tk-card') !== null));
     await page.keyboard.press('Tab');
-    check('Tab goes on to the next figure', await page.evaluate(() => document.activeElement.getAttribute('data-id') === 'ust10' && document.querySelector('#sa-tk-card strong').textContent.startsWith('U.S. 10-year')));
+    check('Tab goes on to the next figure', await page.evaluate(() => document.activeElement.getAttribute('data-id') === 'ust30' && document.querySelector('#sa-tk-card strong').textContent.startsWith('U.S. 30-year')));
     await page.keyboard.press('Escape');
     check('Escape closes the card', await page.evaluate(() => document.getElementById('sa-tk-card').hidden));
     await page.focus('.sa-tk-tag');
@@ -130,7 +132,7 @@ function spot(page, id) {
     const first = await page.evaluate(() => ({ inCard: !!document.activeElement.closest('#sa-tk-card'), text: document.activeElement.textContent }));
     await page.keyboard.press('Tab');
     const second = await page.evaluate(() => ({ inCard: !!document.activeElement.closest('#sa-tk-card'), text: document.activeElement.textContent }));
-    check('from the label, Enter and Tab walk the sources', first.inCard && first.text === 'U.S. Department of the Treasury' && second.inCard && second.text === 'European Central Bank');
+    check('from the label, Enter and Tab walk the sources', first.inCard && first.text === 'DeVoe & Company' && second.inCard && second.text === 'U.S. Department of the Treasury');
     await page.keyboard.press('Escape');
     check('and Escape goes back to the label', await page.evaluate(() => document.getElementById('sa-tk-card').hidden && document.activeElement.classList.contains('sa-tk-tag')));
     check('no script error on the page', errors.length === 0);
@@ -148,7 +150,7 @@ function spot(page, id) {
     });
     check('on a phone it sits under the menu, above the headline, and the page is no wider', s.top === s.navBottom && s.bottom <= s.heroTop && s.pageWide);
     let p = null;
-    for (const id of ['ust30', 'ust10', 'eurusd', 'btc', 'brent', 'wti', 'gas']) { p = await spot(page, id); if (p) break; }
+    for (const id of ['ria', 'ust30', 'ust10', 'eurusd', 'btc', 'brent', 'wti', 'gas']) { p = await spot(page, id); if (p) break; }
     await page.touchscreen.tap(p.x, p.y);
     await page.waitForTimeout(250);
     const c = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); const b = card.getBoundingClientRect(); return { open: !card.hidden, inside: b.left >= 0 && b.right <= window.innerWidth, id: (document.querySelector('.sa-tk-item.open') || document.body).getAttribute('data-id') }; });
@@ -157,6 +159,16 @@ function spot(page, id) {
     await page.touchscreen.tap(Math.max(again.x, 130), again.y);
     await page.waitForTimeout(250);
     check('a second tap closes it', await page.evaluate(() => document.getElementById('sa-tk-card').hidden));
+    await ctx.close();
+  }
+
+  // --- a narrow phone, where the menu wraps tall
+  {
+    const { ctx, page } = await open(browser, { viewport: { width: 320, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+    await page.waitForSelector('#sa-ticker.on', { timeout: 8000 });
+    await page.waitForTimeout(300);
+    const s = await page.evaluate(() => ({ strip: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().bottom), first: Math.round(document.querySelector('.hero-tag').getBoundingClientRect().top), wide: document.documentElement.scrollWidth <= window.innerWidth }));
+    check('on a narrow phone the strip does not sit on the first line of the page', s.strip < s.first && s.wide);
     await ctx.close();
   }
 
