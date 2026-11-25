@@ -15,7 +15,11 @@ A post is one JSON file in content/posts/, named YYYY-MM-DD-slug.json:
      {"type": "link", "text": "Score your website", "url": "/tools/website-scorer.html"},
      {"type": "image", "src": "/img/insights/x.png", "alt": "...", "caption": "..."}],
    "linkedin": "Optional: the exact words for the LinkedIn post.",
+   "card": "/img/insights/slug.png",
    "draft": true}
+
+card is optional: the post's own picture (drawn by scripts/stat_card.cjs),
+shown when the post is shared. It must be a file in site/img/insights/.
 
 Categories: practice (for advisors; the only one shown on the homepage),
 markets, business, sports. A stat must carry its source: a post with a
@@ -84,6 +88,8 @@ def load(posts_dir: Path, drafts: bool = False) -> list[dict]:
                 s = b.get("source") or {}
                 if not all(s.get(k) for k in ("name", "year", "finding", "url")):
                     fail(f"{f.name}: block {i + 1} is a statistic without a full source (name, year, finding, url)")
+        if p.get("card") is not None and not re.fullmatch(r"/img/insights/[a-z0-9]+(?:-[a-z0-9]+)*\.(?:png|jpg)", str(p["card"])):
+            fail(f"{f.name}: card must be a picture in /img/insights/, lower case, .png or .jpg")
         if p.get("draft") and not drafts:
             continue
         p["slug"] = m.group(2)
@@ -125,7 +131,7 @@ def block(b: dict, where: str) -> str:
     return ""
 
 
-def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "") -> str:
+def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "", image: str = "/img/social-card.png") -> str:
     follow = f' &middot; <a href="{esc(linkedin)}" target="_blank" rel="noopener">LinkedIn</a>' if linkedin else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -143,7 +149,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:url" content="{BASE}{path}">
-<meta property="og:image" content="{BASE}/img/social-card.png">
+<meta property="og:image" content="{BASE}{esc(image)}">
 <meta name="twitter:card" content="summary_large_image">
 {extra_head}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -246,7 +252,12 @@ def build(out: Path, posts_dir: Path | None = None, drafts: bool = False) -> int
 </section>"""
         d = root / p["slug"]
         d.mkdir(parents=True, exist_ok=True)
-        (d / "index.html").write_text(shell(p["title"], p["summary"], p["url"], body, linkedin, f'<script type="application/ld+json">{ld}</script>\n'), encoding="utf-8")
+        image = "/img/social-card.png"
+        if p.get("card"):
+            if not (out / p["card"].lstrip("/")).is_file():
+                fail(f"{where}: its card {p['card']} is not in site/img/insights/")
+            image = p["card"]
+        (d / "index.html").write_text(shell(p["title"], p["summary"], p["url"], body, linkedin, f'<script type="application/ld+json">{ld}</script>\n', image), encoding="utf-8")
 
     used = [c for c in CATEGORIES if any(p["category"] == c for p in posts)]
     filters = ('<div class="in-filters" role="group" aria-label="Show"><button type="button" class="on" data-show="all">All</button>'

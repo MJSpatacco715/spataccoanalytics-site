@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stat Bank | Spatacco Analytics</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0F1B2D;--navy-light:#162640;--navy-mid:#1C3352;--cyan:#3DD8D8;--cyan-light:#5EE4E4;--purple:#7B5CFF;--blue:#5B8DEF;--white:#fff;--slate:#64748B;--text-light:#94A3B8;--line:rgba(255,255,255,.1);--bad:#FFB4A8;--gold:#F4C95D}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:var(--cyan)}
+button{font:inherit;cursor:pointer}
+[hidden]{display:none!important}
+.wrap{max-width:860px;margin:0 auto;padding:28px 16px 80px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:26px}
+.top a.home{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--white)}
+.top img{width:40px;height:40px;border-radius:9px;background:#fff}
+.top b{font-size:15px;letter-spacing:.3px}
+.top span{display:block;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);margin-top:2px}
+.ghost{background:none;border:1px solid var(--line);color:var(--text-light);border-radius:4px;padding:8px 14px;font-size:13px}
+.ghost:hover{color:var(--white);border-color:rgba(61,216,216,.4)}
+h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(30px,6vw,42px);line-height:1.1}
+h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px}
+.lead{color:var(--text-light);font-size:15px;line-height:1.65;margin-top:10px;max-width:640px}
+.card{background:var(--navy-light);border:1px solid rgba(61,216,216,.1);border-radius:6px;padding:22px;margin-top:22px}
+label{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text-light);font-weight:600;margin-bottom:8px}
+input[type=password],textarea{width:100%;font:inherit;font-size:16px;color:var(--white);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:4px;padding:13px 14px;outline:none}
+input[type=password]:focus,textarea:focus{border-color:var(--cyan);background:rgba(61,216,216,.04)}
+textarea{min-height:120px;resize:vertical;line-height:1.5}
+::placeholder{color:var(--slate)}
+.go{display:inline-block;font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:var(--navy);font-weight:700;background:linear-gradient(135deg,var(--cyan),var(--purple));border:0;border-radius:4px;padding:14px 26px}
+.go[disabled]{opacity:.55;cursor:default}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:14px}
+.err{color:var(--bad);font-size:14px;line-height:1.5;margin-top:12px}
+.ok{color:var(--cyan);font-size:14px;margin-top:12px}
+
+/* the drop zone */
+.drop{border:2px dashed rgba(61,216,216,.28);border-radius:6px;padding:16px}
+.drop.over{border-color:var(--cyan);background:rgba(61,216,216,.06)}
+.hint{font-size:13px;color:var(--text-light);line-height:1.6;margin-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:13px;font-weight:500;color:var(--text-light);background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:999px;padding:7px 14px}
+.chip[aria-pressed=true]{background:rgba(61,216,216,.12);border-color:var(--cyan);color:var(--cyan);font-weight:600}
+.chip i{font-style:normal;opacity:.7;margin-left:5px}
+.pending{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.pend{position:relative;border:1px solid var(--line);border-radius:4px;background:rgba(255,255,255,.04);padding:6px 30px 6px 8px;font-size:12px;color:var(--text-light);display:flex;align-items:center;gap:8px;max-width:100%}
+.pend img{width:44px;height:44px;object-fit:cover;border-radius:3px}
+.pend span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.pend button{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--text-light);font-size:18px;line-height:1;padding:4px}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+
+/* the bank */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-top:38px}
+.count{font-size:13px;color:var(--text-light)}
+.item{background:var(--navy-light);border:1px solid var(--line);border-radius:6px;padding:18px;margin-top:14px}
+.item.next{border-color:var(--gold)}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--text-light)}
+.pill{font-size:10.5px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;border-radius:3px;padding:3px 8px;background:rgba(255,255,255,.08);color:var(--text-light)}
+.pill.new{background:rgba(91,141,239,.16);color:var(--blue)}
+.pill.checked{background:rgba(61,216,216,.14);color:var(--cyan)}
+.pill.needs_source{background:rgba(255,180,168,.14);color:var(--bad)}
+.pill.scheduled,.pill.nextp{background:rgba(244,201,93,.16);color:var(--gold)}
+.pill.posted{background:rgba(123,92,255,.18);color:#B9A8FF}
+.body{font-size:15px;line-height:1.6;margin-top:12px;white-space:pre-wrap;overflow-wrap:anywhere}
+.body.clamp{display:-webkit-box;-webkit-line-clamp:6;-webkit-box-orient:vertical;overflow:hidden}
+.link{display:block;font-size:14px;margin-top:10px;overflow-wrap:anywhere}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.thumbs a.im img{display:block;width:120px;height:120px;object-fit:contain;border-radius:4px;border:1px solid var(--line);background:#0b1422}
+.thumbs a.doc{display:inline-flex;align-items:center;gap:8px;font-size:13px;text-decoration:none;border:1px solid var(--line);border-radius:4px;padding:9px 12px;color:var(--white)}
+.found{margin-top:14px;border-left:3px solid var(--cyan);padding:4px 0 4px 14px}
+.found b{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:30px;font-variant-numeric:lining-nums;color:var(--cyan-light);margin-right:8px}
+.found p{font-size:14px;line-height:1.55;color:var(--text-light);margin-top:4px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.acts button{background:none;border:1px solid var(--line);color:var(--text-light);border-radius:4px;padding:7px 12px;font-size:12.5px}
+.acts button:hover{color:var(--white);border-color:rgba(61,216,216,.4)}
+.acts button.on{border-color:var(--gold);color:var(--gold)}
+.acts button.del:hover{border-color:var(--bad);color:var(--bad)}
+.empty{color:var(--text-light);font-size:15px;line-height:1.6;margin-top:18px}
+@media(max-width:520px){.thumbs a.im img{width:96px;height:96px}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="home" href="/"><img src="/img/logo-square.png" alt=""><div><b>Spatacco Analytics</b><span>Stat Bank</span></div></a>
+    <button class="ghost" id="signout" hidden>Sign out</button>
+  </div>
+
+  <!-- not set up, or checking -->
+  <div id="s-wait"><h1>Stat Bank</h1><p class="lead" id="wait-msg">One moment.</p></div>
+
+  <!-- sign in -->
+  <div id="s-login" hidden>
+    <h1>Stat Bank</h1>
+    <p class="lead">Private. Sign in to drop something in or see what is waiting.</p>
+    <form class="card" id="login-form" autocomplete="on">
+      <label for="pw">Password</label>
+      <input type="password" id="pw" autocomplete="current-password" required>
+      <div class="row"><button class="go" id="login-go" type="submit">Sign in</button></div>
+      <div class="err" id="login-err" role="alert" hidden></div>
+    </form>
+  </div>
+
+  <!-- the bank -->
+  <div id="s-bank" hidden>
+    <h1>Drop it in.</h1>
+    <p class="lead">A link, a number, a quote, a screenshot, a PDF. Anything worth turning into a post. Each week the next one is traced to its source and prepared for you to approve.</p>
+
+    <form class="card" id="add-form">
+      <div class="drop" id="drop">
+        <label for="text">What did you find?</label>
+        <textarea id="text" placeholder="Paste a link or the words here. Paste a screenshot anywhere on this page, or drag files in."></textarea>
+        <div class="pending" id="pending"></div>
+        <div class="row">
+          <span class="ghost filebtn">Add a file or photo<input type="file" id="files" multiple accept="image/*,application/pdf,text/plain"></span>
+          <span class="hint" style="margin-top:0">Pictures, PDFs and text. Up to 5 files, 12 MB each.</span>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <label id="topic-label">Topic (optional)</label>
+        <div class="chips" id="topics" role="group" aria-labelledby="topic-label">
+          <button type="button" class="chip" data-topic="transitions" aria-pressed="false">Advisor transitions</button>
+          <button type="button" class="chip" data-topic="markets" aria-pressed="false">Markets</button>
+          <button type="button" class="chip" data-topic="data" aria-pressed="false">Data</button>
+          <button type="button" class="chip" data-topic="other" aria-pressed="false">Other</button>
+        </div>
+      </div>
+      <div class="row"><button class="go" id="add-go" type="submit">Add to the bank</button></div>
+      <div class="err" id="add-err" role="alert" hidden></div>
+      <div class="ok" id="add-ok" role="status" hidden></div>
+      <p class="hint">Email works too: send or forward anything to <span id="mailto"></span> with <b>STAT</b> at the start of the subject. The weekly routine files it here.</p>
+    </form>
+
+    <div class="bar">
+      <h2>In the bank</h2>
+      <div class="count" id="count"></div>
+    </div>
+    <div class="chips" id="filters" style="margin-top:14px" role="group" aria-label="Show"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var API = '/bank/api.php?a=';
+  var MAX_FILES = 5, MAX_BYTES = 12 * 1024 * 1024;
+  var STATUS = { 'new': 'New', checked: 'Ready', needs_source: 'Needs a source', scheduled: 'Scheduled', posted: 'Posted', skipped: 'Skipped' };
+  var TOPIC = { transitions: 'Advisor transitions', markets: 'Markets', data: 'Data', other: 'Other' };
+  var BY = { page: 'dropped here', email: 'by email', chat: 'from a chat', routine: 'by the routine' };
+  var items = [], pending = [], filter = 'open', topic = '';
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function show(id) { ['s-wait', 's-login', 's-bank'].forEach(function (s) { $(s).hidden = s !== id; }); $('signout').hidden = id !== 's-bank'; }
+  function say(id, msg) { var e = $(id); e.textContent = msg || ''; e.hidden = !msg; }
+
+  // Every call carries the page's own header; the answer is {status, body}.
+  function call(a, opts) {
+    opts = opts || {};
+    var headers = { 'X-Bank': '1' };
+    var body = opts.form || null;
+    if (opts.json) { headers['Content-Type'] = 'application/json'; body = JSON.stringify(opts.json); }
+    return fetch(API + a, { method: opts.form || opts.json ? 'POST' : 'GET', headers: headers, body: body, credentials: 'same-origin', cache: 'no-store' })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { status: r.status, body: b }; }); })
+      .catch(function () { return { status: 0, body: {} }; });
+  }
+  function why(r) {
+    var e = r.body && r.body.error;
+    if (r.status === 0) return 'No connection. Nothing was changed.';
+    if (r.status === 401) return e === 'wrong password' ? 'That password is not right.' : 'You are signed out. Reload the page and sign in again.';
+    if (r.status === 429) return 'Too many tries. Wait fifteen minutes and try again.';
+    if (r.status === 413) return e === 'too many files' ? 'At most 5 files at a time.' : 'That file is too large. 12 MB is the limit.';
+    if (r.status === 415) return 'One of those files is not a picture, a PDF or plain text.';
+    if (r.status === 422) return 'There is nothing to keep yet. Paste something or add a file.';
+    if (r.status === 507) return 'The bank is full. Delete some items first.';
+    if (r.status === 503) return 'The bank has not been set up yet.';
+    return 'That did not work. Nothing was changed.';
+  }
+
+  /* ---- sign in ---- */
+  function start() {
+    call('status').then(function (r) {
+      if (r.status !== 200) { say('wait-msg', 'The bank could not be reached. Reload to try again.'); return; }
+      if (!r.body.setup) { say('wait-msg', 'The bank has not been set up yet: its password is not on the server.'); return; }
+      if (!r.body.signed_in) { show('s-login'); $('pw').focus(); return; }
+      show('s-bank'); load();
+    });
+  }
+  $('login-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    say('login-err', '');
+    var b = $('login-go'); b.disabled = true;
+    call('login', { json: { password: $('pw').value } }).then(function (r) {
+      b.disabled = false;
+      if (r.status !== 200) { say('login-err', why(r)); return; }
+      $('pw').value = '';
+      show('s-bank'); load();
+    });
+  });
+  $('signout').addEventListener('click', function () {
+    call('logout', { json: {} }).then(function () { items = []; show('s-login'); });
+  });
+
+  /* ---- dropping something in ---- */
+  function addFiles(list) {
+    say('add-err', '');
+    Array.prototype.forEach.call(list || [], function (f) {
+      if (!f || !f.size) return;
+      if (pending.length >= MAX_FILES) { say('add-err', 'At most 5 files at a time.'); return; }
+      if (f.size > MAX_BYTES) { say('add-err', 'That file is too large. 12 MB is the limit.'); return; }
+      pending.push(f);
+    });
+    drawPending();
+  }
+  function drawPending() {
+    var box = $('pending'); box.textContent = '';
+    pending.forEach(function (f, i) {
+      var p = el('div', 'pend');
+      if (/^image\//.test(f.type) && !/heic|heif/i.test(f.type)) { var im = el('img'); im.alt = ''; im.src = URL.createObjectURL(f); im.onload = function () { URL.revokeObjectURL(im.src); }; p.appendChild(im); }
+      p.appendChild(el('span', '', f.name || 'pasted picture'));
+      var x = el('button', '', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove ' + (f.name || 'this file'));
+      x.addEventListener('click', function () { pending.splice(i, 1); drawPending(); });
+      p.appendChild(x); box.appendChild(p);
+    });
+  }
+  $('files').addEventListener('change', function () { addFiles(this.files); this.value = ''; });
+  document.addEventListener('paste', function (ev) {
+    if ($('s-bank').hidden) return;
+    var fs = [], cd = ev.clipboardData;
+    if (cd && cd.items) Array.prototype.forEach.call(cd.items, function (it) { if (it.kind === 'file') { var f = it.getAsFile(); if (f) fs.push(f); } });
+    if (fs.length) { ev.preventDefault(); addFiles(fs); }
+  });
+  var drop = $('drop');
+  ['dragenter', 'dragover'].forEach(function (n) { drop.addEventListener(n, function (ev) { ev.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave', 'drop'].forEach(function (n) { drop.addEventListener(n, function (ev) { ev.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function (ev) { if (ev.dataTransfer) addFiles(ev.dataTransfer.files); });
+  $('topics').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-topic]'); if (!b) return;
+    topic = topic === b.dataset.topic ? '' : b.dataset.topic;
+    Array.prototype.forEach.call(this.children, function (c) { c.setAttribute('aria-pressed', String(c.dataset.topic === topic)); });
+  });
+  $('add-form').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    say('add-err', ''); say('add-ok', '');
+    var text = $('text').value.trim();
+    if (!text && !pending.length) { say('add-err', 'There is nothing to keep yet. Paste something or add a file.'); return; }
+    var fd = new FormData();
+    fd.append('text', text); fd.append('topic', topic);
+    pending.forEach(function (f) { fd.append('files[]', f, f.name || 'pasted.png'); });
+    var b = $('add-go'); b.disabled = true; b.textContent = 'Adding';
+    call('add', { form: fd }).then(function (r) {
+      b.disabled = false; b.textContent = 'Add to the bank';
+      if (r.status !== 200 || !r.body.ok) { say('add-err', why(r)); return; }
+      $('text').value = ''; pending = []; drawPending();
+      topic = ''; Array.prototype.forEach.call($('topics').children, function (c) { c.setAttribute('aria-pressed', 'false'); });
+      say('add-ok', 'In the bank.');
+      setTimeout(function () { say('add-ok', ''); }, 4000);
+      items.unshift(r.body.item); draw();
+    });
+  });
+
+  /* ---- the bank ---- */
+  function load() {
+    call('list').then(function (r) {
+      if (r.status === 401) { show('s-login'); return; }
+      if (r.status !== 200) { $('list').textContent = ''; $('list').appendChild(el('p', 'empty', 'The bank could not be read. Reload to try again.')); return; }
+      items = r.body.items || []; draw();
+    });
+  }
+  function isOpen(it) { return it.status !== 'posted' && it.status !== 'skipped'; }
+  function when(iso) { var d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+  function change(it, set, btn) {
+    if (btn) btn.disabled = true;
+    set.id = it.id;
+    call('update', { json: set }).then(function (r) {
+      if (btn) btn.disabled = false;
+      if (r.status !== 200) { alert(why(r)); return; }
+      if (set.next === true) items.forEach(function (o) { o.next = false; });
+      var i = items.findIndex(function (o) { return o.id === it.id; });
+      if (i >= 0) items[i] = r.body.item;
+      draw();
+    });
+  }
+  function draw() {
+    var counts = { open: 0, all: items.length };
+    items.forEach(function (it) { counts[it.status] = (counts[it.status] || 0) + 1; if (isOpen(it)) counts.open++; });
+    $('count').textContent = items.length === 1 ? '1 item' : items.length + ' items';
+
+    var fl = $('filters'); fl.textContent = '';
+    [['open', 'Waiting'], ['new', 'New'], ['checked', 'Ready'], ['needs_source', 'Needs a source'], ['scheduled', 'Scheduled'], ['posted', 'Posted'], ['skipped', 'Skipped'], ['all', 'Everything']].forEach(function (f) {
+      if (f[0] !== 'open' && f[0] !== 'all' && !counts[f[0]]) return;
+      var b = el('button', 'chip', f[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(filter === f[0]));
+      b.appendChild(el('i', '', String(counts[f[0]] || 0)));
+      b.addEventListener('click', function () { filter = f[0]; draw(); });
+      fl.appendChild(b);
+    });
+
+    var list = $('list'); list.textContent = '';
+    var shown = items.filter(function (it) { return filter === 'all' ? true : filter === 'open' ? isOpen(it) : it.status === filter; });
+    shown.sort(function (a, b) { return (b.next ? 1 : 0) - (a.next ? 1 : 0); });
+    if (!shown.length) { list.appendChild(el('p', 'empty', items.length ? 'Nothing under this heading.' : 'Nothing here yet. Drop in the first thing you find.')); return; }
+    shown.forEach(function (it) { list.appendChild(card(it)); });
+  }
+  function card(it) {
+    var c = el('div', 'item' + (it.next ? ' next' : ''));
+    var m = el('div', 'meta');
+    m.appendChild(el('span', 'pill ' + it.status, STATUS[it.status] || it.status));
+    if (it.next) m.appendChild(el('span', 'pill nextp', 'Next up'));
+    if (it.topic && TOPIC[it.topic]) m.appendChild(el('span', '', TOPIC[it.topic]));
+    m.appendChild(el('span', '', when(it.at) + ' · ' + (BY[it.by] || it.by || '')));
+    if (it.scheduled_for) m.appendChild(el('span', '', 'for ' + it.scheduled_for));
+    if (it.posted_on) m.appendChild(el('span', '', 'posted ' + it.posted_on));
+    c.appendChild(m);
+
+    if (it.text) {
+      var b = el('div', 'body clamp', it.text);
+      b.addEventListener('click', function () { b.classList.toggle('clamp'); });
+      c.appendChild(b);
+    }
+    if (it.url && /^https?:\/\//i.test(it.url)) {
+      var a = el('a', 'link', it.url); a.href = it.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; c.appendChild(a);
+    }
+    if (it.files && it.files.length) {
+      var t = el('div', 'thumbs');
+      it.files.forEach(function (f) {
+        var href = API + 'file&id=' + encodeURIComponent(f.id);
+        var a = el('a', ''); a.href = href; a.target = '_blank'; a.rel = 'noopener';
+        if (/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { a.className = 'im'; var im = el('img'); im.loading = 'lazy'; im.alt = f.name || 'picture'; im.src = href; a.appendChild(im); }
+        else { a.className = 'doc'; a.textContent = (f.type === 'application/pdf' ? 'PDF: ' : 'File: ') + (f.name || 'file'); }
+        t.appendChild(a);
+      });
+      c.appendChild(t);
+    }
+    var fd = it.found;
+    if (fd && (fd.value || fd.label || fd.note || (fd.source && fd.source.name))) {
+      var f = el('div', 'found');
+      if (fd.value || fd.label) { var line = el('div'); if (fd.value) line.appendChild(el('b', '', fd.value)); line.appendChild(document.createTextNode(fd.label || '')); f.appendChild(line); }
+      var s = fd.source || {};
+      if (s.name) {
+        var p = el('p', '', 'Source: ' + s.name + (s.year ? ', ' + s.year : '') + (s.finding ? '. ' + s.finding : ''));
+        if (s.url && /^https?:\/\//i.test(s.url)) { p.appendChild(document.createTextNode(' ')); var sa = el('a', '', 'Open it'); sa.href = s.url; sa.target = '_blank'; sa.rel = 'noopener noreferrer'; p.appendChild(sa); }
+        f.appendChild(p);
+      }
+      if (fd.note) f.appendChild(el('p', '', fd.note));
+      c.appendChild(f);
+    }
+    if (it.post) { var pl = el('a', 'link', 'The post on the site'); pl.href = '/insights/' + encodeURIComponent(it.post) + '/'; c.appendChild(pl); }
+
+    var acts = el('div', 'acts');
+    if (isOpen(it)) {
+      var nx = el('button', it.next ? 'on' : '', it.next ? 'Next up (undo)' : 'Post this next'); nx.type = 'button';
+      nx.addEventListener('click', function () { change(it, { next: !it.next }, nx); });
+      acts.appendChild(nx);
+    }
+    if (it.status !== 'posted') {
+      var sk = el('button', '', it.status === 'skipped' ? 'Bring back' : 'Skip'); sk.type = 'button';
+      sk.addEventListener('click', function () { change(it, it.status === 'skipped' ? { status: 'new' } : { status: 'skipped', next: false }, sk); });
+      acts.appendChild(sk);
+    }
+    var del = el('button', 'del', 'Delete'); del.type = 'button';
+    del.addEventListener('click', function () {
+      if (!confirm('Delete this item and its files? This cannot be undone.')) return;
+      del.disabled = true;
+      call('delete', { json: { id: it.id } }).then(function (r) {
+        if (r.status !== 200) { del.disabled = false; alert(why(r)); return; }
+        items = items.filter(function (o) { return o.id !== it.id; }); draw();
+      });
+    });
+    acts.appendChild(del);
+    c.appendChild(acts);
+    return c;
+  }
+
+  $('mailto').textContent = 'mike' + '@' + 'spataccoanalytics.com';
+  start();
+})();
+</script>
+</body>
+</html>

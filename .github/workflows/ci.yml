@@ -53,6 +53,12 @@ jobs:
       - name: The notice mail goes out as the firm, and a visitor cannot add to it
         run: bash tests/notice_test.sh
 
+      - name: The stat bank is private, and keeps only pictures, PDFs and text
+        run: bash tests/bank_test.sh
+
+      - name: A statistic card is drawn only for a number with a source
+        run: bash tests/card_test.sh
+
       - name: Project prices go only to a visitor who left an email
         run: bash tests/pricing_test.sh
 
@@ -75,6 +81,8 @@ jobs:
           php -l live/feed.php
           php -l site/score/lead.php
           php -l site/contact/submit.php
+          php -l site/bank/api.php
+          php -l site/lib/bank.php
           php -l site/lib/leads.php
           php -l site/services/pricing.php
           node --check capture/capture.mjs

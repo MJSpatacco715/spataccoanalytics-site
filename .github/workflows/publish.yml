@@ -181,6 +181,31 @@ jobs:
                 "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
           echo "Project pricing written beside the web root."
 
+      - name: Stat bank access
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          BANK_PASSWORD: ${{ secrets.BANK_PASSWORD }}
+          BANK_TOKEN: ${{ secrets.BANK_TOKEN }}
+        run: |
+          # Who may open the private stat bank (/bank/): the owner's password
+          # and the weekly routine's token. Neither is in this repository:
+          # they come from secrets and are written one level above the web
+          # root, where bank/api.php reads them and the web cannot. Sent on
+          # stdin; readable by this account alone. With no password the bank
+          # stays closed to everyone.
+          [ -n "$BANK_PASSWORD" ] || { echo "::warning::BANK_PASSWORD is not set; the stat bank stays closed."; exit 0; }
+          [ "${#BANK_PASSWORD}" -ge 10 ] || { echo "::error::BANK_PASSWORD must be at least 10 characters."; exit 1; }
+          if [ -n "$BANK_TOKEN" ] && [ "${#BANK_TOKEN}" -lt 24 ]; then echo "::error::BANK_TOKEN must be at least 24 characters."; exit 1; fi
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          cfg="$(dirname "$web")/sa-bank.json"
+          jq -n --arg p "$BANK_PASSWORD" --arg t "$BANK_TOKEN" '{password: $p, token: $t}' \
+            | ssh -o ConnectionAttempts=8 -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" \
+                "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
+          echo "Stat bank access written beside the web root."
+
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'
         run: |

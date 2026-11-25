@@ -32,5 +32,16 @@ check "a number without a source does not build" '! python3 "$here/scripts/build
 printf '%s' '{"title":"x","date":"2026-01-08","category":"practice","summary":"s","blocks":[{"type":"link","text":"t","url":"javascript:alert(1)"}]}' > "$t/bad/2026-01-08-no-source.json"
 check "a link that is not a web address does not build" '! python3 "$here/scripts/build_site.py" --site "$here/site" --out "$t/b" --posts "$t/bad" >/dev/null 2>&1'
 
+# a post's own picture is its share image, and it has to be there
+check "a post with no card shares the site's picture" 'grep -q "og:image\" content=\"https://spataccoanalytics.com/img/social-card.png" "$i/sample-practice/index.html"'
+mkdir -p "$t/site" "$t/cardposts" && cp -r "$here/site/." "$t/site/" && mkdir -p "$t/site/img/insights" && cp "$here/site/img/logo-square.png" "$t/site/img/insights/with-card.png"
+printf '%s' '{"title":"With a card","date":"2026-01-09","category":"practice","summary":"s","card":"/img/insights/with-card.png","blocks":[{"type":"p","text":"x"}]}' > "$t/cardposts/2026-01-09-with-card.json"
+python3 "$here/scripts/build_site.py" --site "$t/site" --out "$t/c" --posts "$t/cardposts" >/dev/null
+check "a post's card is its share image" 'grep -q "og:image\" content=\"https://spataccoanalytics.com/img/insights/with-card.png" "$t/c/insights/with-card/index.html"'
+rm "$t/site/img/insights/with-card.png"
+check "a card that is not there does not build" '! python3 "$here/scripts/build_site.py" --site "$t/site" --out "$t/c2" --posts "$t/cardposts" >/dev/null 2>&1'
+printf '%s' '{"title":"x","date":"2026-01-09","category":"practice","summary":"s","card":"https://elsewhere.example/x.png","blocks":[{"type":"p","text":"x"}]}' > "$t/cardposts/2026-01-09-with-card.json"
+check "a card from somewhere else does not build" '! python3 "$here/scripts/build_site.py" --site "$t/site" --out "$t/c3" --posts "$t/cardposts" >/dev/null 2>&1'
+
 echo "$((n - fails))/$n insights checks passed"
 [ "$fails" = 0 ]
