@@ -43,11 +43,27 @@
 .tool-link::after{content:' →'}
 .tool-caveat{font-size:12px;color:var(--slate);font-style:italic;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)}
 
-/* Featured (financial services) cards — ~10% scale-up of heading/badge/icon, bolder */
+/* Featured (financial services) cards: ~10% scale-up of heading/badge/icon, bolder */
 .tool-card.featured h3{font-size:24px;font-weight:600;letter-spacing:-0.005em}
 .tool-card.featured .tool-icon{font-size:31px}
 .tool-card.featured .tool-badge{font-size:11px;letter-spacing:1.7px;padding:5px 13px}
 .tool-card.featured p{font-size:15px}
+
+/* Built to order: platforms that run privately, so they are described, not linked */
+.built-band{padding-top:0}
+.built-band .section-inner{border-top:1px solid rgba(61,216,216,0.12);padding-top:80px}
+.built-note{font-size:15px;line-height:1.7;color:var(--text-light);max-width:640px;margin-top:20px}
+.category-label.built{color:var(--blue)}
+.tool-badge.built{background:rgba(91,141,239,0.14);color:var(--blue)}
+.build-card{display:flex;flex-direction:column}
+.build-card .tool-badge,.build-card .tool-icon,.build-card .tool-link{align-self:flex-start}
+.build-card p{margin-bottom:16px}
+.build-points{list-style:none;margin:0 0 20px;padding:0}
+.build-points li{position:relative;padding-left:18px;font-size:13.5px;line-height:1.6;color:var(--text-light);margin-bottom:8px}
+.build-points li::before{content:'';position:absolute;left:0;top:9px;width:6px;height:6px;border-radius:50%;background:var(--cyan);opacity:.7}
+.build-facts{display:flex;flex-wrap:wrap;gap:8px;margin:auto 0 22px;padding-top:4px}
+.build-facts span{font-size:11px;letter-spacing:.6px;color:var(--white);border:1px solid rgba(255,255,255,0.16);border-radius:2px;padding:5px 10px;white-space:nowrap}
+.build-facts b{color:var(--cyan);font-weight:600}
 
 /* ===== THEMED SUBGROUPS ===== */
 .subgroup{margin-top:56px;border-radius:8px;position:relative;overflow:hidden}
@@ -57,7 +73,7 @@
 .subgroup-tagline{font-size:13px;line-height:1.6;max-width:520px}
 .subgroup-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:22px;padding:28px 36px 36px}
 
-/* ===== SPORTS — stadium scorecard ===== */
+/* ===== SPORTS: stadium scorecard ===== */
 .subgroup-stadium{background:linear-gradient(180deg,#F0F1EE 0%,#E5E7E0 100%);border:1px solid #D4D6CE}
 .subgroup-stadium::before{content:"";position:absolute;top:0;left:0;right:0;height:6px;background:repeating-linear-gradient(90deg,#1A4D3A 0,#1A4D3A 14px,#235847 14px,#235847 28px)}
 .subgroup-stadium .subgroup-eyebrow{background:#1A4D3A;color:#F4D744;letter-spacing:6px;font-family:'DM Sans',sans-serif}
@@ -75,7 +91,7 @@
 .scorecard-launch{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;color:#F4D744;text-transform:uppercase}
 .scorecard:hover .scorecard-launch{color:#fff}
 
-/* ===== CINEMA — red velvet curtain ===== */
+/* ===== CINEMA: red velvet curtain ===== */
 .subgroup-cinema{background:radial-gradient(ellipse at 30% 20%,#7A1F2B 0%,#4A0F1A 75%);border:2px solid #C9A961}
 .subgroup-cinema::before{content:"";display:block;height:18px;background:radial-gradient(circle at 8px 50%,#F4D744 4px,transparent 4.5px);background-size:24px 18px;background-color:#3A0A12;border-bottom:1px solid #C9A961;box-shadow:inset 0 -8px 16px rgba(244,215,68,0.08)}
 .subgroup-cinema .subgroup-header{padding-top:32px}
@@ -94,7 +110,7 @@
 .playbill-launch::after{content:" ★"}
 .playbill:hover .playbill-launch{color:#1A1310}
 
-/* ===== COLLECTIBLES — trading card ===== */
+/* ===== COLLECTIBLES: trading card ===== */
 .subgroup-collectibles{background:#F0F1EE;border:1px solid #D4D6CE;background-image:linear-gradient(rgba(12,31,63,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(12,31,63,0.04) 1px,transparent 1px);background-size:32px 32px}
 .subgroup-collectibles .subgroup-eyebrow{background:#0C1F3F;color:#3DD8D8;letter-spacing:5px;font-family:'DM Sans',sans-serif}
 .subgroup-collectibles .subgroup-title{color:#0C1F3F}
@@ -149,8 +165,8 @@
   <div class="page-hero-inner">
     <div class="page-hero-tag">Tools &amp; Projects</div>
     <h1>Your site can do more than <em>describe you.</em></h1>
-    <p class="tools-intro">Each tool below is a working example of something a firm&rsquo;s website can do: <em>score</em>, <em>parse</em>, <em>calculate</em>, <em>explain</em>. Some were built for financial services and some for fun. All of them run live on this site.</p>
-    <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The four projects in the lower section started as personal builds &mdash; curiosity, a desire to learn new frameworks, and in the case of the two movie trackers, a better way to keep track of what I&rsquo;ve actually watched than a half-remembered mental list. Take a look around.</p>
+    <p class="tools-intro">Each tool below is a working example of something a firm&rsquo;s website can do: <em>score</em>, <em>parse</em>, <em>calculate</em>, <em>explain</em>. Some were built for financial services, some to order for a firm or a group, and some for fun. The tools run live on this site. The built-to-order platforms run privately, and you can ask to see one.</p>
+    <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The projects in the lowest section started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around.</p>
   </div>
 </section>
 
@@ -167,7 +183,7 @@
         <span class="tool-badge fs">Financial Services</span>
         <div class="tool-icon">&#128200;</div>
         <h3>RIA Digital Presence Scorecard</h3>
-        <p><p>Score your firm&rsquo;s website and LinkedIn presence across six dimensions &mdash; design, messaging, navigation, credibility, team visibility, and contact accessibility. Choose what to evaluate, enter your URL, and receive a scored report card with a downloadable PDF. No account required.</p> visual design, content quality, navigation, credibility signals, team visibility, contact accessibility, and LinkedIn presence. Outputs a scored report with actionable breakdowns. Personal advisor / BD profile scoring coming soon.</p>
+        <p>Score your firm&rsquo;s website across six categories: design, messaging, navigation, credibility, advisor profiles and contact accessibility. LinkedIn presence is an optional seventh. Enter your URL and see your overall score. A name and an email open the full breakdown and a downloadable PDF.</p>
         <a href="/tools/website-scorer.html" class="tool-link">Launch Tool</a>
       </div>
       <div class="tool-card featured reveal d10">
@@ -177,6 +193,72 @@
         <p>Drop in a resume and get its contents back as structured data: contact details, qualifications, every job with its dates, and education. Download as Excel or CSV. Try it on a real one of your own: two reads are free.</p>
         <a href="/tools/resume-parser/" class="tool-link">Launch Tool</a>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BUILT TO ORDER ===== -->
+<section class="section-dark built-band" id="built">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="category-label built">Built to Order</div>
+      <h2 class="section-heading section-heading-dark">Platforms built for a firm or a group.</h2>
+      <div class="accent-line"></div>
+      <p class="built-note">Each of these runs privately for the people it was built for, so it is described here, not linked. Names and data stay with their owners. Ask for a walkthrough and we will show you one live.</p>
+    </div>
+    <div class="tools-grid">
+
+      <div class="tool-card build-card reveal d05">
+        <span class="tool-badge built">Custom CRM</span>
+        <div class="tool-icon">&#128199;</div>
+        <h3>A CRM shaped to one firm&rsquo;s work</h3>
+        <p>Built for an advisory firm in wealth management that handles mergers and acquisitions and executive search. Staff sign in with their own level of access, from read-only to administrator, and buyers and sellers get a portal of their own.</p>
+        <ul class="build-points">
+          <li>Reads a resume from a PDF, a Word file or a phone photo, and files each job, date and degree into the person&rsquo;s record once a user approves it.</li>
+          <li>Fills in firm facts from public SEC filings and license dates from FINRA BrokerCheck.</li>
+          <li>Finds duplicate firms and people and proposes each merge with its reason.</li>
+          <li>Scores buyers against sellers and logs every NDA accepted or declined.</li>
+          <li>Builds an anonymous seller teaser as a PDF from intake answers.</li>
+          <li>Takes in Salesforce exports and sends calls and statuses back.</li>
+        </ul>
+        <div class="build-facts"><span><b>5</b> staff access levels</span><span><b>3</b> portal roles</span><span><b>46</b> screens</span></div>
+        <a href="/contact/?about=crm" class="tool-link">Ask for a walkthrough</a>
+      </div>
+
+      <div class="tool-card build-card reveal d10">
+        <span class="tool-badge built">Multi-user Platform</span>
+        <div class="tool-icon">&#127944;</div>
+        <h3>A league&rsquo;s whole season, live and archived</h3>
+        <p>Built for a private twelve-team fantasy football league. Members sign in on a phone, a computer or a TV, and commissioners get controls that members do not. Its archive covers every season from 2005 to 2025.</p>
+        <ul class="build-points">
+          <li>A live scoreboard that keeps itself current through every game window.</li>
+          <li>A live draft room, trades, blind-bid waivers and rule votes, each with its own record.</li>
+          <li>A weekly write-up editor: arrange the blocks, preview the piece, then publish it to the front page and to email.</li>
+          <li>An archive of 1,878 box scores, with records, rivalries and champions drawn from it.</li>
+          <li>A TV signs in when a member scans its code with a phone that is already signed in.</li>
+          <li>Installs to a phone like an app, with email reminders for lineups and waiver results.</li>
+        </ul>
+        <div class="build-facts"><span><b>59</b> pages</span><span><b>24</b> scheduled jobs</span><span><b>475</b> automated test files</span></div>
+        <a href="/contact/?about=league" class="tool-link">Ask for a walkthrough</a>
+      </div>
+
+      <div class="tool-card build-card reveal d15">
+        <span class="tool-badge built">Game</span>
+        <div class="tool-icon">&#9971;</div>
+        <h3>A season-long golf pick&rsquo;em</h3>
+        <p>Built for a private group of twelve. Each week every player picks one golfer, and that golfer&rsquo;s prize money counts toward the player&rsquo;s season total. No golfer can be used twice.</p>
+        <ul class="build-points">
+          <li>Locks each pick when that golfer tees off, using live tee times.</li>
+          <li>Rebuilds the standings from official results after every tournament.</li>
+          <li>Emails players who have not picked yet and tells the organizer who is missing.</li>
+          <li>A live leaderboard of the group&rsquo;s golfers during a tournament, with a feed of every pick and change.</li>
+          <li>Installs to a phone home screen like an app.</li>
+          <li>Organizer tools for picks, players and the schedule, with a backup taken before every change.</li>
+        </ul>
+        <div class="build-facts"><span><b>12</b> players</span><span><b>29</b> tournaments</span><span><b>1,169</b> golfers on file</span></div>
+        <a href="/contact/?about=golf" class="tool-link">Ask for a walkthrough</a>
+      </div>
+
     </div>
   </div>
 </section>
@@ -191,7 +273,7 @@
     </div>
     <div class="tools-grid" style="display:block;margin-top:40px">
 
-      <!-- ===== SPORTS — STADIUM SCORECARD ===== -->
+      <!-- ===== SPORTS: STADIUM SCORECARD ===== -->
       <div class="subgroup subgroup-stadium reveal d05">
         <div class="subgroup-header">
           <span class="subgroup-eyebrow">Sports Desk</span>
@@ -213,7 +295,7 @@
             <span class="scorecard-num">Sport &middot; 02</span>
             <span class="scorecard-icon">&#129482;</span>
             <h4>Curling Explainer</h4>
-            <p>An interactive visual guide that demystifies curling &mdash; the sweeping, the hammer, the house, the bonspiel. Built for casual viewers who tune in every Olympics and want to actually follow the action.</p>
+            <p>An interactive visual guide that demystifies curling: the sweeping, the hammer, the house, the bonspiel. Built for casual viewers who tune in every Olympics and want to actually follow the action.</p>
             <div class="scorecard-foot">
               <span class="scorecard-stat">Interactive</span>
               <span class="scorecard-launch">Launch</span>
@@ -222,7 +304,7 @@
         </div>
       </div>
 
-      <!-- ===== CINEMA — RED VELVET PLAYBILL ===== -->
+      <!-- ===== CINEMA: RED VELVET PLAYBILL ===== -->
       <div class="subgroup subgroup-cinema reveal d10">
         <div class="subgroup-header">
           <span class="subgroup-eyebrow">Now Showing</span>
@@ -249,7 +331,7 @@
         </div>
       </div>
 
-      <!-- ===== COLLECTIBLES — TRADING CARD ===== -->
+      <!-- ===== COLLECTIBLES: TRADING CARD ===== -->
       <div class="subgroup subgroup-collectibles reveal d15">
         <div class="subgroup-header">
           <span class="subgroup-eyebrow">From the Collection</span>
@@ -284,30 +366,11 @@
   </div>
 </section>
 
-<!-- ===== COMING SOON ===== -->
-<section class="section-dark">
-  <div class="section-inner">
-    <div class="reveal">
-      <div class="category-label" style="color:var(--blue);border-color:rgba(91,141,239,0.15)">On the Workbench</div>
-      <h2 class="section-heading section-heading-dark">More in the works.</h2>
-      <div class="accent-line"></div>
-    </div>
-    <div class="tools-grid">
-      <div class="tool-card reveal d05" style="opacity:0.7">
-        <span class="tool-badge coming">Coming Soon</span>
-        <div class="tool-icon">&#9971;</div>
-        <h3>PGA Fantasy Pick &rsquo;Em</h3>
-        <p>A live fantasy golf game with ESPN-integrated scoring, weekly picks, and full-season standings. Currently in beta &mdash; coming to the tools page once it&rsquo;s polished.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ===== CTA ===== -->
-<section class="section-light" style="text-align:center;padding:80px 48px">
+<section class="section-dark" style="text-align:center;padding:80px 48px">
   <div class="section-inner reveal">
-    <h2 class="section-heading section-heading-light">Have an idea for a custom tool?</h2>
-    <p style="font-size:16px;line-height:1.7;color:var(--text);max-width:540px;margin:0 auto 32px">If you can describe it, we can probably build it. Data dashboards, interactive calculators, client-facing portals &mdash; we love this kind of work.</p>
+    <h2 class="section-heading section-heading-dark">Have an idea for a custom tool?</h2>
+    <p style="font-size:16px;line-height:1.7;color:var(--text-light);max-width:540px;margin:0 auto 32px">If you can describe it, we can probably build it. Data dashboards, interactive calculators, client-facing portals. We love this kind of work.</p>
     <a href="/contact/" class="btn-primary">Let&rsquo;s Talk</a>
   </div>
 </section>
