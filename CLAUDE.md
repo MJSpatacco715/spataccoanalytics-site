@@ -41,6 +41,13 @@ lives and says which pieces are not in this repo yet.
   on the strip from a free or scraped feed: only from a source the owner has
   a licence for. The energy key is the `EIA_API_KEY` secret and is never in
   this repository.
+  Its hover cards name the source with a link and say the tool runs on free
+  public data. They make no pitch: the owner wants that question ("why don't
+  you have tools like this working for you") asked where the strip is
+  referenced elsewhere on the site, not in the hover. The host keeps scripts
+  and styles for a year, so the strip's two tags in `site/index.html` carry
+  `?v=` and the first eight characters of each file's SHA-1.
+  `tests/market_test.sh` fails until they match.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare

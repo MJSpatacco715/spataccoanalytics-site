@@ -34,6 +34,8 @@ feed() { BODY=$(SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW="$1" php -r '$_SERVER["DO
 ids() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)?implode(",",array_column($d["items"]??[],"id")):"NOT JSON";'; }
 # of ID FIELD  (FIELD may be card.title and so on)
 of() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); foreach(($d["items"]??[]) as $i){ if($i["id"]===$argv[1]){ $v=$i; foreach(explode(".",$argv[2]) as $k){ $v=is_array($v)&&array_key_exists($k,$v)?$v[$k]:null; } echo is_scalar($v)?$v:json_encode($v); } }' "$1" "$2"; }
+# the publishers the feed names for the strip's own card, as A|B|C
+srcs() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); $o=[]; foreach(($d["sources"]??[]) as $s){ $o[]=$s["name"].(strncmp($s["url"]??"","https://",8)===0?"":" NOT HTTPS"); } echo implode("|",$o);'; }
 ok() { printf '%s' "$BODY" | php -r '$d=json_decode(stream_get_contents(STDIN),true); echo is_array($d)&&array_key_exists("ok",$d)?json_encode($d["ok"]):"NOT JSON";'; }
 asked() { awk -v p="$1" 'index($0,p){c++} END{print c+0}' "$fx/requests.log" 2>/dev/null || echo 0; }
 BODY=
@@ -51,7 +53,8 @@ check "regular gasoline, to the tenth of a cent" '[ "$(of gas value)" = "\$3.642
 check "each figure says who published it and for when" '[ "$(of ust10 by)" = Treasury ] && [ "$(of ust10 when)" = "Nov 24" ] && [ "$(of eurusd by)" = ECB ] && [ "$(of brent by)" = EIA ] && [ "$(of brent when)" = "Nov 17" ] && [ "$(of btc by)" = CoinGecko ] && [ "$(of btc when)" = "9:24 AM ET" ]'
 check "a source card names the figure and its day" '[ "$(of ust10 card.title)" = "U.S. 10-year Treasury yield: 4.91%" ] && [[ "$(of ust10 card.text)" == *"November 24, 2026"*"4.92% on November 23, 2026"* ]]'
 check "and its publisher, with a link to them" '[[ "$(of ust10 card.source)" == "U.S. Department of the Treasury"* ]] && [[ "$(of ust10 card.url)" == https://home.treasury.gov/* ]] && [[ "$(of eurusd card.url)" == https://www.ecb.europa.eu/* ]] && [[ "$(of gas card.url)" == https://www.eia.gov/* ]]'
-check "CoinGecko is credited the way it asks" '[ "$(of btc card.source)" = "Data provided by CoinGecko" ] && [[ "$(of btc card.url)" == https://www.coingecko.com/* ]]'
+check "CoinGecko is credited the way it asks" '[ "$(of btc card.source)" = CoinGecko ] && [[ "$(of btc card.text)" == *"Data provided by CoinGecko." ]] && [[ "$(of btc card.url)" == https://www.coingecko.com/* ]]'
+check "each publisher is named once, with a link, for the strip's own card" '[ "$(srcs)" = "U.S. Department of the Treasury|European Central Bank|CoinGecko|U.S. Energy Information Administration" ]'
 check "the oil card says the prices come out weekly" '[[ "$(of brent card.text)" == *"released once a week"* ]]'
 check "the gas card says which week" '[[ "$(of gas card.text)" == *"week of November 23, 2026"*"\$3.805"* ]]'
 check "no markup and no long dash in what the page is given" '[[ "$BODY" != *"<"* ]] && [[ "$BODY" != *$'"'"'\xe2\x80\x94'"'"'* ]]'
@@ -66,6 +69,7 @@ check "the right series are asked for" '[ "$(asked "facets[series][]=RBRTE&facet
 rm -f "$t/home/sa-market.json"; forget
 feed $NOW
 check "with no key the strip shows the other four" '[ "$(ids)" = "ust30,ust10,eurusd,btc" ] && [ "$(asked "eia.gov")" = 0 ]'
+check "and names only the publishers of what it shows" '[ "$(srcs)" = "U.S. Department of the Treasury|European Central Bank|CoinGecko" ]'
 printf '{"eia_key":"short&x=1"}' > "$t/home/sa-market.json"; forget
 feed $NOW
 check "a key that is not a key is no key" '[ "$(ids)" = "ust30,ust10,eurusd,btc" ] && [ "$(asked "eia.gov")" = 0 ]'
@@ -161,10 +165,16 @@ check "the library opened directly says nothing" '[ "$code" = 200 ] && [ ! -s "$
 # --- the page
 home="$here/site/index.html"; js="$here/site/js/ticker.js"
 check "the strip is on the homepage, hidden until it has figures" 'grep -q "<section class=\"hero\"><aside class=\"sa-tk\" id=\"sa-ticker\" aria-label=\"Market figures\" hidden></aside>" "$home"'
-check "with its stylesheet and its script" 'grep -q "<link rel=\"stylesheet\" href=\"/css/ticker.css\">" "$home" && grep -q "<script src=\"/js/ticker.js\" defer></script>" "$home"'
+# The host keeps scripts and styles for a year, so each tag carries the first
+# eight characters of its file's SHA-1: change the file and the tag must follow.
+vcss=$(sha1sum "$here/site/css/ticker.css" | cut -c1-8); vjs=$(sha1sum "$js" | cut -c1-8)
+check "with its stylesheet, tagged with its version (now ?v=$vcss)" 'grep -q "<link rel=\"stylesheet\" href=\"/css/ticker.css?v=$vcss\">" "$home"'
+check "and its script, tagged with its version (now ?v=$vjs)" 'grep -q "<script src=\"/js/ticker.js?v=$vjs\" defer></script>" "$home"'
 check "the homepage is the only page with it" '[ "$(grep -rl "sa-ticker" "$here/site" --include=*.html | wc -l)" = 1 ]'
 check "the script writes text, never markup" '! grep -nE "innerHTML|outerHTML|insertAdjacentHTML|document\.write" "$js"'
 check "and asks only the site's own feed" '[ "$(grep -c "fetch(" "$js")" = 1 ] && grep -q "var FEED = ./market/feed.php.;" "$js" && ! grep -qE "https?://" "$js"'
+check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live quotes\." "$js" && grep -q "This tool runs entirely on free public data\." "$js"'
+check "the hover makes no pitch and links only to sources" '! grep -qiE "working for you|/contact|mailto:" "$js"'
 check "it has a pause button and respects reduced motion" 'grep -q "sa-tk-pause" "$js" && grep -q "prefers-reduced-motion" "$js" && grep -q "prefers-reduced-motion" "$here/site/css/ticker.css"'
 check "no long dash in any of it" '! grep -l $'"'"'\xe2\x80\x94'"'"' "$js" "$here/site/css/ticker.css" "$here/site/lib/market.php" "$here/site/market/feed.php"'
 check "no licensed index or metal is named as a figure" '! grep -qiE "s&p|dow jones|gold" "$js" && ! grep -qE "\x27(spx|dow|gold)\x27 =>" "$here/site/lib/market.php"'
