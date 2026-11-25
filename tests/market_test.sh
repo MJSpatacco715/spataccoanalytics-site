@@ -104,6 +104,7 @@ check "and only this account can read them" '[ "$(stat -c %a "$t/home/sa-market"
 check "the key went to the Energy Information Administration" '[ "$(asked "https://api.eia.gov/v2/")" = 2 ] && [ "$(asked "api_key=$KEY")" = 2 ]'
 check "and to nobody else" '[ "$(grep -v "^https://api.eia.gov/" "$fx/requests.log" | grep -c "$KEY")" = 0 ]'
 check "it is not in what the page is given, or in what is kept" '[[ "$BODY" != *"$KEY"* ]] && ! grep -q "$KEY" "$t/home/sa-market/cache.json"'
+check "each energy question is bounded to recent months, as the source asks" '[ "$(asked "RWTC&start=2026-08-01&sort")" = 1 ] && [ "$(asked "EMM_EPMR_PTE_NUS_DPG&start=2026-03-01&sort")" = 1 ]'
 check "the right series are asked for" '[ "$(asked "facets[series][]=RBRTE&facets[series][]=RWTC")" = 1 ] && [ "$(asked "facets[series][]=EMM_EPMR_PTE_NUS_DPG")" = 1 ]'
 rm -f "$t/home/sa-market.json"; forget
 feed $NOW

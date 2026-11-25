@@ -142,6 +142,16 @@ footer{background:var(--navy);border-top:1px solid rgba(61,216,216,0.1);padding:
 .nb{white-space:nowrap}
 .screen .stat-bar{margin-top:48px}
 @media(min-width:1080px){
+.hero-content{display:grid;grid-template-columns:minmax(0,1fr) 290px;column-gap:72px;align-items:center;max-width:1240px;width:100%}
+.hero-content>*{grid-column:1;justify-self:start}
+.hero h1{font-size:clamp(40px,4.6vw,66px);max-width:100%}
+.hero .stat-bar{grid-column:2;grid-row:1 / span 4;justify-self:stretch;flex-direction:column;flex-wrap:nowrap;gap:26px;margin-top:0;padding:6px 0 6px 40px;border-top:0;border-left:1px solid rgba(61,216,216,.14)}
+.hero .stat-item{max-width:none}
+/* figures in a right-hand column open their source card beside them, to the
+   left, where there is room: above, the first one would run under the menu */
+.hero .sa-cite-card,.screen .sa-cite-card{left:auto;right:calc(100% + 16px);bottom:auto;top:-10px}
+.hero .sa-cite-card::after,.screen .sa-cite-card::after{left:100%;right:auto;top:0;bottom:0;width:18px;height:auto}
+.hero .stat-item:last-child .sa-cite-card,.screen .stat-item:last-child .sa-cite-card{top:auto;bottom:-10px}
 .screen{overflow:visible}
 .screen-inner{display:grid;grid-template-columns:minmax(0,1fr) 290px;column-gap:72px;align-items:center;max-width:1240px;width:100%}
 .screen-inner>*{grid-column:1}
@@ -149,7 +159,6 @@ footer{background:var(--navy);border-top:1px solid rgba(61,216,216,0.1);padding:
 .screen-sub{margin-bottom:36px}
 .screen .stat-bar{grid-column:2;grid-row:1 / span 3;flex-direction:column;flex-wrap:nowrap;gap:26px;margin-top:0;padding:6px 0 6px 40px;border-top:0;border-left:1px solid rgba(61,216,216,.14)}
 .screen .stat-item{max-width:none}
-.screen .sa-cite-card{left:auto;right:0}
 #approach .section-inner{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);column-gap:72px;align-items:center}
 #approach .section-inner>*{grid-column:1}
 #approach .section-heading{font-size:clamp(32px,3.2vw,44px)}
@@ -176,10 +185,9 @@ footer{background:var(--navy);border-top:1px solid rgba(61,216,216,0.1);padding:
 .service-go{padding-top:16px}
 }
 @media(max-width:600px){
-/* on a phone: the first screen's two figures side by side, and each pillar's
-   icon in the corner of its card instead of on a line of its own */
-.hero .stat-bar{display:grid;grid-template-columns:1fr 1fr;gap:18px 20px}
-.hero .stat-item{max-width:none;min-width:0}
+/* on a phone everything is one vertical stack, section by section (the
+   owner's rule): the figures one under another, and each pillar's icon in
+   the corner of its card instead of on a line of its own */
 .service-icon{position:absolute;top:20px;right:20px;width:36px;height:36px;margin:0;font-size:16px;border-radius:10px}
 .service-card h3{padding-right:48px}
 }
