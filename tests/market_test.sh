@@ -207,6 +207,17 @@ check "the day before comes from last month's feed" '[ "$(of ust10 value)" = "4.
 check "and the card names both days" '[[ "$(of ust10 card.text)" == *"December 1, 2026"*"4.91% on November 24, 2026"* ]]'
 check "and the chart runs across the two months" '[ "$(pts ust10)" = "17 [\"2026-11-02\",4.91] [\"2026-12-01\",4.95]" ] && [ "$(of ust10 card.line.title)" = "Day by day, since Nov 2" ]'
 
+# --- the energy source, when its first answer does not come
+all_sources; with_key; forget
+rm -f "$fx/eia_gas.json"
+feed $NOW
+check "a slow source that gives no answer costs only its own figure" '[ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti" ] && [ "$(asked EMM_EPMR_PTE_NUS_DPG)" = 1 ]'
+feed $((NOW + 100))
+check "it is left alone for three minutes" '[ "$(asked EMM_EPMR_PTE_NUS_DPG)" = 1 ]'
+cp "$src/eia_gas.json" "$fx/"
+feed $((NOW + 200))
+check "then asked again, and its figure and chart arrive" '[ "$(asked EMM_EPMR_PTE_NUS_DPG)" = 2 ] && [ "$(ids)" = "ust30,ust10,eurusd,btc,brent,wti,gas" ] && [ "$(pts gas | cut -d" " -f1)" = 26 ]'
+
 # --- which is worth more follows the rate
 all_sources; forget
 sed -i 's#currency="USD" rate="[0-9.]*"#currency="USD" rate="0.9500"#g' "$fx/ecb.xml"
