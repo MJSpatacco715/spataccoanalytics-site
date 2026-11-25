@@ -53,6 +53,10 @@ lives and says which pieces are not in this repo yet.
   on the strip from a free or scraped feed: only from a source the owner has
   a licence for. The energy key is the `EIA_API_KEY` secret and is never in
   this repository.
+  Brent and WTI are not the energy publisher's own figures: it buys them from
+  Refinitiv and republishes them with permission. The owner was told this and
+  ruled on 2026-11-25 to keep both on the strip, so do not take them off or
+  raise it again. Its weekly gasoline price is its own survey.
   The RIA deal count on it is DeVoe & Company's, the same source as the
   record in the stat row, typed into `MARKET_DEALS` each quarter
   (`docs/stat-bank.md`). Its card is drawn, not written out: the count, a bar
