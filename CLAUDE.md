@@ -30,6 +30,23 @@ lives and says which pieces are not in this repo yet.
 - The menu reads Services, Approach, Tools, About, Contact, on every page, in
   the posts' shell (`scripts/build_insights.py`) and so on every tool page. The
   owner set that order on 2026-11-26. `tests/pages_test.sh` holds it.
+- The logo. The owner, 2026-11-26: "the logo is small and near invisible on the
+  site". The menu had shown the logo file whole (`site/img/logo.jpg`: the
+  wordmark small in the middle of a white square), 36px tall, which left the
+  name about 8px tall. Shown four fixes and asked which, the owner answered "A
+  with C where appropriate". So: the menu on every page shows the wordmark
+  alone, cut out of its square, lettering white (`site/img/wordmark-on-dark.png`,
+  made by `scripts/logo_cutout.py`), 48px tall on a desktop and never under
+  36px; and both logos together, the SA mark on its white tile and then the
+  wordmark, go where there is room for both, which is the footer. The two are
+  not put side by side in the menu, and `logo.jpg` is never shown directly on a
+  dark page. The SA mark (`site/img/logo-square.png`) stays the picture for the
+  browser tab, search and profiles. `tests/pages_test.sh` and
+  `tests/logo_browser.cjs` hold all of it.
+  The wordmark's tags and the `shared.css` link carry `?v=` and the first eight
+  characters of the file's SHA-1, because the host keeps both for a year: change
+  `site/css/shared.css` and the link on every page (and in
+  `scripts/build_insights.py`) must change with it.
 - Pages are never kept by the host's page cache (`site/.htaccess` marks
   every `.html` file `private, no-cache`), so a publish shows without anyone
   clearing a cache. Scripts, styles and images are kept for a year: when one
