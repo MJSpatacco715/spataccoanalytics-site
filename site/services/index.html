@@ -91,7 +91,15 @@
 .sv-foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-top:12px}
 .sv-price{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);line-height:1;font-variant-numeric:lining-nums;white-space:nowrap}
 .sv-price small{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500}
+button.sv-price{background:none;border:none;padding:0;margin:0;font:inherit;color:inherit;text-align:left}
 .sv-price.locked{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--slate);border:1px dashed var(--slate);padding:6px 9px}
+/* the one free look reads as an invitation; once it is used, the rest ask */
+button.sv-price.locked{cursor:pointer;color:var(--purple);border-color:var(--purple);transition:background .15s,color .15s}
+button.sv-price.locked:hover,button.sv-price.locked:focus-visible{background:var(--purple);color:var(--white);border-style:solid;outline:none}
+button.sv-price.locked.ask{color:var(--slate);border-color:var(--slate)}
+button.sv-price.locked.ask:hover,button.sv-price.locked.ask:focus-visible{background:var(--navy);border-color:var(--navy);color:var(--white)}
+button.sv-price.locked:disabled{cursor:default;opacity:.7}
+.sv-price.seen{box-shadow:inset 0 -3px 0 var(--cyan)}
 .sv-time{font-size:13px;color:var(--slate);white-space:nowrap}
 .sv-clear{background:none;border:none;font-family:inherit;font-size:13px;color:var(--slate);text-decoration:underline;cursor:pointer;padding:10px 18px}
 .sv-clear:hover{color:var(--navy)}
@@ -133,6 +141,18 @@
 .sv-gate .sv-err{display:none;color:#FFB4B4;font-size:14px;margin-top:12px}
 .sv-gate .sv-fine{color:var(--text-light)}
 .sv-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.sv-ask{border:none;padding:0;margin:auto;width:calc(100% - 32px);max-width:540px;max-height:calc(100vh - 32px);overflow:auto;background:var(--navy)}
+.sv-ask::backdrop{background:rgba(10,22,40,0.7)}
+.sv-ask .sv-gate{position:relative;padding-top:30px}
+.sv-x{position:absolute;top:8px;right:10px;background:none;border:none;color:#CBD5E1;font-size:28px;line-height:1;padding:6px 10px;cursor:pointer}
+.sv-x:hover{color:var(--white)}
+.sv-ask fieldset{border:none;padding:0;margin:0 0 6px;min-width:0}
+.sv-ask legend{font-size:13px;font-weight:600;color:var(--white);margin-bottom:4px;padding:0}
+.sv-items{list-style:none;margin:0;padding:0}
+.sv-gate .sv-items label{display:flex;align-items:flex-start;gap:10px;font-size:15px;font-weight:400;line-height:1.45;color:#CBD5E1;margin:8px 0;cursor:pointer}
+.sv-gate .sv-items input{width:16px;height:16px;padding:0;margin:3px 0 0;flex-shrink:0;accent-color:var(--cyan)}
+.sv-more{background:none;border:none;font-family:inherit;font-size:14px;color:var(--cyan);text-decoration:underline;cursor:pointer;padding:4px 0}
+.sv-more:hover{color:var(--white)}
 .sv-terms{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 40px;margin-top:8px}
 .sv-terms li{font-size:15px;line-height:1.6;color:#CBD5E1;padding-left:18px;position:relative}
 .sv-terms li::before{content:'';position:absolute;left:0;top:10px;width:8px;height:2px;background:var(--cyan)}
@@ -197,7 +217,7 @@
       <div class="section-tag">Project work</div>
       <h2 class="section-heading section-heading-light">Fixed scope, fixed timeline.</h2>
       <div class="accent-line"></div>
-      <p class="sv-lead">Each project is quoted to your firm. Choose a level in any service to build a plan, then ask for pricing below and it appears on this page right away.</p>
+      <p class="sv-lead">Each project is quoted to your firm. Click any one price to see it, free. For the rest, leave your email and every project price appears on this page right away, with the plan you build totaled.</p>
     </div>
 
     <div class="sv-tiers" aria-hidden="true">
@@ -221,12 +241,12 @@
         <label class="sv-opt rec"><input type="radio" name="audit" value="professional">
           <span class="sv-name"><span class="sv-tick"></span>Audit Report<span class="sv-tier-tag">Professional</span></span>
           <span class="sv-desc">Site, search, and AI-visibility review with prioritized fixes, about 5 pages.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="audit.professional">Pricing on request</span><span class="sv-time">1 week</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="audit.professional">Click to unveil</button><span class="sv-time">1 week</span></span>
         </label>
         <label class="sv-opt"><input type="radio" name="audit" value="complete">
           <span class="sv-name"><span class="sv-tick"></span>Practice Audit<span class="sv-tier-tag">Complete</span></span>
           <span class="sv-desc">Audit Report plus full CRM Diagnostic.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="audit.complete">Pricing on request</span><span class="sv-time">2 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="audit.complete">Click to unveil</button><span class="sv-time">2 weeks</span></span>
         </label>
       </div>
       <button type="button" class="sv-clear" data-clear="audit" hidden>Remove from plan</button>
@@ -242,17 +262,17 @@
         <label class="sv-opt"><input type="radio" name="design" value="essential">
           <span class="sv-name"><span class="sv-tick"></span>Refresh<span class="sv-tier-tag">Essential</span></span>
           <span class="sv-desc">Up to 5 pages, audit included.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="design.essential">Pricing on request</span><span class="sv-time">2 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="design.essential">Click to unveil</button><span class="sv-time">2 weeks</span></span>
         </label>
         <label class="sv-opt rec"><input type="radio" name="design" value="professional">
           <span class="sv-name"><span class="sv-tick"></span>Redesign<span class="sv-tier-tag">Professional</span></span>
           <span class="sv-desc">Up to 10 pages, audit included, compliance-ready structure.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="design.professional">Pricing on request</span><span class="sv-time">3 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="design.professional">Click to unveil</button><span class="sv-time">3 weeks</span></span>
         </label>
         <label class="sv-opt"><input type="radio" name="design" value="complete">
           <span class="sv-name"><span class="sv-tick"></span>Rebuild<span class="sv-tier-tag">Complete</span></span>
           <span class="sv-desc">Full rebuild with content migration, audit included.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="design.complete">Pricing on request</span><span class="sv-time">4 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="design.complete">Click to unveil</button><span class="sv-time">4 weeks</span></span>
         </label>
       </div>
       <button type="button" class="sv-clear" data-clear="design" hidden>Remove from plan</button>
@@ -268,17 +288,17 @@
         <label class="sv-opt"><input type="radio" name="crm" value="essential">
           <span class="sv-name"><span class="sv-tick"></span>Diagnostic<span class="sv-tier-tag">Essential</span></span>
           <span class="sv-desc">Data gaps, duplicates, broken components, unused paid features, plus a fixed repair quote.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="crm.essential">Pricing on request</span><span class="sv-time">1 to 2 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="crm.essential">Click to unveil</button><span class="sv-time">1 to 2 weeks</span></span>
         </label>
         <label class="sv-opt rec"><input type="radio" name="crm" value="professional">
           <span class="sv-name"><span class="sv-tick"></span>Repair<span class="sv-tier-tag">Professional</span></span>
           <span class="sv-desc">Cleanup, fixes, custom reports and workflows, priced from the Diagnostic.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="crm.professional" data-from="1">Pricing on request</span><span class="sv-time">2 to 6 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="crm.professional" data-from="1">Click to unveil</button><span class="sv-time">2 to 6 weeks</span></span>
         </label>
         <label class="sv-opt"><input type="radio" name="crm" value="complete">
           <span class="sv-name"><span class="sv-tick"></span>Rebuild or Migration<span class="sv-tier-tag">Complete</span></span>
           <span class="sv-desc">New build or platform move with full data migration.</span>
-          <span class="sv-foot"><span class="sv-price locked" data-price="crm.complete" data-from="1">Pricing on request</span><span class="sv-time">4 to 8 weeks</span></span>
+          <span class="sv-foot"><button type="button" class="sv-price locked" data-price="crm.complete" data-from="1">Click to unveil</button><span class="sv-time">4 to 8 weeks</span></span>
         </label>
       </div>
       <button type="button" class="sv-clear" data-clear="crm" hidden>Remove from plan</button>
@@ -336,17 +356,9 @@
       </div>
 
       <div class="sv-gate" id="sv-gate">
-        <h3>See project pricing</h3>
-        <p>Tell us where to reach you and every project price appears on this page right away, with your plan totaled.</p>
-        <label for="sv-name">Your name</label>
-        <input type="text" id="sv-name" autocomplete="name">
-        <label for="sv-email">Email address</label>
-        <input type="email" id="sv-email" autocomplete="email">
-        <label for="sv-firm">Firm name (optional)</label>
-        <input type="text" id="sv-firm" autocomplete="organization">
-        <div class="sv-hp" aria-hidden="true"><label for="sv-company">Leave this empty</label><input type="text" id="sv-company" tabindex="-1" autocomplete="off"></div>
-        <div class="sv-err" id="sv-err" role="alert"></div>
-        <button type="button" class="go" id="sv-go">Show pricing</button>
+        <h3>See every project price</h3>
+        <p id="sv-gate-text">One price is yours to see free: click it above. Leave your email and every project price appears on this page right away, with your plan totaled.</p>
+        <button type="button" class="go" id="sv-gate-go">Get pricing</button>
         <p class="sv-fine">We use your email to follow up on your plan. No spam.</p>
       </div>
 
@@ -385,6 +397,36 @@
   <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC</div>
 </footer>
 
+<dialog class="sv-ask" id="sv-ask" aria-labelledby="sv-ask-title">
+  <div class="sv-gate">
+    <button type="button" class="sv-x" id="sv-ask-x" aria-label="Close">&times;</button>
+    <div id="sv-ask-form">
+      <h3 id="sv-ask-title">Get pricing for these</h3>
+      <p id="sv-ask-text">Leave your email and every project price appears on this page right away, with your plan totaled. What you tick tells us what to follow up on.</p>
+      <fieldset>
+        <legend>Pricing for</legend>
+        <ul class="sv-items" id="sv-ask-items"></ul>
+        <button type="button" class="sv-more" id="sv-ask-more">Add other services</button>
+      </fieldset>
+      <label for="sv-name">Your name</label>
+      <input type="text" id="sv-name" autocomplete="name">
+      <label for="sv-email">Email address</label>
+      <input type="email" id="sv-email" autocomplete="email">
+      <label for="sv-firm">Firm name (optional)</label>
+      <input type="text" id="sv-firm" autocomplete="organization">
+      <div class="sv-hp" aria-hidden="true"><label for="sv-company">Leave this empty</label><input type="text" id="sv-company" tabindex="-1" autocomplete="off"></div>
+      <div class="sv-err" id="sv-err" role="alert"></div>
+      <button type="button" class="go" id="sv-go">Show pricing</button>
+      <p class="sv-fine">We use your email to follow up on these services. No spam.</p>
+    </div>
+    <div id="sv-ask-done" hidden>
+      <h3>Thank you. Pricing is on its way.</h3>
+      <p>We have your request and will email your project pricing shortly.</p>
+      <button type="button" class="go" id="sv-ask-ok">Close</button>
+    </div>
+  </div>
+</dialog>
+
 <script src="/js/shared.js"></script>
 <script src="/js/cite.js"></script>
 <script>
@@ -392,8 +434,14 @@
   var PRICING_URL = '/services/pricing.php';
   var KEEP_DAYS = 30;
   var SERVICES = { audit: 'Website & AI Audit', design: 'Website Design', crm: 'CRM Diagnostic & Repair' };
-  var prices = null;      // project prices, once the server has given them
+  var prices = null;      // every project price, once the server has given them
   var pending = false;    // asked, lead kept, but prices could not be read
+  // The one free look: { item: 'design.professional', price: n, at } once this
+  // browser has used it; item and price are null when the server said it was
+  // used on this connection already. The server's cookie is what holds it;
+  // this copy lets the page show the price again without asking. A soft limit.
+  var look = null;
+  var busy = false;
 
   var $ = function (id) { return document.getElementById(id); };
   var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
@@ -407,21 +455,48 @@
     var el = document.querySelector('input[name="' + name + '"]:checked');
     return el ? el.value : '';
   }
+  function nameOf(label) { return label.querySelector('.sv-name').childNodes[1].textContent.trim(); }
   function optionName(name) {
     var el = document.querySelector('input[name="' + name + '"]:checked');
-    return el ? el.closest('label').querySelector('.sv-name').childNodes[1].textContent.trim() : '';
+    return el ? nameOf(el.closest('label')) : '';
+  }
+  // 'design.professional' -> 'Website Design: Redesign'
+  function itemName(item) {
+    var p = item.split('.');
+    var el = document.querySelector('input[name="' + p[0] + '"][value="' + p[1] + '"]');
+    return SERVICES[p[0]] + ': ' + (el ? nameOf(el.closest('label')) : p[1]);
+  }
+  // every priced item, in page order
+  function allItems() {
+    return Array.prototype.map.call(document.querySelectorAll('[data-price]'), function (el) { return el.getAttribute('data-price'); });
+  }
+  // a price this visitor may see now, or null
+  function priceOf(item) {
+    var p = item.split('.');
+    if (prices && prices[p[0]] && typeof prices[p[0]][p[1]] === 'number') return prices[p[0]][p[1]];
+    if (look && look.item === item && typeof look.price === 'number') return look.price;
+    return null;
   }
 
-  // Fill every price slot once the prices are in hand.
+  // Each price slot: the price once it may be shown, otherwise a button. The
+  // first click is the free look; after that a click asks.
   function showPrices() {
     document.querySelectorAll('[data-price]').forEach(function (el) {
-      var p = el.getAttribute('data-price').split('.');
-      var v = prices && prices[p[0]] ? prices[p[0]][p[1]] : null;
-      if (typeof v !== 'number') return;
-      el.classList.remove('locked');
-      el.textContent = '';
-      if (el.getAttribute('data-from')) { var s = document.createElement('small'); s.textContent = 'From '; el.appendChild(s); }
-      el.appendChild(document.createTextNode(money(v)));
+      var item = el.getAttribute('data-price'), v = priceOf(item);
+      if (typeof v === 'number') {
+        var s = document.createElement('span');
+        s.className = 'sv-price' + (!prices ? ' seen' : '');
+        s.setAttribute('data-price', item);
+        if (el.getAttribute('data-from')) { s.setAttribute('data-from', '1'); var f = document.createElement('small'); f.textContent = 'From '; s.appendChild(f); }
+        s.appendChild(document.createTextNode(money(v)));
+        el.replaceWith(s);
+        return;
+      }
+      if (el.tagName !== 'BUTTON') return;
+      el.disabled = busy || pending;
+      el.classList.toggle('ask', !!look || pending);
+      el.textContent = pending ? 'By email' : (look ? 'Get pricing' : 'Click to unveil');
+      el.setAttribute('aria-label', itemName(item) + ': ' + (pending ? 'pricing on its way by email' : (look ? 'get pricing' : 'click to see this price free')));
     });
   }
 
@@ -432,8 +507,9 @@
     d.appendChild(a); d.appendChild(b); return d;
   }
 
-  // The plan, added up. Project prices appear only when unlocked; hosting is
-  // always shown, since its prices are public.
+  // The plan, added up. A project price appears once it may be shown; the
+  // total needs every picked price. Hosting is always shown, since its prices
+  // are public.
   function render() {
     var box = $('sv-lines'); box.textContent = '';
     var note = [];
@@ -446,16 +522,17 @@
       p.textContent = 'Nothing picked yet. Choose a level in any service above and it shows up here.';
       box.appendChild(p); $('sv-note').textContent = ''; return;
     }
-    var oneTime = 0, anyFrom = false, anyProject = false, priced = !!prices;
+    var oneTime = 0, anyFrom = false, missing = false;
     function cost(service, tier) {
       if (service === 'audit' && tier === 'essential') return 0;
-      return prices ? prices[service][tier] : null;
+      return priceOf(service + '.' + tier);
     }
     [['audit', audit], ['design', design], ['crm', crm]].forEach(function (pair) {
       var service = pair[0], tier = pair[1]; if (!tier) return;
       var c = cost(service, tier);
       var from = service === 'crm' && tier !== 'essential';
       if (from) anyFrom = true;
+      if (c === null) missing = true;
       var label = SERVICES[service] + ': ' + optionName(service);
       var value = c === 0 ? 'Free' : (c === null ? 'On request' : (from ? 'From ' : '') + money(c));
       box.appendChild(line(label, value));
@@ -463,9 +540,9 @@
     });
     // Audit and Diagnostic fees are credited toward a project.
     var project = (design ? 1 : 0) + (crm && crm !== 'essential' ? 1 : 0);
-    if (priced && project) {
-      var projectSum = (design ? prices.design[design] : 0) + (crm && crm !== 'essential' ? prices.crm[crm] : 0);
-      var fees = (audit && audit !== 'essential' ? prices.audit[audit] : 0) + (crm === 'essential' ? prices.crm.essential : 0);
+    if (!missing && project) {
+      var projectSum = (design ? cost('design', design) : 0) + (crm && crm !== 'essential' ? cost('crm', crm) : 0);
+      var fees = (audit && audit !== 'essential' ? cost('audit', audit) : 0) + (crm === 'essential' ? cost('crm', 'essential') : 0);
       var credit = Math.min(fees, projectSum);
       if (credit > 0) {
         box.appendChild(line('Audit and Diagnostic fees credited toward your project', '-' + money(credit), 'credit'));
@@ -474,7 +551,7 @@
       }
     }
     if (audit || design || crm) {
-      box.appendChild(line('Estimated one-time total', priced ? (anyFrom ? 'From ' : '') + money(oneTime) : 'On request', 'total'));
+      box.appendChild(line('Estimated one-time total', missing ? 'On request' : (anyFrom ? 'From ' : '') + money(oneTime), 'total'));
     }
     if (host) {
       var base = Number(document.querySelector('input[name="hosting"]:checked').getAttribute('data-monthly'));
@@ -483,12 +560,21 @@
       if (off) box.appendChild(line((off === 0.25 ? 'Website design client' : 'Audit client') + ' discount, ' + Math.round(off * 100) + '% off', '-' + money(base * off) + '/mo', 'credit'));
       box.appendChild(line('Hosting, monthly', money(base * (1 - off)) + '/mo', 'total'));
     }
-    if (!priced && (audit && audit !== 'essential' || design || crm)) {
-      note.push(pending ? 'Your project pricing is on its way by email.' : 'Project prices fill in here once you ask for pricing.');
+    if (missing) {
+      note.push(pending ? 'Your project pricing is on its way by email.'
+        : (look ? 'The rest of the prices fill in here once you ask for pricing.'
+        : 'Click any one price above to see it free. The rest fill in here once you ask for pricing.'));
     }
-    if (anyFrom && priced) note.push('"From" prices are set by the Diagnostic.');
+    if (anyFrom && !missing) note.push('"From" prices are set by the Diagnostic.');
     note.push('An estimate, not a quote. Third-party costs are billed at cost.');
     $('sv-note').textContent = note.join(' ');
+  }
+
+  function refresh() {
+    showPrices(); render();
+    if (look && !prices && !pending) {
+      $('sv-gate-text').textContent = 'Leave your email and every project price appears on this page right away, with your plan totaled.';
+    }
   }
 
   function unlocked(mode) {
@@ -497,20 +583,121 @@
       $('sv-open-title').textContent = 'Thank you. Pricing is on its way.';
       $('sv-open-text').textContent = 'We have your request and will email your project pricing shortly.';
     }
-    showPrices(); render();
+    refresh();
   }
 
-  function ask(person, knownFrom) {
-    var body = {
+  function post(body) {
+    return fetch(PRICING_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); });
+  }
+
+  function ask(person, items, knownFrom) {
+    return post({
       name: person.name, email: person.email, firm: person.firm || '',
+      items: items || [],
+      unveiled: look && look.item ? look.item : '',
       picks: { audit: picked('audit'), design: picked('design'), crm: picked('crm'), hosting: picked('hosting') },
       known_from: knownFrom || '',
       utm_source: arrived('utm_source'), utm_medium: arrived('utm_medium'), utm_campaign: arrived('utm_campaign'),
       company: $('sv-company').value
-    };
-    return fetch(PRICING_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); });
+    });
   }
+
+  // Put a priced level in the plan, as a click anywhere else on its card does.
+  function pick(item) {
+    var p = item.split('.');
+    var el = document.querySelector('input[name="' + p[0] + '"][value="' + p[1] + '"]');
+    if (el && !el.checked) { el.checked = true; render(); }
+  }
+
+  function remember(item, price) {
+    look = { item: item || null, price: typeof price === 'number' ? price : null, at: Date.now() };
+    store('sa_unveil', look);
+  }
+
+  // The free look at one price.
+  function unveil(item) {
+    busy = true; showPrices();
+    var done = function () { busy = false; refresh(); };
+    post({ unveil: item, company: '' }).then(function (res) {
+      var d = res.data || {};
+      if (d.ok && typeof d.price === 'number') { remember(item, d.price); done(); return; }
+      if (d.error === 'used') {
+        // this browser or connection has had its look: show the price it saw, if it is known, and ask for the rest
+        if (d.item && typeof d.price === 'number') remember(d.item, d.price); else remember(null, null);
+        done(); openAsk([look.item, item]); return;
+      }
+      // no prices to show just now: the form still gets them by email
+      done(); openAsk([item]);
+    }).catch(function () { done(); openAsk([item]); });
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('button.sv-price.locked');
+    if (!b) return;
+    e.preventDefault();
+    if (busy || pending || prices) return;
+    var item = b.getAttribute('data-price');
+    pick(item);
+    if (!look) unveil(item);
+    else openAsk([look.item, item]);
+  });
+
+  // The request form: the items given ticked and shown, every other priced
+  // item one click away under "Add other services".
+  function openAsk(items) {
+    var want = [];
+    (items || []).forEach(function (i) { if (i && allItems().indexOf(i) !== -1 && want.indexOf(i) === -1) want.push(i); });
+    var list = $('sv-ask-items'); list.textContent = '';
+    var others = 0;
+    // the ones asked about first, in the order clicked, then the rest in page order
+    want.concat(allItems().filter(function (i) { return want.indexOf(i) === -1; })).forEach(function (item) {
+      var li = document.createElement('li');
+      var lab = document.createElement('label');
+      var box = document.createElement('input'); box.type = 'checkbox'; box.value = item; box.checked = want.indexOf(item) !== -1;
+      lab.appendChild(box); lab.appendChild(document.createTextNode(itemName(item)));
+      li.appendChild(lab);
+      if (!box.checked) { li.hidden = true; li.className = 'other'; others++; }
+      list.appendChild(li);
+    });
+    $('sv-ask-more').hidden = others === 0 || want.length === 0;
+    if (!want.length) list.querySelectorAll('li').forEach(function (li) { li.hidden = false; });
+    $('sv-ask-title').textContent = want.length ? 'Get pricing for these' : 'Get pricing';
+    $('sv-ask-text').textContent = (look && look.item ? 'You have seen one price free. ' : '') +
+      'Leave your email and every project price appears on this page right away, with your plan totaled. What you tick tells us what to follow up on.';
+    $('sv-ask-form').hidden = false; $('sv-ask-done').hidden = true;
+    $('sv-err').style.display = 'none';
+    var d = $('sv-ask');
+    if (typeof d.showModal === 'function') { if (!d.open) d.showModal(); } else { d.setAttribute('open', ''); }
+    var lead = load('sa_lead');
+    if (fresh(lead)) {
+      if (!$('sv-name').value) $('sv-name').value = lead.name || '';
+      if (!$('sv-email').value) $('sv-email').value = lead.email || '';
+      if (!$('sv-firm').value) $('sv-firm').value = lead.firm || '';
+    }
+    setTimeout(function () { ($('sv-name').value ? $('sv-email') : $('sv-name')).focus(); }, 0);
+  }
+  function closeAsk() {
+    var d = $('sv-ask');
+    if (typeof d.close === 'function' && d.open) d.close(); else d.removeAttribute('open');
+  }
+  $('sv-ask-more').addEventListener('click', function () {
+    $('sv-ask-items').querySelectorAll('li.other').forEach(function (li) { li.hidden = false; });
+    $('sv-ask-more').hidden = true;
+  });
+  $('sv-ask-x').addEventListener('click', closeAsk);
+  $('sv-ask-ok').addEventListener('click', closeAsk);
+  $('sv-ask').addEventListener('click', function (e) { if (e.target === $('sv-ask')) closeAsk(); });
+
+  // The plan's own button asks for what is in the plan, and the price seen.
+  $('sv-gate-go').addEventListener('click', function () {
+    var items = [];
+    if (look && look.item) items.push(look.item);
+    [['audit', picked('audit')], ['design', picked('design')], ['crm', picked('crm')]].forEach(function (p) {
+      if (p[1] && !(p[0] === 'audit' && p[1] === 'essential')) items.push(p[0] + '.' + p[1]);
+    });
+    openAsk(items);
+  });
 
   $('sv-go').addEventListener('click', function () {
     var err = $('sv-err'); err.style.display = 'none';
@@ -518,20 +705,22 @@
     function fail(msg) { err.textContent = msg; err.style.display = 'block'; }
     if (!person.name) return fail('Please enter your name.');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email)) return fail('Please enter a valid email address.');
+    var items = Array.prototype.map.call($('sv-ask-items').querySelectorAll('input:checked'), function (b) { return b.value; });
     var btn = $('sv-go'); btn.disabled = true; btn.textContent = 'One moment';
-    ask(person).then(function (res) {
+    ask(person, items).then(function (res) {
+      btn.disabled = false; btn.textContent = 'Show pricing';
       if (res.status === 429) throw new Error('Too many requests from this connection. Please try again in an hour.');
       if (!res.data || !res.data.ok) throw new Error('That did not go through. Please check your email address and try again.');
       store('sa_lead', { name: person.name, email: person.email, firm: person.firm, at: Date.now() });
-      if (res.data.prices) { prices = res.data.prices; store('sa_pricing', { prices: prices, at: Date.now() }); unlocked(); }
-      else { pending = true; unlocked('pending'); }
+      if (res.data.prices) { prices = res.data.prices; store('sa_pricing', { prices: prices, at: Date.now() }); closeAsk(); unlocked(); }
+      else { pending = true; unlocked('pending'); $('sv-ask-form').hidden = true; $('sv-ask-done').hidden = false; }
     }).catch(function (e) {
       btn.disabled = false; btn.textContent = 'Show pricing';
       fail(e && e.message && e.message.indexOf('Failed') !== 0 ? e.message : 'We could not reach the server. Please try again, or email mike@spataccoanalytics.com.');
     });
   });
   ['sv-name', 'sv-email', 'sv-firm'].forEach(function (id) {
-    $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') $('sv-go').click(); });
+    $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); $('sv-go').click(); } });
   });
 
   document.querySelectorAll('input[type="radio"]').forEach(function (el) { el.addEventListener('change', render); });
@@ -542,17 +731,19 @@
     });
   });
 
-  // A visitor who unlocked here before sees prices again for 30 days. One who
-  // already left an email at the scorer is not asked twice: the request is
-  // made for them, and recorded as a pricing request.
-  var kept = load('sa_pricing'), known = load('sa_lead');
+  // A visitor who unlocked here before sees prices again for 30 days, and one
+  // who had the free look sees that price again. One who already left an
+  // email at the scorer is not asked twice: the request is made for them, and
+  // recorded as a pricing request.
+  var kept = load('sa_pricing'), known = load('sa_lead'), seen = load('sa_unveil');
+  if (fresh(seen)) look = { item: seen.item || null, price: typeof seen.price === 'number' ? seen.price : null, at: seen.at };
   if (fresh(kept) && kept.prices) { prices = kept.prices; unlocked(); }
   else if (fresh(known) && known.email && known.name) {
-    ask(known, 'scorer').then(function (res) {
+    ask(known, [], 'scorer').then(function (res) {
       if (res.data && res.data.ok && res.data.prices) { prices = res.data.prices; store('sa_pricing', { prices: prices, at: Date.now() }); unlocked(); }
     }).catch(function () {});
   }
-  render();
+  refresh();
 })();
 </script>
 </body>

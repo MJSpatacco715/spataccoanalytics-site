@@ -24,8 +24,8 @@ and one pull request at a time; merging to `main` is what publishes.
 | Resume Parser | `site/tools/resume-parser/index.html` | Public tool: a resume in, structured data out, as Excel or CSV. Two free reads per browser, then an invitation to get it for the visitor's firm. Holds no client's records or field names. |
 | Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
-| Services page | `site/services/index.html` | The first screen shows the four services themselves (beside the headline from 1000px wide, under it on a phone), each going to its own part of the page; `tests/hero_browser.cjs` holds that all four are in view at the owner's window size and on a phone. Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page. |
-| Project prices | The `SERVICE_PRICING` secret | **Never in this repo, which is public.** Publish writes them to `sa-pricing.json` beside the web root. `site/services/pricing.php` gives them out only after it has kept the visitor's name and email in `sa-leads/pricing.jsonl`. |
+| Services page | `site/services/index.html` | The first screen shows the four services themselves (beside the headline from 1000px wide, under it on a phone), each going to its own part of the page; `tests/hero_browser.cjs` holds that all four are in view at the owner's window size and on a phone. Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page: each reads "Click to unveil". A visitor's first click shows that one price; any other click opens the pricing form with both ticked, the rest a click away under "Add other services", and an email brings every price onto the page. |
+| Project prices | The `SERVICE_PRICING` secret | **Never in this repo, which is public.** Publish writes them to `sa-pricing.json` beside the web root. `site/services/pricing.php` gives one free, with no email, once per browser (an HttpOnly cookie, 30 days) and at most two different ones a day per address: a soft limit that keeps a script from reading them all. It gives them all only after it has kept the visitor's name, email and the services they ticked in `sa-leads/pricing.jsonl`, and mailed the notice. |
 | What the lead forms and the contact form share | `site/lib/leads.php` | The checks, the storage and the notice mail. The notice is sent by the web host, From the firm's address. Two rules at Microsoft 365 decide whether it arrives: the envelope sender must NOT be at the firm's domain (Microsoft refuses that as Direct Send), and the host's DKIM key must be in the domain's DNS (`default._domainkey` in Cloudflare) or the domain's DMARC policy quarantines the notice. |
 | The logo in the menu and the footer | `site/img/wordmark-on-dark.png` (made from `site/img/logo.jpg` by `scripts/logo_cutout.py`), `site/img/logo-square.png`, the `nav .logo` and `footer .footer-*` rules in `site/css/shared.css` and in the home page's own styles | The menu on every page shows the wordmark alone, lettering white, 48px tall on a desktop (40px on a phone); the bar is no taller for it. The footer shows both logos: the SA mark on its white tile, then the wordmark. The logo file itself is the wordmark small in the middle of a white square, which is why it is not shown directly: at the menu's height the name came out about 8px tall. If `logo.jpg` is replaced, run `python3 scripts/logo_cutout.py` (it needs Pillow and numpy), then `node scripts/brand_images.cjs`, and update the `?v=` on every tag. The host keeps pictures and stylesheets for a year, so the wordmark's tags and the `shared.css` link carry `?v=` and the first eight characters of the file's SHA-1; `tests/pages_test.sh` fails until they match, and `tests/logo_browser.cjs` measures the logos in a browser. |
 | How the site appears in search and AI answers | `site/favicon*`, `site/img/logo-square.png`, `site/img/social-card.png`, the head tags and JSON-LD on each page, `site/sitemap.xml`, `site/robots.txt`, `site/llms.txt` | The favicon and square logo are the SA mark (`site/img/sa-mark.png`). The canonical address is `https://spataccoanalytics.com` without `www`. Search engines decide what they show and can take weeks to pick up a change. A page's title says what the page sells or does, never just its menu name. A page that is delisted or private carries `noindex` and stays out of the sitemap; `tests/pages_test.sh` holds both. |
@@ -42,9 +42,10 @@ and one pull request at a time; merging to `main` is what publishes.
 How a visitor moves: printed menu (QR) or PDF menu (link) > `/score/` >
 scorer, website-only > overall score > name and email > full breakdown and
 PDF > `/services/`. The lead is recorded when the email is given. On
-`/services/` a visitor builds a plan, and a name and email bring the project
-prices onto the page. Someone who has given an email on either page is not
-asked again on the other for 30 days.
+`/services/` a visitor builds a plan and may see any one project price free;
+a second price opens the pricing form with both ticked, and a name and email
+bring every project price onto the page. Someone who has given an email on
+either page is not asked again on the other for 30 days.
 
 ## What it does
 
@@ -165,7 +166,7 @@ bash tests/contact_test.sh                                  # the contact form k
 bash tests/notice_test.sh                                   # the notice mail goes out as the firm, and a visitor cannot add to it
 bash tests/bank_test.sh                                     # the stat bank is private, and keeps only pictures, PDFs and text
 bash tests/card_test.sh                                     # a statistic card is drawn only for a number with a source
-bash tests/pricing_test.sh                                  # project prices go only to a visitor who left an email
+bash tests/pricing_test.sh                                  # one price free per browser, the rest only to a visitor who left an email
 node tests/worker_test.mjs                                  # the relay passes on the tools' own requests and nothing else
 bash tests/insights_test.sh                                 # posts build into pages, sourced and escaped
 npm install --prefix live && \

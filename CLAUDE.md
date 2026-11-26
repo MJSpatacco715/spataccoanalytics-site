@@ -134,6 +134,21 @@ lives and says which pieces are not in this repo yet.
   commit message or a pull request. The repository is public. They live in
   the `SERVICE_PRICING` secret only. Hosting prices are public and are in
   `site/services/index.html`.
+- How much of the project pricing is locked. The owner, 2026-11-26: "i want
+  some lock on pricing but it does currently seem/feel too locked / not
+  informative enough. Maybe each visitor gets one unveil (click to unveil) and
+  then the second click brings about a contact form (with the two things
+  they've checked (and an option to add others)) and they input email there".
+  So each project price on `/services/` is a "Click to unveil" button. The
+  first click shows that one price, with no email, and puts its level in the
+  plan; `site/services/pricing.php` remembers it in an HttpOnly cookie for 30
+  days and gives an address at most two different prices a day. That is a
+  soft limit, said so in the code: it stops a script, not a person on a second
+  connection. Any later click opens the pricing form with the price seen and
+  the one clicked ticked, every other priced item under "Add other services",
+  then name, email and firm. The email brings every project price onto the
+  page, and the notice lists each service ticked by name and the one seen
+  first. `tests/pricing_test.sh` and `tests/notice_test.sh` hold it.
 - Every statistic on the site carries its source: the publisher and year in
   view, and a source card (`site/css/cite.css`, `site/js/cite.js`) with the
   finding, who was surveyed and a link. A number with no checkable source

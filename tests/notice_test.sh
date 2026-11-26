@@ -12,8 +12,9 @@ pid=
 cleanup() { [ -n "$pid" ] && kill "$pid" 2>/dev/null; rm -rf "$t"; }
 trap cleanup EXIT
 
-mkdir -p "$t/home/public_html/score" "$t/home/public_html/contact" "$t/home/public_html/lib" "$t/out"
+mkdir -p "$t/home/public_html/score" "$t/home/public_html/contact" "$t/home/public_html/services" "$t/home/public_html/lib" "$t/out"
 cp "$here/site/score/lead.php" "$t/home/public_html/score/lead.php"
+cp "$here/site/services/pricing.php" "$t/home/public_html/services/pricing.php"
 cp "$here/site/contact/submit.php" "$t/home/public_html/contact/submit.php"
 cp "$here/site/lib/leads.php" "$t/home/public_html/lib/leads.php"
 
@@ -54,16 +55,26 @@ check "with the envelope sender left to the host too" '! head -1 "$m" | grep -q 
 check "its subject says it is the contact form" 'grep -q "^Subject: Contact form: Example Wealth" "$m"'
 check "and carries the notes and the build asked about" 'grep -q "Looking at a rebuild." "$m" && grep -q "a walkthrough (golf)" "$m"'
 
+post /services/pricing.php '{"name":"Pat Advisor","email":"pat@example.com","firm":"Example Wealth","items":["design.professional","crm.essential"],"unveiled":"design.professional","picks":{"design":"professional"},"company":""}'
+check "a pricing request is accepted" '[ "$CODE" = 200 ]'
+check "and sends its own notice" '[ "$(msgs)" = 3 ]'
+m=$(last)
+check "its subject says it is a pricing request" 'grep -q "^Subject: Pricing request: Example Wealth" "$m"'
+check "and it lists each service ticked by name" 'grep -q "^  - Website Design: Redesign$" "$m" && grep -q "^  - CRM Diagnostic & Repair: Diagnostic$" "$m"'
+check "and the one seen first" 'grep -q "^Saw first: Website Design: Redesign (the free look)$" "$m"'
+post /services/pricing.php '{"unveil":"design.professional","company":""}'
+check "a free look sends no notice" '[ "$(msgs)" = 3 ]'
+
 # nothing a visitor types reaches a header or the command line
 post /contact/submit.php '{"name":"Pat\r\nBcc: x@example.com","email":"pat@example.com","firm":"A\r\nCc: y@example.com","notes":"hello\r\nBcc: z@example.com -fevil@example.com","company":""}'
 m=$(last)
-check "a line break in a field adds no header" '[ "$(msgs)" = 3 ] && ! grep -q -i "^Bcc:" "$m" && ! grep -q -i "^Cc:" "$m"'
+check "a line break in a field adds no header" '[ "$(msgs)" = 4 ] && ! grep -q -i "^Bcc:" "$m" && ! grep -q -i "^Cc:" "$m"'
 check "and nothing typed reaches the command line" '! head -1 "$m" | grep -q -e "evil" -e "-f"'
 
 post /contact/submit.php '{"name":"Bot","email":"bot@example.com","company":"Acme"}'
-check "a bot's message sends no notice" '[ "$CODE" = 200 ] && [ "$(msgs)" = 3 ]'
+check "a bot's message sends no notice" '[ "$CODE" = 200 ] && [ "$(msgs)" = 4 ]'
 post /contact/submit.php '{"name":"Pat","email":"not-an-email"}'
-check "a refused message sends no notice" '[ "$CODE" = 422 ] && [ "$(msgs)" = 3 ]'
+check "a refused message sends no notice" '[ "$CODE" = 422 ] && [ "$(msgs)" = 4 ]'
 
 echo "$((n - fails))/$n notice checks passed"
 [ "$fails" = 0 ]
