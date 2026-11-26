@@ -154,7 +154,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {extra_head}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=8fe557dd">
+<link rel="stylesheet" href="/css/shared.css?v=a1136c74">
 <link rel="stylesheet" href="/css/cite.css">
 <link rel="stylesheet" href="/css/insights.css">
 </head>

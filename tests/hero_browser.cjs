@@ -84,6 +84,24 @@ function blueLine(page) {
     await ctx.close();
   }
 
+  // --- every inner page opens on a supporting figure, and its source card opens whole
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1255, height: 607 } });
+    const page = await ctx.newPage();
+    for (const [path, num] of [['/services/', '62%'], ['/approach/', '56%'], ['/about/', '244'], ['/contact/', '3%'], ['/tools/', '72%']]) {
+      await page.goto(base + path, { waitUntil: 'load' });
+      await page.waitForTimeout(1800);
+      const at = await page.evaluate(() => { const f = document.querySelector('.page-hero .hero-stat'), r = f.getBoundingClientRect(), n = f.querySelector('.stat-num'), src = f.querySelector('.sa-cite-src').getBoundingClientRect(); return { num: n.textContent, top: r.top, bottom: r.bottom, x: src.left + src.width / 2, y: src.top + src.height / 2, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, srcShown: src.width > 0 && src.bottom <= window.innerHeight }; });
+      check(path + ': its figure (' + num + ') is on the first screen with its source in view', at.num === num && at.top >= at.nav && at.bottom <= at.vh && at.srcShown);
+      await page.mouse.move(at.x, at.y, { steps: 2 });
+      await page.waitForTimeout(350);
+      const card = await page.evaluate(() => { const c = document.querySelector('.page-hero .hero-stat .sa-cite-card'), r = c.getBoundingClientRect(), st = getComputedStyle(c); const on = (x, y) => { const e = document.elementFromPoint(x, y); return !!(e && c.contains(e)); }; return { shown: st.visibility === 'visible' && Number(st.opacity) > 0.9, top: r.top, bottom: r.bottom, left: r.left, right: r.right, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, vw: window.innerWidth, clear: on(r.left + 12, r.top + 12) && on(r.right - 12, r.bottom - 12), link: (c.querySelector('a') || {}).href || '' }; });
+      check(path + ': pointing at it opens its source card, whole, clear of the menu, with a link to the source', card.shown && card.top >= card.nav && card.bottom <= card.vh && card.left >= 0 && card.right <= card.vw && card.clear && /^https:\/\//.test(card.link));
+      await page.mouse.move(5, card.vh - 5);
+    }
+    await ctx.close();
+  }
+
   // --- the Tools page: every tool is on the first screen, and a kind keeps only its own
   const tools = (page) => page.evaluate(() => {
     const tiles = [...document.querySelectorAll('.page-hero .tl-tile')].filter((t) => !t.hidden).map((t) => { const r = t.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, name: t.querySelector('.tl-name').textContent }; });
