@@ -266,6 +266,34 @@ for f in "$svc" "$site/approach/index.html" "$site/about/index.html" "$site/tool
 done
 check "every inner page's headline ends on one blue part, and the shared stylesheet gives it a line of its own: $heads_ok of $heads_all" '[ "$heads_ok" = "$heads_all" ] && grep -q "^\.page-hero h1 em{display:block;font-style:italic;color:var(--cyan)}" "$site/css/shared.css"'
 
+# --- the Tools page opens on its tools
+# The owner, 2026-11-26: "on the tools page the meat is too buried. I need tiles
+# or chips that fit with the overall scheme to pull to the top (visible on first
+# glance) the tools that meet the criteria. Sports Movies Business, etc". And of
+# its headline, when the blue line became a line of its own everywhere: "this
+# one is okay to stay".
+check "every tool on the Tools page has a tile in its first section, every tile leads to a tool that is there, and each kind says how many it has" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+hero = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S)
+if not hero: sys.exit(1)
+h = hero.group(0); rest = s[hero.end():]
+tiles = re.findall(r"<a class=\"tl-tile\" href=\"([^\"]+)\" data-kinds=\"([a-z ]+)\">", h)
+# the tools the page itself shows: the two that launch, the three kinds of card below them, and the platforms described
+shown = set(re.findall(r"<a href=\"(/tools/[^\"]+)\" class=\"(?:tool-link|scorecard|playbill|tradingcard)\"", rest))
+shown |= {"#" + i for i in re.findall(r"class=\"tool-card build-card[^\"]*\" id=\"([a-z-]+)\"", rest)}
+ok = len(tiles) == len(set(t[0] for t in tiles)) and set(t[0] for t in tiles) == shown and len(shown) >= 13
+chips = re.findall(r"data-kind=\"([a-z]+)\" aria-pressed=\"(true|false)\">[^<]+<span>(\d+)</span>", h)
+ok = ok and [c[0] for c in chips][0] == "all" and chips[0][1] == "true" and all(c[1] == "false" for c in chips[1:])
+kinds = [c[0] for c in chips[1:]]
+ok = ok and all(set(t[1].split()) <= set(kinds) and t[1].split() for t in tiles)          # no tile of a kind that cannot be chosen
+for kind, _, said in chips:
+    ok = ok and int(said) == sum(1 for t in tiles if kind == "all" or kind in t[1].split()) and int(said) > 0
+sys.exit(0 if ok else 1)
+PY'
+check "its headline is the one that stays on one line, by a rule of its own page" 'grep -q "<h1>Your site can do more than <em>describe you.</em></h1>" "$site/tools/index.html" && grep -q "^\.tl-hero h1 em{display:inline}" "$site/tools/index.html"'
+check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile\"" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind)[ .:{\[]"'
+
 # --- the logo
 # The owner, 2026-11-26: "the logo is small and near invisible on the site". The
 # menu showed the logo file whole, a white square 36px tall with the name about

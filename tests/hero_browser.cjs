@@ -4,7 +4,11 @@
 // Two things the owner asked for on 2026-11-26:
 //   - "services page is all talk and no service options on first screen": the four
 //     services are on the Services page's first screen, each going to its own part;
-//   - "as a standard I'd like the blue response hero text to be on its own line".
+//   - "as a standard I'd like the blue response hero text to be on its own line"
+//     (of the Tools page's one-sentence headline: "this one is okay to stay");
+//   - "on the tools page the meat is too buried. I need tiles or chips that fit with
+//     the overall scheme to pull to the top (visible on first glance) the tools that
+//     meet the criteria. Sports Movies Business, etc".
 const { chromium } = require('playwright');
 const base = process.argv[2];
 const fails = []; let n = 0;
@@ -29,12 +33,17 @@ function blueLine(page) {
   for (const [w, h, mobile] of [[1440, 900, false], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
-    for (const path of ['/services/', '/approach/', '/about/', '/tools/', '/contact/', '/insights/']) {
+    for (const path of ['/services/', '/approach/', '/about/', '/contact/', '/insights/']) {
       await page.goto(base + path, { waitUntil: 'load' });
       await page.waitForTimeout(150);
       const b = await blueLine(page);
       check(path + ' at ' + w + 'px: the blue part of the headline is on its own line, from the left edge', !!b && b.below && b.atLeft && b.blue === 'rgb(61, 216, 216)');
     }
+    // the one headline that stays whole: a single sentence, on one line where there is room for it
+    await page.goto(base + '/tools/', { waitUntil: 'load' });
+    await page.waitForTimeout(150);
+    const one = await page.evaluate(() => { const h1 = document.querySelector('.page-hero h1'); return { lines: Math.round(h1.getBoundingClientRect().height / parseFloat(getComputedStyle(h1).lineHeight)), blue: getComputedStyle(h1.querySelector('em')).color, text: h1.textContent }; });
+    check('/tools/ at ' + w + 'px: its headline is one sentence, kept on one line where there is room, the blue part still blue', one.text === 'Your site can do more than describe you.' && one.blue === 'rgb(61, 216, 216)' && (w < 1000 || one.lines === 1));
     await ctx.close();
   }
 
@@ -72,6 +81,39 @@ function blueLine(page) {
     await page.waitForTimeout(1700);
     const f = await first(page);
     check('/services/ on a ' + w + ' by ' + h + ' phone: all four services are on the first screen, under the headline, and the page is no wider', f.opts.length === 4 && f.opts.every((o) => o.top >= f.h1.bottom && o.bottom <= f.vh && o.left >= 0 && o.right <= f.vw) && f.pageWide);
+    await ctx.close();
+  }
+
+  // --- the Tools page: every tool is on the first screen, and a kind keeps only its own
+  const tools = (page) => page.evaluate(() => {
+    const tiles = [...document.querySelectorAll('.page-hero .tl-tile')].filter((t) => !t.hidden).map((t) => { const r = t.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, name: t.querySelector('.tl-name').textContent }; });
+    const chips = [...document.querySelectorAll('.page-hero .tl-chip')].map((c) => ({ kind: c.getAttribute('data-kind'), says: Number(c.querySelector('span').textContent), on: c.getAttribute('aria-pressed') === 'true' && c.classList.contains('on'), r: c.getBoundingClientRect() }));
+    const count = (k) => [...document.querySelectorAll('.page-hero .tl-tile')].filter((t) => k === 'all' || (' ' + t.getAttribute('data-kinds') + ' ').includes(' ' + k + ' ')).length;
+    return { tiles, chips: chips.map((c) => Object.assign(c, { has: count(c.kind), inView: c.r.top >= 0 && c.r.bottom <= window.innerHeight })), navBottom: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, vw: window.innerWidth, pageWide: document.documentElement.scrollWidth <= window.innerWidth };
+  });
+  const whole = (t, f) => t.top >= f.navBottom && t.bottom <= f.vh && t.left >= 0 && t.right <= f.vw;
+  for (const [w, h, mobile] of [[1255, 607, false], [1366, 657, false], [1440, 900, false], [390, 844, true]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
+    const page = await ctx.newPage();
+    await page.goto(base + '/tools/', { waitUntil: 'load' });
+    await page.waitForTimeout(1800);        // the opening animation
+    const f = await tools(page);
+    check('/tools/ at ' + w + ' by ' + h + ': every tool is a tile on the first screen, whole, under the menu (' + f.tiles.filter((t) => whole(t, f)).length + ' of ' + f.tiles.length + ')', f.tiles.length === 13 && f.tiles.every((t) => whole(t, f)) && f.pageWide);
+    check('/tools/ at ' + w + ' by ' + h + ': the kinds to choose from are in view above them, All chosen, each saying how many it has', f.chips.map((c) => c.kind).join(',') === 'all,business,sports,movies,built' && f.chips.every((c) => c.inView && c.says === c.has) && f.chips[0].on && f.chips.slice(1).every((c) => !c.on) && f.chips.every((c) => c.r.bottom <= f.tiles[0].top));
+    if (w === 1255 || mobile) {
+      for (const [kind, n, has] of [['sports', 8, 'NFL Lines Tracker'], ['movies', 2, 'AFI 100 Tracker'], ['business', 3, 'Resume Parser'], ['built', 3, 'Golf Pick\u2019em'], ['all', 13, 'Card Evaluator']]) {
+        if (mobile) await page.tap('.tl-chip[data-kind="' + kind + '"]'); else await page.click('.tl-chip[data-kind="' + kind + '"]');
+        await page.waitForTimeout(120);
+        const g = await tools(page);
+        check('/tools/ at ' + w + 'px: choosing ' + kind + ' leaves its ' + n + ' tools, all on the first screen, and marks that kind as chosen', g.tiles.length === n && g.tiles.some((t) => t.name === has) && g.tiles.every((t) => whole(t, g)) && g.chips.filter((c) => c.on).map((c) => c.kind).join() === kind);
+      }
+    }
+    if (w === 1255) {
+      await page.click('.tl-tile[href="#built-golf"]');
+      await page.waitForTimeout(400);
+      const at = await page.evaluate(() => { const r = document.getElementById('built-golf').getBoundingClientRect(), s = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: r.top, strip: s.bottom, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight }; });
+      check('a platform\'s tile goes to where it is described, clear of the menu and the strip under it', at.top >= Math.max(at.nav, at.strip) - 1 && at.top < at.vh * 0.6);
+    }
     await ctx.close();
   }
 
