@@ -53,7 +53,16 @@ lives and says which pieces are not in this repo yet.
   published, on the site or anywhere else, until the owner says so. What is
   in the bank is private: never copy an item, a file or the bank's password
   or token into this repository, a commit or a pull request.
-- The market strip on the homepage (`site/js/ticker.js`, `site/market/feed.php`,
+- The market strip is on the tools page, under the menu. The owner moved it
+  there from the home page on 2026-11-26 ("i want the ticker to be on the tools
+  page instead of the home page"): it is a working example at the top of the
+  page of working examples, and the home page does not carry it. In
+  `site/tools/index.html` it is the page's own child, between the menu and the
+  first section, never inside that section, which would cut its cards off. Its
+  stylesheet and script tags sit beside it, not in the head or after the
+  footer, because the build reuses that page's head, menu and footer for each
+  tool's own page.
+  The strip (`site/js/ticker.js`, `site/market/feed.php`,
   `site/lib/market.php`) shows only figures the site may show: each comes
   from its publisher's own free feed and says in view who published it and
   for when. The S&P 500, the Dow and gold are licensed data. They do not go
@@ -78,7 +87,7 @@ lives and says which pieces are not in this repo yet.
   far as the hover sells: no link and no direct pitch. The owner wants the
   question ("why don't you have tools like this working for you") asked where
   the strip is referenced elsewhere on the site. The host keeps scripts
-  and styles for a year, so the strip's two tags in `site/index.html` carry
+  and styles for a year, so the strip's two tags in `site/tools/index.html` carry
   `?v=` and the first eight characters of each file's SHA-1.
   `tests/market_test.sh` fails until they match.
 - Search: a page's title says what the page sells or does, not its menu name

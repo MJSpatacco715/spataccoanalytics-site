@@ -1,7 +1,9 @@
 // The market strip opened in a browser (tests/market_test.sh runs this where
-// Playwright is installed). The page is the built homepage, served with the
-// saved answers, so nothing here leaves the machine.
-//   node tests/ticker_browser.cjs http://127.0.0.1:18746/
+// Playwright is installed). The page is the built tools page, where the strip
+// lives, served with the saved answers, so nothing here leaves the machine.
+// The home page, which had the strip until November 2026, is opened once at
+// the end to see that it is gone from there.
+//   node tests/ticker_browser.cjs http://127.0.0.1:18746/tools/
 const { chromium } = require('playwright');
 
 const url = process.argv[2];
@@ -53,7 +55,7 @@ function spot(page, id) {
         copiesHidden: sets.slice(1).every((x) => x.getAttribute('aria-hidden') === 'true'),
         copiesOutOfTabs: sets.slice(1).every((x) => [...x.querySelectorAll('button')].every((q) => q.tabIndex === -1)),
         top: Math.round(b.top), navBottom: document.getElementById('main-nav').offsetHeight, height: Math.round(b.height),
-        heroTop: Math.round(document.querySelector('.hero-tag').getBoundingClientRect().top),
+        heroTop: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top),
         bottom: Math.round(b.bottom),
         moving: getComputedStyle(track).animationName !== 'none' && getComputedStyle(track).animationPlayState === 'running',
         trackWide: track.getBoundingClientRect().width >= 2 * r.querySelector('.sa-tk-view').clientWidth,
@@ -73,8 +75,8 @@ function spot(page, id) {
     check('it says what the figures are', s.note && s.text.includes('These quotes are latest published figures and not necessarily live.'));
     check('the note rides on every other pass of the figures, not every one', /^(n-)+$/.test(s.notes) && s.sets % 4 === 0 && s.noWordTwice);
     check('the page is no wider than the window', s.pageWide);
-    const h = await page.evaluate(() => { const m = document.querySelector('.hero h1 .h1-main').getBoundingClientRect(), e = document.querySelector('.hero h1 em').getBoundingClientRect(); return { below: e.top >= m.bottom - 2, left: Math.abs(e.left - m.left) < 2, text: document.querySelector('.hero h1').textContent }; });
-    check('the headline is two lines: the statement, then the ask beneath it', h.below && h.left && h.text === 'Buyers will look at your data. Make sure it is ready.');
+    const where = await page.evaluate(() => { const r = document.getElementById('sa-ticker'); return { parent: r.parentNode === document.body, lit: (document.querySelector('#main-nav a.active') || {}).textContent, h1: document.querySelector('.page-hero h1').textContent.replace(/\s+/g, ' ').trim() }; });
+    check('it is on the tools page, as the page\'s own child and not inside the first section', where.parent && where.lit === 'Tools' && where.h1 === 'Your site can do more than describe you.');
 
     // hover: the strip stops and the source card opens under the figure
     const tag = await page.evaluate(() => { const b = document.querySelector('.sa-tk-tag').getBoundingClientRect(); return { x: b.left + 20, y: b.top + 10 }; });
@@ -92,6 +94,12 @@ function spot(page, id) {
     const p = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
     await page.mouse.move(p.x, p.y, { steps: 3 });
     await page.waitForTimeout(250);
+    const whole = await page.evaluate(() => {
+      const card = document.getElementById('sa-tk-card'), r = card.getBoundingClientRect(), hero = document.querySelector('.page-hero').getBoundingClientRect();
+      const on = (x, y) => { const e = document.elementFromPoint(x, y); return !!(e && card.contains(e)); };
+      return { past: r.bottom > hero.bottom, shown: on(r.left + 8, r.bottom - 8) && on(r.right - 8, r.bottom - 8) && on(r.left + r.width / 2, r.top + 8), inWindow: r.bottom <= window.innerHeight };
+    });
+    check('a card longer than the first section shows whole: nothing cuts it off or covers it', whole.past && whole.shown && whole.inWindow);
     const c = await page.evaluate(() => {
       const card = document.getElementById('sa-tk-card');
       const a = card.querySelector('a');
@@ -220,7 +228,7 @@ function spot(page, id) {
     await page.waitForTimeout(300);
     const s = await page.evaluate(() => {
       const r = document.getElementById('sa-ticker').getBoundingClientRect();
-      return { top: Math.round(r.top), navBottom: document.getElementById('main-nav').offsetHeight, heroTop: Math.round(document.querySelector('.hero-tag').getBoundingClientRect().top), bottom: Math.round(r.bottom), pageWide: document.documentElement.scrollWidth <= window.innerWidth };
+      return { top: Math.round(r.top), navBottom: document.getElementById('main-nav').offsetHeight, heroTop: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top), bottom: Math.round(r.bottom), pageWide: document.documentElement.scrollWidth <= window.innerWidth };
     });
     check('on a phone it sits under the menu, above the headline, and the page is no wider', s.top === s.navBottom && s.bottom <= s.heroTop && s.pageWide);
     let p = null;
@@ -241,8 +249,15 @@ function spot(page, id) {
     const { ctx, page } = await open(browser, { viewport: { width: 320, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await page.waitForSelector('#sa-ticker.on', { timeout: 8000 });
     await page.waitForTimeout(300);
-    const s = await page.evaluate(() => ({ strip: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().bottom), first: Math.round(document.querySelector('.hero-tag').getBoundingClientRect().top), wide: document.documentElement.scrollWidth <= window.innerWidth }));
+    const s = await page.evaluate(() => ({ strip: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().bottom), first: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top), wide: document.documentElement.scrollWidth <= window.innerWidth }));
     check('on a narrow phone the strip does not sit on the first line of the page', s.strip < s.first && s.wide);
+    const follows = await page.evaluate(async () => {
+      const nav = document.getElementById('main-nav'); nav.style.paddingBottom = '31px';      // as a late font or a longer menu would
+      await new Promise((r) => setTimeout(r, 300));
+      const r = document.getElementById('sa-ticker').getBoundingClientRect();
+      return { top: Math.round(r.top), nav: nav.offsetHeight, first: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top), bottom: Math.round(r.bottom) };
+    });
+    check('when the menu grows after the strip is up, the strip moves down with it and stays clear of the page', follows.top === follows.nav && follows.bottom < follows.first);
     await ctx.close();
   }
 
@@ -314,6 +329,21 @@ function spot(page, id) {
     await page.evaluate(() => { document.querySelector('.sa-tk-tag').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
     const t = await page.evaluate(() => ({ hit: window.__hit === 1, imgs: document.querySelectorAll('#sa-ticker img, #sa-ticker script').length, links: document.querySelectorAll('#sa-tk-card a').length, items: document.querySelectorAll('#sa-tk-card li').length, bad: [...document.querySelectorAll('#sa-tk-card a')].some((a) => !/^https:/.test(a.href)) }));
     check('and the same holds for the list of sources', !t.hit && t.imgs === 0 && t.items === t.links + 1 && !t.bad);
+    await ctx.close();
+  }
+
+  // --- the home page, which gave the strip up
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await ctx.newPage();
+    const asked = [];
+    page.on('request', (r) => { if (/ticker\.(js|css)|market\/feed/.test(r.url())) asked.push(r.url()); });
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    await page.goto(new URL('/', url).href, { waitUntil: 'load' });
+    await page.waitForTimeout(600);
+    const h = await page.evaluate(() => { const m = document.querySelector('.hero h1 .h1-main').getBoundingClientRect(), e = document.querySelector('.hero h1 em').getBoundingClientRect(); return { strip: !!document.querySelector('#sa-ticker, .sa-tk'), pad: document.querySelector('.hero').style.paddingTop, below: e.top >= m.bottom - 2, left: Math.abs(e.left - m.left) < 2, text: document.querySelector('.hero h1').textContent }; });
+    check('the home page has no strip, asks for none of its files, and its first screen is as it was', !h.strip && asked.length === 0 && h.pad === '');
+    check('the home page headline is two lines: the statement, then the ask beneath it', h.below && h.left && h.text === 'Buyers will look at your data. Make sure it is ready.');
     await ctx.close();
   }
 

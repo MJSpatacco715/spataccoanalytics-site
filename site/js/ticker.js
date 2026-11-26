@@ -168,7 +168,10 @@
     var nav = document.getElementById('main-nav') || document.querySelector('nav');
     if (!nav || !nav.offsetHeight) return;
     root.style.setProperty('--sa-tk-top', nav.offsetHeight + 'px');
-    var hero = root.parentNode;
+    // The strip is the page's own child, laid over the section that follows
+    // it (so its cards are never cut off by that section), or sits inside one.
+    var hero = root.parentNode === document.body ? root.nextElementSibling : root.parentNode;
+    while (hero && !/^(SECTION|HEADER|MAIN|DIV)$/.test(hero.tagName)) hero = hero.nextElementSibling;
     if (!hero || !hero.style) return;
     hero.style.paddingTop = '';
     var need = nav.offsetHeight + root.offsetHeight + 18;
@@ -586,6 +589,15 @@
       if (view.clientWidth !== lastWidth) lay();
     }, 200);
   });
+  // The menu's height is not settled when the strip first shows: its font
+  // arrives a moment later and, where the menu wraps, makes it a few pixels
+  // taller. The strip follows the menu whenever its height changes.
+  (function () {
+    var nav = document.getElementById('main-nav') || document.querySelector('nav');
+    var again = function () { if (track && !root.hidden) place(); };
+    if (nav && window.ResizeObserver) new ResizeObserver(again).observe(nav, { box: 'border-box' });
+    else if (document.fonts && document.fonts.ready) document.fonts.ready.then(again);
+  })();
   document.addEventListener('visibilitychange', function () { if (!document.hidden && root.hidden) load(); });
 
   load();

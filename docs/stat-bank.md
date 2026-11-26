@@ -110,7 +110,7 @@ the same way whenever he asks.
 
 ## Once a quarter: the RIA deal count on the market strip
 
-The homepage's market strip carries the year's RIA deal count against the
+The market strip on the tools page carries the year's RIA deal count against the
 record. The count is DeVoe & Company's, from its RIA Deal Book, which comes
 out about a month after each quarter ends (late January, April, July and
 October). The strip is the one place the count shows: the homepage's stat
