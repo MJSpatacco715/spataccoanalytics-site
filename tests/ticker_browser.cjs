@@ -205,8 +205,8 @@ function spot(page, id) {
     await page.mouse.move(700, 600);
     check('and starts it again', await page.evaluate(() => document.querySelector('.sa-tk-pause').getAttribute('aria-pressed') === 'false' && getComputedStyle(document.querySelector('.sa-tk-track')).animationPlayState === 'running'));
 
-    // the keyboard
-    await page.evaluate(() => { document.querySelector('nav a:last-of-type').focus(); });
+    // the keyboard: on from the last thing before the strip in the page, the last tool tile
+    await page.evaluate(() => { const tiles = document.querySelectorAll('.page-hero .tl-tile'); (tiles.length ? tiles[tiles.length - 1] : document.querySelector('nav a:last-of-type')).focus({ preventScroll: true }); });
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press('Tab');
       if (await page.evaluate(() => document.activeElement && document.activeElement.classList.contains('sa-tk-item'))) break;

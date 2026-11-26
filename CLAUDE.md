@@ -34,7 +34,22 @@ lives and says which pieces are not in this repo yet.
   line of its own, on every page (the owner, 2026-11-26: "as a standard I'd
   like the blue response hero text to be on its own line"). The shared
   stylesheet does it for the inner pages (`.page-hero h1 em`), the home page
-  for its own two.
+  for its own two. One exception, the owner's: the Tools page's headline is a
+  single sentence ("Your site can do more than describe you.") and stays on one
+  line ("this one is okay to stay"), by a rule of its own page.
+- The Tools page opens on its tools (the owner, 2026-11-26: "on the tools page
+  the meat is too buried. I need tiles or chips that fit with the overall
+  scheme to pull to the top (visible on first glance) the tools that meet the
+  criteria. Sports Movies Business, etc"). Its first section holds a row of
+  kinds (All, Business, Sports, Movies, Built to order) and a tile for every
+  tool on the page; a kind chosen keeps only its tools, and a tool can be of
+  more than one kind. All thirteen tiles are on the first screen at the owner's
+  window (1255 by 607) and on a phone. A tile goes to its tool, or, for a
+  platform that runs privately, to where it is described lower down. A tool
+  added to the page needs a tile, and a tile needs its tool:
+  `tests/pages_test.sh` fails until they match, and `tests/hero_browser.cjs`
+  opens it in a browser. The rules for that section are scoped to it
+  (`.tl-hero`), because each tool's own page is built with the same head.
 - The Services page opens on its services (the owner, the same day: "services
   page is all talk and no service options on first screen"). The four sit in
   the first section, beside the headline from 1000px wide and under it on a
