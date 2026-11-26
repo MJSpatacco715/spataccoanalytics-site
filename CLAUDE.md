@@ -30,6 +30,54 @@ lives and says which pieces are not in this repo yet.
 - The menu reads Services, Approach, Tools, About, Contact, on every page, in
   the posts' shell (`scripts/build_insights.py`) and so on every tool page. The
   owner set that order on 2026-11-26. `tests/pages_test.sh` holds it.
+- Headlines. The blue part of a headline is the last thing in it and sits on a
+  line of its own, on every page (the owner, 2026-11-26: "as a standard I'd
+  like the blue response hero text to be on its own line"). The shared
+  stylesheet does it for the inner pages (`.page-hero h1 em`), the home page
+  for its own two. One exception, the owner's: the Tools page's headline is a
+  single sentence ("Your site can do more than describe you.") and stays on one
+  line ("this one is okay to stay"), by a rule of its own page.
+- Every inner page opens on at least one supporting figure with its source
+  (the owner, 2026-11-26: "They should all have at least one supporting
+  statistic"), in the same form on each (`.hero-stat` in the shared stylesheet,
+  with a source card): Services 62% (Broadridge), Approach 56% (Morningstar),
+  About 244 RIA deals (DeVoe & Company), Contact 3% (Orion), Tools 72%
+  (Wealthtender). The owner approved these five. Four are the home page's own
+  figures and must say what the home page says of them; the About figure is
+  the market strip's deal count and changes with it each quarter
+  (`docs/stat-bank.md`). On the Services and Tools pages a phone shows the
+  figure after the services and the tiles, which keep the first screen.
+  A claim with a number or a "most" in it needs a source or it goes. The
+  Approach page said "Adoption dies in week three", which came over with the
+  first site's copy and had no source (the owner: "how do i know that? how do
+  they know that's true?"). It now reads "A cleanup built on someone else's
+  workflow does not stick. We build on the way your team already works.", the
+  owner's choice of three.
+- The Tools page opens on its tools (the owner, 2026-11-26: "on the tools page
+  the meat is too buried. I need tiles or chips that fit with the overall
+  scheme to pull to the top (visible on first glance) the tools that meet the
+  criteria. Sports Movies Business, etc"). Its first section holds a row of
+  kinds (All, Business, Sports, Movies, Built to order) and a tile for every
+  tool on the page; a kind chosen keeps only its tools, and a tool can be of
+  more than one kind. All thirteen tiles are on the first screen at the owner's
+  window (1255 by 607) and on a phone. A tile goes to its tool, or, for a
+  platform that runs privately, to where it is described lower down. A tool
+  added to the page needs a tile, and a tile needs its tool:
+  `tests/pages_test.sh` fails until they match, and `tests/hero_browser.cjs`
+  opens it in a browser. The rules for that section are scoped to it
+  (`.tl-hero`), because each tool's own page is built with the same head.
+- The Services page opens on its services (the owner, the same day: "services
+  page is all talk and no service options on first screen"). The four sit in
+  the first section, beside the headline from 1000px wide and under it on a
+  phone, each going to its own part of the page, and all four are on the first
+  screen at the owner's own window (1255 by 607: a 1880px screen at 150%) and
+  on a phone. Nothing goes between the menu and them, and the headline there
+  stays the size it is. Its blue line is "Pick where to start.": the owner did
+  not love "Scoped before you commit." and chose this one. What each option
+  says beside its name (free, weeks, the hosting price) is read off the page's
+  own parts by `tests/pages_test.sh`; `tests/hero_browser.cjs` opens it in a
+  browser. A block of links inside a page is a `div`, never a `nav`: the
+  shared stylesheet pins every `nav` to the top of the window.
 - The logo. The owner, 2026-11-26: "the logo is small and near invisible on the
   site". The menu had shown the logo file whole (`site/img/logo.jpg`: the
   wordmark small in the middle of a white square), 36px tall, which left the
@@ -75,6 +123,10 @@ lives and says which pieces are not in this repo yet.
   than one location answers. A count of some word in the file proves nothing.
   If a wrong copy is kept anyway, change the file so its address changes; the
   owner can also purge that address in Cloudflare.
+  A visitor cannot cause it either: the publish unpacks everything a page
+  loads first and the pages last (`scripts/remote_deploy.sh`,
+  `tests/remote_deploy_test.sh`), so no page names an address before its file
+  is there. Keep that order.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.

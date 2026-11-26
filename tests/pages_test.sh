@@ -225,6 +225,128 @@ JS'
 check "its fields do not ask for https://, in the hint or in the message" '! grep -q "starting with https://" "$scorer" && grep -q "id=\"inp-website\" placeholder=\"yourfirm.com\"" "$scorer" && grep -q "id=\"inp-linkedin\" placeholder=\"linkedin.com/company/yourfirm\"" "$scorer" && ! grep -q "type=\"url\"" "$scorer"'
 check "the scorer checks what was typed through the address reader, not for the letters http" 'grep -q "const website   = tidyAddress(typedSite);" "$scorer" && ! grep -q "startsWith(\"http\")" "$scorer"'
 
+# --- the first screen of the inner pages
+# The owner, 2026-11-26: "services page is all talk and no service options on
+# first screen", and "as a standard I'd like the blue response hero text to be
+# on its own line. don't LOVE 'scoped before you commit". Asked which line
+# instead, the owner chose "Pick where to start."
+svc="$site/services/index.html"
+check "the Services page opens on its four services, each going to its own part of the page, inside the first section" 'python3 - "$svc" <<'"'"'PY'"'"'
+import re, sys, html
+s = open(sys.argv[1], encoding="utf-8").read()
+hero = re.search(r"<section class=\"page-hero sv-hero\">.*?</section>", s, re.S)
+if not hero: sys.exit(1)
+picks = re.findall(r"<a href=\"#([a-z]+)\"><span class=\"sv-pick-name\">([^<]+)</span><span class=\"sv-pick-what\">([^<]+)</span><span class=\"sv-pick-go\">([^<]+)</span></a>", hero.group(0))
+ok = [p[0] for p in picks] == ["audit", "design", "crm", "hosting"]
+ok = ok and all(re.search(r"id=\"%s\"" % p[0], s) for p in picks)
+# each is named as its own part of the page names it
+heads = dict(re.findall(r"<fieldset class=\"sv-card reveal\" id=\"([a-z]+)\".*?<h3>([^<]+)</h3>", s, re.S))
+ok = ok and all(html.unescape(p[1]) == html.unescape(heads[p[0]]) for p in picks[:3]) and picks[3][1] == "Managed Hosting"
+# what each says beside its name is what the page itself says lower down
+part = lambda i: re.search(r"<fieldset class=\"sv-card reveal\" id=\"%s\".*?</fieldset>" % i, s, re.S).group(0)
+times = lambda i: re.findall(r"<span class=\"sv-time\">([^<]+)<", part(i))
+go = {p[0]: p[3] for p in picks}
+ok = ok and go["audit"] == "Starts free" and "<span class=\"sv-price\">Free</span>" in part("audit")
+ok = ok and go["design"] == "%s to %s" % (times("design")[0].split()[0], times("design")[-1]) 
+ok = ok and go["crm"] == "From " + times("crm")[0].split()[0] + " week"
+ok = ok and go["hosting"] == "From $%d/mo" % min(int(x) for x in re.findall(r"data-monthly=\"(\d+)\"", s))
+sys.exit(0 if ok else 1)
+PY'
+check "its headline ends on the line the owner chose, and the one the owner did not love is gone" 'grep -q "<h1>Websites, CRM, and data for independent advisors. <em>Pick where to start.</em></h1>" "$svc" && ! grep -rqi "scoped before you commit" "$site" "$here/scripts" "$here/content"'
+check "no project price came onto the first screen with them: the one figure there is the published hosting price" '[ "$(python3 -c "
+import re,sys
+s=open(sys.argv[1],encoding=\"utf-8\").read()
+h=re.search(r\"<section class=\\\"page-hero sv-hero\\\">.*?</section>\", s, re.S).group(0)
+print(\",\".join(re.findall(r\"\\\$[0-9][0-9,]*\", h)))" "$svc")" = "\$160" ]'
+heads_ok=0; heads_all=0
+for f in "$svc" "$site/approach/index.html" "$site/about/index.html" "$site/tools/index.html" "$site/contact/index.html" "$dist/insights/index.html"; do
+  heads_all=$((heads_all+1))
+  # one blue part, closing the headline, so that it is the headline's last line
+  grep -qE "<h1>[^<]+ <em>[^<]+</em></h1>" "$f" && heads_ok=$((heads_ok+1)) || echo "  the headline of ${f#$here/} does not end on one blue part"
+done
+check "every inner page's headline ends on one blue part, and the shared stylesheet gives it a line of its own: $heads_ok of $heads_all" '[ "$heads_ok" = "$heads_all" ] && grep -q "^\.page-hero h1 em{display:block;font-style:italic;color:var(--cyan)}" "$site/css/shared.css"'
+
+# --- the Tools page opens on its tools
+# The owner, 2026-11-26: "on the tools page the meat is too buried. I need tiles
+# or chips that fit with the overall scheme to pull to the top (visible on first
+# glance) the tools that meet the criteria. Sports Movies Business, etc". And of
+# its headline, when the blue line became a line of its own everywhere: "this
+# one is okay to stay".
+check "every tool on the Tools page has a tile in its first section, every tile leads to a tool that is there, and each kind says how many it has" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+hero = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S)
+if not hero: sys.exit(1)
+h = hero.group(0); rest = s[hero.end():]
+tiles = re.findall(r"<a class=\"tl-tile\" href=\"([^\"]+)\" data-kinds=\"([a-z ]+)\">", h)
+# the tools the page itself shows: the two that launch, the three kinds of card below them, and the platforms described
+shown = set(re.findall(r"<a href=\"(/tools/[^\"]+)\" class=\"(?:tool-link|scorecard|playbill|tradingcard)\"", rest))
+shown |= {"#" + i for i in re.findall(r"class=\"tool-card build-card[^\"]*\" id=\"([a-z-]+)\"", rest)}
+ok = len(tiles) == len(set(t[0] for t in tiles)) and set(t[0] for t in tiles) == shown and len(shown) >= 13
+chips = re.findall(r"data-kind=\"([a-z]+)\" aria-pressed=\"(true|false)\">[^<]+<span>(\d+)</span>", h)
+ok = ok and [c[0] for c in chips][0] == "all" and chips[0][1] == "true" and all(c[1] == "false" for c in chips[1:])
+kinds = [c[0] for c in chips[1:]]
+ok = ok and all(set(t[1].split()) <= set(kinds) and t[1].split() for t in tiles)          # no tile of a kind that cannot be chosen
+for kind, _, said in chips:
+    ok = ok and int(said) == sum(1 for t in tiles if kind == "all" or kind in t[1].split()) and int(said) > 0
+sys.exit(0 if ok else 1)
+PY'
+check "its headline is the one that stays on one line, by a rule of its own page" 'grep -q "<h1>Your site can do more than <em>describe you.</em></h1>" "$site/tools/index.html" && grep -q "^\.tl-hero h1 em{display:inline}" "$site/tools/index.html"'
+check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile\"" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind)[ .:{\[]"'
+
+# --- every inner page opens on a supporting figure with its source
+# The owner, 2026-11-26: "each of the page heros should be consistent. white
+# line 1, blue line 2. They should all have at least one supporting statistic.
+# adoption dies in week three. how do i know that? how do they know that's
+# true?" The owner approved the five figures and chose the Approach page's line.
+figs_ok=0
+for pair in "services:62%:Broadridge, 2025" "approach:56%:Morningstar, 2026" "about:244:DeVoe &amp; Company, 2026" "contact:3%:Orion, 2026" "tools:72%:Wealthtender, 2025"; do
+  page=${pair%%:*}; rest=${pair#*:}; num=${rest%%:*}; src=${rest#*:}
+  if python3 - "$dist/$page/index.html" "$num" "$src" <<'PY'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read(); num, src = sys.argv[2], sys.argv[3]
+hero = re.search(r"<section class=\"page-hero[^\"]*\">.*?</section>", s, re.S)
+figs = re.findall(r"<div class=\"hero-stat sa-cite[^\"]*\" tabindex=\"0\">(.*?</a></span>)</div>", hero.group(0) if hero else "", re.S)
+ok = len(figs) == 1
+if ok:
+    f = figs[0]
+    ok = f.startswith("<div class=\"stat-num\">%s</div><div class=\"stat-label\">" % num)
+    ok = ok and "<span class=\"sa-cite-src\">Source: %s</span>" % src in f                      # who says so, and when, in view
+    card = re.search(r"<span class=\"sa-cite-card\" role=\"note\"><strong>[^<]{30,}</strong>.*?<span>[^<]{40,}</span><a href=\"https://[^\"]+\" target=\"_blank\" rel=\"noopener\">[^<]+</a></span>$", f, re.S)
+    ok = ok and bool(card)                                                                      # the finding, who was asked, a link
+# the source cards are styled and opened on this page
+ok = ok and "href=\"/css/cite.css\"" in s and "<script src=\"/js/cite.js\"></script>" in s
+sys.exit(0 if ok else 1)
+PY
+  then figs_ok=$((figs_ok+1)); else echo "  the opening figure is not right on /$page/"; fi
+done
+check "Services, Approach, About, Contact and Tools each open on one figure, with its source in view and a card that links to it: $figs_ok of 5" '[ "$figs_ok" = 5 ]'
+check "the four figures taken from the home page say of themselves what the home page says" 'python3 - "$home" "$site" <<'"'"'PY'"'"'
+import re, sys
+home = open(sys.argv[1], encoding="utf-8").read()
+ok = True
+for page, num in (("services", "62%"), ("contact", "3%"), ("tools", "72%")):
+    s = open("%s/%s/index.html" % (sys.argv[2], page), encoding="utf-8").read()
+    there = re.search(r"<div class=\"stat-num\">%s</div>.*?(<span class=\"sa-cite-card\".*?</a></span>)</div>" % re.escape(num), home, re.S)
+    here = re.search(r"<div class=\"hero-stat sa-cite[^\"]*\" tabindex=\"0\"><div class=\"stat-num\">%s</div>.*?(<span class=\"sa-cite-card\".*?</a></span>)</div>" % re.escape(num), s, re.S)
+    ok = ok and bool(there and here) and there.group(1) == here.group(1)
+sys.exit(0 if ok else 1)
+PY'
+check "the About page's figure is the deal count the market strip carries, and names the same Deal Book" 'python3 - "$site/about/index.html" "$site/lib/market.php" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read(); php = open(sys.argv[2], encoding="utf-8").read()
+deals = php[php.index("const MARKET_DEALS = ["):]
+count = re.search(r"\x27count\x27 => (\d+)", deals).group(1)
+year = re.search(r"\x27year\x27 => (\d+)", deals).group(1)
+book = re.search(r"\x27book\x27 => \x27([^\x27]+)\x27", deals).group(1)
+url = re.search(r"\x27url\x27 => \x27([^\x27]+)\x27", deals).group(1)
+fig = re.search(r"<div class=\"hero-stat sa-cite\" tabindex=\"0\"><div class=\"stat-num\">(\d+)</div><div class=\"stat-label\">([^<]+)</div>.*?</a></span></div>", s, re.S)
+ok = bool(fig) and fig.group(1) == count and year in fig.group(2)
+ok = ok and book.replace("&", "&amp;") in fig.group(0) and "href=\"%s\"" % url in fig.group(0)
+sys.exit(0 if ok else 1)
+PY'
+check "the line with no source is gone from the Approach page, which now says what the owner chose" '! grep -rqi "week three" "$site" "$here/content" "$here/scripts" && ! grep -q "Most &ldquo;cleanups&rdquo; fail" "$site/approach/index.html" && grep -q "<p class=\"page-hero-sub\">A cleanup built on someone else&rsquo;s workflow does not stick. We build on the way your team already works.</p>" "$site/approach/index.html"'
+
 # --- the logo
 # The owner, 2026-11-26: "the logo is small and near invisible on the site". The
 # menu showed the logo file whole, a white square 36px tall with the name about
@@ -300,9 +422,12 @@ if node -e "require('playwright')" 2>/dev/null; then
   (cd "$dist" && exec python3 -m http.server 18747 --bind 127.0.0.1 >/dev/null 2>&1) & lpid=$!
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18747/" && break; sleep 0.1; done
   lout=$(node "$here/tests/logo_browser.cjs" http://127.0.0.1:18747 2>&1); lcode=$?
+  hout=$(node "$here/tests/hero_browser.cjs" http://127.0.0.1:18747 2>&1); hcode=$?
   kill "$lpid" 2>/dev/null
   check "the logos show in a browser: $(printf '%s' "$lout" | tail -1)" '[ $lcode -eq 0 ]'
   [ $lcode -eq 0 ] || printf '%s\n' "$lout"
+  check "the first screens are right in a browser: $(printf '%s' "$hout" | tail -1)" '[ $hcode -eq 0 ]'
+  [ $hcode -eq 0 ] || printf '%s\n' "$hout"
 else
   echo "no browser here: the logos were not opened"
 fi

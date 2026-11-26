@@ -68,6 +68,53 @@ check "refuses a non-public_html root" '[ $rc -ne 0 ]'
 #    even though it works here (found on the first live deploy).
 check "no process substitution in the deploy script" '! grep -q "<(" "$here/scripts/remote_deploy.sh"'
 
+# 7. Everything a page loads is in place before any page is. The host and
+#    Cloudflare keep a stylesheet for a year under its full address: a page
+#    naming a new address must never be there before the file is (on
+#    2026-11-26 an old stylesheet was kept under a new address for hours).
+#    Unpacked in one pass in the list's order, about/index.html would land
+#    before css/site.css. A stand-in for tar notes what each unpacking was
+#    given and what the stylesheet on the host said at that moment.
+rm -rf "$src"; src=$(mktemp -d); mkdir -p "$src/about" "$src/css" "$src/img" "$src/js" "$src/tools"
+mkdir -p "$web/css" "$web/about"; echo "old css" > "$web/css/site.css"; echo "old about page" > "$web/about/index.html"
+echo "new about page" > "$src/about/index.html"; echo "new css" > "$src/css/site.css"; echo "pic" > "$src/img/logo.png"
+echo "new home page" > "$src/index.html"; echo "new js" > "$src/js/app.js"; echo "new tools page" > "$src/tools/index.html"
+echo "an endpoint" > "$src/tools/feed.php"
+real_tar=$(command -v tar); mkdir -p "$home/bin"; : > "$home/tar.log"
+cat > "$home/bin/tar" <<SHIM
+#!/usr/bin/env bash
+list=; prev=; unpack=
+for a in "\$@"; do [ "\$prev" = "-T" ] && list="\$a"; case "\$a" in -x*) unpack=1 ;; esac; prev="\$a"; done
+if [ -n "\$unpack" ]; then
+  if [ -n "\$list" ]; then kinds=\$(awk '{ print (/\\.html\$/ ? "pages" : "other") }' "\$list" | sort -u | tr '\\n' ' ')
+  else kinds="everything at once "; fi
+  echo "\${kinds}| the stylesheet says: \$(cat "$web/css/site.css" 2>/dev/null)" >> "$home/tar.log"
+fi
+exec "$real_tar" "\$@"
+SHIM
+chmod +x "$home/bin/tar"
+stage "$src"
+PATH="$home/bin:$PATH" HOME="$home" bash "$here/scripts/remote_deploy.sh" "www/example.com/public_html" "private/spa-site" "saratoga .well-known tools/gc-demo" >/dev/null 2>&1; rc=$?
+check "a deploy of pages, styles, scripts and pictures succeeds" '[ $rc -eq 0 ]'
+check "it unpacks twice: what pages load, then the pages" '[ "$(wc -l < "$home/tar.log")" = 2 ] && sed -n 1p "$home/tar.log" | grep -q "^other |" && sed -n 2p "$home/tar.log" | grep -q "^pages |"'
+check "when the first page goes in, the stylesheet it names is already the new one" 'sed -n 2p "$home/tar.log" | grep -q "the stylesheet says: new css$"'
+check "and everything arrived: pages, the stylesheet, the script, the picture, the endpoint" 'grep -q "new about page" "$web/about/index.html" && grep -q "new home page" "$web/index.html" && grep -q "new tools page" "$web/tools/index.html" && grep -q "new css" "$web/css/site.css" && grep -q "new js" "$web/js/app.js" && [ -f "$web/img/logo.png" ] && [ -f "$web/tools/feed.php" ]'
+check "the earlier pages were backed up first" 'tar -tzf "$(ls -1t "$priv"/backups/*.tgz | head -1)" | grep -qx "about/index.html"'
+check "nothing is left behind in the private folder" '[ ! -e "$priv/first.txt" ] && [ ! -e "$priv/pages.txt" ] && [ ! -e "$priv/incoming.tgz" ]'
+
+# 7b. A deploy with only pages, and one with no page at all, both work.
+only=$(mktemp -d); mkdir -p "$only/about"; echo "newer about page" > "$only/about/index.html"
+check "a deploy of pages alone works" 'stage "$only"; run && grep -q "newer about page" "$web/about/index.html"'
+rm -rf "$only"; only=$(mktemp -d); mkdir -p "$only/css"; echo "newest css" > "$only/css/site.css"
+# (This one also has a new file last in its list, which once stopped a deploy without a word.)
+check "a deploy with no page works, and so does one whose last file is new" 'stage "$only"; run && grep -q "newest css" "$web/css/site.css"'
+rm -rf "$only"
+
+# 8. Refuses a path tar would read as an option.
+printf -- '-x.html\n' > "$priv/incoming.txt"; tar -czf "$priv/incoming.tgz" -T /dev/null
+run; rc=$?
+check "refuses a path that starts with a dash" '[ $rc -ne 0 ]'
+
 rm -rf "$src"
 [ $fails -eq 0 ] && echo "all $n checks passed" || echo "$fails of $n checks failed"
 exit $fails

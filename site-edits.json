@@ -9,12 +9,6 @@
     },
     {
       "file": "tools/index.html",
-      "why": "Client-facing framing; the personal projects are now the lowest section, under the built-to-order platforms",
-      "find": "The four projects in the lower section started as personal builds &mdash; curiosity, a desire to learn new frameworks, and in the case of the two movie trackers, a better way to keep track of what I&rsquo;ve actually watched than a half-remembered mental list. Take a look around.",
-      "replace": "The projects in the lowest section started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around."
-    },
-    {
-      "file": "tools/index.html",
       "why": "Sports Desk now leads with live NFL tools",
       "find": "<h3 class=\"subgroup-title\">Things I tried to understand.</h3>",
       "replace": "<h3 class=\"subgroup-title\">Sports, through the data.</h3>"

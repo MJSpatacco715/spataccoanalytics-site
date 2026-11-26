@@ -23,7 +23,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=66144cae">
+<link rel="stylesheet" href="/css/shared.css?v=a1136c74">
+<link rel="stylesheet" href="/css/cite.css">
 <style>
 /* ===== TOOLS PAGE STYLES ===== */
 .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:28px;margin-top:48px}
@@ -146,6 +147,50 @@
 
 .tools-intro{font-size:16px;line-height:1.8;color:var(--text-light);max-width:700px;margin-bottom:24px;opacity:0;animation:fadeUp .9s .55s forwards}
 .tools-intro em{color:var(--cyan);font-style:normal;font-weight:500}
+/* The tools themselves, on the first screen. The owner, 2026-11-26: "on the tools page
+   the meat is too buried. I need tiles or chips that fit with the overall scheme to pull
+   to the top (visible on first glance) the tools that meet the criteria. Sports Movies
+   Business, etc". Every rule here is for this page's opening section only (.tl-hero):
+   each tool's own page is built with this head and has a plain one. */
+.tl-hero{padding-top:108px;padding-bottom:32px}
+.tl-hero .page-hero-inner{max-width:1100px}
+.tl-hero h1{font-size:clamp(34px,3.7vw,48px);margin-bottom:10px}
+/* This headline is one sentence and stays on one line: the owner, of this one, "okay to stay". */
+.tl-hero h1 em{display:inline}
+.tl-hero .hero-stat{margin-bottom:16px}
+.tl-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;opacity:0;animation:fadeUp .9s .6s forwards}
+.tl-chip{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.7px;text-transform:uppercase;color:#CBD5E1;background:rgba(255,255,255,0.04);border:1px solid rgba(203,213,225,0.28);border-radius:2px;padding:8px 14px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.tl-chip span{margin-left:6px;font-weight:500;letter-spacing:0;color:#8FA0B8}
+.tl-chip:hover{border-color:var(--cyan);color:var(--white)}
+.tl-chip:focus-visible{outline:2px solid var(--purple-light);outline-offset:2px}
+.tl-chip.on{background:var(--cyan);border-color:var(--cyan);color:var(--navy)}
+.tl-chip.on span{color:var(--navy)}
+.tl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;opacity:0;animation:fadeUp .9s .7s forwards}
+.tl-tile{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 14px;border:1px solid rgba(61,216,216,0.28);background:rgba(255,255,255,0.03);text-decoration:none;transition:border-color .2s,background .2s}
+.tl-tile[hidden]{display:none}
+.tl-tile:hover,.tl-tile:focus-visible{border-color:var(--cyan);background:rgba(61,216,216,0.09)}
+.tl-ico{flex:none;font-size:18px;line-height:1}
+.tl-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.tl-name{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;line-height:1.15;color:var(--white)}
+.tl-kind{font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);white-space:nowrap}
+.fun-note{font-size:15px;line-height:1.7;color:var(--slate);max-width:640px;margin-top:4px}
+/* a platform's tile lands on its card, clear of the menu and the strip pinned under it */
+#built-crm,#built-league,#built-golf{scroll-margin-top:136px}
+.build-card.reveal{transform:none}
+@media(max-width:1000px){.tl-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.tl-tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .tl-kind{display:none}}
+@media(max-width:560px){
+  .tl-hero{padding-top:128px;padding-bottom:26px}
+  .tl-hero .page-hero-inner{display:flex;flex-direction:column}
+  .tl-hero .hero-stat{order:5;margin:18px 0 0}
+  .tl-hero h1{margin-bottom:16px}
+  .tl-chips{gap:6px;margin-bottom:12px}
+  .tl-chip{padding:7px 10px;font-size:10.5px;letter-spacing:1.2px}
+  .tl-tiles{gap:8px}
+  .tl-tile{min-height:46px;padding:7px 10px;gap:8px}
+  .tl-name{font-size:16px}
+  .tl-ico{font-size:16px}
+}
 </style>
 </head>
 <body>
@@ -161,12 +206,47 @@
   </div>
 </nav>
 
-<section class="page-hero">
+<section class="page-hero tl-hero">
   <div class="page-hero-inner">
     <div class="page-hero-tag">Tools &amp; Projects</div>
     <h1>Your site can do more than <em>describe you.</em></h1>
-    <p class="tools-intro">Each tool below is a working example of something a firm&rsquo;s website can do: <em>score</em>, <em>parse</em>, <em>calculate</em>, <em>explain</em>. Some were built for financial services, some to order, and some for fun. The tools run live on this site. The built-to-order platforms run privately, and you can ask to see one.</p>
-    <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The projects in the lowest section started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around.</p>
+    <div class="hero-stat sa-cite hero-stat-row" tabindex="0"><div class="stat-num">72%</div><div class="stat-label">of prospects say they would visit an advisor&rsquo;s own website</div><span class="sa-cite-src">Source: Wealthtender, 2025</span><span class="sa-cite-card" role="note"><strong>72% of people looking for an advisor said they would visit the advisor&rsquo;s website as a next step.</strong>Only checking reviews and awards (83%) and an introductory call (73%) ranked higher.<span>Wealthtender survey of 500 U.S. adults earning over $100,000 who plan to hire an advisor within five years, July 2025. Wealthtender sells marketing services to advisors.</span><a href="https://wealthtender.com/insights/how-americans-find-and-hire-financial-advisors/" target="_blank" rel="noopener">Read the study</a></span></div>
+    <!-- Every tool on this page, on the first screen. A kind chosen above them keeps only
+         the tools of that kind. A tool can be of more than one kind. Each tile goes to
+         its tool, or, for a platform that runs privately, to where it is described below. -->
+    <div class="tl-chips" role="group" aria-label="Show tools by kind">
+      <button type="button" class="tl-chip on" data-kind="all" aria-pressed="true">All <span>13</span></button>
+      <button type="button" class="tl-chip" data-kind="business" aria-pressed="false">Business <span>3</span></button>
+      <button type="button" class="tl-chip" data-kind="sports" aria-pressed="false">Sports <span>8</span></button>
+      <button type="button" class="tl-chip" data-kind="movies" aria-pressed="false">Movies <span>2</span></button>
+      <button type="button" class="tl-chip" data-kind="built" aria-pressed="false">Built to order <span>3</span></button>
+    </div>
+    <div class="tl-tiles" id="tl-tiles">
+      <a class="tl-tile" href="/tools/website-scorer.html" data-kinds="business"><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-text"><span class="tl-name">RIA Digital Presence Scorecard</span><span class="tl-kind">Business</span></span></a>
+      <a class="tl-tile" href="/tools/resume-parser/" data-kinds="business"><span class="tl-ico" aria-hidden="true">&#128196;</span><span class="tl-text"><span class="tl-name">Resume Parser</span><span class="tl-kind">Business</span></span></a>
+      <a class="tl-tile" href="#built-crm" data-kinds="business built"><span class="tl-ico" aria-hidden="true">&#128199;</span><span class="tl-text"><span class="tl-name">Custom CRM</span><span class="tl-kind">Built to order</span></span></a>
+      <a class="tl-tile" href="#built-league" data-kinds="sports built"><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-text"><span class="tl-name">Fantasy League Platform</span><span class="tl-kind">Built to order</span></span></a>
+      <a class="tl-tile" href="#built-golf" data-kinds="sports built"><span class="tl-ico" aria-hidden="true">&#9971;</span><span class="tl-text"><span class="tl-name">Golf Pick&rsquo;em</span><span class="tl-kind">Built to order</span></span></a>
+      <a class="tl-tile" href="/tools/football/nfl-lines-tracker.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-text"><span class="tl-name">NFL Lines Tracker</span><span class="tl-kind">Sports</span></span></a>
+      <a class="tl-tile" href="/tools/football/nfl-injury-tracker.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#129657;</span><span class="tl-text"><span class="tl-name">NFL Injury Tracker</span><span class="tl-kind">Sports</span></span></a>
+      <a class="tl-tile" href="/tools/football/nfl-depth-charts.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-text"><span class="tl-name">NFL Depth Charts</span><span class="tl-kind">Sports</span></span></a>
+      <a class="tl-tile" href="/tools/cricket-explainer.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#127951;</span><span class="tl-text"><span class="tl-name">Cricket vs. Baseball</span><span class="tl-kind">Sports</span></span></a>
+      <a class="tl-tile" href="/tools/curling-explainer.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#129482;</span><span class="tl-text"><span class="tl-name">Curling Explainer</span><span class="tl-kind">Sports</span></span></a>
+      <a class="tl-tile" href="/tools/card-evaluator.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#127183;</span><span class="tl-text"><span class="tl-name">Card Evaluator</span><span class="tl-kind">Sports</span></span></a>
+      <a class="tl-tile" href="/tools/oscar-tracker.html" data-kinds="movies"><span class="tl-ico" aria-hidden="true">&#127942;</span><span class="tl-text"><span class="tl-name">Best Picture Tracker</span><span class="tl-kind">Movies</span></span></a>
+      <a class="tl-tile" href="/tools/afi-tracker.html" data-kinds="movies"><span class="tl-ico" aria-hidden="true">&#127916;</span><span class="tl-text"><span class="tl-name">AFI 100 Tracker</span><span class="tl-kind">Movies</span></span></a>
+    </div>
+    <script>
+    /* A kind chosen: only the tools of that kind stay. With no script, every tool shows. */
+    (function () {
+      var chips = document.querySelectorAll('.tl-chip'), tiles = document.querySelectorAll('.tl-tile');
+      function show(kind) {
+        for (var i = 0; i < tiles.length; i++) tiles[i].hidden = kind !== 'all' && (' ' + tiles[i].getAttribute('data-kinds') + ' ').indexOf(' ' + kind + ' ') < 0;
+        for (var j = 0; j < chips.length; j++) { var on = chips[j].getAttribute('data-kind') === kind; chips[j].classList.toggle('on', on); chips[j].setAttribute('aria-pressed', on ? 'true' : 'false'); }
+      }
+      for (var k = 0; k < chips.length; k++) chips[k].addEventListener('click', function () { show(this.getAttribute('data-kind')); });
+    })();
+    </script>
   </div>
 </section>
 
@@ -186,6 +266,7 @@
       <div class="category-label fs">Financial Services</div>
       <h2 class="section-heading section-heading-dark">Tools built for the industry we know.</h2>
       <div class="accent-line"></div>
+      <p class="built-note">Each tool on this page is a working example of something a firm&rsquo;s website can do: score, parse, calculate, explain.</p>
     </div>
     <div class="tools-grid">
       <div class="tool-card featured reveal d05">
@@ -217,7 +298,7 @@
     </div>
     <div class="tools-grid">
 
-      <div class="tool-card build-card reveal d05">
+      <div class="tool-card build-card reveal d05" id="built-crm">
         <span class="tool-badge built">Custom CRM</span>
         <div class="tool-icon">&#128199;</div>
         <h3>A CRM built for the way the work is done</h3>
@@ -234,7 +315,7 @@
         <a href="/contact/?about=crm" class="tool-link">Ask for a walkthrough</a>
       </div>
 
-      <div class="tool-card build-card reveal d10">
+      <div class="tool-card build-card reveal d10" id="built-league">
         <span class="tool-badge built">Multi-user Platform</span>
         <div class="tool-icon">&#127944;</div>
         <h3>A league&rsquo;s whole season, live and archived</h3>
@@ -251,7 +332,7 @@
         <a href="/contact/?about=league" class="tool-link">Ask for a walkthrough</a>
       </div>
 
-      <div class="tool-card build-card reveal d15">
+      <div class="tool-card build-card reveal d15" id="built-golf">
         <span class="tool-badge built">Game</span>
         <div class="tool-icon">&#9971;</div>
         <h3>A season-long golf pick&rsquo;em</h3>
@@ -279,6 +360,7 @@
       <div class="category-label fun">Just for Fun</div>
       <h2 class="section-heading section-heading-light">Projects built out of curiosity and stubbornness.</h2>
       <div class="accent-line"></div>
+      <p class="fun-note">These started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around.</p>
     </div>
     <div class="tools-grid" style="display:block;margin-top:40px">
 
@@ -390,5 +472,6 @@
 </footer>
 
 <script src="/js/shared.js"></script>
+<script src="/js/cite.js"></script>
 </body>
 </html>

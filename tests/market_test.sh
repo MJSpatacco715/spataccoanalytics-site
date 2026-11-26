@@ -272,11 +272,11 @@ check "the strip is on the tools page, after the opening copy and before the fir
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
 # the copy leads: nothing of the strip between the menu and the opening section
-lead = re.search(r"</nav>(.*?)<section class=\"page-hero\">", s, re.S)
+lead = re.search(r"</nav>(.*?)<section class=\"page-hero[^\"]*\">", s, re.S)
 if not lead or re.search(r"sa-tk|ticker\.(css|js)", lead.group(1)):
     sys.exit(1)
 # then the strip, a child of the page itself, between that section and the next
-m = re.search(r"<section class=\"page-hero\">.*?</section>(.*?)<section\b", s, re.S)
+m = re.search(r"<section class=\"page-hero[^\"]*\">.*?</section>(.*?)<section\b", s, re.S)
 between = re.sub(r"<!--.*?-->", "", m.group(1), flags=re.S) if m else ""
 ok = re.fullmatch(r"\s*<link rel=\"stylesheet\" href=\"/css/ticker\.css\?v=[0-9a-f]{8}\">\s*<aside class=\"sa-tk\" id=\"sa-ticker\" aria-label=\"Market figures\" hidden></aside>\s*<script src=\"/js/ticker\.js\?v=[0-9a-f]{8}\" defer></script>\s*", between)
 sys.exit(0 if ok else 1)
