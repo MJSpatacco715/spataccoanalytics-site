@@ -191,6 +191,38 @@ has = "in-home" in open(sys.argv[2], encoding="utf-8").read()
 sys.exit(0 if want == has else 1)
 PY'
 
+# --- the scorer reads an address however it is typed
+scorer="$site/tools/website-scorer.html"
+check "the scorer takes an address with or without https://, and turns away what is not one" 'node - "$scorer" <<'"'"'JS'"'"'
+const fs = require("fs");
+const src = fs.readFileSync(process.argv[2], "utf8");
+const m = src.match(/\/\* tidy-address:start \*\/([\s\S]*?)\/\* tidy-address:end \*\//);
+if (!m) { console.log("  the address reader is not in the page"); process.exit(1); }
+const tidyAddress = new Function(m[1] + "; return tidyAddress;")();
+const want = [
+  ["www.columbusmacro.com", "https://www.columbusmacro.com"],
+  ["columbusmacro.com", "https://columbusmacro.com"],
+  ["  Columbusmacro.com/  ", "https://columbusmacro.com"],
+  ["https://www.columbusmacro.com", "https://www.columbusmacro.com"],
+  ["http://columbusmacro.com", "http://columbusmacro.com"],
+  ["HTTPS://Firm.com/About", "https://firm.com/About"],
+  ["https//firm.com", "https://firm.com"],
+  ["http:/firm.com", "http://firm.com"],
+  ["firm.com/team?x=1", "https://firm.com/team?x=1"],
+  ["firm.com.", "https://firm.com"],
+  ["httpbin.org", "https://httpbin.org"],
+  ["linkedin.com/company/yourfirm", "https://linkedin.com/company/yourfirm"],
+  ["www.linkedin.com/company/yourfirm/", "https://www.linkedin.com/company/yourfirm/"],
+  ["", ""], ["columbus macro", ""], ["firm", ""], ["john@firm.com", ""], ["mailto:john@firm.com", ""],
+  ["javascript:alert(1)", ""], ["<script>", ""], ["https://", ""], ["1.2.3.4", ""],
+];
+let bad = 0;
+for (const [typed, out] of want) { const got = tidyAddress(typed); if (got !== out) { bad++; console.log("  typed " + JSON.stringify(typed) + " gave " + JSON.stringify(got) + ", wanted " + JSON.stringify(out)); } }
+process.exit(bad ? 1 : 0);
+JS'
+check "its fields do not ask for https://, in the hint or in the message" '! grep -q "starting with https://" "$scorer" && grep -q "id=\"inp-website\" placeholder=\"yourfirm.com\"" "$scorer" && grep -q "id=\"inp-linkedin\" placeholder=\"linkedin.com/company/yourfirm\"" "$scorer" && ! grep -q "type=\"url\"" "$scorer"'
+check "the scorer checks what was typed through the address reader, not for the letters http" 'grep -q "const website   = tidyAddress(typedSite);" "$scorer" && ! grep -q "startsWith(\"http\")" "$scorer"'
+
 # --- house rules
 check "no long dash on the home page or the two new pages" '! grep -lE "&mdash;|"$'"'"'\xe2\x80\x94'"'"' "$home" "$site/approach/index.html" "$site/about/index.html"'
 check "no project price on any of them" '! grep -nE "\\\$[0-9][0-9,]{3,}" "$site/approach/index.html" "$site/about/index.html"'
