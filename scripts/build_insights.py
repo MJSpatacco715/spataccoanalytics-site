@@ -131,7 +131,7 @@ def block(b: dict, where: str) -> str:
     return ""
 
 
-def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "", image: str = "/img/social-card.png") -> str:
+def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "", image: str = "/img/social-card.png?v=fa9978ce") -> str:
     follow = f' &middot; {sign_off_link(linkedin, "LinkedIn")}' if linkedin else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -160,7 +160,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 </head>
 <body>
 <nav id="main-nav">
-  <a href="/" class="brand"><img src="/img/wordmark-on-dark.png?v=51ed4b33" alt="Spatacco Analytics" class="logo" width="520" height="164"></a>
+  <a href="/" class="brand"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="logo" width="520" height="163"></a>
   <div class="nav-links">
     <a href="/services/">Services</a>
     <a href="/approach/">Approach</a>
@@ -171,7 +171,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 </nav>
 {body}
 <footer>
-  <a href="/" class="footer-brand"><img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512"><img src="/img/wordmark-on-dark.png?v=51ed4b33" alt="Spatacco Analytics" class="footer-logo" width="520" height="164"></a>
+  <a href="/" class="footer-brand"><img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="footer-logo" width="520" height="163"></a>
   <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; {sign_off_link("/insights/", "Insights")}{follow}</div>
 </footer>
 <script src="/js/shared.js"></script>
@@ -266,7 +266,7 @@ def build(out: Path, posts_dir: Path | None = None, drafts: bool = False) -> int
 </section>"""
         d = root / p["slug"]
         d.mkdir(parents=True, exist_ok=True)
-        image = "/img/social-card.png"
+        image = "/img/social-card.png?v=fa9978ce"
         if p.get("card"):
             if not (out / p["card"].lstrip("/")).is_file():
                 fail(f"{where}: its card {p['card']} is not in site/img/insights/")
