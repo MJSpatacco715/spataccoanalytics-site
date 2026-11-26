@@ -96,6 +96,10 @@
 .sv-opt-go:hover .sv-go,.sv-opt-go:focus-visible .sv-go{background:var(--purple);color:var(--white)}
 .sv-opt-go:hover{box-shadow:inset 0 0 0 3px var(--purple)}
 .sv-opt-go:focus-visible{outline:3px solid var(--purple);outline-offset:-3px}
+/* it comes with every paid engagement: once anything is picked it shows ticked, as a level chosen does */
+.sv-opt-go.inc{box-shadow:inset 0 0 0 3px var(--purple)}
+.sv-opt-go.inc .sv-tick{border:1.5px solid var(--purple);border-radius:50%;background:var(--purple);box-shadow:inset 0 0 0 3px var(--white)}
+.sv-opt-go.inc .sv-tick::before{content:none}
 .sv-foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-top:12px}
 .sv-price{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);line-height:1;font-variant-numeric:lining-nums;white-space:nowrap}
 .sv-price small{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500}
@@ -133,7 +137,7 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
 .sv-sum h3,.sv-gate h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;color:var(--navy);margin-bottom:14px;line-height:1.2}
 .sv-line{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--text)}
 .sv-line span:last-child{font-weight:600;color:var(--navy);white-space:nowrap;font-variant-numeric:lining-nums}
-.sv-line.credit span:last-child{color:#0B7A5B}
+.sv-line.credit span:last-child,.sv-line.inc span:last-child{color:#0B7A5B}
 .sv-line.total{border-bottom:none;border-top:2px solid var(--navy);margin-top:6px;padding-top:12px;font-weight:600;color:var(--navy);font-size:16px}
 .sv-line.total span:last-child{font-family:'Cormorant Garamond',serif;font-size:26px}
 .sv-empty{font-size:15px;color:var(--slate);line-height:1.6}
@@ -243,10 +247,12 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
       <div class="sv-row">
         <!-- The free level is the website scorer itself, so all of it is a link there. The owner,
              2026-11-26, having tapped it and seen it only ticked: "This should (obviously) link
-             to the web scorer". It is not a level to put in the plan: there is nothing to price. -->
+             to the web scorer". It is not a level to choose, and it is in the plan all the same:
+             "Add it to the builder. Essentially will be auto-checked on all paid engagements".
+             Once anything is picked the script below shows it ticked and puts it first in the plan. -->
         <a class="sv-opt sv-opt-go" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">
-          <span class="sv-name"><span class="sv-tick" aria-hidden="true"></span>Website Score<span class="sv-tier-tag">Essential</span></span>
-          <span class="sv-desc">Instant overall score for your site.</span>
+          <span class="sv-name"><span class="sv-tick" aria-hidden="true"></span>Website Score<span class="sv-hp sv-in" hidden>, included in your plan</span><span class="sv-tier-tag">Essential</span></span>
+          <span class="sv-desc">Instant overall score for your site. Included with every paid engagement.</span>
           <span class="sv-foot"><span class="sv-price">Free</span><span class="sv-go">Score my site</span><span class="sv-time">Instant</span></span>
         </a>
         <label class="sv-opt rec"><input type="radio" name="audit" value="professional">
@@ -528,11 +534,18 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
     ['audit', 'design', 'crm', 'hosting'].forEach(function (n) {
       var b = document.querySelector('[data-clear="' + n + '"]'); if (b) b.hidden = !picked(n);
     });
-    if (!audit && !design && !crm && !host) {
+    // The free Website Score comes with every paid engagement: once anything is
+    // picked it shows ticked on its card (it stays a link to the scorer) and
+    // leads the plan. Nobody ticks or unticks it.
+    var paid = !!(audit || design || crm || host);
+    var score = document.querySelector('.sv-opt-go');
+    if (score) { score.classList.toggle('inc', paid); score.querySelector('.sv-in').hidden = !paid; }
+    if (!paid) {
       var p = document.createElement('p'); p.className = 'sv-empty';
       p.textContent = 'Nothing picked yet. Choose a level in any service above and it shows up here.';
       box.appendChild(p); $('sv-note').textContent = ''; return;
     }
+    box.appendChild(line('Website Score (included)', 'Free', 'inc'));
     var oneTime = 0, anyFrom = false, missing = false;
     function cost(service, tier) {
       if (service === 'audit' && tier === 'essential') return 0;

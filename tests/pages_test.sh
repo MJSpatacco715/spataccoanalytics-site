@@ -254,7 +254,10 @@ sys.exit(0 if ok else 1)
 PY'
 # The audit's free level is the website scorer. It was a level to tick like the others, and
 # a tap only ticked it; the owner, 2026-11-26: "This should (obviously) link to the web
-# scorer". All of it is a link there now, and it is no longer a level to put in the plan.
+# scorer". All of it is a link there now, and it is not a level to choose.
+# It is in the plan all the same. The owner, told it could no longer be added: "Add it to
+# the builder. Essentially will be auto-checked on all paid engagements". So the page says
+# it comes with every paid engagement, and the plan lists it, free, once anything is picked.
 check "the free Website Score on the Services page is a link to the scorer, all of it, and not a level to tick" 'python3 - "$svc" "$dist" <<'"'"'PY'"'"'
 import os, re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
@@ -264,6 +267,8 @@ ok = bool(go) and "Website Score" in go.group(2) and "<span class=\"sv-price\">F
 ok = ok and "<input" not in go.group(2) and "<button" not in go.group(2)          # nothing inside it that a tap would land on instead
 ok = ok and os.path.isfile(sys.argv[2] + go.group(1))                                # the page it goes to is in the built site
 ok = ok and re.findall(r"<input type=\"radio\" name=\"audit\" value=\"([a-z]+)\"", card) == ["professional", "complete"]
+ok = ok and "Included with every paid engagement." in go.group(2)
+ok = ok and "box.appendChild(line(\"Website Score (included)\", \"Free\", \"inc\"))".replace(chr(34), chr(39)) in s    # the line the plan draws for it
 sys.exit(0 if ok else 1)
 PY'
 check "its headline ends on the line the owner chose, and the one the owner did not love is gone" 'grep -q "<h1>Websites, CRM, and data for independent advisors. <em>Pick where to start.</em></h1>" "$svc" && ! grep -rqi "scoped before you commit" "$site" "$here/scripts" "$here/content"'

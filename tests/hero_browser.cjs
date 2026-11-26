@@ -118,6 +118,28 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     await page.waitForTimeout(200);
     const k = await page.evaluate(() => { const e = document.querySelector('input[name="audit"]:checked'); return { picked: e ? e.value : '', plan: document.getElementById('sv-lines').textContent, path: location.pathname }; });
     check('/services/ at ' + w + ' by ' + h + ': the audit levels beside it still tick into the plan and stay on the page', k.picked === 'professional' && k.plan.includes('Audit Report') && k.path === '/services/');
+    // It is in the plan with every paid engagement, by itself (the owner: "Add it to the builder.
+    // Essentially will be auto-checked on all paid engagements"): ticked on its card, first in the plan.
+    const plan = () => page.evaluate(() => { const o = document.querySelector('.sv-opt-go'), t = getComputedStyle(o.querySelector('.sv-tick')); return { ticked: o.classList.contains('inc') && t.backgroundColor === 'rgb(123, 92, 255)', said: !o.querySelector('.sv-in').hidden, lines: [...document.querySelectorAll('#sv-lines .sv-line')].map((l) => l.children[0].textContent + '=' + l.children[1].textContent), link: o.tagName === 'A' && o.getAttribute('href').indexOf('/tools/website-scorer.html') === 0 }; });
+    const withAudit = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': with a paid level picked the Website Score shows ticked and leads the plan, free', withAudit.ticked && withAudit.said && withAudit.lines[0] === 'Website Score (included)=Free' && withAudit.lines.length >= 2 && withAudit.link);
+    await page.locator('[data-clear="audit"]').scrollIntoViewIfNeeded();
+    if (mobile) await page.tap('[data-clear="audit"]'); else await page.click('[data-clear="audit"]');
+    await page.waitForTimeout(200);
+    const none = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': with nothing picked it is not ticked and not in the plan', !none.ticked && !none.said && none.lines.length === 0 && none.link);
+    await page.locator('label.sv-plan.rec .sv-desc').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    if (mobile) await page.tap('label.sv-plan.rec .sv-desc'); else await page.click('label.sv-plan.rec .sv-desc');
+    await page.waitForTimeout(200);
+    const host = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': hosting alone is a paid engagement too: the Website Score is ticked and in the plan', host.ticked && host.lines[0] === 'Website Score (included)=Free' && host.lines.some((l) => /^Managed Hosting/.test(l)));
+    // ticked, it is still the link
+    await page.locator('.sv-opt-go .sv-go').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(600);
+    const again = mobile ? page.tap('.sv-opt-go .sv-go') : page.click('.sv-opt-go .sv-go');
+    await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), again]);
+    check('/services/ at ' + w + ' by ' + h + ': ticked, it still opens the scorer', new URL(page.url()).pathname === '/tools/website-scorer.html');
     await ctx.close();
   }
 
