@@ -27,6 +27,9 @@ lives and says which pieces are not in this repo yet.
   more than it needs. On a phone everything is one vertical stack, section by
   section: nothing sits side by side there. A change that adds a section or a tall block has to take as
   much height out somewhere else.
+- The menu reads Services, Approach, Tools, About, Contact, on every page, in
+  the posts' shell (`scripts/build_insights.py`) and so on every tool page. The
+  owner set that order on 2026-11-26. `tests/pages_test.sh` holds it.
 - Pages are never kept by the host's page cache (`site/.htaccess` marks
   every `.html` file `private, no-cache`), so a publish shows without anyone
   clearing a cache. Scripts, styles and images are kept for a year: when one
