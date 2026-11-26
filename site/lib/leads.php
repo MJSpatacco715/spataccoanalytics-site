@@ -51,6 +51,10 @@ function lead_text($v, int $max): string
 function lead_url($v): string
 {
     $s = lead_text($v, 300);
+    // "www.firm.com" is the same address as "https://www.firm.com".
+    if (!preg_match('#^https?://#i', $s) && preg_match('#^([a-z0-9-]+\.)+[a-z0-9-]{2,}(/[^\s<>"\']*)?$#i', $s)) {
+        $s = 'https://' . $s;
+    }
     return preg_match('#^https?://[^\s<>"\']+$#i', $s) ? $s : '';
 }
 

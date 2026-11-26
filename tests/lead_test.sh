@@ -61,6 +61,7 @@ check "an email carrying a line break is refused" '[ "$CODE" = 422 ] && [ "$(lin
 post '{"name":"Pat\r\nBcc: x@example.com","email":"pat@example.com","firm":"A\nB","website":"javascript:alert(1)","scores":{"<b>":5,"ok_key":"7","big":900}}'
 check "line breaks in other fields are flattened" '[ "$CODE" = 200 ] && [ "$(lines)" = 3 ] && tail -1 "$file" | grep -q "\"name\":\"Pat Bcc: x@example.com\""'
 check "a non-web address is dropped" 'tail -1 "$file" | grep -q "\"website\":\"\""'
+check "an address typed without https:// is kept as the same address, and what is not an address is dropped" '[ "$(php -r '"'"'require $argv[1]; echo lead_url("www.example.com/team"), "|", lead_url("Example.com"), "|", lead_url("https://example.com"), "|", lead_url("not an address"), "|", lead_url("javascript:alert(1)"), "|", lead_url("pat@example.com");'"'"' "$here/site/lib/leads.php")" = "https://www.example.com/team|https://Example.com|https://example.com|||" ]'
 check "score keys and values are bounded" 'tail -1 "$file" | grep -q "\"scores\":{\"ok_key\":7,\"big\":100}"'
 check "every line is valid JSON" 'php -r '"'"'foreach (file($argv[1]) as $l) { if (!is_array(json_decode($l, true))) exit(1); }'"'"' "$file"'
 

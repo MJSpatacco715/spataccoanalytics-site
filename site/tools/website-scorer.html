@@ -325,11 +325,11 @@
     <!-- URL FIELDS — shown/hidden based on selection -->
     <div class="field" id="field-website">
       <label>Your Website URL <span style="color:var(--red)">*</span></label>
-      <input type="url" id="inp-website" placeholder="https://yourfirm.com" autocomplete="off" />
+      <input type="text" inputmode="url" id="inp-website" placeholder="yourfirm.com" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" />
     </div>
     <div class="field" id="field-linkedin">
       <label>LinkedIn Company Page <span class="opt" id="linkedin-opt-label">(optional — we'll search if you leave this blank)</span></label>
-      <input type="url" id="inp-linkedin" placeholder="https://linkedin.com/company/yourfirm" autocomplete="off" />
+      <input type="text" inputmode="url" id="inp-linkedin" placeholder="linkedin.com/company/yourfirm" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" />
     </div>
 
     <div class="error-msg" id="input-error"></div>
@@ -482,6 +482,26 @@ const $ = id => document.getElementById(id);
 function esc(v) {
   return String(v ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 }
+/* tidy-address:start */
+// A web address the way a person types it, made whole. "www.firm.com",
+// "firm.com/about", "Firm.com " and "https://firm.com" are all the same
+// address, and nobody should have to type https:// to be understood.
+// Returns "" when what was typed is not a web address at all.
+function tidyAddress(v) {
+  let s = String(v ?? "").trim().replace(/^[<("'\s]+|[>)"'\s.,;]+$/g, "");
+  if (!s || /\s/.test(s)) return "";
+  s = s.replace(/^(https?)(:\/?\/?|\/\/)/i, (m, p) => p.toLowerCase() + "://");   // "HTTP://x", "https//x", "http:/x"
+  if (!/^https?:\/\//.test(s)) {
+    if (/^[a-z][a-z0-9+.-]*:/i.test(s) && !/^[^/]*:\d/.test(s)) return "";      // some other kind of link (mailto:)
+    if (s.includes("@") && !s.includes("/")) return "";                         // an email address
+    s = "https://" + s;
+  }
+  let u; try { u = new URL(s); } catch { return ""; }
+  if (u.username || u.password) return "";
+  if (!/^([a-z0-9-]+\.)+(?!\d+$)[a-z0-9-]{2,}$/i.test(u.hostname)) return "";    // a real domain: firm.com
+  return (u.pathname === "/" && !u.search && !u.hash) ? u.href.replace(/\/$/, "") : u.href;
+}
+/* tidy-address:end */
 function safeUrl(v) {
   try { const u = new URL(String(v)); return (u.protocol === "https:" || u.protocol === "http:") ? u.href : null; } catch { return null; }
 }
@@ -801,15 +821,22 @@ function renderResults(result, scope, websiteUrl) {
 // ── ANALYZE ──────────────────────────────────────────────────────
 $("btn-analyze").addEventListener("click", async () => {
   const scope    = getScope();
-  const website  = $("inp-website").value.trim();
-  const linkedin = $("inp-linkedin").value.trim();
-  const errEl    = $("input-error");
+  // Whatever was typed is read as an address: no https:// needed.
+  const typedSite = $("inp-website").value.trim();
+  const typedLi   = $("inp-linkedin").value.trim();
+  const website   = tidyAddress(typedSite);
+  const linkedin  = tidyAddress(typedLi) || typedLi;     // a firm's name typed here is passed on as it is
+  const errEl     = $("input-error");
   errEl.style.display = "none";
 
-  if ((scope === "both" || scope === "website") && (!website || !website.startsWith("http"))) {
-    errEl.textContent = "Please enter a valid website URL starting with https://";
+  if ((scope === "both" || scope === "website") && !website) {
+    errEl.textContent = !typedSite ? "Please enter your website address, like yourfirm.com."
+      : typedSite.includes("@") ? "That looks like an email address. Enter your website instead, like yourfirm.com."
+      : "We could not read that as a website address. Try it like yourfirm.com.";
     errEl.style.display = "block"; return;
   }
+  if (website) $("inp-website").value = website;
+  if (linkedin) $("inp-linkedin").value = linkedin;
   if (scope === "linkedin" && !linkedin && !website) {
     errEl.textContent = "Please enter your LinkedIn URL, or a website URL so we can search for your LinkedIn page.";
     errEl.style.display = "block"; return;

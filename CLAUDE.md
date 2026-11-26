@@ -91,6 +91,11 @@ lives and says which pieces are not in this repo yet.
   Console and the sitemap, which only the owner's account can do.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
+- A field for a web address takes what people type. The owner, after the scorer
+  turned away `www.` and a domain with no `https://`: "This cannot require https
+  etc. too rigid". `tidyAddress` in `site/tools/website-scorer.html` makes a
+  typed address whole, and `lead_url` in `site/lib/leads.php` reads it the same
+  way. No field asks for `https://`, in its hint or in its message.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
   Worker. Its source is `worker/ria-scorer.js`, and it refuses any request
   it does not recognise. Change a tool's instructions, reader, tools or
