@@ -311,7 +311,11 @@ after = re.sub(r"<!--.*?-->", "", s[hero.end():], flags=re.S).lstrip() if hero e
 ok = ok and after.startswith("<link rel=\"stylesheet\" href=\"/css/ticker.css?v=")
 sys.exit(0 if ok else 1)
 PY'
-check "its headline is the one that stays on one line, by a rule of its own page" 'grep -q "<h1>Your site can do more than <em>describe you.</em></h1>" "$site/tools/index.html" && grep -q "^\.tl-hero h1 em{display:inline}" "$site/tools/index.html"'
+# Its headline was one sentence kept on one line ("this one is okay to stay") until the
+# owner asked for it to put the question ("frame it more of your website can do
+# more..... what can/should your website do for you?") and chose, of four: the white
+# line as it was, with "website", and the question in blue on a line of its own.
+check "its headline keeps its line and adds the question, in blue, on a line of its own like every page's: no rule of its own keeps it on one line any more" 'grep -q "<h1>Your website can do more than describe you. <em>What should it do for you?</em></h1>" "$site/tools/index.html" && ! grep -q "tl-hero h1 em{display:inline}" "$site/tools/index.html"'
 check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile\"" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind)[ .:{\[]"'
 
 # --- every inner page opens on a supporting figure with its source
