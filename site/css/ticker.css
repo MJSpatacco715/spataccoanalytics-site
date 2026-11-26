@@ -7,8 +7,10 @@
    end of the scroll open a card about the whole strip. It stops while someone
    is reading it, has its own pause button, and does not move at all for a
    visitor who has asked for less motion. Hidden until it has figures to show.
-   The host keeps this file for a year: change the ?v= on its tag in
-   tools/index.html whenever it changes (tests/market_test.sh checks). */
+   The host and Cloudflare keep this file for a year under its address: change
+   the ?v= on its tag in tools/index.html whenever it changes
+   (tests/market_test.sh checks). Never ask for the new address before the
+   publish has finished: Cloudflare then keeps the old file under it. */
 /* In the page where it is written, and held under the menu (whose height the
    script keeps in --sa-tk-top) once the page scrolls past it. Its ground is
    near solid: pinned, it passes over light sections as well as dark ones. */

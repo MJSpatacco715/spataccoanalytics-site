@@ -62,6 +62,19 @@ lives and says which pieces are not in this repo yet.
   clearing a cache. Scripts, styles and images are kept for a year: when one
   changes, its address must change (a `?v=`), or returning visitors never get
   it.
+  The site is behind Cloudflare, which keeps a script, style or image for that
+  year under its full address, `?v=` included, at each of its locations. So a
+  new address must never be asked for before the publish that brings the file
+  has finished: asked early, Cloudflare is handed the old file and serves it
+  under the new address from then on. On 2026-11-26 a check of
+  `ticker.css?v=...` made a minute before the publish landed left the Newark
+  location serving the old stylesheet, and the owner saw the strip unpinned
+  ("ticker not sticking to the right place"). To check a publish: read the
+  page, which is never kept, until it names the new address, and only then
+  fetch the file and compare its SHA-1 with the tag, several times so that more
+  than one location answers. A count of some word in the file proves nothing.
+  If a wrong copy is kept anyway, change the file so its address changes; the
+  owner can also purge that address in Cloudflare.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.
