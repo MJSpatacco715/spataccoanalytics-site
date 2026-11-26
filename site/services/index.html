@@ -88,6 +88,14 @@
 .sv-tick{width:16px;height:16px;border:1.5px solid var(--navy);border-radius:50%;flex-shrink:0;background:var(--white)}
 .sv-opt:has(input:checked) .sv-tick{background:var(--purple);border-color:var(--purple);box-shadow:inset 0 0 0 3px var(--white)}
 .sv-desc{font-size:14px;line-height:1.55;color:var(--text)}
+/* the free level: a link to the scorer, with an arrow where the levels to choose have a tick */
+.sv-opt-go{text-decoration:none;color:inherit}
+.sv-opt-go .sv-tick{width:16px;height:16px;border:none;background:none;font-size:17px;font-weight:700;line-height:16px;text-align:center;color:var(--purple)}
+.sv-opt-go .sv-tick::before{content:'\2192'}
+.sv-go{margin-right:auto;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);border:1px solid var(--purple);padding:6px 9px;white-space:nowrap;transition:background .15s,color .15s}
+.sv-opt-go:hover .sv-go,.sv-opt-go:focus-visible .sv-go{background:var(--purple);color:var(--white)}
+.sv-opt-go:hover{box-shadow:inset 0 0 0 3px var(--purple)}
+.sv-opt-go:focus-visible{outline:3px solid var(--purple);outline-offset:-3px}
 .sv-foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-top:12px}
 .sv-price{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);line-height:1;font-variant-numeric:lining-nums;white-space:nowrap}
 .sv-price small{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500}
@@ -233,11 +241,14 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
         <p>How your firm shows up on its own site, in search, and in AI answers, and what to fix first.</p>
       </div>
       <div class="sv-row">
-        <label class="sv-opt"><input type="radio" name="audit" value="essential">
-          <span class="sv-name"><span class="sv-tick"></span>Website Score<span class="sv-tier-tag">Essential</span></span>
+        <!-- The free level is the website scorer itself, so all of it is a link there. The owner,
+             2026-11-26, having tapped it and seen it only ticked: "This should (obviously) link
+             to the web scorer". It is not a level to put in the plan: there is nothing to price. -->
+        <a class="sv-opt sv-opt-go" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">
+          <span class="sv-name"><span class="sv-tick" aria-hidden="true"></span>Website Score<span class="sv-tier-tag">Essential</span></span>
           <span class="sv-desc">Instant overall score for your site.</span>
-          <span class="sv-foot"><span class="sv-price">Free</span><span class="sv-time">Instant</span></span>
-        </label>
+          <span class="sv-foot"><span class="sv-price">Free</span><span class="sv-go">Score my site</span><span class="sv-time">Instant</span></span>
+        </a>
         <label class="sv-opt rec"><input type="radio" name="audit" value="professional">
           <span class="sv-name"><span class="sv-tick"></span>Audit Report<span class="sv-tier-tag">Professional</span></span>
           <span class="sv-desc">Site, search, and AI-visibility review with prioritized fixes, about 5 pages.</span>

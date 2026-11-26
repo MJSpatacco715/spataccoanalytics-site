@@ -94,6 +94,11 @@ lives and says which pieces are not in this repo yet.
   own parts by `tests/pages_test.sh`; `tests/hero_browser.cjs` opens it in a
   browser. A block of links inside a page is a `div`, never a `nav`: the
   shared stylesheet pins every `nav` to the top of the window.
+  The audit's free level, Website Score, is the website scorer, and all of it
+  is a link there (`a.sv-opt-go`), not a level to tick into the plan. It was a
+  radio like the levels beside it, and a tap only ticked it; the owner,
+  2026-11-26: "This should (obviously) link to the web scorer". Anything on the
+  site that offers the free score goes to the scorer.
 - The logo. The owner, 2026-11-26: "the logo is small and near invisible on the
   site". The menu had shown the logo file whole (`site/img/logo.jpg`: the
   wordmark small in the middle of a white square), 36px tall, which left the

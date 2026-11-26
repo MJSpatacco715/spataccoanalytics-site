@@ -93,6 +93,34 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     await ctx.close();
   }
 
+  // --- the free Website Score on the Services page goes to the scorer, wherever it is pressed
+  // (the owner, having tapped it and seen it only ticked: "This should (obviously) link to the web scorer")
+  for (const [w, h, mobile] of [[1255, 607, false], [430, 744, true]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
+    const page = await ctx.newPage();
+    const went = [];
+    for (const part of ['.sv-name', '.sv-desc', '.sv-price', '.sv-go']) {
+      await page.goto(base + '/services/', { waitUntil: 'load' });
+      await page.locator('.sv-opt-go ' + part).scrollIntoViewIfNeeded();
+      await page.waitForTimeout(700);
+      const press = mobile ? page.tap('.sv-opt-go ' + part) : page.click('.sv-opt-go ' + part);
+      await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press]);
+      const u = new URL(page.url());
+      if (u.pathname === '/tools/website-scorer.html' && u.searchParams.get('scope') === 'website' && u.searchParams.get('utm_source') === 'services') went.push(part);
+    }
+    check('/services/ at ' + w + ' by ' + h + ': the free Website Score opens the scorer, whichever part of it is pressed (' + went.length + ' of 4)', went.length === 4);
+    check('and the scorer is what opens', /Website Score/.test(await page.title()) && (await page.locator('input').count()) > 0);
+    // the two levels beside it are still levels to tick: a press ticks one into the plan and goes nowhere
+    await page.goto(base + '/services/', { waitUntil: 'load' });
+    await page.locator('#audit .sv-opt.rec .sv-desc').scrollIntoViewIfNeeded();
+    await page.waitForTimeout(700);
+    if (mobile) await page.tap('#audit .sv-opt.rec .sv-desc'); else await page.click('#audit .sv-opt.rec .sv-desc');
+    await page.waitForTimeout(200);
+    const k = await page.evaluate(() => { const e = document.querySelector('input[name="audit"]:checked'); return { picked: e ? e.value : '', plan: document.getElementById('sv-lines').textContent, path: location.pathname }; });
+    check('/services/ at ' + w + ' by ' + h + ': the audit levels beside it still tick into the plan and stay on the page', k.picked === 'professional' && k.plan.includes('Audit Report') && k.path === '/services/');
+    await ctx.close();
+  }
+
   // --- every inner page opens on a supporting figure, and its source card opens whole
   {
     const ctx = await browser.newContext({ viewport: { width: 1255, height: 607 } });
