@@ -161,13 +161,6 @@
   </div>
 </nav>
 
-<!-- The market strip: a working example at the top of the page of working examples.
-     Its styles and script are here, not in the head or after the footer, because the
-     build reuses this page's head, menu and footer for each tool's own page. -->
-<link rel="stylesheet" href="/css/ticker.css?v=d68cc37d">
-<aside class="sa-tk" id="sa-ticker" aria-label="Market figures" hidden></aside>
-<script src="/js/ticker.js?v=f949cbbb" defer></script>
-
 <section class="page-hero">
   <div class="page-hero-inner">
     <div class="page-hero-tag">Tools &amp; Projects</div>
@@ -176,6 +169,15 @@
     <p class="tools-intro" style="animation-delay:.7s;font-size:14px;color:var(--slate)">The projects in the lowest section started as personal builds: a way to test new frameworks and data sources on subjects I follow closely. Take a look around.</p>
   </div>
 </section>
+
+<!-- The market strip: a working example between the opening copy and the tools.
+     It scrolls with the page until it reaches the menu, then stays pinned under it.
+     It is the page's own child (inside a section it could not stay pinned past that
+     section). Its styles and script are here, not in the head or after the footer,
+     because the build reuses this page's head, menu and footer for each tool's own page. -->
+<link rel="stylesheet" href="/css/ticker.css?v=f493ad3f">
+<aside class="sa-tk" id="sa-ticker" aria-label="Market figures" hidden></aside>
+<script src="/js/ticker.js?v=d08a6632" defer></script>
 
 <!-- ===== FINANCIAL SERVICES TOOLS ===== -->
 <section class="section-dark">

@@ -1,6 +1,8 @@
 // The market strip opened in a browser (tests/market_test.sh runs this where
 // Playwright is installed). The page is the built tools page, where the strip
-// lives, served with the saved answers, so nothing here leaves the machine.
+// lives: after the opening copy, and held under the menu once the page is
+// scrolled past it. Served with the saved answers, so nothing here leaves
+// the machine.
 // The home page, which had the strip until November 2026, is opened once at
 // the end to see that it is gone from there.
 //   node tests/ticker_browser.cjs http://127.0.0.1:18746/tools/
@@ -20,6 +22,33 @@ async function open(browser, opts, before) {
   if (before) await before(page);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   return { ctx, page, errors };
+}
+
+// Scroll far enough that the strip is held under the menu, where its cards
+// open downward as they always did.
+async function pin(page) {
+  await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; window.scrollTo(0, document.querySelector('.page-hero').offsetHeight + 400); });
+  await page.waitForTimeout(250);
+}
+
+// The card as it stands: which way it opened, in which form, and whether all of it shows.
+function cardNow(page) {
+  return page.evaluate(() => {
+    const card = document.getElementById('sa-tk-card'), r = card.getBoundingClientRect(), nav = document.getElementById('main-nav').offsetHeight, strip = document.getElementById('sa-ticker').getBoundingClientRect();
+    const free = card.querySelector('.sa-tk-free'), f = free ? free.getBoundingClientRect() : null;
+    const on = (x, y) => { const e = document.elementFromPoint(x, y); return !!(e && card.contains(e)); };
+    const halves = [...card.querySelectorAll('.sa-tk-half')];
+    return {
+      open: !card.hidden, up: card.classList.contains('sa-tk-up'), flat: card.classList.contains('sa-tk-flat'),
+      inView: r.top >= nav && r.bottom <= window.innerHeight && r.left >= 0 && r.right <= window.innerWidth,
+      shown: on(r.left + 10, r.top + 10) && on(r.right - 10, r.top + 10) && on(r.left + 10, r.bottom - 14) && on(r.right - 10, r.bottom - 14),
+      lastLine: !!f && f.top >= r.top && f.bottom <= r.bottom + 1,
+      scrolls: card.scrollHeight > card.clientHeight + 1 || card.scrollWidth > card.clientWidth + 1,
+      clear: r.bottom <= strip.top + 1 || r.top >= strip.bottom - 1,
+      left: halves[0] ? [...halves[0].children].map((e) => e.className.split(' ')[0]).join(',') : '',
+      right: halves[1] ? [...halves[1].children].map((e) => e.className.split(' ')[0]).join(',') : '',
+    };
+  });
 }
 
 // The middle of a figure that is in view, by id.
@@ -55,7 +84,10 @@ function spot(page, id) {
         copiesHidden: sets.slice(1).every((x) => x.getAttribute('aria-hidden') === 'true'),
         copiesOutOfTabs: sets.slice(1).every((x) => [...x.querySelectorAll('button')].every((q) => q.tabIndex === -1)),
         top: Math.round(b.top), navBottom: document.getElementById('main-nav').offsetHeight, height: Math.round(b.height),
-        heroTop: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top),
+        heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom),
+        nextTop: Math.round(document.querySelector('.page-hero ~ section').getBoundingClientRect().top),
+        nextIs: (document.querySelector('.page-hero ~ section .category-label') || {}).textContent,
+        sticky: getComputedStyle(r).position,
         bottom: Math.round(b.bottom),
         moving: getComputedStyle(track).animationName !== 'none' && getComputedStyle(track).animationPlayState === 'running',
         trackWide: track.getBoundingClientRect().width >= 2 * r.querySelector('.sa-tk-view').clientWidth,
@@ -69,7 +101,7 @@ function spot(page, id) {
     check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('78 to tie record') && s.text.includes('DeVoe, Q1-Q3'));
     check('the dollar is quoted in euros, as what one dollar buys', s.text.includes('USD/EUR') && s.text.includes('$1 = \u20AC0.9122') && !s.text.includes('EUR/USD'));
     check('the copies are hidden from assistive technology and from the Tab key', s.sets >= 2 && s.firstHidden === null && s.copiesHidden && s.copiesOutOfTabs);
-    check('it sits directly under the menu and above the headline', s.top === s.navBottom && s.bottom < s.heroTop && s.height <= 36);
+    check('the copy leads: the strip comes after it and before the Financial Services section', s.top === s.heroBottom && s.bottom === s.nextTop && s.top > s.navBottom + 200 && s.nextIs === 'Financial Services' && s.height <= 36 && s.sticky === 'sticky');
     check('it scrolls, with no seam', s.moving && s.trackWide);
     check('a figure shows its value, its move, who published it and for when', s.text.includes('US 10-Yr') && s.text.includes('4.91%') && s.text.includes('-1 bp') && s.text.includes('Treasury, Nov 24') && s.text.includes('EIA, Nov 17'));
     check('it says what the figures are', s.note && s.text.includes('These quotes are latest published figures and not necessarily live.'));
@@ -77,6 +109,30 @@ function spot(page, id) {
     check('the page is no wider than the window', s.pageWide);
     const where = await page.evaluate(() => { const r = document.getElementById('sa-ticker'); return { parent: r.parentNode === document.body, lit: (document.querySelector('#main-nav a.active') || {}).textContent, h1: document.querySelector('.page-hero h1').textContent.replace(/\s+/g, ' ').trim() }; });
     check('it is on the tools page, as the page\'s own child and not inside the first section', where.parent && where.lit === 'Tools' && where.h1 === 'Your site can do more than describe you.');
+
+    // Before the page is scrolled the strip sits low on the screen and no card
+    // fits above or below it: the card is laid out wide, upward, all in view.
+    {
+      const at = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
+      await page.mouse.move(at.x, at.y, { steps: 3 });
+      await page.waitForTimeout(300);
+      const c0 = await cardNow(page);
+      check('low on the screen a card opens upward, laid out wide, every line of it in view', c0.open && c0.up && c0.flat && c0.inView && c0.shown && c0.lastLine && !c0.scrolls && c0.clear);
+      check('wide, the figure and its chart are on the left; low, high and change, the source and the closing line on the right', /^sa-tk-eye,sa-tk-hero/.test(c0.left) && /sa-tk-chart$/.test(c0.left) && /^sa-tk-tiles/.test(c0.right) && /sa-tk-from,sa-tk-free$/.test(c0.right));
+      await page.mouse.move(at.x, at.y - 30);      // across the gap, onto the card
+      await page.waitForTimeout(350);
+      check('the pointer can move from the figure up onto the card without it closing', (await cardNow(page)).open);
+      await page.mouse.move(20, 300);
+      await page.waitForTimeout(400);
+      check('and leaving both closes it', await page.evaluate(() => document.getElementById('sa-tk-card').hidden));
+    }
+    await pin(page);
+    const held = await page.evaluate(() => { const r = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: Math.round(r.top), nav: document.getElementById('main-nav').offsetHeight, y: window.scrollY, light: (() => { window.scrollTo(0, document.querySelector('.section-light').offsetTop + 80); return 1; })() }; });
+    await page.waitForTimeout(250);
+    const overLight = await page.evaluate(() => { const r = document.getElementById('sa-ticker'), b = r.getBoundingClientRect(); const bg = getComputedStyle(r).backgroundColor.match(/[\d.]+/g).map(Number); return { top: Math.round(b.top), nav: document.getElementById('main-nav').offsetHeight, solid: bg.length < 4 || bg[3] >= 0.9, under: (() => { const e = document.elementFromPoint(300, b.top + b.height / 2); return !!(e && r.contains(e)); })() }; });
+    check('scrolled, it goes with the page and stays held under the menu', held.y > 600 && held.top === held.nav);
+    check('it stays there over a light section too, on ground solid enough to read', overLight.top === overLight.nav && overLight.solid && overLight.under);
+    await pin(page);
 
     // hover: the strip stops and the source card opens under the figure
     const tag = await page.evaluate(() => { const b = document.querySelector('.sa-tk-tag').getBoundingClientRect(); return { x: b.left + 20, y: b.top + 10 }; });
@@ -94,12 +150,8 @@ function spot(page, id) {
     const p = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
     await page.mouse.move(p.x, p.y, { steps: 3 });
     await page.waitForTimeout(250);
-    const whole = await page.evaluate(() => {
-      const card = document.getElementById('sa-tk-card'), r = card.getBoundingClientRect(), hero = document.querySelector('.page-hero').getBoundingClientRect();
-      const on = (x, y) => { const e = document.elementFromPoint(x, y); return !!(e && card.contains(e)); };
-      return { past: r.bottom > hero.bottom, shown: on(r.left + 8, r.bottom - 8) && on(r.right - 8, r.bottom - 8) && on(r.left + r.width / 2, r.top + 8), inWindow: r.bottom <= window.innerHeight };
-    });
-    check('a card longer than the first section shows whole: nothing cuts it off or covers it', whole.past && whole.shown && whole.inWindow);
+    const whole = await cardNow(page);
+    check('held under the menu, a card opens downward in one column and shows whole', whole.open && !whole.up && !whole.flat && whole.inView && whole.shown && whole.lastLine && !whole.scrolls);
     const c = await page.evaluate(() => {
       const card = document.getElementById('sa-tk-card');
       const a = card.querySelector('a');
@@ -137,7 +189,11 @@ function spot(page, id) {
     check('the card is under the strip and inside the window', c.inside && c.below);
     check('the strip stands still while it is read', c.paused);
     check('the card holds text and a link, nothing else', c.kids === 0);
-    await page.mouse.move(700, 600, { steps: 3 });
+    {
+      // somewhere that is neither the strip nor the card, wherever the card opened
+      const away = await page.evaluate(() => { const r = document.getElementById('sa-tk-card').getBoundingClientRect(); return { x: r.right + 160 < window.innerWidth ? r.right + 120 : Math.max(10, r.left - 120), y: Math.min(window.innerHeight - 10, r.bottom + 60) }; });
+      await page.mouse.move(away.x, away.y, { steps: 3 });
+    }
     await page.waitForTimeout(450);
     check('moving away closes the card and the strip moves again', await page.evaluate(() => document.getElementById('sa-tk-card').hidden && getComputedStyle(document.querySelector('.sa-tk-track')).animationPlayState === 'running'));
 
@@ -228,11 +284,15 @@ function spot(page, id) {
     await page.waitForTimeout(300);
     const s = await page.evaluate(() => {
       const r = document.getElementById('sa-ticker').getBoundingClientRect();
-      return { top: Math.round(r.top), navBottom: document.getElementById('main-nav').offsetHeight, heroTop: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top), bottom: Math.round(r.bottom), pageWide: document.documentElement.scrollWidth <= window.innerWidth };
+      return { top: Math.round(r.top), heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom), nextTop: Math.round(document.querySelector('.page-hero ~ section').getBoundingClientRect().top), bottom: Math.round(r.bottom), pageWide: document.documentElement.scrollWidth <= window.innerWidth };
     });
-    check('on a phone it sits under the menu, above the headline, and the page is no wider', s.top === s.navBottom && s.bottom <= s.heroTop && s.pageWide);
+    check('on a phone it comes after the opening copy and before the first section, and the page is no wider', s.top === s.heroBottom && s.bottom === s.nextTop && s.pageWide);
+    await pin(page);
+    const sp = await page.evaluate(() => ({ top: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().top), nav: document.getElementById('main-nav').offsetHeight }));
+    check('scrolled on a phone, it is held under the menu', sp.top === sp.nav);
     let p = null;
     for (const id of ['ria', 'ust30', 'ust10', 'eurusd', 'btc', 'brent', 'wti', 'gas']) { p = await spot(page, id); if (p) break; }
+    if (!p) throw new Error('on a phone no figure of the strip is in view once the page is scrolled: the rest cannot be checked');
     await page.touchscreen.tap(p.x, p.y);
     await page.waitForTimeout(250);
     const c = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); const b = card.getBoundingClientRect(); return { open: !card.hidden, inside: b.left >= 0 && b.right <= window.innerWidth, id: (document.querySelector('.sa-tk-item.open') || document.body).getAttribute('data-id') }; });
@@ -249,15 +309,16 @@ function spot(page, id) {
     const { ctx, page } = await open(browser, { viewport: { width: 320, height: 640 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     await page.waitForSelector('#sa-ticker.on', { timeout: 8000 });
     await page.waitForTimeout(300);
-    const s = await page.evaluate(() => ({ strip: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().bottom), first: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top), wide: document.documentElement.scrollWidth <= window.innerWidth }));
-    check('on a narrow phone the strip does not sit on the first line of the page', s.strip < s.first && s.wide);
+    await pin(page);
+    const s = await page.evaluate(() => ({ top: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().top), nav: document.getElementById('main-nav').offsetHeight, wide: document.documentElement.scrollWidth <= window.innerWidth }));
+    check('on a narrow phone, where the menu wraps tall, the strip is held under all of it', s.top === s.nav && s.nav > 100 && s.wide);
     const follows = await page.evaluate(async () => {
       const nav = document.getElementById('main-nav'); nav.style.paddingBottom = '31px';      // as a late font or a longer menu would
       await new Promise((r) => setTimeout(r, 300));
       const r = document.getElementById('sa-ticker').getBoundingClientRect();
-      return { top: Math.round(r.top), nav: nav.offsetHeight, first: Math.round(document.querySelector('.page-hero-tag').getBoundingClientRect().top), bottom: Math.round(r.bottom) };
+      return { top: Math.round(r.top), nav: nav.offsetHeight };
     });
-    check('when the menu grows after the strip is up, the strip moves down with it and stays clear of the page', follows.top === follows.nav && follows.bottom < follows.first);
+    check('when the menu grows after the strip is up, the strip moves down with it', follows.top === follows.nav);
     await ctx.close();
   }
 
@@ -350,4 +411,4 @@ function spot(page, id) {
   await browser.close();
   if (fails.length) { console.log(fails.map((f) => 'FAIL ' + f).join('\n')); console.log(fails.length + ' of ' + n + ' browser checks failed'); process.exit(1); }
   console.log('ok, ' + n + ' browser checks');
-})().catch((e) => { console.error(String(e && e.stack || e)); process.exit(1); });
+})().catch((e) => { if (fails.length) console.log(fails.map((f) => 'FAIL ' + f).join('\n')); console.error(String(e && e.stack || e)); process.exit(1); });

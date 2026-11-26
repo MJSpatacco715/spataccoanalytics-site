@@ -1,4 +1,6 @@
-/* The market strip under the menu on the homepage (css/ticker.css).
+/* The market strip on the tools page (css/ticker.css). It sits in the page
+   between the opening copy and the first section, and stays pinned under the
+   menu once the page is scrolled past it.
 
    It asks the site's own feed (market/feed.php) for a handful of market
    figures and scrolls them slowly. Every figure shows who published it and
@@ -12,7 +14,7 @@
    an empty bar. Everything is written as text, never as markup.
 
    The host keeps this file for a year: change the ?v= on its tag in
-   index.html whenever it changes (tests/market_test.sh checks). */
+   tools/index.html whenever it changes (tests/market_test.sh checks). */
 (function () {
   'use strict';
   var root = document.getElementById('sa-ticker');
@@ -161,29 +163,66 @@
     track.style.setProperty('--sa-tk-dur', Math.max(20, Math.round((half * round) / SPEED)) + 's');
   }
 
-  // The strip sits just under the menu, whatever height the menu is. Where the
-  // menu wraps tall (a narrow phone) the page's first line starts lower, so
-  // the strip never sits on it.
+  // The strip is pinned just under the menu, whatever height the menu is:
+  // the stylesheet holds it at --sa-tk-top, which is kept here.
   function place() {
     var nav = document.getElementById('main-nav') || document.querySelector('nav');
     if (!nav || !nav.offsetHeight) return;
     root.style.setProperty('--sa-tk-top', nav.offsetHeight + 'px');
-    // The strip is the page's own child, laid over the section that follows
-    // it (so its cards are never cut off by that section), or sits inside one.
-    var hero = root.parentNode === document.body ? root.nextElementSibling : root.parentNode;
-    while (hero && !/^(SECTION|HEADER|MAIN|DIV)$/.test(hero.tagName)) hero = hero.nextElementSibling;
-    if (!hero || !hero.style) return;
-    hero.style.paddingTop = '';
-    var need = nav.offsetHeight + root.offsetHeight + 18;
-    if ((parseFloat(getComputedStyle(hero).paddingTop) || 0) < need) hero.style.paddingTop = need + 'px';
+    if (openItem) under(openItem);
   }
 
   function sync() {
     root.classList.toggle('paused', userPaused || !!openItem);
   }
 
+  // A card laid out wide: its blocks in two halves, side by side. The figure
+  // and what is drawn of it stay on the left; the right half starts where the
+  // low, high and change begin (for the deal count, at its list of facts).
+  // Back to one column when asked. Says whether the card is now wide.
+  function wide(on) {
+    var split = card.querySelector('.sa-tk-split');
+    if (split) {                                   // undo first: one column is where every measure starts
+      [].slice.call(split.querySelectorAll('.sa-tk-half')).forEach(function (h) { while (h.firstChild) card.insertBefore(h.firstChild, split); });
+      card.removeChild(split);
+    }
+    card.classList.remove('sa-tk-flat');
+    if (!on) return false;
+    var kids = [].slice.call(card.children), at = -1;
+    kids.forEach(function (k, i) { if (at < 0 && (k.classList.contains('sa-tk-tiles') || k.classList.contains('sa-tk-facts'))) at = i; });
+    if (at < 1) return false;                      // nothing to split on: it stays one column
+    split = el('div', 'sa-tk-split');
+    var left = el('div', 'sa-tk-half'), right = el('div', 'sa-tk-half');
+    kids.forEach(function (k, i) { (i < at ? left : right).appendChild(k); });
+    split.appendChild(left); split.appendChild(right);
+    card.appendChild(split);
+    card.classList.add('sa-tk-flat');
+    return true;
+  }
+
   function under(btn) {
     var box = root.getBoundingClientRect(), b = btn.getBoundingClientRect();
+    // Down, where it fits. Before the page is scrolled the strip sits low on
+    // the screen: then the card opens upward if it fits there. Where it fits
+    // neither way it is laid out wide, about half as tall. Only if that is
+    // still too tall is it cut to the room it has, scrolling inside.
+    var nav = document.getElementById('main-nav') || document.querySelector('nav');
+    var below = window.innerHeight - box.bottom - 20;
+    var above = box.top - (nav ? nav.offsetHeight : 0) - 20;
+    card.classList.remove('sa-tk-up');
+    card.style.maxHeight = '';
+    wide(false);
+    var up = false, flat = false, tall = card.scrollHeight + 4;
+    if (tall > below) {
+      if (tall <= above) up = true;
+      else {
+        if (window.innerWidth >= 780 && wide(true)) { flat = true; tall = card.scrollHeight + 4; }
+        if (tall > below) up = above > below;
+        if (flat && tall > (up ? above : below)) flat = wide(false);
+      }
+    }
+    card.classList.toggle('sa-tk-up', up);
+    if (!flat) card.style.maxHeight = Math.max(180, Math.floor(up ? above : below)) + 'px';
     var most = Math.max(12, box.width - card.offsetWidth - 12);
     card.style.left = Math.min(Math.max(12, b.left - box.left), most) + 'px';
   }
@@ -598,6 +637,13 @@
     if (nav && window.ResizeObserver) new ResizeObserver(again).observe(nav, { box: 'border-box' });
     else if (document.fonts && document.fonts.ready) document.fonts.ready.then(again);
   })();
+  // The page moving under an open card changes the room the card has.
+  var moving = false;
+  window.addEventListener('scroll', function () {
+    if (!openItem || moving) return;
+    moving = true;
+    requestAnimationFrame(function () { moving = false; if (openItem) under(openItem); });
+  }, { passive: true });
   document.addEventListener('visibilitychange', function () { if (!document.hidden && root.hidden) load(); });
 
   load();

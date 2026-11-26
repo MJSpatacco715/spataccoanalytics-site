@@ -268,10 +268,15 @@ home="$here/site/index.html"; js="$here/site/js/ticker.js"
 check "the headline is two lines: the statement, then the ask" 'grep -q "<h1><span class=\"h1-main\">Buyers will look at your data.</span> <em>Make sure it is ready.</em></h1>" "$home" && grep -q "\.hero h1 \.h1-main,\.hero h1 em{display:block}" "$home"'
 check "pages are served fresh, never from the host's page cache" 'grep -A3 "<FilesMatch \"\\\\.html\$\">" "$here/site/.htaccess" | grep -q "Header set Cache-Control \"private, no-cache\""'
 tools="$here/site/tools/index.html"
-check "the strip is on the tools page, between the menu and the first section, hidden until it has figures" 'python3 - "$tools" <<'"'"'PY'"'"'
+check "the strip is on the tools page, after the opening copy and before the first group of tools, hidden until it has figures" 'python3 - "$tools" <<'"'"'PY'"'"'
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
-m = re.search(r"</nav>(.*?)<section class=\"page-hero\">", s, re.S)
+# the copy leads: nothing of the strip between the menu and the opening section
+lead = re.search(r"</nav>(.*?)<section class=\"page-hero\">", s, re.S)
+if not lead or re.search(r"sa-tk|ticker\.(css|js)", lead.group(1)):
+    sys.exit(1)
+# then the strip, a child of the page itself, between that section and the next
+m = re.search(r"<section class=\"page-hero\">.*?</section>(.*?)<section\b", s, re.S)
 between = re.sub(r"<!--.*?-->", "", m.group(1), flags=re.S) if m else ""
 ok = re.fullmatch(r"\s*<link rel=\"stylesheet\" href=\"/css/ticker\.css\?v=[0-9a-f]{8}\">\s*<aside class=\"sa-tk\" id=\"sa-ticker\" aria-label=\"Market figures\" hidden></aside>\s*<script src=\"/js/ticker\.js\?v=[0-9a-f]{8}\" defer></script>\s*", between)
 sys.exit(0 if ok else 1)

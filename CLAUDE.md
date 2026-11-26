@@ -56,15 +56,26 @@ lives and says which pieces are not in this repo yet.
   published, on the site or anywhere else, until the owner says so. What is
   in the bank is private: never copy an item, a file or the bank's password
   or token into this repository, a commit or a pull request.
-- The market strip is on the tools page, under the menu. The owner moved it
-  there from the home page on 2026-11-26 ("i want the ticker to be on the tools
-  page instead of the home page"): it is a working example at the top of the
-  page of working examples, and the home page does not carry it. In
-  `site/tools/index.html` it is the page's own child, between the menu and the
-  first section, never inside that section, which would cut its cards off. Its
+- The market strip is on the tools page. The owner moved it there from the
+  home page on 2026-11-26 ("i want the ticker to be on the tools page instead
+  of the home page"), and the same day set its place: "lets have the copy lead
+  and have the scroll between tools & projects and financial services section.
+  when user scrolls down on the tools page the ticker should go with them and
+  stay up top pinned to menu". So the opening copy comes first, the strip sits
+  between it and the Financial Services section, and once the page is scrolled
+  past it the strip stays pinned under the menu (`position: sticky`, its top
+  set to the menu's height by `site/js/ticker.js`). The home page does not
+  carry it. In `site/tools/index.html` it is the page's own child, between
+  those two sections, never inside one: inside a section it would stop being
+  pinned when that section scrolled away, and its cards would be cut off. Its
   stylesheet and script tags sit beside it, not in the head or after the
   footer, because the build reuses that page's head, menu and footer for each
   tool's own page.
+  A card always shows whole. Pinned, it opens below the strip. Where the strip
+  still sits low on the screen it opens above it, and where neither side has
+  the height it is laid out wide, in two halves side by side (`wide()` and
+  `under()` in `site/js/ticker.js`). A change to a card's contents has to be
+  checked at the start position as well as pinned.
   The strip (`site/js/ticker.js`, `site/market/feed.php`,
   `site/lib/market.php`) shows only figures the site may show: each comes
   from its publisher's own free feed and says in view who published it and

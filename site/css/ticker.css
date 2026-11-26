@@ -1,4 +1,6 @@
-/* The market strip under the menu on the homepage (js/ticker.js).
+/* The market strip on the tools page (js/ticker.js): it sits in the page
+   between the opening copy and the first section, and once the page is
+   scrolled that far it stays pinned under the menu.
    A slow scroll of a few market figures. Each one says in view who published
    it and for when, and opens its source card on hover, keyboard focus or tap,
    as every number on this site does. The "Markets" label and the note at the
@@ -6,10 +8,15 @@
    is reading it, has its own pause button, and does not move at all for a
    visitor who has asked for less motion. Hidden until it has figures to show.
    The host keeps this file for a year: change the ?v= on its tag in
-   index.html whenever it changes (tests/market_test.sh checks). */
-.sa-tk{position:absolute;left:0;right:0;top:var(--sa-tk-top,77px);z-index:5;height:34px;display:flex;align-items:stretch;background:rgba(11,20,34,.72);border-bottom:1px solid rgba(61,216,216,.1);font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:34px;color:#CBD5E1;opacity:0;transition:opacity .6s ease}
+   tools/index.html whenever it changes (tests/market_test.sh checks). */
+/* In the page where it is written, and held under the menu (whose height the
+   script keeps in --sa-tk-top) once the page scrolls past it. Its ground is
+   near solid: pinned, it passes over light sections as well as dark ones. */
+.sa-tk{position:sticky;top:var(--sa-tk-top,77px);z-index:50;height:34px;display:flex;align-items:stretch;background:rgba(11,20,34,.96);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid rgba(61,216,216,.1);border-bottom:1px solid rgba(61,216,216,.1);font-family:'DM Sans',sans-serif;font-size:12.5px;line-height:34px;color:#CBD5E1;opacity:0;transition:opacity .6s ease}
 .sa-tk.on{opacity:1}
-.sa-tk[hidden]{display:none}
+/* Before its figures arrive it keeps its line, unseen, so nothing below it
+   jumps when they do. The page behind it is the same navy as its neighbours. */
+.sa-tk[hidden]{display:flex;visibility:hidden}
 .sa-tk-tag{flex:none;margin:0;padding:0 16px 0 48px;border:0;border-radius:0;font-family:inherit;font-size:10.5px;line-height:inherit;letter-spacing:3px;text-transform:uppercase;font-weight:600;color:#3DD8D8;background:rgba(11,20,34,.92);position:relative;z-index:2;cursor:help;outline:none;-webkit-appearance:none;appearance:none}
 .sa-tk-tag:hover,.sa-tk-tag.open{color:#7FEAEA}
 .sa-tk-tag:focus-visible{box-shadow:inset 0 0 0 2px #3DD8D8}
@@ -50,6 +57,24 @@
 .sa-tk-card{position:absolute;top:calc(100% + 8px);left:12px;z-index:30;width:330px;max-width:calc(100vw - 24px);padding:16px 18px;background:#fff;color:#1E293B;border-top:3px solid #3DD8D8;box-shadow:0 14px 40px rgba(0,0,0,.35);font-size:14px;line-height:1.55;letter-spacing:0;white-space:normal;text-align:left}
 .sa-tk-card[hidden]{display:none}
 .sa-tk-card::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:12px}
+/* Low on the screen, where there is more room above the strip than below it,
+   the card opens upward. The script decides, and sets how tall it may be. */
+/* The gap between it and the strip is then part of the card (a clear border),
+   so the pointer can cross it; a piece hung below the card would make the
+   card scroll. */
+.sa-tk-card.sa-tk-up{top:auto;bottom:100%;border-bottom:8px solid transparent;background-clip:padding-box;box-shadow:0 -14px 40px rgba(0,0,0,.35)}
+.sa-tk-card.sa-tk-up::before{display:none}
+/* Where a card is taller than the room on either side of the strip (the strip
+   low on the screen before the page is scrolled, or a short laptop window),
+   the script lays it out wide instead: two halves side by side, about half as
+   tall, every line of it in view. The figure and what is drawn of it on the
+   left; its low, high and change, what it is, its source and the closing line
+   on the right. */
+.sa-tk .sa-tk-card.sa-tk-flat{width:min(736px,calc(100vw - 24px));max-height:none}
+.sa-tk-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.sa-tk-half:first-child{padding-right:16px}
+.sa-tk-half + .sa-tk-half{padding-left:16px;border-left:1px solid #E2E8F0}
+.sa-tk .sa-tk-card .sa-tk-half > :first-child{margin-top:0;padding-top:0;border-top:0}
 .sa-tk-card strong{display:block;font-weight:600;color:#0F1B2D;margin-bottom:6px}
 .sa-tk-card p{margin:0}
 .sa-tk-card a{color:#0F1B2D;font-weight:600;text-decoration:underline;text-underline-offset:3px}
