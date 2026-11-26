@@ -67,7 +67,8 @@ footer a:hover{color:var(--cyan)}
 .page-hero .page-hero-inner{max-width:900px;margin:0 auto;position:relative;z-index:2}
 .page-hero .page-hero-tag{display:inline-block;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--cyan);font-weight:600;margin-bottom:16px;opacity:0;animation:slideRight .8s .3s forwards}
 .page-hero h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(36px,4.5vw,56px);line-height:1.12;color:var(--white);margin-bottom:20px;opacity:0;animation:fadeUp .9s .4s forwards}
-.page-hero h1 em{font-style:italic;color:var(--cyan)}
+/* The blue line of a headline is its own line, on every page (the owner's standard, 2026-11-26). */
+.page-hero h1 em{display:block;font-style:italic;color:var(--cyan)}
 .page-hero .page-hero-sub{font-size:17px;line-height:1.7;color:var(--text-light);max-width:600px;opacity:0;animation:fadeUp .9s .55s forwards}
 
 /* ===== BUTTONS ===== */

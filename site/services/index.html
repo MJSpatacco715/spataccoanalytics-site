@@ -24,10 +24,45 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=66144cae">
+<link rel="stylesheet" href="/css/shared.css?v=8fe557dd">
 <style>
 /* a link from the home page lands on its service, clear of the menu */
 .sv-card,#hosting{scroll-margin-top:96px}
+/* A service fades in where it stands. Sliding up as it appeared, the one a
+   visitor had just been sent to ended 28px higher than it was aimed, its top
+   edge under the menu. */
+.sv-card.reveal{transform:none}
+/* The first screen shows the services themselves. The owner, 2026-11-26: "services
+   page is all talk and no service options on first screen". From 1000px wide the
+   four sit beside the headline; narrower, right under it. Each goes to its own
+   part of this page. The headline is set smaller here so both fit one screen. */
+.sv-hero{padding-top:124px;padding-bottom:60px}
+.sv-hero .page-hero-inner{max-width:1100px}
+.sv-hero h1{font-size:clamp(34px,3.7vw,48px);margin-bottom:16px}
+.sv-hero .page-hero-sub{max-width:520px}
+.sv-pick{display:grid;gap:10px;margin-top:30px;opacity:0;animation:fadeUp .9s .6s forwards}
+.sv-pick a{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:18px;row-gap:3px;align-items:center;padding:13px 18px;border:1px solid rgba(61,216,216,0.28);background:rgba(255,255,255,0.03);text-decoration:none;transition:border-color .2s,background .2s}
+.sv-pick a:hover,.sv-pick a:focus-visible{border-color:var(--cyan);background:rgba(61,216,216,0.09)}
+.sv-pick-name{grid-column:1;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:23px;line-height:1.2;color:var(--white)}
+.sv-pick-what{grid-column:1;font-size:14px;line-height:1.5;color:#A8B5C7}
+.sv-pick-go{grid-column:2;grid-row:1 / span 2;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);white-space:nowrap}
+.sv-pick-go::after{content:'\2192';margin-left:10px;letter-spacing:0}
+@media(min-width:1000px){
+  .sv-hero .page-hero-inner{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:center}
+  .sv-pick{margin-top:0}
+}
+@media(max-width:768px){.sv-hero{padding-top:112px;padding-bottom:48px}}
+@media(max-width:560px){
+  .sv-hero{padding-top:130px;padding-bottom:40px}
+  .sv-pick{gap:8px;margin-top:24px}
+  .sv-pick a{padding:11px 14px}
+  .sv-pick-name{font-size:20px}
+  .sv-pick-what{display:none}
+  .sv-pick-go{grid-row:1;font-size:10.5px;letter-spacing:1.5px}
+  /* on a phone the four services say it themselves, and sit higher for it */
+  .sv-hero .page-hero-sub{display:none}
+  .sv-hero h1{margin-bottom:0}
+}
 .sv-wrap{max-width:1100px;margin:0 auto}
 .sv-lead{font-size:17px;line-height:1.7;color:var(--text);max-width:720px;margin-bottom:40px}
 .sv-start{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;background:var(--navy);color:var(--white);padding:26px 30px;margin-bottom:56px}
@@ -125,11 +160,21 @@
   </div>
 </nav>
 
-<section class="page-hero">
+<section class="page-hero sv-hero">
   <div class="page-hero-inner">
-    <div class="page-hero-tag">Services</div>
-    <h1>Websites, CRM, and data for independent advisors. <em>Scoped before you commit.</em></h1>
-    <p class="page-hero-sub">Four services, three levels each. Pick what fits your practice and see what it involves, how long it takes, and what it costs.</p>
+    <div class="sv-hero-copy">
+      <div class="page-hero-tag">Services</div>
+      <h1>Websites, CRM, and data for independent advisors. <em>Pick where to start.</em></h1>
+      <p class="page-hero-sub">Four services, three levels each. See what each involves, how long it takes, and what it costs.</p>
+    </div>
+    <!-- The services themselves, on the first screen. Each goes to its own part of this page.
+         (A div, not a nav: the shared stylesheet pins every nav to the top of the window.) -->
+    <div class="sv-pick" role="navigation" aria-label="The four services">
+      <a href="#audit"><span class="sv-pick-name">Website &amp; AI Audit</span><span class="sv-pick-what">Your site, search and AI visibility, reviewed.</span><span class="sv-pick-go">Starts free</span></a>
+      <a href="#design"><span class="sv-pick-name">Website Design</span><span class="sv-pick-what">A site built to pass compliance review.</span><span class="sv-pick-go">2 to 4 weeks</span></a>
+      <a href="#crm"><span class="sv-pick-name">CRM Diagnostic &amp; Repair</span><span class="sv-pick-what">Any CRM that can export its data.</span><span class="sv-pick-go">From 1 week</span></a>
+      <a href="#hosting"><span class="sv-pick-name">Managed Hosting</span><span class="sv-pick-what">Hosting, updates and security, flat monthly.</span><span class="sv-pick-go">From $160/mo</span></a>
+    </div>
   </div>
 </section>
 
