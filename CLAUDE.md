@@ -37,6 +37,22 @@ lives and says which pieces are not in this repo yet.
   for its own two. One exception, the owner's: the Tools page's headline is a
   single sentence ("Your site can do more than describe you.") and stays on one
   line ("this one is okay to stay"), by a rule of its own page.
+- Every inner page opens on at least one supporting figure with its source
+  (the owner, 2026-11-26: "They should all have at least one supporting
+  statistic"), in the same form on each (`.hero-stat` in the shared stylesheet,
+  with a source card): Services 62% (Broadridge), Approach 56% (Morningstar),
+  About 244 RIA deals (DeVoe & Company), Contact 3% (Orion), Tools 72%
+  (Wealthtender). The owner approved these five. Four are the home page's own
+  figures and must say what the home page says of them; the About figure is
+  the market strip's deal count and changes with it each quarter
+  (`docs/stat-bank.md`). On the Services and Tools pages a phone shows the
+  figure after the services and the tiles, which keep the first screen.
+  A claim with a number or a "most" in it needs a source or it goes. The
+  Approach page said "Adoption dies in week three", which came over with the
+  first site's copy and had no source (the owner: "how do i know that? how do
+  they know that's true?"). It now reads "A cleanup built on someone else's
+  workflow does not stick. We build on the way your team already works.", the
+  owner's choice of three.
 - The Tools page opens on its tools (the owner, 2026-11-26: "on the tools page
   the meat is too buried. I need tiles or chips that fit with the overall
   scheme to pull to the top (visible on first glance) the tools that meet the

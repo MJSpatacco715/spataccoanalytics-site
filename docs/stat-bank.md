@@ -113,7 +113,8 @@ the same way whenever he asks.
 The market strip on the tools page carries the year's RIA deal count against the
 record. The count is DeVoe & Company's, from its RIA Deal Book, which comes
 out about a month after each quarter ends (late January, April, July and
-October). The strip is the one place the count shows: the homepage's stat
+October). The count shows in two places: on the strip, and as the supporting
+figure that opens the About page (`site/about/index.html`). The homepage's stat
 row gave its place to a figure on advisors' data in November 2026.
 
 When the weekly run falls after a new Deal Book is out:
@@ -136,7 +137,11 @@ When the weekly run falls after a new Deal Book is out:
    the quarters do not add up. With three quarters in, the card works out by
    itself what the fourth needs and what a repeat of the record year's fourth
    would do.
-4. Change the expected figures in `tests/market_test.sh` and
+4. Change the About page's opening figure to match: the number, its label
+   (the months it covers), and the sentences, the Deal Book's name and the
+   link in its source card. `tests/pages_test.sh` fails while that number
+   differs from `count`.
+5. Change the expected figures in `tests/market_test.sh` and
    `tests/ticker_browser.cjs`, run the checks, and open the pull request.
    This one needs no approval to merge: it is a number from an agreed source.
 

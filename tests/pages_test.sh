@@ -294,6 +294,59 @@ PY'
 check "its headline is the one that stays on one line, by a rule of its own page" 'grep -q "<h1>Your site can do more than <em>describe you.</em></h1>" "$site/tools/index.html" && grep -q "^\.tl-hero h1 em{display:inline}" "$site/tools/index.html"'
 check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile\"" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind)[ .:{\[]"'
 
+# --- every inner page opens on a supporting figure with its source
+# The owner, 2026-11-26: "each of the page heros should be consistent. white
+# line 1, blue line 2. They should all have at least one supporting statistic.
+# adoption dies in week three. how do i know that? how do they know that's
+# true?" The owner approved the five figures and chose the Approach page's line.
+figs_ok=0
+for pair in "services:62%:Broadridge, 2025" "approach:56%:Morningstar, 2026" "about:244:DeVoe &amp; Company, 2026" "contact:3%:Orion, 2026" "tools:72%:Wealthtender, 2025"; do
+  page=${pair%%:*}; rest=${pair#*:}; num=${rest%%:*}; src=${rest#*:}
+  if python3 - "$dist/$page/index.html" "$num" "$src" <<'PY'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read(); num, src = sys.argv[2], sys.argv[3]
+hero = re.search(r"<section class=\"page-hero[^\"]*\">.*?</section>", s, re.S)
+figs = re.findall(r"<div class=\"hero-stat sa-cite[^\"]*\" tabindex=\"0\">(.*?</a></span>)</div>", hero.group(0) if hero else "", re.S)
+ok = len(figs) == 1
+if ok:
+    f = figs[0]
+    ok = f.startswith("<div class=\"stat-num\">%s</div><div class=\"stat-label\">" % num)
+    ok = ok and "<span class=\"sa-cite-src\">Source: %s</span>" % src in f                      # who says so, and when, in view
+    card = re.search(r"<span class=\"sa-cite-card\" role=\"note\"><strong>[^<]{30,}</strong>.*?<span>[^<]{40,}</span><a href=\"https://[^\"]+\" target=\"_blank\" rel=\"noopener\">[^<]+</a></span>$", f, re.S)
+    ok = ok and bool(card)                                                                      # the finding, who was asked, a link
+# the source cards are styled and opened on this page
+ok = ok and "href=\"/css/cite.css\"" in s and "<script src=\"/js/cite.js\"></script>" in s
+sys.exit(0 if ok else 1)
+PY
+  then figs_ok=$((figs_ok+1)); else echo "  the opening figure is not right on /$page/"; fi
+done
+check "Services, Approach, About, Contact and Tools each open on one figure, with its source in view and a card that links to it: $figs_ok of 5" '[ "$figs_ok" = 5 ]'
+check "the four figures taken from the home page say of themselves what the home page says" 'python3 - "$home" "$site" <<'"'"'PY'"'"'
+import re, sys
+home = open(sys.argv[1], encoding="utf-8").read()
+ok = True
+for page, num in (("services", "62%"), ("contact", "3%"), ("tools", "72%")):
+    s = open("%s/%s/index.html" % (sys.argv[2], page), encoding="utf-8").read()
+    there = re.search(r"<div class=\"stat-num\">%s</div>.*?(<span class=\"sa-cite-card\".*?</a></span>)</div>" % re.escape(num), home, re.S)
+    here = re.search(r"<div class=\"hero-stat sa-cite[^\"]*\" tabindex=\"0\"><div class=\"stat-num\">%s</div>.*?(<span class=\"sa-cite-card\".*?</a></span>)</div>" % re.escape(num), s, re.S)
+    ok = ok and bool(there and here) and there.group(1) == here.group(1)
+sys.exit(0 if ok else 1)
+PY'
+check "the About page's figure is the deal count the market strip carries, and names the same Deal Book" 'python3 - "$site/about/index.html" "$site/lib/market.php" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read(); php = open(sys.argv[2], encoding="utf-8").read()
+deals = php[php.index("const MARKET_DEALS = ["):]
+count = re.search(r"\x27count\x27 => (\d+)", deals).group(1)
+year = re.search(r"\x27year\x27 => (\d+)", deals).group(1)
+book = re.search(r"\x27book\x27 => \x27([^\x27]+)\x27", deals).group(1)
+url = re.search(r"\x27url\x27 => \x27([^\x27]+)\x27", deals).group(1)
+fig = re.search(r"<div class=\"hero-stat sa-cite\" tabindex=\"0\"><div class=\"stat-num\">(\d+)</div><div class=\"stat-label\">([^<]+)</div>.*?</a></span></div>", s, re.S)
+ok = bool(fig) and fig.group(1) == count and year in fig.group(2)
+ok = ok and book.replace("&", "&amp;") in fig.group(0) and "href=\"%s\"" % url in fig.group(0)
+sys.exit(0 if ok else 1)
+PY'
+check "the line with no source is gone from the Approach page, which now says what the owner chose" '! grep -rqi "week three" "$site" "$here/content" "$here/scripts" && ! grep -q "Most &ldquo;cleanups&rdquo; fail" "$site/approach/index.html" && grep -q "<p class=\"page-hero-sub\">A cleanup built on someone else&rsquo;s workflow does not stick. We build on the way your team already works.</p>" "$site/approach/index.html"'
+
 # --- the logo
 # The owner, 2026-11-26: "the logo is small and near invisible on the site". The
 # menu showed the logo file whole, a white square 36px tall with the name about

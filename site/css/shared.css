@@ -41,6 +41,27 @@ nav .nav-links a.active{color:var(--cyan);border-bottom-color:var(--cyan)}
 nav .nav-links a.unleash-link{color:var(--red);font-weight:700;letter-spacing:3px;text-shadow:0 0 8px rgba(200,16,46,0.3);transition:color .3s,text-shadow .3s}
 nav .nav-links a.unleash-link:hover{color:#FF1744;text-shadow:0 0 16px rgba(200,16,46,0.6)}
 
+/* A page's supporting figure. Every inner page opens on at least one, with its
+   source in view and a source card behind it (css/cite.css), as the home page's
+   figures have. The owner's standard, 2026-11-26. */
+/* (z-index: its card opens over whatever follows it in the section, which is drawn later) */
+.hero-stat{z-index:5;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:18px;align-items:center;max-width:540px;margin-top:26px;padding-top:20px;border-top:1px solid rgba(61,216,216,0.14);opacity:0;animation:fadeUp .9s .7s forwards}
+.hero-stat .stat-num{grid-row:1 / span 2;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:50px;line-height:1;color:var(--cyan);font-variant-numeric:lining-nums}
+.hero-stat .stat-label{font-size:12px;line-height:1.5;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-light)}
+.hero-stat .sa-cite-src{justify-self:start;margin-top:5px}
+/* one row, where the first screen is full: the figure, what it is, its source */
+.hero-stat.hero-stat-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;max-width:none;margin-top:0;padding-top:0;border-top:0}
+.hero-stat.hero-stat-row .stat-num{font-size:30px}
+.hero-stat.hero-stat-row .sa-cite-src{margin-top:0}
+/* near the top of a page a source card opens downward, clear of the menu */
+.hero-stat.hero-stat-row .sa-cite-card{bottom:auto;top:calc(100% + 10px)}
+.hero-stat.hero-stat-row .sa-cite-card::after{top:auto;bottom:100%}
+@media(max-width:560px){
+  .hero-stat{column-gap:14px;margin-top:20px;padding-top:16px}
+  .hero-stat .stat-num{font-size:42px}
+  .hero-stat .stat-label{font-size:11px;letter-spacing:1.2px}
+}
+
 /* ===== SECTIONS ===== */
 .section-dark{background:var(--navy);padding:100px 48px}
 .section-light{background:var(--off-white);padding:100px 48px}

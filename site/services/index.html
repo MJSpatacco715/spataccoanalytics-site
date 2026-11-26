@@ -24,7 +24,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=8fe557dd">
+<link rel="stylesheet" href="/css/shared.css?v=a1136c74">
+<link rel="stylesheet" href="/css/cite.css">
 <style>
 /* a link from the home page lands on its service, clear of the menu */
 .sv-card,#hosting{scroll-margin-top:96px}
@@ -48,8 +49,10 @@
 .sv-pick-go{grid-column:2;grid-row:1 / span 2;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);white-space:nowrap}
 .sv-pick-go::after{content:'\2192';margin-left:10px;letter-spacing:0}
 @media(min-width:1000px){
-  .sv-hero .page-hero-inner{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:center}
-  .sv-pick{margin-top:0}
+  .sv-hero .page-hero-inner{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);column-gap:56px;row-gap:0}
+  .sv-hero-copy{grid-column:1;grid-row:1;align-self:end}
+  .sv-hero .hero-stat{grid-column:1;grid-row:2;align-self:start}
+  .sv-pick{grid-column:2;grid-row:1 / span 2;align-self:center;margin-top:0}
 }
 @media(max-width:768px){.sv-hero{padding-top:112px;padding-bottom:48px}}
 @media(max-width:560px){
@@ -175,6 +178,7 @@
       <a href="#crm"><span class="sv-pick-name">CRM Diagnostic &amp; Repair</span><span class="sv-pick-what">Any CRM that can export its data.</span><span class="sv-pick-go">From 1 week</span></a>
       <a href="#hosting"><span class="sv-pick-name">Managed Hosting</span><span class="sv-pick-what">Hosting, updates and security, flat monthly.</span><span class="sv-pick-go">From $160/mo</span></a>
     </div>
+    <div class="hero-stat sa-cite" tabindex="0"><div class="stat-num">62%</div><div class="stat-label">of advisors say their website fails to bring in leads</div><span class="sa-cite-src">Source: Broadridge, 2025</span><span class="sa-cite-card" role="note"><strong>62% of advisors find their own website ineffective at generating leads.</strong>Reported by Broadridge from its own study of financial advisors.<span>Broadridge Financial Solutions, press release of September 8, 2025. The release does not give the size of the study. Broadridge sells websites and marketing to advisors.</span><a href="https://www.broadridge.com/press-release/2025/broadridge-boosts-digital-marketing-suite" target="_blank" rel="noopener">Read the release</a></span></div>
   </div>
 </section>
 
@@ -382,6 +386,7 @@
 </footer>
 
 <script src="/js/shared.js"></script>
+<script src="/js/cite.js"></script>
 <script>
 (function () {
   var PRICING_URL = '/services/pricing.php';
