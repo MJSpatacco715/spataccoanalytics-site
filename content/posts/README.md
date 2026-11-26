@@ -10,5 +10,6 @@ Merging a post to `main` publishes it. To get the words for LinkedIn:
 python3 scripts/build_insights.py --linkedin SLUG
 ```
 
-There are no posts yet. Until the first one is merged, the site has no
-Insights section and the homepage shows no teaser.
+The section went live with its first post on 2026-11-25. A post in the
+`practice` category also puts a teaser on the homepage; the other categories
+do not. Every page's last line links to the section.

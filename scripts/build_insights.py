@@ -132,7 +132,7 @@ def block(b: dict, where: str) -> str:
 
 
 def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "", image: str = "/img/social-card.png") -> str:
-    follow = f' &middot; {sign_off_link(linkedin)}' if linkedin else ""
+    follow = f' &middot; {sign_off_link(linkedin, "LinkedIn")}' if linkedin else ""
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -172,7 +172,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {body}
 <footer>
   <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="footer-logo"></a>
-  <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; <a href="/insights/">Insights</a>{follow}</div>
+  <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; {sign_off_link("/insights/", "Insights")}{follow}</div>
 </footer>
 <script src="/js/shared.js"></script>
 <script src="/js/cite.js"></script>
@@ -186,13 +186,13 @@ def card(p: dict) -> str:
             f'<h3>{esc(p["title"])}</h3><p>{esc(p["summary"])}</p><span class="in-date">{long_date(p["date"])}</span></a>')
 
 
-def sign_off_link(linkedin: str) -> str:
-    """The LinkedIn link in a page's last line. Pages style their footers in
-    different places and some style no links there at all, where a browser
-    would draw it dark blue on the navy footer. It carries its own look: the
-    colour of the line it sits in, underlined."""
-    return (f'<a href="{esc(linkedin)}" target="_blank" rel="noopener" '
-            'style="color:inherit;text-decoration:underline;text-underline-offset:3px">LinkedIn</a>')
+def sign_off_link(url: str, text: str) -> str:
+    """A link in a page's last line. Pages style their footers in different
+    places and some style no links there at all, where a browser would draw
+    one dark blue on the navy footer. So it carries its own look: the colour
+    of the line it sits in, underlined. A link off the site opens a new tab."""
+    away = ' target="_blank" rel="noopener"' if url.startswith("http") else ""
+    return f'<a href="{esc(url)}"{away} style="color:inherit;text-decoration:underline;text-underline-offset:3px">{esc(text)}</a>'
 
 
 def linkedin_text(p: dict) -> str:
@@ -215,20 +215,25 @@ def build(out: Path, posts_dir: Path | None = None, drafts: bool = False) -> int
     if linkedin:
         safe_url(linkedin, "content/site.json linkedin_url")
 
-    # the firm's LinkedIn page, wherever the site signs off, and in what search engines read
-    if linkedin:
+    posts = load(posts_dir, drafts) if posts_dir.is_dir() else []
+
+    # Where the site signs off: the Insights section once it has a post, so a
+    # visitor and a search engine can reach it from any page, then the firm's
+    # LinkedIn page. The home page also tells search engines the page is the firm's.
+    tail = (f' &middot; {sign_off_link("/insights/", "Insights")}' if posts else "") + \
+           (f' &middot; {sign_off_link(linkedin, "LinkedIn")}' if linkedin else "")
+    if tail:
         sign = "&copy; 2026 Spatacco Analytics LLC"
         for f in out.rglob("*.html"):
             s = f.read_text(encoding="utf-8")
-            if sign in s and "LinkedIn</a>" not in s:
-                f.write_text(s.replace(sign, f'{sign} &middot; {sign_off_link(linkedin)}'), encoding="utf-8")
+            if sign in s and sign + tail not in s:
+                f.write_text(s.replace(sign, sign + tail), encoding="utf-8")
+    if linkedin:
         home = out / "index.html"
         s = home.read_text(encoding="utf-8")
         mark = '"@type":"ProfessionalService",'
         if mark in s and '"sameAs"' not in s:
             home.write_text(s.replace(mark, mark + '"sameAs":[' + json.dumps(linkedin) + '],', 1), encoding="utf-8")
-
-    posts = load(posts_dir, drafts) if posts_dir.is_dir() else []
     if not posts:
         return 0
 

@@ -75,7 +75,10 @@ def main() -> None:
 
     urls: list[str] = []
     for line in sys.stdin:
-        for page in pages_for(line):
+        pages = pages_for(line)
+        if pages and pages[0].startswith("/insights/") and BASE + pages[0] not in listed:
+            continue        # a draft or an unpublished post: the Insights page did not change either
+        for page in pages:
             url = BASE + page
             if url in listed and url not in urls:
                 urls.append(url)
