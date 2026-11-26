@@ -30,6 +30,23 @@ lives and says which pieces are not in this repo yet.
 - The menu reads Services, Approach, Tools, About, Contact, on every page, in
   the posts' shell (`scripts/build_insights.py`) and so on every tool page. The
   owner set that order on 2026-11-26. `tests/pages_test.sh` holds it.
+- Headlines. The blue part of a headline is the last thing in it and sits on a
+  line of its own, on every page (the owner, 2026-11-26: "as a standard I'd
+  like the blue response hero text to be on its own line"). The shared
+  stylesheet does it for the inner pages (`.page-hero h1 em`), the home page
+  for its own two.
+- The Services page opens on its services (the owner, the same day: "services
+  page is all talk and no service options on first screen"). The four sit in
+  the first section, beside the headline from 1000px wide and under it on a
+  phone, each going to its own part of the page, and all four are on the first
+  screen at the owner's own window (1255 by 607: a 1880px screen at 150%) and
+  on a phone. Nothing goes between the menu and them, and the headline there
+  stays the size it is. Its blue line is "Pick where to start.": the owner did
+  not love "Scoped before you commit." and chose this one. What each option
+  says beside its name (free, weeks, the hosting price) is read off the page's
+  own parts by `tests/pages_test.sh`; `tests/hero_browser.cjs` opens it in a
+  browser. A block of links inside a page is a `div`, never a `nav`: the
+  shared stylesheet pins every `nav` to the top of the window.
 - The logo. The owner, 2026-11-26: "the logo is small and near invisible on the
   site". The menu had shown the logo file whole (`site/img/logo.jpg`: the
   wordmark small in the middle of a white square), 36px tall, which left the
