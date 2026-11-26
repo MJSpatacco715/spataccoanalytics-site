@@ -75,6 +75,10 @@ lives and says which pieces are not in this repo yet.
   than one location answers. A count of some word in the file proves nothing.
   If a wrong copy is kept anyway, change the file so its address changes; the
   owner can also purge that address in Cloudflare.
+  A visitor cannot cause it either: the publish unpacks everything a page
+  loads first and the pages last (`scripts/remote_deploy.sh`,
+  `tests/remote_deploy_test.sh`), so no page names an address before its file
+  is there. Keep that order.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.
