@@ -47,6 +47,16 @@ lives and says which pieces are not in this repo yet.
   characters of the file's SHA-1, because the host keeps both for a year: change
   `site/css/shared.css` and the link on every page (and in
   `scripts/build_insights.py`) must change with it.
+  Off the site the wordmark leads too (the owner, the same day: "can i make
+  sure the new logo is front and center for linkedin / google search, etc?"):
+  the share picture every page names (`site/img/social-card.png`, with a `?v=`),
+  and the LinkedIn banner and Google cover in `brand/profile/`, all drawn by
+  `scripts/brand_images.cjs`. Three places stay the SA mark because they are
+  small squares where the wordmark cannot be read: the browser-tab icon, the
+  logo search engines are given in the home page's structured data (Google
+  asks that it look right on white, where white lettering would vanish), and a profile
+  picture unless the owner chooses the wordmark square. The profiles are the
+  owner's accounts: the files are made here, the owner uploads them.
 - Pages are never kept by the host's page cache (`site/.htaccess` marks
   every `.html` file `private, no-cache`), so a publish shows without anyone
   clearing a cache. Scripts, styles and images are kept for a year: when one

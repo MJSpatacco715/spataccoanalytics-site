@@ -232,6 +232,7 @@ check "the scorer checks what was typed through the address reader, not for the 
 # white lettering for the menu, and both logos together "where appropriate":
 # the footer.
 word="$site/img/wordmark-on-dark.png"; vword=$(sha1sum "$word" | cut -c1-8); vcss=$(sha1sum "$site/css/shared.css" | cut -c1-8)
+dims=$(python3 -c 'import struct,sys; print("%d %d" % struct.unpack(">II", open(sys.argv[1],"rb").read()[16:24]))' "$word")
 check "the menu's logo is the wordmark alone: a wide picture with a clear ground, not the square" 'python3 - "$word" <<'"'"'PY'"'"'
 import struct, sys
 b = open(sys.argv[1], "rb").read()
@@ -244,10 +245,10 @@ check "the tool that makes it from the logo file is kept with it" '[ -s "$here/s
 logos_ok=0; logo_pages=0
 for f in "$dist/index.html" "$dist/services/index.html" "$dist/approach/index.html" "$dist/tools/index.html" "$dist/about/index.html" "$dist/contact/index.html" "$dist/insights/index.html" "$dist/insights/most-firms-dont-need-more-software/index.html" "$dist/tools/football/nfl-lines-tracker.html"; do
   logo_pages=$((logo_pages+1))
-  if python3 - "$f" "$vword" <<'PY'
+  if python3 - "$f" "$vword" $dims <<'PY'
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read(); v = sys.argv[2]
-word = r'<img src="/img/wordmark-on-dark\.png\?v=' + v + r'" alt="Spatacco Analytics" class="%s" width="520" height="164">'
+word = r'<img src="/img/wordmark-on-dark\.png\?v=' + v + r'" alt="Spatacco Analytics" class="%s" width="' + sys.argv[3] + '" height="' + sys.argv[4] + '">'
 nav = re.search(r"<nav[^>]*>.*?</nav>", s, re.S); foot = re.search(r"<footer>.*?</footer>", s, re.S)
 ok = bool(nav and foot)
 ok = ok and len(re.findall(word % "logo", nav.group(0))) == 1 and len(re.findall(r"<img\b", nav.group(0))) == 1
@@ -263,6 +264,34 @@ done
 check "every page shows the wordmark in its menu and both logos in its footer, at the picture's current address (now ?v=$vword): $logos_ok of $logo_pages" '[ "$logos_ok" = "$logo_pages" ]'
 check "the home page no longer carries the logo written into the page twice (it is now $(wc -c < "$home") bytes)" '[ "$(wc -c < "$home")" -lt 60000 ]'
 check "the menu shows it 48px tall, and the bar is no taller for it" 'grep -q "nav .logo{height:48px;width:auto;display:block}" "$site/css/shared.css" && grep -q "nav .logo{height:48px;width:auto;display:block}" "$home" && grep -q "align-items:center;padding:14px 48px;" "$site/css/shared.css" && grep -q "align-items:center;padding:14px 48px;" "$home"'
+# --- the picture a link to the site shows
+# The owner, 2026-11-26: "can i make sure the new logo is front and center for
+# linkedin / google search, etc?" The share picture led with the SA mark and the
+# name set in type; it leads with the wordmark now. A site that shows a link's
+# picture keeps its own copy by address, so the address carries a version.
+share="$site/img/social-card.png"; vshare=$(sha1sum "$share" | cut -c1-8)
+check "the share picture is the size link previews ask for, and light enough for every one of them ($(( $(wc -c < "$share") / 1024 )) KB)" 'python3 - "$share" <<'"'"'PY'"'"'
+import struct, sys
+b = open(sys.argv[1], "rb").read()
+w, h = struct.unpack(">II", b[16:24])
+sys.exit(0 if b[:8] == b"\x89PNG\r\n\x1a\n" and (w, h) == (1200, 630) and len(b) < 300000 else 1)
+PY'
+shared_ok=$(grep -rlE "og:image\" content=\"https://spataccoanalytics.com/img/social-card\.png" "$dist" --include=*.html | while read -r f; do grep -q "og:image\" content=\"https://spataccoanalytics.com/img/social-card.png?v=$vshare\"" "$f" && echo "$f"; done | wc -l)
+shared_all=$(grep -rlE "og:image\" content=\"https://spataccoanalytics.com/img/social-card\.png" "$dist" --include=*.html | wc -l)
+check "every page that shares it names its current address (now ?v=$vshare): $shared_ok of $shared_all pages" '[ "$shared_all" -ge 9 ] && [ "$shared_ok" = "$shared_all" ]'
+check "the tools that draw the wordmark and the pictures made with it are kept, with the large wordmark they use" '[ -s "$here/scripts/brand_images.cjs" ] && [ -s "$here/brand/wordmark-on-dark-large.png" ] && grep -q "brand/wordmark-on-dark-large.png" "$here/scripts/brand_images.cjs"'
+check "the pictures for the owner to upload are there: a LinkedIn banner, a Google cover, and the wordmark and the SA mark as squares" 'python3 - "$here/brand/profile" <<'"'"'PY'"'"'
+import struct, sys, os
+want = {"linkedin-cover-2256x382.png": (2256, 382), "google-cover-1200x900.png": (1200, 900), "wordmark-square-800.png": (800, 800), "google-logo-720.png": (720, 720)}
+ok = True
+for name, size in want.items():
+    f = os.path.join(sys.argv[1], name)
+    if not os.path.isfile(f): ok = False; continue
+    b = open(f, "rb").read()
+    ok = ok and struct.unpack(">II", b[16:24]) == size and 10000 < len(b) < 3000000      # LinkedIn takes up to 3 MB, Google from 10 KB to 5 MB
+sys.exit(0 if ok else 1)
+PY'
+
 # The host keeps a stylesheet for a year, so the shared one carries a version too.
 stale=$(grep -rlE "href=\"/css/shared\.css" "$dist" --include=*.html | while read -r f; do grep -q "href=\"/css/shared.css?v=$vcss\"" "$f" || echo "$f"; done | wc -l)
 linked=$(grep -rlE "href=\"/css/shared\.css" "$dist" --include=*.html | wc -l)
