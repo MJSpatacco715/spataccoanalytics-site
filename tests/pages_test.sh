@@ -148,7 +148,10 @@ sys.exit(0 if ok else 1)
 PY'
 check "a style, a script, a picture or a test changing names nothing" '[ -z "$(tell site/css/ticker.css site/js/ticker.js site/img/logo-square.png tests/pages_test.sh site/lib/market.php README.md)" ]'
 check "a page kept out of search is never named" '[ -z "$(tell site/unleash/index.html site/unleash/kraken.html site/score/index.html site/bank/index.html)" ]'
-check "a post is named only once the sitemap lists it" '[ -z "$(tell content/posts/not-published-yet.json)" ]'
+check "a post that is not published names nothing, not even the Insights page" '[ -z "$(tell content/posts/2026-12-01-not-published-yet.json)" ]'
+python3 "$here/scripts/build_site.py" --site "$site" --out "$t/withposts" --posts "$here/tests/fixtures/posts" >/dev/null 2>&1
+check "a published post is named by its own address, without the date in its file name, with the Insights page" '[[ "$(printf "%s\n" content/posts/2026-01-05-sample-practice.json content/posts/2026-01-07-sample-draft.json | python3 "$here/scripts/indexnow.py" --site "$site" --dist "$t/withposts")" == *"\"urlList\": [\"https://spataccoanalytics.com/insights/sample-practice/\", \"https://spataccoanalytics.com/insights/\"]"* ]]'
+check "the site settings file names the home page, where search engines read the firm's details" '[[ "$(tell content/site.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/\"]"* ]]'
 check "the showcase file names the tools page" '[[ "$(tell showcase/tools.json)" == *"\"urlList\": [\"https://spataccoanalytics.com/tools/\"]"* ]]'
 wf="$here/.github/workflows/publish.yml"
 check "the publish tells Bing after a merge only, and can never fail on it" 'python3 - "$wf" <<'"'"'PY'"'"'
@@ -159,6 +162,33 @@ step = m.group(1) if m else ""
 ok = ("github.event_name == '"'"'push'"'"'" in step and "continue-on-error: true" in step and "scripts/indexnow.py --site site --dist dist" in step
       and "https://api.indexnow.org/indexnow" in step and s.index("- name: Verify on the server") < s.index("- name: Tell Bing what changed"))
 sys.exit(0 if ok else 1)
+PY'
+
+# --- the LinkedIn page is tied to the site
+li="https://www.linkedin.com/company/spatacco-analytics/"
+check "the firm's LinkedIn page is set" '[ "$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[\"linkedin_url\"])" "$here/content/site.json")" = "$li" ]'
+check "search engines are told the LinkedIn page is the firm's" 'grep -qF "\"@type\":\"ProfessionalService\",\"sameAs\":[\"$li\"]," "$dist/index.html"'
+signed=0; bare=0
+for f in $(grep -rl "&copy; 2026 Spatacco Analytics LLC" "$dist" --include=*.html); do
+  signed=$((signed+1))
+  grep -qF "<a href=\"$li\" target=\"_blank\" rel=\"noopener\" style=\"color:inherit;text-decoration:underline;text-underline-offset:3px\">LinkedIn</a>" "$f" || { bare=$((bare+1)); echo "  no readable LinkedIn link: ${f#$dist}"; }
+done
+check "every page that signs off links to it, in the colour of its own footer line and underlined" '[ "$signed" -ge 6 ] && [ "$bare" = 0 ]'
+
+# --- the Insights section
+ins=0
+for f in $(grep -rl "&copy; 2026 Spatacco Analytics LLC" "$dist" --include=*.html); do
+  grep -qF "<a href=\"/insights/\" style=\"color:inherit;text-decoration:underline;text-underline-offset:3px\">Insights</a>" "$f" || { ins=$((ins+1)); echo "  no Insights link: ${f#$dist}"; }
+done
+check "the Insights section is built and every page that signs off leads to it" '[ -s "$dist/insights/index.html" ] && [ -s "$dist/insights/feed.xml" ] && [ "$ins" = 0 ]'
+check "the first post is published at its own address and listed for search engines" '[ -s "$dist/insights/most-firms-dont-need-more-software/index.html" ] && grep -q "<loc>https://spataccoanalytics.com/insights/most-firms-dont-need-more-software/</loc>" "$dist/sitemap.xml" && grep -q "<loc>https://spataccoanalytics.com/insights/</loc>" "$dist/sitemap.xml"'
+check "the first post is the owner's own words, without the line about LinkedIn" 'f="$dist/insights/most-firms-dont-need-more-software/index.html"; grep -q "We work with financial advisors and small business owners on three things" "$f" && grep -q "They need the software they have to work the way they do." "$f" && ! grep -q "is now on LinkedIn" "$f"'
+check "the home page carries an Insights teaser only when a published post is written for advisors" 'python3 - "$here/content/posts" "$dist/index.html" <<'"'"'PY'"'"'
+import json, pathlib, sys
+posts = [json.loads(f.read_text(encoding="utf-8")) for f in pathlib.Path(sys.argv[1]).glob("*.json")]
+want = any(p.get("category") == "practice" and not p.get("draft") for p in posts)
+has = "in-home" in open(sys.argv[2], encoding="utf-8").read()
+sys.exit(0 if want == has else 1)
 PY'
 
 # --- house rules

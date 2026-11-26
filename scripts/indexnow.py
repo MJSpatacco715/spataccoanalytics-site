@@ -44,11 +44,14 @@ def key_of(site: Path) -> str:
 def pages_for(path: str) -> list[str]:
     """The addresses a changed repository path can change."""
     path = path.strip()
-    m = re.fullmatch(r"content/posts/([a-z0-9]+(?:-[a-z0-9]+)*)\.json", path)
+    # a post file is YYYY-MM-DD-slug.json and is published at /insights/slug/
+    m = re.fullmatch(r"content/posts/\d{4}-\d{2}-\d{2}-([a-z0-9]+(?:-[a-z0-9]+)*)\.json", path)
     if m:
         return [f"/insights/{m.group(1)}/", "/insights/"]
     if path.startswith("showcase/"):
         return ["/tools/"]
+    if path == "content/site.json":
+        return ["/"]          # the firm's details in what search engines read on the home page
     if not path.startswith("site/") or not path.endswith(".html"):
         return []
     rel = path[len("site/"):]
@@ -72,7 +75,10 @@ def main() -> None:
 
     urls: list[str] = []
     for line in sys.stdin:
-        for page in pages_for(line):
+        pages = pages_for(line)
+        if pages and pages[0].startswith("/insights/") and BASE + pages[0] not in listed:
+            continue        # a draft or an unpublished post: the Insights page did not change either
+        for page in pages:
             url = BASE + page
             if url in listed and url not in urls:
                 urls.append(url)

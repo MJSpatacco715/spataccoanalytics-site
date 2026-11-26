@@ -1,4 +1,4 @@
 {
   "_note": "Site-wide settings. linkedin_url: the firm's LinkedIn page. Once set, every page that signs off links to it and search engines are told it belongs to the firm.",
-  "linkedin_url": ""
+  "linkedin_url": "https://www.linkedin.com/company/spatacco-analytics/"
 }
