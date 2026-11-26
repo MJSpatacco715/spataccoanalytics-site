@@ -161,6 +161,13 @@
   </div>
 </nav>
 
+<!-- The market strip: a working example at the top of the page of working examples.
+     Its styles and script are here, not in the head or after the footer, because the
+     build reuses this page's head, menu and footer for each tool's own page. -->
+<link rel="stylesheet" href="/css/ticker.css?v=d68cc37d">
+<aside class="sa-tk" id="sa-ticker" aria-label="Market figures" hidden></aside>
+<script src="/js/ticker.js?v=f949cbbb" defer></script>
+
 <section class="page-hero">
   <div class="page-hero-inner">
     <div class="page-hero-tag">Tools &amp; Projects</div>

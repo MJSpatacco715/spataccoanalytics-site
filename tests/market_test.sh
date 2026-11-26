@@ -267,13 +267,22 @@ check "the library opened directly says nothing" '[ "$code" = 200 ] && [ ! -s "$
 home="$here/site/index.html"; js="$here/site/js/ticker.js"
 check "the headline is two lines: the statement, then the ask" 'grep -q "<h1><span class=\"h1-main\">Buyers will look at your data.</span> <em>Make sure it is ready.</em></h1>" "$home" && grep -q "\.hero h1 \.h1-main,\.hero h1 em{display:block}" "$home"'
 check "pages are served fresh, never from the host's page cache" 'grep -A3 "<FilesMatch \"\\\\.html\$\">" "$here/site/.htaccess" | grep -q "Header set Cache-Control \"private, no-cache\""'
-check "the strip is on the homepage, hidden until it has figures" 'grep -q "<section class=\"hero\"><aside class=\"sa-tk\" id=\"sa-ticker\" aria-label=\"Market figures\" hidden></aside>" "$home"'
+tools="$here/site/tools/index.html"
+check "the strip is on the tools page, between the menu and the first section, hidden until it has figures" 'python3 - "$tools" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+m = re.search(r"</nav>(.*?)<section class=\"page-hero\">", s, re.S)
+between = re.sub(r"<!--.*?-->", "", m.group(1), flags=re.S) if m else ""
+ok = re.fullmatch(r"\s*<link rel=\"stylesheet\" href=\"/css/ticker\.css\?v=[0-9a-f]{8}\">\s*<aside class=\"sa-tk\" id=\"sa-ticker\" aria-label=\"Market figures\" hidden></aside>\s*<script src=\"/js/ticker\.js\?v=[0-9a-f]{8}\" defer></script>\s*", between)
+sys.exit(0 if ok else 1)
+PY'
 # The host keeps scripts and styles for a year, so each tag carries the first
 # eight characters of its file's SHA-1: change the file and the tag must follow.
 vcss=$(sha1sum "$here/site/css/ticker.css" | cut -c1-8); vjs=$(sha1sum "$js" | cut -c1-8)
-check "with its stylesheet, tagged with its version (now ?v=$vcss)" 'grep -q "<link rel=\"stylesheet\" href=\"/css/ticker.css?v=$vcss\">" "$home"'
-check "and its script, tagged with its version (now ?v=$vjs)" 'grep -q "<script src=\"/js/ticker.js?v=$vjs\" defer></script>" "$home"'
-check "the homepage is the only page with it" '[ "$(grep -rl "sa-ticker" "$here/site" --include=*.html | wc -l)" = 1 ]'
+check "with its stylesheet, tagged with its version (now ?v=$vcss)" 'grep -q "<link rel=\"stylesheet\" href=\"/css/ticker.css?v=$vcss\">" "$tools"'
+check "and its script, tagged with its version (now ?v=$vjs)" 'grep -q "<script src=\"/js/ticker.js?v=$vjs\" defer></script>" "$tools"'
+check "the tools page is the only page with it" '[ "$(grep -rl "sa-ticker" "$here/site" --include=*.html)" = "$tools" ]'
+check "the home page gave it up: no strip, and neither of its files" '! grep -qE "sa-tk|ticker\.(css|js)|market/feed" "$home"'
 check "the script writes text, never markup" '! grep -nE "innerHTML|outerHTML|insertAdjacentHTML|document\.write" "$js"'
 check "and asks only the site's own feed" '[ "$(grep -c "fetch(" "$js")" = 1 ] && grep -q "var FEED = ./market/feed.php.;" "$js" && ! grep -vF "var SVG = '"'"'http://www.w3.org/2000/svg'"'"';" "$js" | grep -qE "https?://"'
 check "it says what the figures are, and that the tool runs on free public data" 'grep -q "These quotes are latest published figures and not necessarily live\.." "$js" && ! grep -q "live quotes" "$js" && grep -q "This tool runs entirely on free public data\. Yours could too\." "$js"'
@@ -283,6 +292,7 @@ check "no long dash in any of it" '! grep -l $'"'"'\xe2\x80\x94'"'"' "$js" "$her
 check "no licensed index or metal is named as a figure" '! grep -qiE "s&p|dow jones|gold" "$js" && ! grep -qE "\x27(spx|dow|gold)\x27 =>" "$here/site/lib/market.php"'
 if python3 "$here/scripts/build_site.py" --site "$here/site" --out "$t/dist" >/dev/null 2>&1; then
   check "the built site carries the feed, its library, the script and the styles" '[ -s "$t/dist/market/feed.php" ] && [ -s "$t/dist/lib/market.php" ] && [ -s "$t/dist/js/ticker.js" ] && [ -s "$t/dist/css/ticker.css" ]'
+  check "in the built site only the tools page loads the strip: not the home page, and not the tool pages that reuse its head, menu and footer" '[ "$(grep -rlE "sa-ticker|ticker\.(css|js)" "$t/dist" --include=*.html)" = "$t/dist/tools/index.html" ] && [ "$(ls "$t/dist/tools/football/"*.html | wc -l)" -ge 3 ]'
 else
   check "the site builds" 'false'
 fi
@@ -294,7 +304,7 @@ if node -e "require('playwright')" 2>/dev/null && [ -d "$t/dist" ]; then
   SA_MARKET_FIXTURES="$fx" SA_MARKET_NOW=$NOW php -S 127.0.0.1:18746 -t "$web" >/dev/null 2>&1 & pid=$!
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18746/" && break; sleep 0.1; done
   curl -s -o /dev/null "http://127.0.0.1:18746/market/feed.php"; curl -s -o /dev/null "http://127.0.0.1:18746/market/feed.php"   # every source asked before the browser looks
-  out=$(node "$here/tests/ticker_browser.cjs" http://127.0.0.1:18746/ 2>&1); code=$?
+  out=$(node "$here/tests/ticker_browser.cjs" http://127.0.0.1:18746/tools/ 2>&1); code=$?
   BODY=$out
   check "the strip works in a browser: $(printf '%s' "$out" | tail -1)" '[ $code -eq 0 ]'
   [ $code -eq 0 ] || printf '%s\n' "$out"
