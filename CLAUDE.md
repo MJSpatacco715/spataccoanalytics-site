@@ -56,15 +56,25 @@ lives and says which pieces are not in this repo yet.
 - The Tools page opens on its tools (the owner, 2026-11-26: "on the tools page
   the meat is too buried. I need tiles or chips that fit with the overall
   scheme to pull to the top (visible on first glance) the tools that meet the
-  criteria. Sports Movies Business, etc"). Its first section holds a row of
-  kinds (All, Business, Sports, Movies, Built to order) and a tile for every
-  tool on the page; a kind chosen keeps only its tools, and a tool can be of
-  more than one kind. All thirteen tiles are on the first screen at the owner's
-  window (1255 by 607) and on a phone. A tile goes to its tool, or, for a
-  platform that runs privately, to where it is described lower down. A tool
-  added to the page needs a tile, and a tile needs its tool:
-  `tests/pages_test.sh` fails until they match, and `tests/hero_browser.cjs`
-  opens it in a browser. The rules for that section are scoped to it
+  criteria. Sports Movies Business, etc"). The first cut had five kinds and all
+  thirteen tools on the first screen; the owner, the same afternoon, of that on
+  a phone: "This is too many categories/tiles/chips And I want the scroll to
+  show bottom of first visible screen". So its first section holds three kinds
+  (Business, Sports, Movies) and the tiles of the kind chosen only, Business to
+  begin with. Every tool is of exactly one kind; a platform that runs privately
+  is filed with what it is for (the CRM under Business, the league platform and
+  the golf pick'em under Sports). Do not add a fourth kind or an "All".
+  A tile goes to its tool, or, for a platform that runs privately, to where it
+  is described lower down. A tool added to the page needs a tile, and a tile
+  needs its tool: `tests/pages_test.sh` fails until they match.
+  That section is as tall as the first screen less the market strip, which comes
+  next in the page, so the strip lies along the bottom of the first screen, all
+  of it showing (`min-height` in `svh`, the screen as a phone shows it with its
+  own bars up; the 34px and 32px there are the strip's heights and change with
+  them). What the section holds is centred in it, and held where it stands once
+  a visitor touches it, so choosing a kind does not move the row just pressed.
+  `tests/hero_browser.cjs` opens it at the owner's window (1255 by 607) and the
+  owner's phone (430 by 744). The rules for that section are scoped to it
   (`.tl-hero`), because each tool's own page is built with the same head.
 - The Services page opens on its services (the owner, the same day: "services
   page is all talk and no service options on first screen"). The four sit in
@@ -163,11 +173,12 @@ lives and says which pieces are not in this repo yet.
   stylesheet and script tags sit beside it, not in the head or after the
   footer, because the build reuses that page's head, menu and footer for each
   tool's own page.
-  A card always shows whole. Pinned, it opens below the strip. Where the strip
-  still sits low on the screen it opens above it, and where neither side has
-  the height it is laid out wide, in two halves side by side (`wide()` and
-  `under()` in `site/js/ticker.js`). A change to a card's contents has to be
-  checked at the start position as well as pinned.
+  A card always shows whole. Pinned, it opens below the strip. At the start,
+  where the strip lies along the bottom of the first screen, it opens above it,
+  and where there is not the height for that (the owner's own window, 607px
+  tall) it is laid out wide, in two halves side by side (`wide()` and `under()`
+  in `site/js/ticker.js`). A change to a card's contents has to be checked at
+  the start position as well as pinned.
   The strip (`site/js/ticker.js`, `site/market/feed.php`,
   `site/lib/market.php`) shows only figures the site may show: each comes
   from its publisher's own free feed and says in view who published it and

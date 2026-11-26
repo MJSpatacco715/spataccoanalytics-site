@@ -272,23 +272,43 @@ check "every inner page's headline ends on one blue part, and the shared stylesh
 # glance) the tools that meet the criteria. Sports Movies Business, etc". And of
 # its headline, when the blue line became a line of its own everywhere: "this
 # one is okay to stay".
-check "every tool on the Tools page has a tile in its first section, every tile leads to a tool that is there, and each kind says how many it has" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+# The first cut had five kinds and all thirteen tools on the first screen. The
+# owner, the same afternoon, of that on a phone: "This is too many
+# categories/tiles/chips And I want the scroll to show bottom of first visible
+# screen". So: three kinds, each tool of exactly one, only the chosen kind's
+# tools showing (Business to begin with), and the section as tall as the first
+# screen less the market strip, which comes next.
+check "every tool on the Tools page has a tile in its first section and every tile leads to a tool that is there; three kinds, each tool of one, each kind saying how many it has, and only the first kind showing" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
 hero = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S)
 if not hero: sys.exit(1)
 h = hero.group(0); rest = s[hero.end():]
-tiles = re.findall(r"<a class=\"tl-tile\" href=\"([^\"]+)\" data-kinds=\"([a-z ]+)\">", h)
+tiles = re.findall(r"<a class=\"tl-tile\" href=\"([^\"]+)\" data-kind=\"([a-z]+)\"( hidden)?>", h)
 # the tools the page itself shows: the two that launch, the three kinds of card below them, and the platforms described
 shown = set(re.findall(r"<a href=\"(/tools/[^\"]+)\" class=\"(?:tool-link|scorecard|playbill|tradingcard)\"", rest))
 shown |= {"#" + i for i in re.findall(r"class=\"tool-card build-card[^\"]*\" id=\"([a-z-]+)\"", rest)}
-ok = len(tiles) == len(set(t[0] for t in tiles)) and set(t[0] for t in tiles) == shown and len(shown) >= 13
-chips = re.findall(r"data-kind=\"([a-z]+)\" aria-pressed=\"(true|false)\">[^<]+<span>(\d+)</span>", h)
-ok = ok and [c[0] for c in chips][0] == "all" and chips[0][1] == "true" and all(c[1] == "false" for c in chips[1:])
-kinds = [c[0] for c in chips[1:]]
-ok = ok and all(set(t[1].split()) <= set(kinds) and t[1].split() for t in tiles)          # no tile of a kind that cannot be chosen
-for kind, _, said in chips:
-    ok = ok and int(said) == sum(1 for t in tiles if kind == "all" or kind in t[1].split()) and int(said) > 0
+ok = len(tiles) == h.count("class=\"tl-tile\"") and len(tiles) == len(set(t[0] for t in tiles)) and set(t[0] for t in tiles) == shown and len(shown) >= 13
+chips = re.findall(r"<button type=\"button\" class=\"tl-chip( on)?\" data-kind=\"([a-z]+)\" aria-pressed=\"(true|false)\">[^<]+<span>(\d+)</span>", h)
+ok = ok and len(chips) == len(re.findall(r"class=\"tl-chip[ \"]", h)) and [c[1] for c in chips] == ["business", "sports", "movies"]
+ok = ok and [(c[0], c[2]) for c in chips] == [(" on", "true"), ("", "false"), ("", "false")]
+for _, kind, _, said in chips:
+    ok = ok and int(said) == sum(1 for t in tiles if t[1] == kind) and int(said) > 0
+ok = ok and sum(int(c[3]) for c in chips) == len(tiles)                                   # no tile of a kind that cannot be chosen
+ok = ok and all((t[2] == "") == (t[1] == "business") for t in tiles)                      # what shows before anything is pressed
+sys.exit(0 if ok else 1)
+PY'
+check "its first section is as tall as the first screen less the strip, by a phone's own measure where there is one, and the strip is the next thing in the page" 'python3 - "$site/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+ok = "min-height:calc(100vh - 34px)" in s and "@supports (height:100svh){.tl-hero{min-height:calc(100svh - 34px)}}" in s
+ok = ok and "min-height:calc(100vh - 32px)" in s and "@supports (height:100svh){.tl-hero{min-height:calc(100svh - 32px)}}" in s
+# the strip is 34px tall, 32px on a phone: the numbers above are its
+css = open(sys.argv[1].replace("tools/index.html", "css/ticker.css"), encoding="utf-8").read()
+ok = ok and re.search(r"\.sa-tk\{[^}]*height:34px", css) and re.search(r"@media\(max-width:768px\)\{[^@]*\.sa-tk\{[^}]*height:32px", css)
+hero = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S)
+after = re.sub(r"<!--.*?-->", "", s[hero.end():], flags=re.S).lstrip() if hero else ""
+ok = ok and after.startswith("<link rel=\"stylesheet\" href=\"/css/ticker.css?v=")
 sys.exit(0 if ok else 1)
 PY'
 check "its headline is the one that stays on one line, by a rule of its own page" 'grep -q "<h1>Your site can do more than <em>describe you.</em></h1>" "$site/tools/index.html" && grep -q "^\.tl-hero h1 em{display:inline}" "$site/tools/index.html"'
