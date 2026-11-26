@@ -150,44 +150,55 @@
 /* The tools themselves, on the first screen. The owner, 2026-11-26: "on the tools page
    the meat is too buried. I need tiles or chips that fit with the overall scheme to pull
    to the top (visible on first glance) the tools that meet the criteria. Sports Movies
-   Business, etc". Every rule here is for this page's opening section only (.tl-hero):
-   each tool's own page is built with this head and has a plain one. */
-.tl-hero{padding-top:108px;padding-bottom:32px}
-.tl-hero .page-hero-inner{max-width:1100px}
+   Business, etc". And of the first cut, which had five kinds and every tool at once:
+   "This is too many categories/tiles/chips". So three kinds, and the tools of the kind
+   chosen. Every rule here is for this page's opening section only (.tl-hero): each
+   tool's own page is built with this head and has a plain one. */
+/* The opening section is as tall as the first screen less the market strip, which comes
+   next in the page: the strip then sits along the bottom of the first screen. The owner,
+   2026-11-26: "I want the scroll to show bottom of first visible screen". (svh is the
+   screen as a phone shows it with its own bars up; 34px and 32px are the strip's heights.) */
+.tl-hero{display:flex;flex-direction:column;justify-content:center;min-height:calc(100vh - 34px);padding-top:108px;padding-bottom:32px}
+@supports (height:100svh){.tl-hero{min-height:calc(100svh - 34px)}}
+@media(max-width:768px){
+  .tl-hero{min-height:calc(100vh - 32px)}
+  @supports (height:100svh){.tl-hero{min-height:calc(100svh - 32px)}}
+}
+.tl-hero .page-hero-inner{width:100%;max-width:1100px}
 .tl-hero h1{font-size:clamp(34px,3.7vw,48px);margin-bottom:10px}
 /* This headline is one sentence and stays on one line: the owner, of this one, "okay to stay". */
 .tl-hero h1 em{display:inline}
 .tl-hero .hero-stat{margin-bottom:16px}
-.tl-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;opacity:0;animation:fadeUp .9s .6s forwards}
-.tl-chip{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.7px;text-transform:uppercase;color:#CBD5E1;background:rgba(255,255,255,0.04);border:1px solid rgba(203,213,225,0.28);border-radius:2px;padding:8px 14px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+/* the strip is not far below the figure now: its source card is wider here, so shorter, and ends above the strip */
+@media(min-width:701px){.tl-hero .hero-stat .sa-cite-card{width:580px}}
+.tl-chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;opacity:0;animation:fadeUp .9s .6s forwards}
+.tl-chip{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.7px;text-transform:uppercase;color:#CBD5E1;background:rgba(255,255,255,0.04);border:1px solid rgba(203,213,225,0.28);border-radius:2px;padding:10px 18px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
 .tl-chip span{margin-left:6px;font-weight:500;letter-spacing:0;color:#8FA0B8}
 .tl-chip:hover{border-color:var(--cyan);color:var(--white)}
 .tl-chip:focus-visible{outline:2px solid var(--purple-light);outline-offset:2px}
 .tl-chip.on{background:var(--cyan);border-color:var(--cyan);color:var(--navy)}
 .tl-chip.on span{color:var(--navy)}
-.tl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;opacity:0;animation:fadeUp .9s .7s forwards}
-.tl-tile{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 14px;border:1px solid rgba(61,216,216,0.28);background:rgba(255,255,255,0.03);text-decoration:none;transition:border-color .2s,background .2s}
+.tl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;opacity:0;animation:fadeUp .9s .7s forwards}
+.tl-tile{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 16px;border:1px solid rgba(61,216,216,0.28);background:rgba(255,255,255,0.03);text-decoration:none;transition:border-color .2s,background .2s}
 .tl-tile[hidden]{display:none}
 .tl-tile:hover,.tl-tile:focus-visible{border-color:var(--cyan);background:rgba(61,216,216,0.09)}
 .tl-ico{flex:none;font-size:18px;line-height:1}
-.tl-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.tl-name{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px;line-height:1.15;color:var(--white)}
-.tl-kind{font-size:9.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--cyan);white-space:nowrap}
+.tl-name{flex:1;min-width:0;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:19px;line-height:1.15;color:var(--white)}
 .fun-note{font-size:15px;line-height:1.7;color:var(--slate);max-width:640px;margin-top:4px}
 /* a platform's tile lands on its card, clear of the menu and the strip pinned under it */
 #built-crm,#built-league,#built-golf{scroll-margin-top:136px}
 .build-card.reveal{transform:none}
 @media(max-width:1000px){.tl-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:760px){.tl-tiles{grid-template-columns:repeat(2,minmax(0,1fr))} .tl-kind{display:none}}
+@media(max-width:760px){.tl-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){
   .tl-hero{padding-top:128px;padding-bottom:26px}
   .tl-hero .page-hero-inner{display:flex;flex-direction:column}
   .tl-hero .hero-stat{order:5;margin:18px 0 0}
   .tl-hero h1{margin-bottom:16px}
-  .tl-chips{gap:6px;margin-bottom:12px}
-  .tl-chip{padding:7px 10px;font-size:10.5px;letter-spacing:1.2px}
+  .tl-chips{gap:8px;margin-bottom:14px}
+  .tl-chip{padding:9px 14px;font-size:11px;letter-spacing:1.4px}
   .tl-tiles{gap:8px}
-  .tl-tile{min-height:46px;padding:7px 10px;gap:8px}
+  .tl-tile{min-height:52px;padding:8px 12px;gap:10px}
   .tl-name{font-size:16px}
   .tl-ico{font-size:16px}
 }
@@ -211,40 +222,59 @@
     <div class="page-hero-tag">Tools &amp; Projects</div>
     <h1>Your site can do more than <em>describe you.</em></h1>
     <div class="hero-stat sa-cite hero-stat-row" tabindex="0"><div class="stat-num">72%</div><div class="stat-label">of prospects say they would visit an advisor&rsquo;s own website</div><span class="sa-cite-src">Source: Wealthtender, 2025</span><span class="sa-cite-card" role="note"><strong>72% of people looking for an advisor said they would visit the advisor&rsquo;s website as a next step.</strong>Only checking reviews and awards (83%) and an introductory call (73%) ranked higher.<span>Wealthtender survey of 500 U.S. adults earning over $100,000 who plan to hire an advisor within five years, July 2025. Wealthtender sells marketing services to advisors.</span><a href="https://wealthtender.com/insights/how-americans-find-and-hire-financial-advisors/" target="_blank" rel="noopener">Read the study</a></span></div>
-    <!-- Every tool on this page, on the first screen. A kind chosen above them keeps only
-         the tools of that kind. A tool can be of more than one kind. Each tile goes to
-         its tool, or, for a platform that runs privately, to where it is described below. -->
+    <!-- Three kinds of tool, and the tools of the kind chosen: Business to begin with.
+         The owner, of a first screen with five kinds and all thirteen tools on it: "This
+         is too many categories/tiles/chips". Every tool is of one kind. Each tile goes
+         to its tool, or, for a platform that runs privately, to where it is described below. -->
     <div class="tl-chips" role="group" aria-label="Show tools by kind">
-      <button type="button" class="tl-chip on" data-kind="all" aria-pressed="true">All <span>13</span></button>
-      <button type="button" class="tl-chip" data-kind="business" aria-pressed="false">Business <span>3</span></button>
+      <button type="button" class="tl-chip on" data-kind="business" aria-pressed="true">Business <span>3</span></button>
       <button type="button" class="tl-chip" data-kind="sports" aria-pressed="false">Sports <span>8</span></button>
       <button type="button" class="tl-chip" data-kind="movies" aria-pressed="false">Movies <span>2</span></button>
-      <button type="button" class="tl-chip" data-kind="built" aria-pressed="false">Built to order <span>3</span></button>
     </div>
     <div class="tl-tiles" id="tl-tiles">
-      <a class="tl-tile" href="/tools/website-scorer.html" data-kinds="business"><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-text"><span class="tl-name">RIA Digital Presence Scorecard</span><span class="tl-kind">Business</span></span></a>
-      <a class="tl-tile" href="/tools/resume-parser/" data-kinds="business"><span class="tl-ico" aria-hidden="true">&#128196;</span><span class="tl-text"><span class="tl-name">Resume Parser</span><span class="tl-kind">Business</span></span></a>
-      <a class="tl-tile" href="#built-crm" data-kinds="business built"><span class="tl-ico" aria-hidden="true">&#128199;</span><span class="tl-text"><span class="tl-name">Custom CRM</span><span class="tl-kind">Built to order</span></span></a>
-      <a class="tl-tile" href="#built-league" data-kinds="sports built"><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-text"><span class="tl-name">Fantasy League Platform</span><span class="tl-kind">Built to order</span></span></a>
-      <a class="tl-tile" href="#built-golf" data-kinds="sports built"><span class="tl-ico" aria-hidden="true">&#9971;</span><span class="tl-text"><span class="tl-name">Golf Pick&rsquo;em</span><span class="tl-kind">Built to order</span></span></a>
-      <a class="tl-tile" href="/tools/football/nfl-lines-tracker.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-text"><span class="tl-name">NFL Lines Tracker</span><span class="tl-kind">Sports</span></span></a>
-      <a class="tl-tile" href="/tools/football/nfl-injury-tracker.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#129657;</span><span class="tl-text"><span class="tl-name">NFL Injury Tracker</span><span class="tl-kind">Sports</span></span></a>
-      <a class="tl-tile" href="/tools/football/nfl-depth-charts.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-text"><span class="tl-name">NFL Depth Charts</span><span class="tl-kind">Sports</span></span></a>
-      <a class="tl-tile" href="/tools/cricket-explainer.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#127951;</span><span class="tl-text"><span class="tl-name">Cricket vs. Baseball</span><span class="tl-kind">Sports</span></span></a>
-      <a class="tl-tile" href="/tools/curling-explainer.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#129482;</span><span class="tl-text"><span class="tl-name">Curling Explainer</span><span class="tl-kind">Sports</span></span></a>
-      <a class="tl-tile" href="/tools/card-evaluator.html" data-kinds="sports"><span class="tl-ico" aria-hidden="true">&#127183;</span><span class="tl-text"><span class="tl-name">Card Evaluator</span><span class="tl-kind">Sports</span></span></a>
-      <a class="tl-tile" href="/tools/oscar-tracker.html" data-kinds="movies"><span class="tl-ico" aria-hidden="true">&#127942;</span><span class="tl-text"><span class="tl-name">Best Picture Tracker</span><span class="tl-kind">Movies</span></span></a>
-      <a class="tl-tile" href="/tools/afi-tracker.html" data-kinds="movies"><span class="tl-ico" aria-hidden="true">&#127916;</span><span class="tl-text"><span class="tl-name">AFI 100 Tracker</span><span class="tl-kind">Movies</span></span></a>
+      <a class="tl-tile" href="/tools/website-scorer.html" data-kind="business"><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-name">RIA Digital Presence Scorecard</span></a>
+      <a class="tl-tile" href="/tools/resume-parser/" data-kind="business"><span class="tl-ico" aria-hidden="true">&#128196;</span><span class="tl-name">Resume Parser</span></a>
+      <a class="tl-tile" href="#built-crm" data-kind="business"><span class="tl-ico" aria-hidden="true">&#128199;</span><span class="tl-name">Custom CRM</span></a>
+      <a class="tl-tile" href="/tools/football/nfl-lines-tracker.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-name">NFL Lines Tracker</span></a>
+      <a class="tl-tile" href="/tools/football/nfl-injury-tracker.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#129657;</span><span class="tl-name">NFL Injury Tracker</span></a>
+      <a class="tl-tile" href="/tools/football/nfl-depth-charts.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-name">NFL Depth Charts</span></a>
+      <a class="tl-tile" href="#built-league" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-name">Fantasy League Platform</span></a>
+      <a class="tl-tile" href="#built-golf" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#9971;</span><span class="tl-name">Golf Pick&rsquo;em</span></a>
+      <a class="tl-tile" href="/tools/cricket-explainer.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127951;</span><span class="tl-name">Cricket vs. Baseball</span></a>
+      <a class="tl-tile" href="/tools/curling-explainer.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#129482;</span><span class="tl-name">Curling Explainer</span></a>
+      <a class="tl-tile" href="/tools/card-evaluator.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127183;</span><span class="tl-name">Card Evaluator</span></a>
+      <a class="tl-tile" href="/tools/oscar-tracker.html" data-kind="movies" hidden><span class="tl-ico" aria-hidden="true">&#127942;</span><span class="tl-name">Best Picture Tracker</span></a>
+      <a class="tl-tile" href="/tools/afi-tracker.html" data-kind="movies" hidden><span class="tl-ico" aria-hidden="true">&#127916;</span><span class="tl-name">AFI 100 Tracker</span></a>
     </div>
     <script>
-    /* A kind chosen: only the tools of that kind stay. With no script, every tool shows. */
+    /* A kind chosen: its tools show, the others step aside.
+       The section centres what it holds, so anything that grew (a longer list of tools,
+       the figure's source card opened on a phone) would move the very thing just pressed.
+       So at the first touch the copy is held where it stands; after that it moves up only
+       as far as keeps the strip on the first screen, and is centred again when the window
+       changes size (not when a phone's own bars slide away: the section's height is the same). */
     (function () {
       var chips = document.querySelectorAll('.tl-chip'), tiles = document.querySelectorAll('.tl-tile');
+      var hero = document.querySelector('.tl-hero'), inner = hero.querySelector('.page-hero-inner'), size = '';
+      function pads() { var cs = getComputedStyle(hero); return { top: parseFloat(cs.paddingTop) || 0, foot: parseFloat(cs.paddingBottom) || 0, size: window.innerWidth + ' ' + cs.minHeight }; }
+      function hold(fit) {
+        var p = pads(), was = inner.getBoundingClientRect().top - hero.getBoundingClientRect().top - p.top;
+        if (fit) fit();
+        hero.style.justifyContent = 'flex-start'; inner.style.marginTop = '0px';
+        var spare = hero.clientHeight - p.top - p.foot - inner.offsetHeight;
+        inner.style.marginTop = Math.max(0, fit ? Math.min(was, spare) : was) + 'px';
+        size = p.size;
+      }
       function show(kind) {
-        for (var i = 0; i < tiles.length; i++) tiles[i].hidden = kind !== 'all' && (' ' + tiles[i].getAttribute('data-kinds') + ' ').indexOf(' ' + kind + ' ') < 0;
-        for (var j = 0; j < chips.length; j++) { var on = chips[j].getAttribute('data-kind') === kind; chips[j].classList.toggle('on', on); chips[j].setAttribute('aria-pressed', on ? 'true' : 'false'); }
+        hold(function () {
+          for (var i = 0; i < tiles.length; i++) tiles[i].hidden = tiles[i].getAttribute('data-kind') !== kind;
+          for (var j = 0; j < chips.length; j++) { var on = chips[j].getAttribute('data-kind') === kind; chips[j].classList.toggle('on', on); chips[j].setAttribute('aria-pressed', on ? 'true' : 'false'); }
+        });
       }
       for (var k = 0; k < chips.length; k++) chips[k].addEventListener('click', function () { show(this.getAttribute('data-kind')); });
+      function first() { if (!size) hold(); }
+      hero.addEventListener('pointerdown', first, true); hero.addEventListener('touchstart', first, { capture: true, passive: true }); hero.addEventListener('focusin', first, true);
+      window.addEventListener('resize', function () { if (size && pads().size !== size) { hero.style.justifyContent = ''; inner.style.marginTop = ''; size = ''; } });
     })();
     </script>
   </div>

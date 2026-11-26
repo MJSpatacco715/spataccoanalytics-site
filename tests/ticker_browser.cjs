@@ -1,7 +1,8 @@
 // The market strip opened in a browser (tests/market_test.sh runs this where
 // Playwright is installed). The page is the built tools page, where the strip
-// lives: after the opening copy, and held under the menu once the page is
-// scrolled past it. Served with the saved answers, so nothing here leaves
+// lives: after the opening copy, along the bottom of the first screen (the
+// owner, 2026-11-26: "I want the scroll to show bottom of first visible
+// screen"), and held under the menu once the page is scrolled past it. Served with the saved answers, so nothing here leaves
 // the machine.
 // The home page, which had the strip until November 2026, is opened once at
 // the end to see that it is gone from there.
@@ -95,13 +96,14 @@ function spot(page, id) {
         note: !!r.querySelector('.sa-tk-note'),
         notes: sets.map((x) => (x.querySelector('.sa-tk-note') ? 'n' : '-')).join(''),
         noWordTwice: !/quotes[^.]*quotes/.test((r.querySelector('.sa-tk-note') || {}).textContent || 'quotes quotes'),
-        pageWide: document.documentElement.scrollWidth <= window.innerWidth,
+        pageWide: document.documentElement.scrollWidth <= window.innerWidth, vh: window.innerHeight,
       };
     });
     check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('78 to tie record') && s.text.includes('DeVoe, Q1-Q3'));
     check('the dollar is quoted in euros, as what one dollar buys', s.text.includes('USD/EUR') && s.text.includes('$1 = \u20AC0.9122') && !s.text.includes('EUR/USD'));
     check('the copies are hidden from assistive technology and from the Tab key', s.sets >= 2 && s.firstHidden === null && s.copiesHidden && s.copiesOutOfTabs);
     check('the copy leads: the strip comes after it and before the Financial Services section', s.top === s.heroBottom && s.bottom === s.nextTop && s.top > s.navBottom + 200 && s.nextIs === 'Financial Services' && s.height <= 36 && s.sticky === 'sticky');
+    check('before the page is scrolled it lies along the bottom of the first screen, all of it showing', s.bottom === s.vh && s.top === s.vh - s.height);
     check('it scrolls, with no seam', s.moving && s.trackWide);
     check('a figure shows its value, its move, who published it and for when', s.text.includes('US 10-Yr') && s.text.includes('4.91%') && s.text.includes('-1 bp') && s.text.includes('Treasury, Nov 24') && s.text.includes('EIA, Nov 17'));
     check('it says what the figures are', s.note && s.text.includes('These quotes are latest published figures and not necessarily live.'));
@@ -110,15 +112,14 @@ function spot(page, id) {
     const where = await page.evaluate(() => { const r = document.getElementById('sa-ticker'); return { parent: r.parentNode === document.body, lit: (document.querySelector('#main-nav a.active') || {}).textContent, h1: document.querySelector('.page-hero h1').textContent.replace(/\s+/g, ' ').trim() }; });
     check('it is on the tools page, as the page\'s own child and not inside the first section', where.parent && where.lit === 'Tools' && where.h1 === 'Your site can do more than describe you.');
 
-    // Before the page is scrolled the strip sits low on the screen and no card
-    // fits above or below it: the card is laid out wide, upward, all in view.
+    // Before the page is scrolled the strip is at the bottom of the screen: a card
+    // opens upward, and on a screen this tall there is the height for it in one column.
     {
       const at = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
       await page.mouse.move(at.x, at.y, { steps: 3 });
       await page.waitForTimeout(300);
       const c0 = await cardNow(page);
-      check('low on the screen a card opens upward, laid out wide, every line of it in view', c0.open && c0.up && c0.flat && c0.inView && c0.shown && c0.lastLine && !c0.scrolls && c0.clear);
-      check('wide, the figure and its chart are on the left; low, high and change, the source and the closing line on the right', /^sa-tk-eye,sa-tk-hero/.test(c0.left) && /sa-tk-chart$/.test(c0.left) && /^sa-tk-tiles/.test(c0.right) && /sa-tk-from,sa-tk-free$/.test(c0.right));
+      check('at the bottom of the first screen a card opens upward, in one column where there is the height, every line of it in view', c0.open && c0.up && !c0.flat && c0.inView && c0.shown && c0.lastLine && !c0.scrolls && c0.clear);
       await page.mouse.move(at.x, at.y - 30);      // across the gap, onto the card
       await page.waitForTimeout(350);
       check('the pointer can move from the figure up onto the card without it closing', (await cardNow(page)).open);
@@ -206,7 +207,7 @@ function spot(page, id) {
     check('and starts it again', await page.evaluate(() => document.querySelector('.sa-tk-pause').getAttribute('aria-pressed') === 'false' && getComputedStyle(document.querySelector('.sa-tk-track')).animationPlayState === 'running'));
 
     // the keyboard: on from the last thing before the strip in the page, the last tool tile
-    await page.evaluate(() => { const tiles = document.querySelectorAll('.page-hero .tl-tile'); (tiles.length ? tiles[tiles.length - 1] : document.querySelector('nav a:last-of-type')).focus({ preventScroll: true }); });
+    await page.evaluate(() => { const tiles = [...document.querySelectorAll('.page-hero .tl-tile')].filter((t) => !t.hidden); (tiles.length ? tiles[tiles.length - 1] : document.querySelector('nav a:last-of-type')).focus({ preventScroll: true }); });
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press('Tab');
       if (await page.evaluate(() => document.activeElement && document.activeElement.classList.contains('sa-tk-item'))) break;
@@ -277,6 +278,34 @@ function spot(page, id) {
     await ctx.close();
   }
 
+  // --- a short window, the owner's own (1255 by 607: a 1880px screen at 150%)
+  // The strip is along the bottom there too, and above it there is not the height for a
+  // card in one column: it is laid out wide, upward, all in view. Every figure's card.
+  {
+    const { ctx, page } = await open(browser, { viewport: { width: 1255, height: 607 } });
+    await page.waitForSelector('#sa-ticker.on', { timeout: 8000 });
+    await page.waitForTimeout(1200);
+    const s = await page.evaluate(() => { const r = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: Math.round(r.top), bottom: Math.round(r.bottom), vh: window.innerHeight, heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom) }; });
+    check('in a short window the strip is along the bottom of the first screen too', s.bottom === s.vh && s.top === s.heroBottom);
+    const at = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
+    await page.mouse.move(at.x, at.y, { steps: 3 });
+    await page.waitForTimeout(300);
+    const c0 = await cardNow(page);
+    check('low in a short window a card opens upward, laid out wide, every line of it in view', c0.open && c0.up && c0.flat && c0.inView && c0.shown && c0.lastLine && !c0.scrolls && c0.clear);
+    check('wide, the figure and its chart are on the left; low, high and change, the source and the closing line on the right', /^sa-tk-eye,sa-tk-hero/.test(c0.left) && /sa-tk-chart$/.test(c0.left) && /^sa-tk-tiles/.test(c0.right) && /sa-tk-from,sa-tk-free$/.test(c0.right));
+    await page.mouse.move(20, 200);
+    await page.waitForTimeout(400);
+    const all = [];
+    for (const id of ['ria', 'ust30', 'ust10', 'eurusd', 'btc', 'brent', 'wti', 'gas']) {
+      await page.evaluate((id) => document.querySelector('.sa-tk-item[data-id="' + id + '"]').focus(), id);
+      await page.waitForTimeout(300);
+      const c = await cardNow(page);
+      if (!(c.open && c.up && c.inView && c.lastLine && !c.scrolls && c.clear)) all.push(id);
+    }
+    check('there every figure\'s card shows whole above the strip (not: ' + all.join(', ') + ')', all.length === 0);
+    await ctx.close();
+  }
+
   // --- a phone
   {
     const { ctx, page } = await open(browser, { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
@@ -284,9 +313,10 @@ function spot(page, id) {
     await page.waitForTimeout(300);
     const s = await page.evaluate(() => {
       const r = document.getElementById('sa-ticker').getBoundingClientRect();
-      return { top: Math.round(r.top), heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom), nextTop: Math.round(document.querySelector('.page-hero ~ section').getBoundingClientRect().top), bottom: Math.round(r.bottom), pageWide: document.documentElement.scrollWidth <= window.innerWidth };
+      return { top: Math.round(r.top), heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom), nextTop: Math.round(document.querySelector('.page-hero ~ section').getBoundingClientRect().top), bottom: Math.round(r.bottom), pageWide: document.documentElement.scrollWidth <= window.innerWidth, vh: window.innerHeight };
     });
     check('on a phone it comes after the opening copy and before the first section, and the page is no wider', s.top === s.heroBottom && s.bottom === s.nextTop && s.pageWide);
+    check('on a phone it lies along the bottom of the first screen', s.bottom === s.vh);
     await pin(page);
     const sp = await page.evaluate(() => ({ top: Math.round(document.getElementById('sa-ticker').getBoundingClientRect().top), nav: document.getElementById('main-nav').offsetHeight }));
     check('scrolled on a phone, it is held under the menu', sp.top === sp.nav);

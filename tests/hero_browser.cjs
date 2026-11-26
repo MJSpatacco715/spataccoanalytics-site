@@ -8,7 +8,11 @@
 //     (of the Tools page's one-sentence headline: "this one is okay to stay");
 //   - "on the tools page the meat is too buried. I need tiles or chips that fit with
 //     the overall scheme to pull to the top (visible on first glance) the tools that
-//     meet the criteria. Sports Movies Business, etc".
+//     meet the criteria. Sports Movies Business, etc";
+//   - and of the first cut of that, on a phone: "This is too many
+//     categories/tiles/chips And I want the scroll to show bottom of first visible
+//     screen". Three kinds, the chosen kind's tools only, and the market strip along
+//     the bottom of the first screen.
 const { chromium } = require('playwright');
 const base = process.argv[2];
 const fails = []; let n = 0;
@@ -25,6 +29,10 @@ function blueLine(page) {
     return { below: blue[0].top >= lastLead.top + lh * 0.6, atLeft: Math.abs(blue[0].left - h1.getBoundingClientRect().left) < 3, blue: getComputedStyle(em).color, text: em.textContent };
   });
 }
+
+// What the market feed answers here (the site is served as plain files, with no feed):
+// made-up figures, enough of them for the strip to come up.
+const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-Yr', 'USD/EUR', 'Bitcoin', 'Brent'].map((label, i) => ({ id: 't' + i, label, value: '1.00', delta: '', dir: '', by: 'Test', when: 'Nov 24', card: { title: label, text: 'A made-up answer for the first-screen checks.', source: 'Test', url: 'https://example.com/' } })) };
 
 (async () => {
   const browser = await chromium.launch();
@@ -102,31 +110,50 @@ function blueLine(page) {
     await ctx.close();
   }
 
-  // --- the Tools page: every tool is on the first screen, and a kind keeps only its own
+  // --- the Tools page: three kinds, the chosen kind's tools on the first screen, the strip along its bottom
   const tools = (page) => page.evaluate(() => {
-    const tiles = [...document.querySelectorAll('.page-hero .tl-tile')].filter((t) => !t.hidden).map((t) => { const r = t.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, name: t.querySelector('.tl-name').textContent }; });
+    const every = [...document.querySelectorAll('.page-hero .tl-tile')];
+    const tiles = every.filter((t) => !t.hidden).map((t) => { const r = t.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, name: t.querySelector('.tl-name').textContent, kind: t.getAttribute('data-kind') }; });
     const chips = [...document.querySelectorAll('.page-hero .tl-chip')].map((c) => ({ kind: c.getAttribute('data-kind'), says: Number(c.querySelector('span').textContent), on: c.getAttribute('aria-pressed') === 'true' && c.classList.contains('on'), r: c.getBoundingClientRect() }));
-    const count = (k) => [...document.querySelectorAll('.page-hero .tl-tile')].filter((t) => k === 'all' || (' ' + t.getAttribute('data-kinds') + ' ').includes(' ' + k + ' ')).length;
-    return { tiles, chips: chips.map((c) => Object.assign(c, { has: count(c.kind), inView: c.r.top >= 0 && c.r.bottom <= window.innerHeight })), navBottom: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, vw: window.innerWidth, pageWide: document.documentElement.scrollWidth <= window.innerWidth };
+    const count = (k) => every.filter((t) => t.getAttribute('data-kind') === k).length;
+    const strip = document.getElementById('sa-ticker').getBoundingClientRect(), stat = document.querySelector('.page-hero .hero-stat').getBoundingClientRect();
+    return { tiles, all: every.length, chips: chips.map((c) => Object.assign(c, { has: count(c.kind), inView: c.r.top >= 0 && c.r.bottom <= window.innerHeight, top: Math.round(c.r.top) })), navBottom: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, vw: window.innerWidth, pageWide: document.documentElement.scrollWidth <= window.innerWidth,
+      strip: { top: Math.round(strip.top), bottom: Math.round(strip.bottom), h: Math.round(strip.height) }, heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom), statBottom: stat.bottom, scrolled: window.scrollY };
   });
-  const whole = (t, f) => t.top >= f.navBottom && t.bottom <= f.vh && t.left >= 0 && t.right <= f.vw;
-  for (const [w, h, mobile] of [[1255, 607, false], [1366, 657, false], [1440, 900, false], [390, 844, true]]) {
+  const whole = (t, f) => t.top >= f.navBottom && t.bottom <= f.strip.top && t.left >= 0 && t.right <= f.vw;
+  // (430 by 744 is the owner's phone as it showed the page: a tall phone with the browser's own bars up)
+  for (const [w, h, mobile] of [[1255, 607, false], [1366, 657, false], [1440, 900, false], [1920, 1080, false], [430, 744, true], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
+    await page.route(/\/market\/feed\.php/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(FEED) }));   // the strip, with something on it
     await page.goto(base + '/tools/', { waitUntil: 'load' });
+    await page.waitForSelector('#sa-ticker.on', { timeout: 8000 }).catch(() => {});
     await page.waitForTimeout(1800);        // the opening animation
     const f = await tools(page);
-    check('/tools/ at ' + w + ' by ' + h + ': every tool is a tile on the first screen, whole, under the menu (' + f.tiles.filter((t) => whole(t, f)).length + ' of ' + f.tiles.length + ')', f.tiles.length === 13 && f.tiles.every((t) => whole(t, f)) && f.pageWide);
-    check('/tools/ at ' + w + ' by ' + h + ': the kinds to choose from are in view above them, All chosen, each saying how many it has', f.chips.map((c) => c.kind).join(',') === 'all,business,sports,movies,built' && f.chips.every((c) => c.inView && c.says === c.has) && f.chips[0].on && f.chips.slice(1).every((c) => !c.on) && f.chips.every((c) => c.r.bottom <= f.tiles[0].top));
-    if (w === 1255 || mobile) {
-      for (const [kind, n, has] of [['sports', 8, 'NFL Lines Tracker'], ['movies', 2, 'AFI 100 Tracker'], ['business', 3, 'Resume Parser'], ['built', 3, 'Golf Pick\u2019em'], ['all', 13, 'Card Evaluator']]) {
-        if (mobile) await page.tap('.tl-chip[data-kind="' + kind + '"]'); else await page.click('.tl-chip[data-kind="' + kind + '"]');
-        await page.waitForTimeout(120);
+    check('/tools/ at ' + w + ' by ' + h + ': three kinds to choose from, Business chosen, each saying how many tools it has, all thirteen between them', f.chips.map((c) => c.kind).join(',') === 'business,sports,movies' && f.chips.every((c) => c.inView && c.says === c.has) && f.chips[0].on && f.chips.slice(1).every((c) => !c.on) && f.chips.reduce((a, c) => a + c.says, 0) === 13 && f.all === 13);
+    check('/tools/ at ' + w + ' by ' + h + ': only the Business tools show, whole, under the kinds and the menu (' + f.tiles.length + ' showing)', f.tiles.length === 3 && f.tiles.every((t) => t.kind === 'business' && whole(t, f)) && f.chips.every((c) => c.r.bottom <= f.tiles[0].top) && f.pageWide);
+    check('/tools/ at ' + w + ' by ' + h + ': the market strip lies along the bottom of the first screen, all of it showing, straight after the opening section (strip ' + f.strip.top + ' to ' + f.strip.bottom + ' of ' + f.vh + ')', f.strip.bottom === f.vh && f.strip.h >= 30 && f.strip.top === f.heroBottom && f.scrolled === 0);
+    check('/tools/ at ' + w + ' by ' + h + ': the figure and its source are on that first screen too, above the strip', f.statBottom <= f.strip.top);
+    {
+      const press = (kind) => (mobile ? page.tap('.tl-chip[data-kind="' + kind + '"]') : page.click('.tl-chip[data-kind="' + kind + '"]'));
+      let last = f;
+      for (const [kind, n, has] of [['sports', 8, 'NFL Lines Tracker'], ['movies', 2, 'AFI 100 Tracker'], ['business', 3, 'Resume Parser'], ['sports', 8, 'Golf Pick’em']]) {
+        await press(kind);
+        await page.waitForTimeout(150);
         const g = await tools(page);
-        check('/tools/ at ' + w + 'px: choosing ' + kind + ' leaves its ' + n + ' tools, all on the first screen, and marks that kind as chosen', g.tiles.length === n && g.tiles.some((t) => t.name === has) && g.tiles.every((t) => whole(t, g)) && g.chips.filter((c) => c.on).map((c) => c.kind).join() === kind);
+        check('/tools/ at ' + w + ' by ' + h + ': choosing ' + kind + ' leaves its ' + n + ' tools and no others, all on the first screen above the strip, and marks that kind as chosen', g.tiles.length === n && g.tiles.every((t) => t.kind === kind) && g.tiles.some((t) => t.name === has) && g.tiles.every((t) => whole(t, g)) && g.chips.filter((c) => c.on).map((c) => c.kind).join() === kind);
+        check('/tools/ at ' + w + ' by ' + h + ': with ' + kind + ' chosen the strip is still along the bottom of the first screen', g.strip.bottom === g.vh && g.scrolled === 0);
+        // the row just pressed stays where it was, unless a longer list needs the room (and then it moves once, upward)
+        const moved = g.chips[0].top - last.chips[0].top;
+        check('/tools/ at ' + w + ' by ' + h + ': choosing ' + kind + ' does not move the kinds out from under the pointer (moved ' + moved + 'px)', mobile ? moved <= 0 && (n <= last.tiles.length ? moved === 0 : true) : moved === 0);
+        last = g;
       }
+      await press('business');
+      await page.waitForTimeout(150);
     }
     if (w === 1255) {
+      await page.click('.tl-chip[data-kind="sports"]');
+      await page.waitForTimeout(150);
       await page.click('.tl-tile[href="#built-golf"]');
       await page.waitForTimeout(400);
       const at = await page.evaluate(() => { const r = document.getElementById('built-golf').getBoundingClientRect(), s = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: r.top, strip: s.bottom, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight }; });
