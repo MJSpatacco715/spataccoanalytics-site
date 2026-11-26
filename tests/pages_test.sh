@@ -252,6 +252,20 @@ ok = ok and go["crm"] == "From " + times("crm")[0].split()[0] + " week"
 ok = ok and go["hosting"] == "From $%d/mo" % min(int(x) for x in re.findall(r"data-monthly=\"(\d+)\"", s))
 sys.exit(0 if ok else 1)
 PY'
+# The audit's free level is the website scorer. It was a level to tick like the others, and
+# a tap only ticked it; the owner, 2026-11-26: "This should (obviously) link to the web
+# scorer". All of it is a link there now, and it is no longer a level to put in the plan.
+check "the free Website Score on the Services page is a link to the scorer, all of it, and not a level to tick" 'python3 - "$svc" "$dist" <<'"'"'PY'"'"'
+import os, re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+card = re.search(r"<fieldset class=\"sv-card reveal\" id=\"audit\".*?</fieldset>", s, re.S).group(0)
+go = re.search(r"<a class=\"sv-opt sv-opt-go\" href=\"(/tools/website-scorer\.html)\?scope=website&amp;utm_source=services\">(.*?)</a>", card, re.S)
+ok = bool(go) and "Website Score" in go.group(2) and "<span class=\"sv-price\">Free</span>" in go.group(2) and "<span class=\"sv-go\">Score my site</span>" in go.group(2)
+ok = ok and "<input" not in go.group(2) and "<button" not in go.group(2)          # nothing inside it that a tap would land on instead
+ok = ok and os.path.isfile(sys.argv[2] + go.group(1))                                # the page it goes to is in the built site
+ok = ok and re.findall(r"<input type=\"radio\" name=\"audit\" value=\"([a-z]+)\"", card) == ["professional", "complete"]
+sys.exit(0 if ok else 1)
+PY'
 check "its headline ends on the line the owner chose, and the one the owner did not love is gone" 'grep -q "<h1>Websites, CRM, and data for independent advisors. <em>Pick where to start.</em></h1>" "$svc" && ! grep -rqi "scoped before you commit" "$site" "$here/scripts" "$here/content"'
 check "no project price came onto the first screen with them: the one figure there is the published hosting price" '[ "$(python3 -c "
 import re,sys
