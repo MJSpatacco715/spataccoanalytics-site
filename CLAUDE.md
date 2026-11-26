@@ -34,9 +34,12 @@ lives and says which pieces are not in this repo yet.
   line of its own, on every page (the owner, 2026-11-26: "as a standard I'd
   like the blue response hero text to be on its own line"). The shared
   stylesheet does it for the inner pages (`.page-hero h1 em`), the home page
-  for its own two. One exception, the owner's: the Tools page's headline is a
-  single sentence ("Your site can do more than describe you.") and stays on one
-  line ("this one is okay to stay"), by a rule of its own page.
+  for its own two. There is no exception now. The Tools page's headline was one
+  sentence kept on one line ("this one is okay to stay") until the owner asked,
+  the same day, for it to put the question ("frame it more of your website can
+  do more..... what can/should your website do for you?") and chose, of four:
+  "Your website can do more than describe you." in white and "What should it do
+  for you?" in blue on its own line.
 - Every inner page opens on at least one supporting figure with its source
   (the owner, 2026-11-26: "They should all have at least one supporting
   statistic"), in the same form on each (`.hero-stat` in the shared stylesheet,
@@ -73,8 +76,11 @@ lives and says which pieces are not in this repo yet.
   own bars up; the 34px and 32px there are the strip's heights and change with
   them). What the section holds is centred in it, and held where it stands once
   a visitor touches it, so choosing a kind does not move the row just pressed.
-  `tests/hero_browser.cjs` opens it at the owner's window (1255 by 607) and the
-  owner's phone (430 by 744). The rules for that section are scoped to it
+  `tests/hero_browser.cjs` opens it at the owner's window (1255 by 607), the
+  owner's phone (430 by 744) and the commonest phone (390 by 664); a phone that
+  shows less height gets the same screen set tighter (two rules by
+  `max-height`), and on the smallest the eight Sports tiles push the strip just
+  under. The rules for that section are scoped to it
   (`.tl-hero`), because each tool's own page is built with the same head.
 - The Services page opens on its services (the owner, the same day: "services
   page is all talk and no service options on first screen"). The four sit in

@@ -5,7 +5,8 @@
 //   - "services page is all talk and no service options on first screen": the four
 //     services are on the Services page's first screen, each going to its own part;
 //   - "as a standard I'd like the blue response hero text to be on its own line"
-//     (of the Tools page's one-sentence headline: "this one is okay to stay");
+//     (the Tools page's headline was one sentence then and stayed on one line; it puts
+//     a question in blue now, the owner's choice, and follows the standard);
 //   - "on the tools page the meat is too buried. I need tiles or chips that fit with
 //     the overall scheme to pull to the top (visible on first glance) the tools that
 //     meet the criteria. Sports Movies Business, etc";
@@ -41,17 +42,17 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
   for (const [w, h, mobile] of [[1440, 900, false], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
-    for (const path of ['/services/', '/approach/', '/about/', '/contact/', '/insights/']) {
+    for (const path of ['/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/']) {
       await page.goto(base + path, { waitUntil: 'load' });
       await page.waitForTimeout(150);
       const b = await blueLine(page);
       check(path + ' at ' + w + 'px: the blue part of the headline is on its own line, from the left edge', !!b && b.below && b.atLeft && b.blue === 'rgb(61, 216, 216)');
+      if (path === '/tools/') {
+        // the white line as the owner chose it, the question in blue; each on one line where there is the width
+        const t = await page.evaluate(() => { const h1 = document.querySelector('.page-hero h1'); return { white: h1.firstChild.textContent.trim(), lines: Math.round(h1.getBoundingClientRect().height / parseFloat(getComputedStyle(h1).lineHeight)) }; });
+        check('/tools/ at ' + w + 'px: its headline says the site can do more, then asks what it should do, two lines where there is the width', t.white === 'Your website can do more than describe you.' && b.text === 'What should it do for you?' && (w < 1000 || t.lines === 2));
+      }
     }
-    // the one headline that stays whole: a single sentence, on one line where there is room for it
-    await page.goto(base + '/tools/', { waitUntil: 'load' });
-    await page.waitForTimeout(150);
-    const one = await page.evaluate(() => { const h1 = document.querySelector('.page-hero h1'); return { lines: Math.round(h1.getBoundingClientRect().height / parseFloat(getComputedStyle(h1).lineHeight)), blue: getComputedStyle(h1.querySelector('em')).color, text: h1.textContent }; });
-    check('/tools/ at ' + w + 'px: its headline is one sentence, kept on one line where there is room, the blue part still blue', one.text === 'Your site can do more than describe you.' && one.blue === 'rgb(61, 216, 216)' && (w < 1000 || one.lines === 1));
     await ctx.close();
   }
 
@@ -121,8 +122,9 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
       strip: { top: Math.round(strip.top), bottom: Math.round(strip.bottom), h: Math.round(strip.height) }, heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom), statBottom: stat.bottom, scrolled: window.scrollY };
   });
   const whole = (t, f) => t.top >= f.navBottom && t.bottom <= f.strip.top && t.left >= 0 && t.right <= f.vw;
-  // (430 by 744 is the owner's phone as it showed the page: a tall phone with the browser's own bars up)
-  for (const [w, h, mobile] of [[1255, 607, false], [1366, 657, false], [1440, 900, false], [1920, 1080, false], [430, 744, true], [390, 844, true]]) {
+  // (430 by 744 is the owner's phone as it showed the page: a tall phone with the browser's own bars up.
+  //  390 by 664 is the commonest one the same way.)
+  for (const [w, h, mobile] of [[1255, 607, false], [1366, 657, false], [1440, 900, false], [1920, 1080, false], [430, 744, true], [390, 664, true], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
     await page.route(/\/market\/feed\.php/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(FEED) }));   // the strip, with something on it
@@ -159,6 +161,20 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
       const at = await page.evaluate(() => { const r = document.getElementById('built-golf').getBoundingClientRect(), s = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: r.top, strip: s.bottom, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight }; });
       check('a platform\'s tile goes to where it is described, clear of the menu and the strip under it', at.top >= Math.max(at.nav, at.strip) - 1 && at.top < at.vh * 0.6);
     }
+    await ctx.close();
+  }
+
+  // --- a small phone with its bars up: what the page opens on still ends on the strip
+  // (the eight Sports tools do not fit there with the figure, and push the strip just under)
+  for (const [w, h] of [[375, 629], [360, 640], [375, 548]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
+    const page = await ctx.newPage();
+    await page.route(/\/market\/feed\.php/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(FEED) }));
+    await page.goto(base + '/tools/', { waitUntil: 'load' });
+    await page.waitForSelector('#sa-ticker.on', { timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(1800);
+    const f = await tools(page);
+    check('/tools/ at ' + w + ' by ' + h + ', a small phone: the three kinds, the Business tools and the figure are on the first screen and the strip closes it (strip ' + f.strip.top + ' to ' + f.strip.bottom + ' of ' + f.vh + ')', f.tiles.length === 3 && f.tiles.every((t) => whole(t, f)) && f.chips.every((c) => c.inView && c.r.top >= f.navBottom) && f.statBottom <= f.strip.top && f.strip.bottom === f.vh && f.pageWide);
     await ctx.close();
   }
 

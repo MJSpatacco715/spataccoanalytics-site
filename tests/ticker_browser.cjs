@@ -110,7 +110,7 @@ function spot(page, id) {
     check('the note rides on every other pass of the figures, not every one', /^(n-)+$/.test(s.notes) && s.sets % 4 === 0 && s.noWordTwice);
     check('the page is no wider than the window', s.pageWide);
     const where = await page.evaluate(() => { const r = document.getElementById('sa-ticker'); return { parent: r.parentNode === document.body, lit: (document.querySelector('#main-nav a.active') || {}).textContent, h1: document.querySelector('.page-hero h1').textContent.replace(/\s+/g, ' ').trim() }; });
-    check('it is on the tools page, as the page\'s own child and not inside the first section', where.parent && where.lit === 'Tools' && where.h1 === 'Your site can do more than describe you.');
+    check('it is on the tools page, as the page\'s own child and not inside the first section', where.parent && where.lit === 'Tools' && where.h1 === 'Your website can do more than describe you. What should it do for you?');
 
     // Before the page is scrolled the strip is at the bottom of the screen: a card
     // opens upward, and on a screen this tall there is the height for it in one column.
