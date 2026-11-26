@@ -154,13 +154,13 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {extra_head}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css">
+<link rel="stylesheet" href="/css/shared.css?v=66144cae">
 <link rel="stylesheet" href="/css/cite.css">
 <link rel="stylesheet" href="/css/insights.css">
 </head>
 <body>
 <nav id="main-nav">
-  <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="logo"></a>
+  <a href="/" class="brand"><img src="/img/wordmark-on-dark.png?v=51ed4b33" alt="Spatacco Analytics" class="logo" width="520" height="164"></a>
   <div class="nav-links">
     <a href="/services/">Services</a>
     <a href="/approach/">Approach</a>
@@ -171,7 +171,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 </nav>
 {body}
 <footer>
-  <a href="/"><img src="/img/logo.jpg" alt="Spatacco Analytics" class="footer-logo"></a>
+  <a href="/" class="footer-brand"><img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512"><img src="/img/wordmark-on-dark.png?v=51ed4b33" alt="Spatacco Analytics" class="footer-logo" width="520" height="164"></a>
   <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; {sign_off_link("/insights/", "Insights")}{follow}</div>
 </footer>
 <script src="/js/shared.js"></script>

@@ -225,6 +225,59 @@ JS'
 check "its fields do not ask for https://, in the hint or in the message" '! grep -q "starting with https://" "$scorer" && grep -q "id=\"inp-website\" placeholder=\"yourfirm.com\"" "$scorer" && grep -q "id=\"inp-linkedin\" placeholder=\"linkedin.com/company/yourfirm\"" "$scorer" && ! grep -q "type=\"url\"" "$scorer"'
 check "the scorer checks what was typed through the address reader, not for the letters http" 'grep -q "const website   = tidyAddress(typedSite);" "$scorer" && ! grep -q "startsWith(\"http\")" "$scorer"'
 
+# --- the logo
+# The owner, 2026-11-26: "the logo is small and near invisible on the site". The
+# menu showed the logo file whole, a white square 36px tall with the name about
+# 8px tall inside it. Asked which fix, the owner chose the wordmark alone with
+# white lettering for the menu, and both logos together "where appropriate":
+# the footer.
+word="$site/img/wordmark-on-dark.png"; vword=$(sha1sum "$word" | cut -c1-8); vcss=$(sha1sum "$site/css/shared.css" | cut -c1-8)
+check "the menu's logo is the wordmark alone: a wide picture with a clear ground, not the square" 'python3 - "$word" <<'"'"'PY'"'"'
+import struct, sys
+b = open(sys.argv[1], "rb").read()
+if b[:8] != b"\x89PNG\r\n\x1a\n": sys.exit(1)
+w, h, depth, kind = struct.unpack(">IIBB", b[16:26])
+clear = kind in (4, 6) or b"tRNS" in b          # its own transparency
+sys.exit(0 if clear and w >= 450 and w > h * 2.5 and len(b) < 60000 else 1)
+PY'
+check "the tool that makes it from the logo file is kept with it" '[ -s "$here/scripts/logo_cutout.py" ] && grep -q "site. / .img. / .logo.jpg" "$here/scripts/logo_cutout.py" && [ -s "$site/img/logo.jpg" ]'
+logos_ok=0; logo_pages=0
+for f in "$dist/index.html" "$dist/services/index.html" "$dist/approach/index.html" "$dist/tools/index.html" "$dist/about/index.html" "$dist/contact/index.html" "$dist/insights/index.html" "$dist/insights/most-firms-dont-need-more-software/index.html" "$dist/tools/football/nfl-lines-tracker.html"; do
+  logo_pages=$((logo_pages+1))
+  if python3 - "$f" "$vword" <<'PY'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read(); v = sys.argv[2]
+word = r'<img src="/img/wordmark-on-dark\.png\?v=' + v + r'" alt="Spatacco Analytics" class="%s" width="520" height="164">'
+nav = re.search(r"<nav[^>]*>.*?</nav>", s, re.S); foot = re.search(r"<footer>.*?</footer>", s, re.S)
+ok = bool(nav and foot)
+ok = ok and len(re.findall(word % "logo", nav.group(0))) == 1 and len(re.findall(r"<img\b", nav.group(0))) == 1
+# the footer: the SA mark on its tile, then the wordmark, and nothing else pictured
+pair = r'<img src="/img/logo-square\.png" alt="" class="footer-mark" width="512" height="512">' + word % "footer-logo"
+ok = ok and len(re.findall(pair, foot.group(0))) == 1 and len(re.findall(r"<img\b", foot.group(0))) == 2
+# the square is not shown anywhere on the page, and no logo is written into the page itself
+ok = ok and "/img/logo.jpg" not in s and not re.search(r"<img[^>]*src=\"data:", s)
+sys.exit(0 if ok else 1)
+PY
+  then logos_ok=$((logos_ok+1)); else echo "  the logo is not right on ${f#$dist}"; fi
+done
+check "every page shows the wordmark in its menu and both logos in its footer, at the picture's current address (now ?v=$vword): $logos_ok of $logo_pages" '[ "$logos_ok" = "$logo_pages" ]'
+check "the home page no longer carries the logo written into the page twice (it is now $(wc -c < "$home") bytes)" '[ "$(wc -c < "$home")" -lt 60000 ]'
+check "the menu shows it 48px tall, and the bar is no taller for it" 'grep -q "nav .logo{height:48px;width:auto;display:block}" "$site/css/shared.css" && grep -q "nav .logo{height:48px;width:auto;display:block}" "$home" && grep -q "align-items:center;padding:14px 48px;" "$site/css/shared.css" && grep -q "align-items:center;padding:14px 48px;" "$home"'
+# The host keeps a stylesheet for a year, so the shared one carries a version too.
+stale=$(grep -rlE "href=\"/css/shared\.css" "$dist" --include=*.html | while read -r f; do grep -q "href=\"/css/shared.css?v=$vcss\"" "$f" || echo "$f"; done | wc -l)
+linked=$(grep -rlE "href=\"/css/shared\.css" "$dist" --include=*.html | wc -l)
+check "every page that uses the shared stylesheet asks for its current version (now ?v=$vcss): $linked pages" '[ "$linked" -ge 8 ] && [ "$stale" = 0 ]'
+if node -e "require('playwright')" 2>/dev/null; then
+  (cd "$dist" && exec python3 -m http.server 18747 --bind 127.0.0.1 >/dev/null 2>&1) & lpid=$!
+  for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18747/" && break; sleep 0.1; done
+  lout=$(node "$here/tests/logo_browser.cjs" http://127.0.0.1:18747 2>&1); lcode=$?
+  kill "$lpid" 2>/dev/null
+  check "the logos show in a browser: $(printf '%s' "$lout" | tail -1)" '[ $lcode -eq 0 ]'
+  [ $lcode -eq 0 ] || printf '%s\n' "$lout"
+else
+  echo "no browser here: the logos were not opened"
+fi
+
 # --- house rules
 check "no long dash on the home page or the two new pages" '! grep -lE "&mdash;|"$'"'"'\xe2\x80\x94'"'"' "$home" "$site/approach/index.html" "$site/about/index.html"'
 check "no project price on any of them" '! grep -nE "\\\$[0-9][0-9,]{3,}" "$site/approach/index.html" "$site/about/index.html"'
