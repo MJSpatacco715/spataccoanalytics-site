@@ -102,11 +102,13 @@ check "the approach page has the argument and the four steps in full" 'f="$site/
 check "the about page has who we are, who we serve, and the Microsoft 365 line" 'f="$site/about/index.html"; grep -q "founded by a business development and M&amp;A professional" "$f" && [ "$(grep -o "<span class=\"client-tag" "$f" | wc -l)" = 9 ] && grep -q "Microsoft 365 Business Premium" "$f"'
 
 # --- every menu reaches every page
-want="/services/,/approach/,/about/,/tools/,/contact/"
+# The owner set the order on 2026-11-26: "menu should be: services approach tools about contact".
+want="/services/,/approach/,/tools/,/about/,/contact/"
 for f in "$home" "$site/services/index.html" "$site/tools/index.html" "$site/contact/index.html" "$site/approach/index.html" "$site/about/index.html"; do
   check "the menu on ${f#$site} reaches all five pages" '[ "$(ask "$f" nav | sed "s#^/,##")" = "$want" ]'
 done
-check "posts carry the same menu" 'grep -q "<a href=\"/approach/\">Approach</a>" "$here/scripts/build_insights.py" && grep -q "<a href=\"/about/\">About</a>" "$here/scripts/build_insights.py"'
+check "posts carry the same menu, in the same order" '[ "$(ask "$dist/insights/index.html" nav | sed "s#^/,##")" = "$want" ] && [ "$(ask "$dist/insights/most-firms-dont-need-more-software/index.html" nav | sed "s#^/,##")" = "$want" ]'
+check "and so does each tool page, which is built with the tools page menu" '[ "$(ask "$dist/tools/football/nfl-lines-tracker.html" nav | sed "s#^/,##")" = "$want" ]'
 check "nothing points at a section that left the home page" '! grep -rnE "/#(approach|about)|href=\"#(approach|about|contact)\"" "$site" "$here/scripts" --include=*.html --include=*.py --include=*.txt --include=.htaccess'
 check "the earlier site's pages go to the new ones" 'grep -q "^RewriteRule \^about\\\\.php\$ https://spataccoanalytics.com/about/ \[R=301,QSD,L\]" "$site/.htaccess" && grep -q "^RewriteRule \^approach\\\\.php\$ https://spataccoanalytics.com/approach/ \[R=301,QSD,L\]" "$site/.htaccess"'
 
