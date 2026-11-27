@@ -357,6 +357,62 @@ ok = ok and sum(int(c[3]) for c in chips) == len(tiles)                         
 ok = ok and all((t[2] == "") == (t[1] == "business") for t in tiles)                      # what shows before anything is pressed
 sys.exit(0 if ok else 1)
 PY'
+# The owner, 2026-11-27, of that first screen: "this needs better / greater definition of the three up top are
+# categories and some sort of greater interactive/non delineation beyond just the blue logo/icon", and "RIA digital
+# scorecard should also be clear that this is THE same free (and genuinely useful) tool that you see other parts of
+# the site".
+check "the three chips are named as categories, and the tiles stand in two named groups: the tools to use, then the platforms described below" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+h = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S).group(0)
+ok = "<div class=\"tl-chips\" role=\"group\" aria-label=\"Show tools by category\">" in h and "<span class=\"tl-chips-label\">Browse by category</span>" in h
+groups = re.findall(r"<div class=\"tl-group tl-group-(live|see)\">\s*<div class=\"tl-group-label\"><b>([^<]+)</b><span>([^<]+)</span></div>\s*<div class=\"tl-group-tiles\">(.*?)</div>\s*</div>", h, re.S)
+ok = ok and [(g[0], g[1]) for g in groups] == [("live", "Interactive"), ("see", "Built to order")]
+for kind, _, _, inside in groups:
+    kinds = re.findall(r"<a class=\"tl-tile tl-(live|see)\"", inside)
+    ok = ok and len(kinds) > 0 and set(kinds) == {kind}                    # every tile is in the group that says what it is
+ok = ok and sum(len(re.findall(r"<a class=\"tl-tile ", g[3])) for g in groups) == 13
+ok = ok and ".tl-see{border-style:dashed" in s and ".tl-group[hidden]{display:none}" in s
+sys.exit(0 if ok else 1)
+PY'
+check "the scorecard is named on the Tools page as the rest of the site names it: the free website score" 'f="$site/tools/index.html"; grep -q "<span class=\"tl-name\">Free Website Score <small>The RIA Digital Presence Scorecard</small></span>" "$f" && grep -q "<h3>Free Website Score</h3>" "$f" && grep -q "The RIA Digital Presence Scorecard: the same free score offered on our home page and under Services." "$f" && ! grep -q "<h3>RIA Digital Presence Scorecard</h3>" "$f"'
+# The owner, the same day, of the three platforms: "these cards are too verbose and vertically long".
+check "a platform card is its name, a short paragraph, three figures and the way to ask: what it does opens on a press" 'python3 - "$site/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+cards = re.findall(r"<div class=\"tool-card build-card reveal d\d\d\" id=\"(built-[a-z]+)\">(.*?)\n      </div>\n", s, re.S)
+ok = [c[0] for c in cards] == ["built-crm", "built-league", "built-golf"]
+for cid, inside in cards:
+    para = re.findall(r"\n        <p>(.*?)</p>", inside)
+    ok = ok and len(para) == 1 and len(re.sub(r"&[a-z]+;", "x", para[0]).split()) <= 34          # two sentences, not a column
+    more = re.search(r"<details class=\"build-more\">\s*<summary>What it does</summary>\s*<ul class=\"build-points\">(.*?)</ul>\s*</details>", inside, re.S)
+    ok = ok and bool(more) and len(re.findall(r"<li>", more.group(1))) == 6 and " open" not in inside.split("<details")[1].split(">")[0]
+    ok = ok and len(re.findall(r"<span><b>[\d,]+</b> [^<]+</span>", inside)) == 3 and "class=\"tool-link\">Ask for a walkthrough</a>" in inside
+    ok = ok and inside.index("build-head") < inside.index("build-facts") < inside.index("build-more") < inside.index("tool-link")
+sys.exit(0 if ok else 1)
+PY'
+# And of the light section under them, with its stadium, cinema and trading-card panels: "this section is out of
+# keeping with the style and should be better organized and displayed".
+check "no section of the Tools page is light: Just for fun sits on the navy, one grid of cards of one kind under Sports and Movies" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+body = s[s.index("<body"):]
+ok = "class=\"section-light" not in body and "<section class=\"section-dark fun-band\" id=\"fun\">" in body
+fun = body[body.index("<section class=\"section-dark fun-band\""):]
+fun = fun[:fun.index("</section>")]
+heads = re.findall(r"<h3 class=\"subgroup-title\">([^<]+)</h3>", fun)
+ok = ok and heads == ["Sports", "Movies"]
+cards = re.findall(r"<a href=\"(/tools/[^\"]+)\" class=\"(scorecard|playbill|tradingcard)\">(.*?)</a>", fun, re.S)
+ok = ok and len(cards) == 8
+for href, kind, inside in cards:                                             # the same parts, in the same order, on every card
+    parts = [m.start() for m in (re.search(p, inside) for p in (r"<svg class=\"[a-z]+-icon\" aria-hidden=\"true\"><use href=\"#i-[a-z]+\"/></svg>", r"<h4>[^<]+</h4>", r"<p>.+?</p>", r"<span class=\"scorecard-stat\">Interactive[^<]*</span>", r"<span class=\"scorecard-launch\">(Open|See it)</span>")) if m]
+    ok = ok and len(parts) == 5 and parts == sorted(parts)
+order = [c[0] for c in cards]
+ok = ok and order.index("/tools/card-evaluator.html") < order.index("/tools/oscar-tracker.html")       # the card evaluator is filed with Sports
+ok = ok and not re.search(r"playbill-ticket|tradingcard-holo|tradingcard-stats|Now Showing|From the Collection", fun)
+ok = ok and ".fun-band .subgroup,.fun-band .subgroup-grid{display:contents}" in s
+sys.exit(0 if ok else 1)
+PY'
 check "its first section is as tall as the first screen less the strip, by a phone's own measure where there is one, and the strip is the next thing in the page" 'python3 - "$site/tools/index.html" <<'"'"'PY'"'"'
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
@@ -410,7 +466,7 @@ ok = ok and not re.search(r"class=\"(?:tl-ico|tool-icon|scorecard-icon|playbill-
 ok = ok and not re.search(r"&#(?:1[0-9]{4,5}|9[0-9]{3});", s)                    # no emoji entity left on the page
 sys.exit(0 if ok else 1)
 PY'
-check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more)[ .:,{\[]"'
+check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more|group)(-[a-z]+)?[ .:,{\[]"'
 
 # --- every inner page opens on a supporting figure with its source
 # The owner, 2026-11-26: "each of the page heros should be consistent. white

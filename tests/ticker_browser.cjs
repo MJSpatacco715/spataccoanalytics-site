@@ -139,11 +139,11 @@ function spot(page, id) {
       check('and leaving both closes it', await page.evaluate(() => document.getElementById('sa-tk-card').hidden));
     }
     await pin(page);
-    const held = await page.evaluate(() => { const r = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: Math.round(r.top), nav: document.getElementById('main-nav').offsetHeight, y: window.scrollY, light: (() => { window.scrollTo(0, document.querySelector('.section-light').offsetTop + 80); return 1; })() }; });
+    const held = await page.evaluate(() => { const r = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: Math.round(r.top), nav: document.getElementById('main-nav').offsetHeight, y: window.scrollY, light: (() => { window.scrollTo(0, document.getElementById('fun').offsetTop + 80); return 1; })() }; });
     await page.waitForTimeout(250);
     const overLight = await page.evaluate(() => { const r = document.getElementById('sa-ticker'), b = r.getBoundingClientRect(); const bg = getComputedStyle(r).backgroundColor.match(/[\d.]+/g).map(Number); return { top: Math.round(b.top), nav: document.getElementById('main-nav').offsetHeight, solid: bg.length < 4 || bg[3] >= 0.9, under: (() => { const e = document.elementFromPoint(300, b.top + b.height / 2); return !!(e && r.contains(e)); })() }; });
     check('scrolled, it goes with the page and stays held under the menu', held.y > 600 && held.top === held.nav);
-    check('it stays there over a light section too, on ground solid enough to read', overLight.top === overLight.nav && overLight.solid && overLight.under);
+    check('it stays there over the page\'s last section too (its one light section until it went navy), on ground solid enough to read', overLight.top === overLight.nav && overLight.solid && overLight.under);
     await pin(page);
 
     // hover: the strip stops and the source card opens under the figure

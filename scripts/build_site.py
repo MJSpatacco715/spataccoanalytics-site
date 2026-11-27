@@ -122,8 +122,8 @@ def card(tool: dict, n: int, live: bool = False) -> str:
             <h4>{esc(tool['name'])}</h4>
             <p>{esc(tool['tagline'])}</p>
             <div class="scorecard-foot">
-              <span class="scorecard-stat">Live data</span>
-              <span class="scorecard-launch">{'Try it' if live else 'See it'}</span>
+              <span class="scorecard-stat">Interactive &middot; live data</span>
+              <span class="scorecard-launch">{'Open' if live else 'See it'}</span>
             </div>
           </a>"""
 

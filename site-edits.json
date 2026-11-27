@@ -11,7 +11,7 @@
       "file": "tools/index.html",
       "why": "Sports Desk now leads with live NFL tools",
       "find": "<h3 class=\"subgroup-title\">Things I tried to understand.</h3>",
-      "replace": "<h3 class=\"subgroup-title\">Sports, through the data.</h3>"
+      "replace": "<h3 class=\"subgroup-title\">Sports</h3>"
     },
     {
       "file": "tools/index.html",
@@ -22,8 +22,8 @@
     {
       "file": "tools/index.html",
       "why": "Anchor for the tool pages' back link",
-      "find": "<div class=\"subgroup subgroup-stadium reveal d05\">",
-      "replace": "<div class=\"subgroup subgroup-stadium reveal d05\" id=\"sports-desk\">"
+      "find": "<div class=\"subgroup subgroup-stadium\">",
+      "replace": "<div class=\"subgroup subgroup-stadium\" id=\"sports-desk\">"
     },
     {
       "file": "tools/index.html",
