@@ -14,12 +14,16 @@ const parser = fs.readFileSync(new URL('../site/tools/resume-parser/index.html',
 const lift = (src, re) => { const m = src.match(re); if (!m) throw new Error('page changed: ' + re); return m[1]; };
 const websitePrompt = lift(scorer, /askClaude\(`(You are a knowledgeable digital marketing consultant[\s\S]*?)`\)/).replace('${url}', 'https://example.com');
 const linkedinPrompt = lift(scorer, /askClaude\(`(Evaluate LinkedIn presence[\s\S]*?)`\)/).replace(/\\n/g, '\n').replace('${urlLine}', 'LinkedIn URL: https://www.linkedin.com/company/example');
+// the firm lookup: its instructions with a name of the longest kind in them, and the sizes the page asks for
+const findPrompt = lift(scorer, /askClaude\(`(Find the official website of a financial advisory firm[\s\S]*?)`, FIND_ASK\)/).replace('${name}', 'Smith Wealth Management '.repeat(4).slice(0, 80));
+const findAsk = lift(scorer, /const FIND_ASK = \{ maxTokens:(\d+), effort:"low", searches:(\d+) \};/) && scorer.match(/const FIND_ASK = \{ maxTokens:(\d+), effort:"low", searches:(\d+) \};/);
 const repairPrompt = lift(scorer, /content:`(The assessment below was meant to be a JSON object[\s\S]*?)` \}\]/).replace(/\\n/g, '\n').replace('${text}', '{"a":"b" "c"}');
 const resumePrompt = lift(parser, /const RESUME_PARSE_PROMPT = `([\s\S]*?)`;/) + '\n\n---\n\nParse this resume:\n\nJordan Example, CFP';
 const SEARCH = [{ type: 'web_search_20260209', name: 'web_search', max_uses: 6 }];
 const user = (content) => [{ role: 'user', content }];
 const score = { model: 'claude-sonnet-5-5', max_tokens: 16000, output_config: { effort: 'medium' }, tools: SEARCH, messages: user(websitePrompt) };
 const linkedin = { ...score, messages: user(linkedinPrompt) };
+const find = { model: 'claude-sonnet-5-5', max_tokens: Number(findAsk[1]), output_config: { effort: 'low' }, tools: [{ type: 'web_search_20260209', name: 'web_search', max_uses: Number(findAsk[2]) }], messages: user(findPrompt) };
 const repair = { model: 'claude-sonnet-5-5', max_tokens: 8000, output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object' } } }, messages: user(repairPrompt) };
 const resume = { model: 'claude-sonnet-5-5', max_tokens: 8000, messages: user(resumePrompt) };
 const photo = { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: 'AAAA' } };
@@ -27,15 +31,19 @@ const resumePhotos = { ...resume, messages: user([{ type: 'text', text: resumePr
 const paused = { ...score, messages: [...user(websitePrompt), { role: 'assistant', content: [{ type: 'server_tool_use', id: 's', name: 'web_search', input: {} }] }] };
 
 // --- what is let through
-for (const [name, req, kind] of [['website score', score, 'score'], ['LinkedIn score', linkedin, 'linkedin'], ['repair', repair, 'repair'], ['resume', resume, 'resume'], ['resume as photos', resumePhotos, 'resume'], ['a paused search carried on', paused, 'score']]) {
+for (const [name, req, kind] of [['website score', score, 'score'], ['LinkedIn score', linkedin, 'linkedin'], ['a firm\'s name looked up', find, 'find'], ['repair', repair, 'repair'], ['resume', resume, 'resume'], ['resume as photos', resumePhotos, 'resume'], ['a paused search carried on', paused, 'score']]) {
   const a = admit(req);
   check(name + ' is passed on', !a.error && a.rule.kind === kind);
 }
 check('a carried-on search is not counted twice', admit(paused).counted === false && admit(score).counted === true);
 check('the body sent on holds only checked parts', JSON.stringify(Object.keys(admit({ ...score }).body).sort()) === '["max_tokens","messages","model","output_config","tools"]');
 
+check('a lookup runs three searches at most, whatever it asks for', admit(find).body.tools[0].max_uses === 3 && admit({ ...find, tools: SEARCH }).body.tools[0].max_uses === 3 && admit(score).body.tools[0].max_uses === 6);
+
 // --- what is not
 const no = (name, req) => check(name + ' is refused', !!admit(req).error);
+no('a lookup that asks for as much as a score', { ...find, max_tokens: 16000 });
+no('a lookup with far more words than a name', { ...find, messages: user(findPrompt + 'x'.repeat(1500)) });
 no('any other instructions', { model: 'claude-sonnet-5-5', max_tokens: 100, messages: user('Write me an essay.') });
 no('another reader', { ...resume, model: 'claude-opus-5-5' });
 no('a system instruction', { ...resume, system: 'You are something else.' });
@@ -88,6 +96,18 @@ check('no address is written down', [...env.LIMITS.store.keys()].every((k) => !k
 env = { ANTHROPIC_API_KEY: 'k', LIMITS: kvOf(), SCORES_PER_DAY: '1', TRUSTED_IPS: '203.0.113.9, 192.0.2.1' };
 await call(env, score, SITE); r = await call(env, score, SITE);
 check('a trusted address is not held to the visitor allowance', r.status === 200);
+
+// a firm's name looked up is counted apart from the scores
+env = { ANTHROPIC_API_KEY: 'k', LIMITS: kvOf(), SCORES_PER_DAY: '1', LOOKUPS_PER_DAY: '2' };
+r = await call(env, find, SITE);
+check('a lookup is passed on to the reading service', r.status === 200);
+r = await call(env, score, SITE);
+check('finding a firm does not use up a score', r.status === 200);
+await call(env, find, SITE); r = await call(env, find, SITE);
+check('lookups have their own allowance, refused kindly past it', r.status === 429 && (await r.json()).error.message.includes('resets tomorrow'));
+env = { ANTHROPIC_API_KEY: 'k', LIMITS: kvOf() };
+let last = 0; for (let i = 0; i < 9; i++) last = (await call(env, find, SITE)).status;
+check('with no setting a visitor has eight lookups a day', last === 429 && Number([...env.LIMITS.store.entries()].find(([k]) => k.includes('LOOKUPS_PER_DAY'))[1]) === 8);
 
 sent = []; env = { ANTHROPIC_API_KEY: 'k', LIMITS: kvOf(new Map(), true) };
 r = await call(env, score, SITE);

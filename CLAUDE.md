@@ -259,6 +259,23 @@ lives and says which pieces are not in this repo yet.
   etc. too rigid". `tidyAddress` in `site/tools/website-scorer.html` makes a
   typed address whole, and `lead_url` in `site/lib/leads.php` reads it the same
   way. No field asks for `https://`, in its hint or in its message.
+- A firm's name typed into the scorer is looked up, not turned away. The owner,
+  2026-11-26: "Can we soften the website score input matching a bit? If i type
+  a firm name (and not website (not https not even www)) could it offer user
+  option of 'is this the right one?' With logic (and shown/listed confidence
+  per card shown)". Asked where the matches should come from, the owner chose
+  the search the scorer already runs. So what is typed and is not an address
+  goes to the relay as a fifth request (`find`: three searches at most, counted
+  against its own `LOOKUPS_PER_DAY`, so finding a firm does not use up a
+  score), and the page shows up to three firms, each with its own site, its
+  place, how sure the search is (a word, a number and a bar) and why, with
+  "Yes, score this site" and a way out. Nothing is scored until one is chosen,
+  one match is still asked about and never assumed, and a directory or a social
+  page is never offered as a firm's site. What the search wrote is shown as
+  text, never as markup. When the lookup cannot run (the relay not pasted in
+  yet, a daily limit) the visitor is asked for the address instead.
+  `tests/scorer_browser.cjs` opens it with the relay stood in for: no test runs
+  a real lookup or a real score.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
   Worker. Its source is `worker/ria-scorer.js`, and it refuses any request
   it does not recognise. Change a tool's instructions, reader, tools or

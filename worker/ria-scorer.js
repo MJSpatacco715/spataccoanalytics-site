@@ -6,7 +6,7 @@
  * never reaches a browser.
  *
  * It is not an open door. A request is passed on only if it is one of the
- * four requests those two tools make, for the one reader they use, within
+ * five requests those two tools make, for the one reader they use, within
  * the sizes they need. Each visitor gets a daily allowance per tool, and the
  * whole relay has a daily ceiling, so the most anyone can cost in a day is
  * known in advance.
@@ -16,6 +16,7 @@
  *   LIMITS              KV namespace binding. Without it the request rules
  *                       still apply but nothing is counted.
  *   SCORES_PER_DAY      per visitor, website and LinkedIn scores each (default 8)
+ *   LOOKUPS_PER_DAY     per visitor, a firm's name looked up for its website (default 8)
  *   RESUMES_PER_DAY     per visitor, resume reads (default 4)
  *   DAILY_TOTAL         all visitors together, every kind (default 150)
  *   TRUSTED_IPS         comma-separated addresses that are not counted
@@ -31,18 +32,24 @@ const MAX_BODY_BYTES = 20 * 1024 * 1024; // a resume as up to 12 photos
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const CONTACT = "https://spataccoanalytics.com/contact/";
 
-// The four requests the tools make, told apart by how their instructions begin.
+// The five requests the tools make, told apart by how their instructions begin.
+// (searches: the most web searches one request may run, six unless it says fewer.)
 const KINDS = [
   { kind: "score", allowance: "SCORES_PER_DAY", search: true, maxTokens: 16000, maxText: 12000,
     starts: "You are a knowledgeable digital marketing consultant helping a financial advisor or RIA" },
   { kind: "linkedin", allowance: "SCORES_PER_DAY", search: true, maxTokens: 16000, maxText: 6000,
     starts: "Evaluate LinkedIn presence for a financial advisory firm." },
+  // A firm's name typed into the scorer in place of its website: the sites it could mean.
+  // Short, a few searches, and counted apart from the scores so that finding a firm does
+  // not use one up.
+  { kind: "find", allowance: "LOOKUPS_PER_DAY", search: true, searches: 3, maxTokens: 4000, maxText: 2500,
+    starts: "Find the official website of a financial advisory firm from the name a visitor typed." },
   { kind: "repair", allowance: "SCORES_PER_DAY", search: false, maxTokens: 8000, maxText: 40000, format: true,
     starts: "The assessment below was meant to be a JSON object but does not parse." },
   { kind: "resume", allowance: "RESUMES_PER_DAY", search: false, maxTokens: 8000, maxText: 250000, images: 12,
     starts: "You are a resume parser for Spatacco Analytics." },
 ];
-const DEFAULTS = { SCORES_PER_DAY: 8, RESUMES_PER_DAY: 4, DAILY_TOTAL: 150 };
+const DEFAULTS = { SCORES_PER_DAY: 8, LOOKUPS_PER_DAY: 8, RESUMES_PER_DAY: 4, DAILY_TOTAL: 150 };
 
 function cors(origin) {
   const h = { "Access-Control-Allow-Methods": "POST, OPTIONS", "Access-Control-Allow-Headers": "Content-Type", "Vary": "Origin" };
@@ -65,7 +72,7 @@ function openingText(content) {
   return "";
 }
 
-// Checks the request against the four the tools make. Returns {rule, body}
+// Checks the request against the five the tools make. Returns {rule, body}
 // with the body rebuilt from the checked parts only, or {error}.
 export function admit(input) {
   if (!isObject(input)) return { error: "The request is not in the expected form." };
@@ -101,7 +108,8 @@ export function admit(input) {
   if (rule.search) {
     const t = input.tools;
     if (!Array.isArray(t) || t.length !== 1 || !isObject(t[0]) || t[0].type !== "web_search_20260209" || t[0].name !== "web_search") return { error: "The request is not in the expected form." };
-    const uses = Number.isInteger(t[0].max_uses) ? Math.min(6, Math.max(1, t[0].max_uses)) : 6;
+    const most = rule.searches || 6;
+    const uses = Number.isInteger(t[0].max_uses) ? Math.min(most, Math.max(1, t[0].max_uses)) : most;
     body.tools = [{ type: "web_search_20260209", name: "web_search", max_uses: uses }];
   } else if (input.tools !== undefined) {
     return { error: "The request is not in the expected form." };

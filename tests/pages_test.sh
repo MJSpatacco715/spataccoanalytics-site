@@ -222,7 +222,21 @@ let bad = 0;
 for (const [typed, out] of want) { const got = tidyAddress(typed); if (got !== out) { bad++; console.log("  typed " + JSON.stringify(typed) + " gave " + JSON.stringify(got) + ", wanted " + JSON.stringify(out)); } }
 process.exit(bad ? 1 : 0);
 JS'
-check "its fields do not ask for https://, in the hint or in the message" '! grep -q "starting with https://" "$scorer" && grep -q "id=\"inp-website\" placeholder=\"yourfirm.com\"" "$scorer" && grep -q "id=\"inp-linkedin\" placeholder=\"linkedin.com/company/yourfirm\"" "$scorer" && ! grep -q "type=\"url\"" "$scorer"'
+check "its fields do not ask for https://, in the hint or in the message" '! grep -q "starting with https://" "$scorer" && grep -q "id=\"inp-website\" placeholder=\"yourfirm.com or your firm.s name\"" "$scorer" && grep -q "id=\"inp-linkedin\" placeholder=\"linkedin.com/company/yourfirm\"" "$scorer" && ! grep -q "type=\"url\"" "$scorer"'
+# A firm name typed in place of the website is looked up, not turned away. The owner,
+# 2026-11-26: "If i type a firm name (and not website (not https not even www)) could it
+# offer user option of is this the right one? With logic (and shown/listed confidence per
+# card shown)". tests/scorer_browser.cjs opens it; tests/worker_test.mjs holds the relay to it.
+check "a firm name typed into the scorer is looked up before anything is refused, and nothing in the lookup is an em dash" 'python3 - "$scorer" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+ask = re.search(r"askClaude\(`(Find the official website of a financial advisory firm from the name a visitor typed\.[\s\S]*?)`, FIND_ASK\)", s)
+ok = bool(ask) and "Never invent a website." in ask.group(1) and "confidence" in ask.group(1) and chr(8212) not in ask.group(1)
+i = s.index("const name = firmName(typedSite);"); j = s.index("We could not read that as a website address.")
+ok = ok and i < j and "if (name) { lookUpFirm(name); return; }" in s[i:j]
+ok = ok and "id=\"firm-matches\"" in s and "Is this the right one?" in s
+sys.exit(0 if ok else 1)
+PY'
 check "the scorer checks what was typed through the address reader, not for the letters http" 'grep -q "const website   = tidyAddress(typedSite);" "$scorer" && ! grep -q "startsWith(\"http\")" "$scorer"'
 
 # --- the first screen of the inner pages
@@ -473,11 +487,14 @@ if node -e "require('playwright')" 2>/dev/null; then
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18747/" && break; sleep 0.1; done
   lout=$(node "$here/tests/logo_browser.cjs" http://127.0.0.1:18747 2>&1); lcode=$?
   hout=$(node "$here/tests/hero_browser.cjs" http://127.0.0.1:18747 2>&1); hcode=$?
+  sout=$(node "$here/tests/scorer_browser.cjs" http://127.0.0.1:18747 2>&1); scode=$?
   kill "$lpid" 2>/dev/null
   check "the logos show in a browser: $(printf '%s' "$lout" | tail -1)" '[ $lcode -eq 0 ]'
   [ $lcode -eq 0 ] || printf '%s\n' "$lout"
   check "the first screens are right in a browser: $(printf '%s' "$hout" | tail -1)" '[ $hcode -eq 0 ]'
   [ $hcode -eq 0 ] || printf '%s\n' "$hout"
+  check "the scorer looks a firm name up in a browser: $(printf '%s' "$sout" | tail -1)" '[ $scode -eq 0 ]'
+  [ $scode -eq 0 ] || printf '%s\n' "$sout"
 else
   echo "no browser here: the logos were not opened"
 fi
