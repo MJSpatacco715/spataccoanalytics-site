@@ -162,6 +162,11 @@ lives and says which pieces are not in this repo yet.
   `max-height`), and on the smallest the eight Sports tiles push the strip just
   under. The rules for that section are scoped to it
   (`.tl-hero`), because each tool's own page is built with the same head.
+  The figure's source card on that first screen opens up and to the right of
+  the figure, over the empty side of the headline, and covers no category and no
+  tool (the owner, 2026-11-27, of it opening downward over them: "i'd prefer
+  this popup to utilize the dead space rather than cover the tools links"). On a
+  phone it opens in place, as on every page.
   Lower down, a platform's card is short (the owner, 2026-11-27: "these cards
   are too verbose and vertically long"): its name, two sentences, three
   figures and "Ask for a walkthrough". What it does, point by point, is behind
