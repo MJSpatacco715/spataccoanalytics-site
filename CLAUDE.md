@@ -129,6 +129,22 @@ lives and says which pieces are not in this repo yet.
   Movies) the tiles are large and the words show, the tools to use the larger;
   a longer list (Sports) keeps the small tiles, told apart by the badge. On a
   phone too short for the large tiles they fall back to the small ones.
+  The three are named as categories and the tiles as what they are (the owner,
+  2026-11-27, of the first screen: "this needs better / greater definition of
+  the three up top are categories and some sort of greater interactive/non
+  delineation beyond just the blue logo/icon"). The chips stand under the words
+  "Browse by category" and each says how many tools it holds; the tiles stand
+  in two named groups, the tools to use under "Interactive" and the platforms
+  under "Built to order", whose tiles are in a dashed line and say "Details".
+  From 761px the two groups are side by side, which costs one line of height.
+  On a phone, which has none to spare, the chips fill the row unlabelled, the
+  tools to use lead without a heading and one named line parts them from the
+  platforms; the same height came out of the gaps. A kind with no platform
+  (Movies) shows no second group.
+  The scorecard's tile and its card are named as the rest of the site names it,
+  Free Website Score, with "The RIA Digital Presence Scorecard" under the name
+  (the owner: "RIA digital scorecard should also be clear that this is THE same
+  free (and genuinely useful) tool that you see other parts of the site").
   Icons are drawn, not emoji (the owner, the same message: "Icons could be MUCH
   better"): thirteen symbols at the top of `site/tools/index.html`, one a tool,
   used by its tile and by its card lower down. A card the build adds takes its
@@ -146,6 +162,19 @@ lives and says which pieces are not in this repo yet.
   `max-height`), and on the smallest the eight Sports tiles push the strip just
   under. The rules for that section are scoped to it
   (`.tl-hero`), because each tool's own page is built with the same head.
+  Lower down, a platform's card is short (the owner, 2026-11-27: "these cards
+  are too verbose and vertically long"): its name, two sentences, three
+  figures and "Ask for a walkthrough". What it does, point by point, is behind
+  "What it does", closed until pressed. And no section of the Tools page is
+  light: Just for fun was a light section of three themed panels (a stadium, a
+  cinema, a trading card), and the owner called it "out of keeping with the
+  style" and asked that it be "better organized and displayed". It is one grid
+  on the navy now, every card the site's panel with the same parts in the same
+  order (drawn icon, name, two sentences, "Interactive", "Open"), under the two
+  kinds the top of the page names, Sports and Movies, the card evaluator filed
+  with Sports. Those rules are scoped to that section (`.fun-band`), because
+  each tool's own page is built with the same head and still shows the old
+  Sports Desk panel, which is that page's own look.
 - The Services page opens on its services (the owner, the same day: "services
   page is all talk and no service options on first screen"). The four sit in
   the first section, beside the headline from 1000px wide and under it on a

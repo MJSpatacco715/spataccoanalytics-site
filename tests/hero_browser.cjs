@@ -282,16 +282,34 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
         tagLines: tr.height > 0 ? Math.round(tr.height / parseFloat(getComputedStyle(tag).lineHeight)) : 0,
         ico: Math.round(ir.width), square: Math.abs(ir.width - ir.height) < 1, filled: getComputedStyle(ico).backgroundImage.includes('gradient'),
         drawn: !!use && !!document.querySelector(use.getAttribute('href')) && ico.getBBox().width > 4 && getComputedStyle(ico).fill === 'none' && getComputedStyle(ico).stroke !== 'none',
-        nameIn: nr.left >= ir.right && nr.right <= r.right + 1 && name.scrollWidth <= name.clientWidth + 1, text: x.textContent };
+        nameIn: nr.left >= ir.right && nr.right <= r.right + 1 && name.scrollWidth <= name.clientWidth + 1, text: x.textContent,
+        // the group the tile stands in, and what is written over it (nothing, where a phone leaves the line out)
+        group: (() => { const g = x.closest('.tl-group'), l = g && g.querySelector('.tl-group-label'), lr = l ? l.getBoundingClientRect() : { width: 0, height: 0 }; return { live: !!g && g.classList.contains('tl-group-live'), said: lr.width > 0 && lr.height > 0 ? l.innerText.replace(/\s+/g, ' ').trim() : '', left: g ? Math.round(g.getBoundingClientRect().left) : -1, top: g ? Math.round(g.getBoundingClientRect().top) : -1, px: l ? parseFloat(getComputedStyle(l).fontSize) : 0 }; })(),
+        dashed: getComputedStyle(x).borderTopStyle === 'dashed', name: name.childNodes[0] ? name.childNodes[0].textContent.trim() : '' };
     }));
+    // The owner, 2026-11-27, of this first screen: "this needs better / greater definition of the three up top are
+    // categories and some sort of greater interactive/non delineation beyond just the blue logo/icon".
+    const cats = await page.evaluate(() => { const l = document.querySelector('.tl-chips-label'), r = l.getBoundingClientRect(), c = document.querySelector('.tl-chip').getBoundingClientRect();
+      return { said: r.width > 0 ? l.innerText.replace(/\s+/g, ' ').trim() : '', before: r.right <= c.left && Math.abs((r.top + r.bottom) / 2 - (c.top + c.bottom) / 2) < 6,
+        counts: [...document.querySelectorAll('.tl-chip')].map((x) => x.textContent.replace(/\s+/g, ' ').trim() + getComputedStyle(x.querySelector('span'), '::after').content.replace(/^none$|"/g, '')), label: document.querySelector('.tl-chips').getAttribute('aria-label') }; });
+    check('/tools/ at ' + w + ' by ' + h + (mobile ? ': on a phone the three chips fill the row and are named as categories to assistive technology' : ': the three are under the words "Browse by category", and each says how many tools it holds (' + cats.counts.join(' | ') + ')'),
+      cats.label === 'Show tools by category' && (mobile ? cats.said === '' : cats.said === 'BROWSE BY CATEGORY' && cats.before && cats.counts.join(' | ') === 'Business 3 tools | Sports 8 tools | Movies 2 tools'));
     const b = await seen();
     check('/tools/ at ' + w + ' by ' + h + ': the two Business tools to use say so in words, each on one line (' + b.map((x) => x.tag).join(' | ') + ')', b.length === 3 && b[0].live && b[1].live && b[0].tag === 'INTERACTIVE · TRY IT NOW' && b[1].tag === 'INTERACTIVE · TRY IT NOW' && b[0].tagLines === 1 && b[1].tagLines === 1 && (!mobile || b[0].tagPx >= 13));
-    check('/tools/ at ' + w + ' by ' + h + ': they are the larger tiles, their icons filled; the platform described below is quieter and says it is built to order', b[0].area > b[2].area * 1.25 && b[1].area > b[2].area * 1.25 && b[0].filled && b[1].filled && !b[2].live && !b[2].filled && b[2].tag.startsWith('BUILT TO ORDER') && b[2].tagLines === 1 && b[0].ico > b[2].ico);
+    check('/tools/ at ' + w + ' by ' + h + ': they are the larger tiles, their icons filled; the platform described below is quieter and says it is built to order', b[0].area > b[2].area * 1.25 && b[1].area > b[2].area * 1.25 && b[0].filled && b[1].filled && !b[2].live && !b[2].filled && (b[2].tag.startsWith('BUILT TO ORDER') ? b[2].tagLines === 1 : b[2].group.said.startsWith('BUILT TO ORDER')) && b[0].ico > b[2].ico);
+    check('/tools/ at ' + w + ' by ' + h + ': the tools to use and the platform stand in two groups, the platform under the words "Built to order" and in a dashed line' + (mobile ? '' : ', side by side, the tools under "Interactive"') + ' (' + b[0].group.said + ' | ' + b[2].group.said + ')',
+      b[0].group.live && b[1].group.live && !b[2].group.live && b[2].group.said.startsWith('BUILT TO ORDER') && b[2].dashed && !b[0].dashed && (!mobile || b[2].group.px >= 13)
+      && (mobile ? b[2].group.top > b[0].group.top : b[0].group.said.startsWith('INTERACTIVE') && b[2].group.left > b[0].group.left && Math.abs(b[2].group.top - b[0].group.top) < 2));
+    check('/tools/ at ' + w + ' by ' + h + ': the scorecard is named as the rest of the site names it, the free website score, and says which scorecard it is (' + b[0].name + ')', b[0].name === 'Free Website Score' && /RIA Digital Presence Scorecard/.test(b[0].text));
     check('/tools/ at ' + w + ' by ' + h + ': each icon is drawn, square and in its badge, with the name beside it and not cut', b.every((x) => x.drawn && x.square && x.ico >= 24 && x.nameIn && !/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/u.test(x.text)));
     if (mobile) await page.tap('.tl-chip[data-kind="sports"]'); else await page.click('.tl-chip[data-kind="sports"]');
     await page.waitForTimeout(250);
     const s = await seen();
-    check('/tools/ at ' + w + ' by ' + h + ': of the eight Sports tools the six to use come first with filled icons, the two described after them without', s.length === 8 && s.slice(0, 6).every((x) => x.live && x.filled) && s.slice(6).every((x) => !x.live && !x.filled) && s.every((x) => x.drawn && x.square && x.ico >= 22 && x.nameIn));
+    check('/tools/ at ' + w + ' by ' + h + ': of the eight Sports tools the six to use come first with filled icons, the two described after them without', s.length === 8 && s.slice(0, 6).every((x) => x.live && x.filled && x.group.live && !x.dashed) && s.slice(6).every((x) => !x.live && !x.filled && !x.group.live && x.dashed && x.group.said.startsWith('BUILT TO ORDER')) && s.every((x) => x.drawn && x.square && x.ico >= 22 && x.nameIn));
+    if (mobile) await page.tap('.tl-chip[data-kind="movies"]'); else await page.click('.tl-chip[data-kind="movies"]');
+    await page.waitForTimeout(250);
+    const mv = await seen();
+    check('/tools/ at ' + w + ' by ' + h + ': Movies has no platform, so no "Built to order" group shows and its two tools take the row', mv.length === 2 && mv.every((x) => x.live) && await page.evaluate(() => { const g = document.querySelector('.tl-group-see'); return g.hidden && g.getBoundingClientRect().height === 0 && document.getElementById('tl-tiles').classList.contains('solo'); }));
     await ctx.close();
   }
 
