@@ -38,6 +38,33 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
 (async () => {
   const browser = await chromium.launch();
 
+  // --- the home page is navy from top to bottom. Its pillars were the one light section; the owner,
+  // 2026-11-27: "weirdly all white in a sea of blue", and, shown it in navy: "Yes, make it navy".
+  for (const [w, h, mobile] of [[1255, 607, false], [390, 664, true]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
+    const page = await ctx.newPage();
+    await page.goto(base + '/', { waitUntil: 'load' });
+    await page.addStyleTag({ content: '.reveal{opacity:1 !important;transform:none !important}' });
+    await page.waitForTimeout(400);
+    const g = await page.evaluate(() => {
+      const rgb = (s) => (s.match(/[\d.]+/g) || []).map(Number);
+      const lum = (c) => (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+      const solid = (c) => c.length >= 3 && (c.length < 4 || c[3] > 0.5);
+      const light = [];
+      for (const e of document.querySelectorAll('body *')) {
+        if (e.closest('.sa-cite-card, footer')) continue;          // a source card is a card of paper, shown on asking; the SA mark sits on its white tile
+        const r = e.getBoundingClientRect(), st = getComputedStyle(e), bg = rgb(st.backgroundColor);
+        if (r.width * r.height > 1500 && st.display !== 'none' && solid(bg) && lum(bg) > 0.75) light.push(e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0]);
+      }
+      const cards = [...document.querySelectorAll('.service-card')].map((c) => ({ ground: lum(rgb(getComputedStyle(c).backgroundColor).slice(0, 3)) * (rgb(getComputedStyle(c).backgroundColor)[3] ?? 1), name: lum(rgb(getComputedStyle(c.querySelector('h3')).color)), words: lum(rgb(getComputedStyle(c.querySelector('p')).color)), go: lum(rgb(getComputedStyle(c.querySelector('.service-go')).color)) }));
+      const sec = document.getElementById('services'), head = sec.querySelector('h2');
+      return { light: [...new Set(light)], cards, head: lum(rgb(getComputedStyle(head).color)), sections: [...document.querySelectorAll('body > section')].length, wide: document.documentElement.scrollWidth <= window.innerWidth };
+    });
+    check('/ at ' + w + 'px: no light section or panel anywhere on the home page (not: ' + g.light.join(', ') + ')', g.light.length === 0 && g.sections >= 5 && g.wide);
+    check('/ at ' + w + 'px: the three pillars are panels on the navy, their names white and their words light enough to read', g.cards.length === 3 && g.cards.every((c) => c.ground < 0.1 && c.name > 0.95 && c.words > 0.6 && c.go > 0.7) && g.head > 0.95);
+    await ctx.close();
+  }
+
   // --- the blue line is its own line, on every page with a headline of this kind
   for (const [w, h, mobile] of [[1440, 900, false], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
