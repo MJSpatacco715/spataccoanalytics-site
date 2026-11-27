@@ -13,6 +13,11 @@ const url = process.argv[2];
 const fails = [];
 let n = 0;
 function check(name, pass) { n++; if (!pass) fails.push(name); }
+// A mouse has to rest on a figure before its card opens (LINGER in site/js/ticker.js, 300ms).
+// The owner, 2026-11-27: "the hover cards are very sensitive. if i even glance over it (and people are
+// likely to) it is BOOM taking up screen space. Someone should have to linger on the link for just a
+// split second for it to pop." REST is long enough to count as resting; GLANCE is not.
+const REST = 560, GLANCE = 120;
 
 async function open(browser, opts, before) {
   const ctx = await browser.newContext(opts);
@@ -84,7 +89,7 @@ function spot(page, id) {
         firstHidden: sets[0].getAttribute('aria-hidden'),
         copiesHidden: sets.slice(1).every((x) => x.getAttribute('aria-hidden') === 'true'),
         copiesOutOfTabs: sets.slice(1).every((x) => [...x.querySelectorAll('button')].every((q) => q.tabIndex === -1)),
-        top: Math.round(b.top), navBottom: document.getElementById('main-nav').offsetHeight, height: Math.round(b.height),
+        top: Math.round(b.top), navBottom: document.getElementById('main-nav').offsetHeight, height: Math.round(b.height), grown: parseFloat(getComputedStyle(document.documentElement).fontSize) / 16,
         heroBottom: Math.round(document.querySelector('.page-hero').getBoundingClientRect().bottom),
         nextTop: Math.round(document.querySelector('.page-hero ~ section').getBoundingClientRect().top),
         nextIs: (document.querySelector('.page-hero ~ section .category-label') || {}).textContent,
@@ -102,7 +107,7 @@ function spot(page, id) {
     check('eight figures in order, the RIA deal count first', s.ids === 'ria,ust30,ust10,eurusd,btc,brent,wti,gas' && s.text.includes('RIA Deals 2026') && s.text.includes('78 to tie record') && s.text.includes('DeVoe, Q1-Q3'));
     check('the dollar is quoted in euros, as what one dollar buys', s.text.includes('USD/EUR') && s.text.includes('$1 = \u20AC0.9122') && !s.text.includes('EUR/USD'));
     check('the copies are hidden from assistive technology and from the Tab key', s.sets >= 2 && s.firstHidden === null && s.copiesHidden && s.copiesOutOfTabs);
-    check('the copy leads: the strip comes after it and before the Financial Services section', s.top === s.heroBottom && s.bottom === s.nextTop && s.top > s.navBottom + 200 && s.nextIs === 'Financial Services' && s.height <= 36 && s.sticky === 'sticky');
+    check('the copy leads: the strip comes after it and before the Financial Services section', s.top === s.heroBottom && s.bottom === s.nextTop && s.top > s.navBottom + 200 && s.nextIs === 'Financial Services' && s.height <= 36 * s.grown + 1 && s.sticky === 'sticky');
     check('before the page is scrolled it lies along the bottom of the first screen, all of it showing', s.bottom === s.vh && s.top === s.vh - s.height);
     check('it scrolls, with no seam', s.moving && s.trackWide);
     check('a figure shows its value, its move, who published it and for when', s.text.includes('US 10-Yr') && s.text.includes('4.91%') && s.text.includes('-1 bp') && s.text.includes('Treasury, Nov 24') && s.text.includes('EIA, Nov 17'));
@@ -117,7 +122,13 @@ function spot(page, id) {
     {
       const at = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
       await page.mouse.move(at.x, at.y, { steps: 3 });
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(GLANCE);
+      const glanced = (await cardNow(page)).open;
+      await page.mouse.move(20, 300);
+      await page.waitForTimeout(REST);
+      check('a pointer passing over a figure opens nothing: not while it is there, and not after it has gone', !glanced && await page.evaluate(() => document.getElementById('sa-tk-card').hidden));
+      await page.mouse.move(at.x, at.y, { steps: 3 });
+      await page.waitForTimeout(REST);
       const c0 = await cardNow(page);
       check('at the bottom of the first screen a card opens upward, in one column where there is the height, every line of it in view', c0.open && c0.up && !c0.flat && c0.inView && c0.shown && c0.lastLine && !c0.scrolls && c0.clear);
       await page.mouse.move(at.x, at.y - 30);      // across the gap, onto the card
@@ -138,7 +149,7 @@ function spot(page, id) {
     // hover: the strip stops and the source card opens under the figure
     const tag = await page.evaluate(() => { const b = document.querySelector('.sa-tk-tag').getBoundingClientRect(); return { x: b.left + 20, y: b.top + 10 }; });
     await page.mouse.move(tag.x, tag.y);
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(REST);
     const about = await page.evaluate(() => {
       const card = document.getElementById('sa-tk-card');
       const links = [...card.querySelectorAll('a')];
@@ -150,7 +161,7 @@ function spot(page, id) {
     check('and the line that the tool runs on free public data', about.text.includes('This tool runs entirely on free public data. Yours could too.'));
     const p = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
     await page.mouse.move(p.x, p.y, { steps: 3 });
-    await page.waitForTimeout(250);
+    await page.waitForTimeout(REST);
     const whole = await cardNow(page);
     check('held under the menu, a card opens downward in one column and shows whole', whole.open && !whole.up && !whole.flat && whole.inView && whole.shown && whole.lastLine && !whole.scrolls);
     const c = await page.evaluate(() => {
@@ -289,7 +300,7 @@ function spot(page, id) {
     check('in a short window the strip is along the bottom of the first screen too', s.bottom === s.vh && s.top === s.heroBottom);
     const at = (await spot(page, 'ust10')) || (await spot(page, 'eurusd'));
     await page.mouse.move(at.x, at.y, { steps: 3 });
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(REST);
     const c0 = await cardNow(page);
     check('low in a short window a card opens upward, laid out wide, every line of it in view', c0.open && c0.up && c0.flat && c0.inView && c0.shown && c0.lastLine && !c0.scrolls && c0.clear);
     check('wide, the figure and its chart are on the left; low, high and change, the source and the closing line on the right', /^sa-tk-eye,sa-tk-hero/.test(c0.left) && /sa-tk-chart$/.test(c0.left) && /^sa-tk-tiles/.test(c0.right) && /sa-tk-from,sa-tk-free$/.test(c0.right));
@@ -405,19 +416,20 @@ function spot(page, id) {
       });
     });
     await page.waitForSelector('#sa-ticker.on', { timeout: 8000 });
-    await page.evaluate(() => { document.querySelector('.sa-tk-item').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
+    // (each card below is opened with a click, which opens it at once: what is in it is being read, not the hover)
+    await page.evaluate(() => { document.querySelector('.sa-tk-item').click(); });
     const s = await page.evaluate(() => ({ hit: window.__hit === 1, imgs: document.querySelectorAll('#sa-ticker img, #sa-ticker script').length, link: !!document.querySelector('#sa-tk-card a'), open: !document.getElementById('sa-tk-card').hidden }));
     check('markup in the feed is shown as text and a link that is not https is dropped', !s.hit && s.imgs === 0 && s.open && !s.link);
-    const u = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); return { cols: card.querySelectorAll('.sa-tk-col').length, bar: card.querySelectorAll('.sa-tk-bar').length, shown: card.textContent.includes('<img src=x'), styled: [...card.querySelectorAll('[style]')].every((e) => /^(width|height): \d+(px|%);$/.test(e.getAttribute('style'))) }; });
-    check('a drawn card takes only whole numbers as sizes: a bad one draws nothing', u.cols === 1 && u.bar === 0 && u.shown && u.styled);
-    const draw = (i) => page.evaluate((i) => { document.querySelectorAll('.sa-tk-item')[i].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); const card = document.getElementById('sa-tk-card'); const p = card.querySelector('.sa-tk-path'); return { hit: window.__hit === 1, imgs: card.querySelectorAll('img,script,iframe').length, line: !!card.querySelector('svg.sa-tk-line'), segs: p ? p.getAttribute('d').split('L').length : 0, chip: (card.querySelector('.sa-tk-chip') || {}).className, tiles: card.querySelectorAll('.sa-tk-tile').length, shown: card.textContent.includes('<img src=x') }; }, i);
+    const u = await page.evaluate(() => { const card = document.getElementById('sa-tk-card'); return { cols: card.querySelectorAll('.sa-tk-col').length, bar: card.querySelectorAll('.sa-tk-bar').length, shown: card.textContent.includes('<img src=x'), styled: [...card.querySelectorAll('[style]')].every((e) => /^(width|height): \d+(\.\d+)?(rem|px|%);$/.test(e.getAttribute('style'))) }; });
+    check('a drawn card takes only numbers as sizes (a column\'s height is in rem, so it grows with the page): a bad one draws nothing', u.cols === 1 && u.bar === 0 && u.shown && u.styled);
+    const draw = (i) => page.evaluate((i) => { document.querySelectorAll('.sa-tk-item')[i].click(); const card = document.getElementById('sa-tk-card'); const p = card.querySelector('.sa-tk-path'); return { hit: window.__hit === 1, imgs: card.querySelectorAll('img,script,iframe').length, line: !!card.querySelector('svg.sa-tk-line'), segs: p ? p.getAttribute('d').split('L').length : 0, chip: (card.querySelector('.sa-tk-chip') || {}).className, tiles: card.querySelectorAll('.sa-tk-tile').length, shown: card.textContent.includes('<img src=x') }; }, i);
     const v = await draw(1);
     check('a market figure with markup in it: shown as text, and only real days with real values are drawn', !v.hit && v.imgs === 0 && v.line && v.segs === 5 && v.chip === 'sa-tk-chip flat' && v.tiles === 1 && v.shown);
-    const fxCard = await page.evaluate(() => { const i = [...document.querySelectorAll('.sa-tk-item')].findIndex((e) => e.getAttribute('data-id') === 'eurusd'); document.querySelectorAll('.sa-tk-item')[i].dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); const card = document.getElementById('sa-tk-card'); return { pair: [...card.querySelectorAll('.sa-tk-pair span')].map((e) => e.textContent).join('|'), verdict: (card.querySelector('.sa-tk-verdict') || {}).textContent, big: (card.querySelector('.sa-tk-big') || {}).textContent, fits: card.scrollWidth <= card.clientWidth + 1 && [...card.querySelectorAll('.sa-tk-pair span')].every((e) => e.scrollWidth <= e.clientWidth + 1) }; });
+    const fxCard = await page.evaluate(() => { const i = [...document.querySelectorAll('.sa-tk-item')].findIndex((e) => e.getAttribute('data-id') === 'eurusd'); document.querySelectorAll('.sa-tk-item')[i].click(); const card = document.getElementById('sa-tk-card'); return { pair: [...card.querySelectorAll('.sa-tk-pair span')].map((e) => e.textContent).join('|'), verdict: (card.querySelector('.sa-tk-verdict') || {}).textContent, big: (card.querySelector('.sa-tk-big') || {}).textContent, fits: card.scrollWidth <= card.clientWidth + 1 && [...card.querySelectorAll('.sa-tk-pair span')].every((e) => e.scrollWidth <= e.clientWidth + 1) }; });
     check('the dollar card gives the rate both ways round and says which is worth more', fxCard.pair === '$1 = \u20AC0.9122|\u20AC1 = $1.0963' && fxCard.verdict === 'The euro is worth more: one euro buys $1.10.' && fxCard.big === '\u20AC0.9122' && fxCard.fits);
     const w = await draw(2);
     check('a unit the strip does not know draws no chart', !w.hit && w.imgs === 0 && !w.line);
-    await page.evaluate(() => { document.querySelector('.sa-tk-tag').dispatchEvent(new PointerEvent('pointerenter', { pointerType: 'mouse' })); });
+    await page.evaluate(() => { document.querySelector('.sa-tk-tag').click(); });
     const t = await page.evaluate(() => ({ hit: window.__hit === 1, imgs: document.querySelectorAll('#sa-ticker img, #sa-ticker script').length, links: document.querySelectorAll('#sa-tk-card a').length, items: document.querySelectorAll('#sa-tk-card li').length, bad: [...document.querySelectorAll('#sa-tk-card a')].some((a) => !/^https:/.test(a.href)) }));
     check('and the same holds for the list of sources', !t.hit && t.imgs === 0 && t.items === t.links + 1 && !t.bad);
     await ctx.close();

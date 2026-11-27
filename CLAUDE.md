@@ -27,6 +27,44 @@ lives and says which pieces are not in this repo yet.
   more than it needs. On a phone everything is one vertical stack, section by
   section: nothing sits side by side there. A change that adds a section or a tall block has to take as
   much height out somewhere else.
+- The pages grow with the window. The owner, 2026-11-27, with the site at 100%
+  beside the same page zoomed to 150%: "the site looks better at 150% size than
+  100%, there should be some adjustment. with a target market of 50-80 year olds
+  I shouldn't ask people to squint". Shown three sizes, the owner chose to match
+  the 150% view. So every size on the main pages, the scorer and the Insights
+  pages is in `rem`, and on a page whose `<html>` carries `class="sa-scale"` the
+  root font size follows the window: 16px up to a window 1255px wide (the
+  owner's own window at 150%, the size the pages were laid out for, so nothing
+  there changed), then in step with the window, so a 1920px screen at 100% shows
+  what the owner sees at 150%. It stops at 175%, and follows the window's height
+  too. `scripts/scale_css.py` holds the rule and the list of files, rewrites a
+  px size as rem, and with `--check` fails on one. Write sizes in rem (px / 16),
+  or write px and run it. What stays px: 1px and under, and the widths in
+  `@media` conditions. A size a script sets has to be in rem too
+  (`site/js/ticker.js` does this for its columns and its speed).
+  A page not in that list (each tool's own page) does not carry the mark and is
+  drawn as it always was, so it is never left with a big menu over small text.
+  Convert its styles, then mark it.
+  On a phone no text is under 13px (the owner, asked: "Yes, 13px floor"): a font
+  size under 13px is written `max(size, var(--tfloor))`, which the script does.
+  The one size let under it is the menu's five links on a phone narrower than
+  350px, set smaller so they stay on one row. On the Tools page the taller text
+  was paid for out of the gaps, so the strip still closes the first screen.
+  `tests/scale_browser.cjs` opens every page at the owner's window and the
+  owner's screen and holds that it is the same page enlarged, with nothing left
+  at its old size, and on three phones that nothing is under 13px.
+  Known and accepted: on a big screen the browser's own zoom between 100% and
+  150% changes little, because the page already fills the window.
+- A card that opens on hover waits for the pointer to rest. The owner,
+  2026-11-27: "the hover cards are very sensitive. if i even glance over it (and
+  people are likely to) it is BOOM taking up screen space. Someone should have
+  to linger on the link for just a split second for it to pop." The market
+  strip's cards open after 300ms on a figure (`LINGER` in `site/js/ticker.js`),
+  the statistics' source cards after the same (`transition-delay` in
+  `site/css/cite.css`). A click, a tap and the keyboard open one at once, and
+  it closes as it always did. `tests/ticker_browser.cjs` and
+  `tests/hero_browser.cjs` pass a pointer over one (nothing opens) and rest on
+  one (it opens).
 - The menu reads Services, Approach, Tools, About, Contact, on every page, in
   the posts' shell (`scripts/build_insights.py`) and so on every tool page. The
   owner set that order on 2026-11-26. `tests/pages_test.sh` holds it.
@@ -73,8 +111,8 @@ lives and says which pieces are not in this repo yet.
   That section is as tall as the first screen less the market strip, which comes
   next in the page, so the strip lies along the bottom of the first screen, all
   of it showing (`min-height` in `svh`, the screen as a phone shows it with its
-  own bars up; the 34px and 32px there are the strip's heights and change with
-  them). What the section holds is centred in it, and held where it stands once
+  own bars up; the 2.125rem and 2rem there are the strip's heights, 34px and 32px
+  as drawn, and change with them). What the section holds is centred in it, and held where it stands once
   a visitor touches it, so choosing a kind does not move the row just pressed.
   `tests/hero_browser.cjs` opens it at the owner's window (1255 by 607), the
   owner's phone (430 by 744) and the commonest phone (390 by 664); a phone that
@@ -118,8 +156,8 @@ lives and says which pieces are not in this repo yet.
   name about 8px tall. Shown four fixes and asked which, the owner answered "A
   with C where appropriate". So: the menu on every page shows the wordmark
   alone, cut out of its square, lettering white (`site/img/wordmark-on-dark.png`,
-  made by `scripts/logo_cutout.py`), 48px tall on a desktop and never under
-  36px; and both logos together, the SA mark on its white tile and then the
+  made by `scripts/logo_cutout.py`), 48px tall on a desktop as drawn (3rem: it
+  grows with the page) and never under 36px; and both logos together, the SA mark on its white tile and then the
   wordmark, go where there is room for both, which is the footer. The two are
   not put side by side in the menu, and `logo.jpg` is never shown directly on a
   dark page. The SA mark (`site/img/logo-square.png`) stays the picture for the
@@ -128,7 +166,11 @@ lives and says which pieces are not in this repo yet.
   The wordmark's tags and the `shared.css` link carry `?v=` and the first eight
   characters of the file's SHA-1, because the host keeps both for a year: change
   `site/css/shared.css` and the link on every page (and in
-  `scripts/build_insights.py`) must change with it.
+  `scripts/build_insights.py`) must change with it. `scripts/asset_versions.py`
+  writes the current version into every tag for the five shared files
+  (`shared.css`, `cite.css`, `insights.css`, `ticker.css`, `ticker.js`): run it
+  after changing one. `cite.css` and `insights.css` had no version at all until
+  November 2026. `tests/pages_test.sh` runs its `--check`.
   Off the site the wordmark leads too (the owner, the same day: "can i make
   sure the new logo is front and center for linkedin / google search, etc?"):
   the share picture every page names (`site/img/social-card.png`, with a `?v=`),
@@ -297,6 +339,8 @@ lives and says which pieces are not in this repo yet.
 
 ```
 python3 scripts/validate_showcase.py showcase/tools.json
+python3 scripts/scale_css.py --check
+python3 scripts/asset_versions.py --check
 python3 scripts/build_site.py --site site --out dist
 bash tests/remote_deploy_test.sh
 bash tests/feed_test.sh

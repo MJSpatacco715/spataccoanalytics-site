@@ -134,7 +134,7 @@ def block(b: dict, where: str) -> str:
 def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head: str = "", image: str = "/img/social-card.png?v=fa9978ce") -> str:
     follow = f' &middot; {sign_off_link(linkedin, "LinkedIn")}' if linkedin else ""
     return f"""<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="sa-scale">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -154,9 +154,9 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {extra_head}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=a1136c74">
-<link rel="stylesheet" href="/css/cite.css">
-<link rel="stylesheet" href="/css/insights.css">
+<link rel="stylesheet" href="/css/shared.css?v=6139e5c8">
+<link rel="stylesheet" href="/css/cite.css?v=d9368be7">
+<link rel="stylesheet" href="/css/insights.css?v=7f7e1254">
 </head>
 <body>
 <nav id="main-nav">
@@ -192,7 +192,7 @@ def sign_off_link(url: str, text: str) -> str:
     one dark blue on the navy footer. So it carries its own look: the colour
     of the line it sits in, underlined. A link off the site opens a new tab."""
     away = ' target="_blank" rel="noopener"' if url.startswith("http") else ""
-    return f'<a href="{esc(url)}"{away} style="color:inherit;text-decoration:underline;text-underline-offset:3px">{esc(text)}</a>'
+    return f'<a href="{esc(url)}"{away} style="color:inherit;text-decoration:underline;text-underline-offset:0.1875rem">{esc(text)}</a>'
 
 
 def linkedin_text(p: dict) -> str:
@@ -315,7 +315,7 @@ document.querySelectorAll('.in-filters button').forEach(function (b) {{
     s = home.read_text(encoding="utf-8")
     front = [p for p in posts if p["category"] == "practice"][:HOME_COUNT]
     if HOME_MARK in s and front:
-        teaser = ('<link rel="stylesheet" href="/css/insights.css"><section class="section-light in-home"><div class="section-inner">'
+        teaser = ('<link rel="stylesheet" href="/css/insights.css?v=7f7e1254"><section class="section-light in-home"><div class="section-inner">'
                   '<div class="section-tag">Insights</div><h2 class="section-heading section-heading-light">What the data says about practices like yours.</h2>'
                   f'<div class="accent-line"></div><div class="in-grid">{"".join(card(p) for p in front)}</div>'
                   '<p class="in-more"><a class="in-link" href="/insights/">All insights &rarr;</a></p></div></section>')

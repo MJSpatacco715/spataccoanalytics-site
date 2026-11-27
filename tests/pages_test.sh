@@ -76,8 +76,8 @@ for id in crm audit design; do
   check "a pillar links to the $id service, and the services page has it" 'grep -q "<a class=\"service-card [a-z]* reveal d[0-9]*\" href=\"/services/#$id\">" "$home" && grep -q "<fieldset class=\"sv-card reveal\" id=\"$id\" data-service=\"$id\"" "$site/services/index.html"'
 done
 check "the first screen says what we do in the owner's softer words" 'grep -q "We help advisory firms get their CRM, data and website ready before anyone asks." "$home"'
-check "on a desktop the first screen and the website screen put their figures in a column on the right" 'grep -q "@media(min-width:1080px){" "$home" && grep -q "\.hero-content{display:grid;grid-template-columns:minmax(0,1fr) 290px;" "$home" && grep -q "\.screen-inner{display:grid;grid-template-columns:minmax(0,1fr) 290px;" "$home"'
-check "on a phone the figures are one vertical stack, not side by side" 'grep -q "\.stat-bar{flex-direction:column;gap:20px}" "$home" && ! grep -q "\.hero \.stat-bar{display:grid" "$home"'
+check "on a desktop the first screen and the website screen put their figures in a column on the right" 'grep -q "@media(min-width:1080px){" "$home" && grep -q "\.hero-content{display:grid;grid-template-columns:minmax(0,1fr) 18.125rem;" "$home" && grep -q "\.screen-inner{display:grid;grid-template-columns:minmax(0,1fr) 18.125rem;" "$home"'
+check "on a phone the figures are one vertical stack, not side by side" 'grep -q "\.stat-bar{flex-direction:column;gap:1.25rem}" "$home" && ! grep -q "\.hero \.stat-bar{display:grid" "$home"'
 check "the pillars are one height with their links on one line" 'grep -q "a.service-card{display:flex;flex-direction:column;" "$home" && grep -q "\.service-go{display:block;margin-top:auto;" "$home"'
 check "there are three pillars and each is a link" '[ "$(grep -o "<a class=\"service-card " "$home" | wc -l)" = 3 ] && ! grep -q "<div class=\"service-card" "$home"'
 
@@ -173,14 +173,14 @@ check "search engines are told the LinkedIn page is the firm's" 'grep -qF "\"@ty
 signed=0; bare=0
 for f in $(grep -rl "&copy; 2026 Spatacco Analytics LLC" "$dist" --include=*.html); do
   signed=$((signed+1))
-  grep -qF "<a href=\"$li\" target=\"_blank\" rel=\"noopener\" style=\"color:inherit;text-decoration:underline;text-underline-offset:3px\">LinkedIn</a>" "$f" || { bare=$((bare+1)); echo "  no readable LinkedIn link: ${f#$dist}"; }
+  grep -qF "<a href=\"$li\" target=\"_blank\" rel=\"noopener\" style=\"color:inherit;text-decoration:underline;text-underline-offset:0.1875rem\">LinkedIn</a>" "$f" || { bare=$((bare+1)); echo "  no readable LinkedIn link: ${f#$dist}"; }
 done
 check "every page that signs off links to it, in the colour of its own footer line and underlined" '[ "$signed" -ge 6 ] && [ "$bare" = 0 ]'
 
 # --- the Insights section
 ins=0
 for f in $(grep -rl "&copy; 2026 Spatacco Analytics LLC" "$dist" --include=*.html); do
-  grep -qF "<a href=\"/insights/\" style=\"color:inherit;text-decoration:underline;text-underline-offset:3px\">Insights</a>" "$f" || { ins=$((ins+1)); echo "  no Insights link: ${f#$dist}"; }
+  grep -qF "<a href=\"/insights/\" style=\"color:inherit;text-decoration:underline;text-underline-offset:0.1875rem\">Insights</a>" "$f" || { ins=$((ins+1)); echo "  no Insights link: ${f#$dist}"; }
 done
 check "the Insights section is built and every page that signs off leads to it" '[ -s "$dist/insights/index.html" ] && [ -s "$dist/insights/feed.xml" ] && [ "$ins" = 0 ]'
 check "the first post is published at its own address and listed for search engines" '[ -s "$dist/insights/most-firms-dont-need-more-software/index.html" ] && grep -q "<loc>https://spataccoanalytics.com/insights/most-firms-dont-need-more-software/</loc>" "$dist/sitemap.xml" && grep -q "<loc>https://spataccoanalytics.com/insights/</loc>" "$dist/sitemap.xml"'
@@ -342,11 +342,11 @@ PY'
 check "its first section is as tall as the first screen less the strip, by a phone's own measure where there is one, and the strip is the next thing in the page" 'python3 - "$site/tools/index.html" <<'"'"'PY'"'"'
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
-ok = "min-height:calc(100vh - 34px)" in s and "@supports (height:100svh){.tl-hero{min-height:calc(100svh - 34px)}}" in s
-ok = ok and "min-height:calc(100vh - 32px)" in s and "@supports (height:100svh){.tl-hero{min-height:calc(100svh - 32px)}}" in s
-# the strip is 34px tall, 32px on a phone: the numbers above are its
+ok = "min-height:calc(100vh - 2.125rem)" in s and "@supports (height:100svh){.tl-hero{min-height:calc(100svh - 2.125rem)}}" in s
+ok = ok and "min-height:calc(100vh - 2rem)" in s and "@supports (height:100svh){.tl-hero{min-height:calc(100svh - 2rem)}}" in s
+# the strip is 2.125rem tall (34px as drawn), 2rem on a phone: the numbers above are its
 css = open(sys.argv[1].replace("tools/index.html", "css/ticker.css"), encoding="utf-8").read()
-ok = ok and re.search(r"\.sa-tk\{[^}]*height:34px", css) and re.search(r"@media\(max-width:768px\)\{[^@]*\.sa-tk\{[^}]*height:32px", css)
+ok = ok and re.search(r"\.sa-tk\{[^}]*height:2\.125rem", css) and re.search(r"@media\(max-width:768px\)\{[^@]*\.sa-tk\{[^}]*height:2rem", css)
 hero = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S)
 after = re.sub(r"<!--.*?-->", "", s[hero.end():], flags=re.S).lstrip() if hero else ""
 ok = ok and after.startswith("<link rel=\"stylesheet\" href=\"/css/ticker.css?v=")
@@ -380,7 +380,7 @@ if ok:
     card = re.search(r"<span class=\"sa-cite-card\" role=\"note\"><strong>[^<]{30,}</strong>.*?<span>[^<]{40,}</span><a href=\"https://[^\"]+\" target=\"_blank\" rel=\"noopener\">[^<]+</a></span>$", f, re.S)
     ok = ok and bool(card)                                                                      # the finding, who was asked, a link
 # the source cards are styled and opened on this page
-ok = ok and "href=\"/css/cite.css\"" in s and "<script src=\"/js/cite.js\"></script>" in s
+ok = ok and re.search(r"href=\"/css/cite\.css\?v=[0-9a-f]{8}\"", s) and "<script src=\"/js/cite.js\"></script>" in s
 sys.exit(0 if ok else 1)
 PY
   then figs_ok=$((figs_ok+1)); else echo "  the opening figure is not right on /$page/"; fi
@@ -450,7 +450,7 @@ PY
 done
 check "every page shows the wordmark in its menu and both logos in its footer, at the picture's current address (now ?v=$vword): $logos_ok of $logo_pages" '[ "$logos_ok" = "$logo_pages" ]'
 check "the home page no longer carries the logo written into the page twice (it is now $(wc -c < "$home") bytes)" '[ "$(wc -c < "$home")" -lt 60000 ]'
-check "the menu shows it 48px tall, and the bar is no taller for it" 'grep -q "nav .logo{height:48px;width:auto;display:block}" "$site/css/shared.css" && grep -q "nav .logo{height:48px;width:auto;display:block}" "$home" && grep -q "align-items:center;padding:14px 48px;" "$site/css/shared.css" && grep -q "align-items:center;padding:14px 48px;" "$home"'
+check "the menu shows it 48px tall as drawn (3rem), and the bar is no taller for it" 'grep -q "nav .logo{height:3rem;width:auto;display:block}" "$site/css/shared.css" && grep -q "nav .logo{height:3rem;width:auto;display:block}" "$home" && grep -q "align-items:center;padding:0.875rem 3rem;" "$site/css/shared.css" && grep -q "align-items:center;padding:0.875rem 3rem;" "$home"'
 # --- the picture a link to the site shows
 # The owner, 2026-11-26: "can i make sure the new logo is front and center for
 # linkedin / google search, etc?" The share picture led with the SA mark and the
@@ -483,12 +483,26 @@ PY'
 stale=$(grep -rlE "href=\"/css/shared\.css" "$dist" --include=*.html | while read -r f; do grep -q "href=\"/css/shared.css?v=$vcss\"" "$f" || echo "$f"; done | wc -l)
 linked=$(grep -rlE "href=\"/css/shared\.css" "$dist" --include=*.html | wc -l)
 check "every page that uses the shared stylesheet asks for its current version (now ?v=$vcss): $linked pages" '[ "$linked" -ge 8 ] && [ "$stale" = 0 ]'
+# The same goes for every stylesheet and script the pages share (scripts/asset_versions.py):
+# the source cards' and the Insights pages' had no version at all until November 2026.
+check "every shared stylesheet and script is asked for by its current version: $(python3 "$here/scripts/asset_versions.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/asset_versions.py" --check >/dev/null'
+check "and the built pages carry those versions, the Insights pages and each tool page included" 'v1=$(sha1sum "$site/css/cite.css" | cut -c1-8); v2=$(sha1sum "$site/css/insights.css" | cut -c1-8); ! grep -rlE "href=\"/css/(cite|insights)\.css\"" "$dist" --include=*.html | grep -q . && grep -q "href=\"/css/cite.css?v=$v1\"" "$dist/insights/index.html" && grep -q "href=\"/css/insights.css?v=$v2\"" "$dist/insights/index.html" && grep -q "href=\"/css/cite.css?v=$v1\"" "$dist/tools/football/nfl-lines-tracker.html"'
+
+# --- the page grows with the window (scripts/scale_css.py)
+# The owner, 2026-11-27, with the site at 100% beside the same page at 150%: "the site looks
+# better at 150% size than 100%, there should be some adjustment. with a target market of
+# 50-80 year olds I shouldn't ask people to squint". Chosen of three: match the 150% view.
+check "every size on the main pages, the scorer and the Insights pages is in rem, and each says it grows: $(python3 "$here/scripts/scale_css.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/scale_css.py" --check >/dev/null'
+check "the rule that grows them is the one written down, in the shared stylesheet and on the two pages that do not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -qF "$r" "$site/tools/website-scorer.html"'
+check "on a phone no text is under 13px: the floor is set in the same three places" 'f="@media(max-width:760px){:root{--tfloor:0.8125rem}}"; grep -qF "$f" "$site/css/shared.css" && grep -qF "$f" "$home" && grep -qF "$f" "$site/tools/website-scorer.html"'
+check "the Insights pages grow too, and a tool page built with the tools head does not until its own styles are in rem" 'grep -q "<html lang=\"en\" class=\"sa-scale\">" "$dist/insights/index.html" && ! grep -q "sa-scale" "$dist/tools/football/nfl-lines-tracker.html"'
 if node -e "require('playwright')" 2>/dev/null; then
   (cd "$dist" && exec python3 -m http.server 18747 --bind 127.0.0.1 >/dev/null 2>&1) & lpid=$!
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18747/" && break; sleep 0.1; done
   lout=$(node "$here/tests/logo_browser.cjs" http://127.0.0.1:18747 2>&1); lcode=$?
   hout=$(node "$here/tests/hero_browser.cjs" http://127.0.0.1:18747 2>&1); hcode=$?
   sout=$(node "$here/tests/scorer_browser.cjs" http://127.0.0.1:18747 2>&1); scode=$?
+  zout=$(node "$here/tests/scale_browser.cjs" http://127.0.0.1:18747 2>&1); zcode=$?
   kill "$lpid" 2>/dev/null
   check "the logos show in a browser: $(printf '%s' "$lout" | tail -1)" '[ $lcode -eq 0 ]'
   [ $lcode -eq 0 ] || printf '%s\n' "$lout"
@@ -496,6 +510,8 @@ if node -e "require('playwright')" 2>/dev/null; then
   [ $hcode -eq 0 ] || printf '%s\n' "$hout"
   check "the scorer looks a firm name up in a browser: $(printf '%s' "$sout" | tail -1)" '[ $scode -eq 0 ]'
   [ $scode -eq 0 ] || printf '%s\n' "$sout"
+  check "the pages grow with the window, and a phone shows no text under 13px: $(printf '%s' "$zout" | tail -1)" '[ $zcode -eq 0 ]'
+  [ $zcode -eq 0 ] || printf '%s\n' "$zout"
 else
   echo "no browser here: the logos were not opened"
 fi

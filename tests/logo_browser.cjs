@@ -23,6 +23,9 @@ function measure(page) {
     const fm = document.querySelector('footer img.footer-mark'), fl = document.querySelector('footer img.footer-logo');
     return {
       nav: nav.offsetHeight, logo: l, loaded: img.naturalWidth > 0, src: img.getAttribute('src'),
+      // the page grows with the window where it says so (scripts/scale_css.py): sizes are judged against that
+      grown: parseFloat(getComputedStyle(document.documentElement).fontSize) / 16,
+      rows: new Set(links.map((x) => Math.round(x.top))).size, linkPx: parseFloat(getComputedStyle(nav.querySelector('.nav-links a')).fontSize),
       clearShare: clear / px, lightShare: light / Math.max(solid, 1),
       corner: d[3],
       linksIn: links.length === 5 && links.every((x) => x.left >= 0 && x.right <= window.innerWidth),
@@ -48,7 +51,7 @@ function measure(page) {
       const m = await measure(page);
       check(path + ': the menu shows the wordmark, loaded, at least 44px tall and 130px wide (it is ' + m.logo.w + ' by ' + m.logo.h + ')', m.loaded && m.logo.h >= 44 && m.logo.w >= 130);
       check(path + ': it is the wordmark alone on clear ground with light lettering, not a white square', /^\/img\/wordmark-on-dark\.png\?v=[0-9a-f]{8}$/.test(m.src || '') && m.corner === 0 && m.clearShare > 0.35 && m.lightShare > 0.6 && m.logo.w > m.logo.h * 2.5);
-      check(path + ': the bar is no taller for it (' + m.nav + 'px) and the five links sit clear of it', m.nav <= 80 && m.linksIn && m.apart);
+      check(path + ': the bar is no taller for it (' + m.nav + 'px, the page drawn at ' + m.grown.toFixed(2) + ') and the five links sit clear of it', m.nav <= 80 * m.grown + 1 && m.linksIn && m.apart);
       check(path + ': the footer signs off with the SA mark and then the wordmark, both loaded', !!m.mark && !!m.word && m.mark.loaded && m.word.loaded && m.mark.w === m.mark.h && m.mark.h >= 36 && m.word.h >= 32 && m.mark.right <= m.word.left);
     }
     await ctx.close();
@@ -64,6 +67,8 @@ function measure(page) {
       const m = await measure(page);
       check(path + ' at ' + w + 'px: the wordmark is at least 36px tall, the five links are in view under it, and the page is no wider', m.loaded && m.logo.h >= 36 && m.logo.w >= 110 && m.linksIn && m.apart && m.pageWide);
       check(path + ' at ' + w + 'px: the footer pair fits the screen', !!m.mark && !!m.word && m.mark.left >= 0 && m.word.right <= w);
+      // the smallest text a phone shows is 13px; on a phone narrower than any sold now the five are set smaller, not wrapped
+      check(path + ' at ' + w + 'px: the five links share one row, at ' + m.linkPx + 'px', m.rows === 1 && (w >= 360 ? m.linkPx >= 13 : m.linkPx >= 11));
     }
     await ctx.close();
   }
