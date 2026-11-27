@@ -1,43 +1,43 @@
 /* The Insights section: the feed, a post, and the homepage teaser. */
-.page-hero-tag a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(61,216,216,.4)}
+.page-hero-tag a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(var(--cy),.4)}
 .in-feed{max-width:68.75rem;margin:0 auto}
 .in-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(17.5rem,1fr));gap:1.5rem}
-.in-card{display:flex;flex-direction:column;gap:0.625rem;padding:1.625rem 1.5rem;background:#FFFFFF;border:1px solid #0F1B2D;text-decoration:none;color:#334155;transition:transform .2s,box-shadow .2s}
-.in-card:hover{transform:translateY(-0.1875rem);box-shadow:0 0.625rem 1.75rem rgba(15,27,45,.12)}
+.in-card{display:flex;flex-direction:column;gap:0.625rem;padding:1.625rem 1.5rem;background:#FFFFFF;border:1px solid var(--navy);text-decoration:none;color:#334155;transition:transform .2s,box-shadow .2s}
+.in-card:hover{transform:translateY(-0.1875rem);box-shadow:0 0.625rem 1.75rem rgba(var(--nv),.12)}
 .in-card[hidden]{display:none}
-.in-card h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.5625rem;line-height:1.2;color:#0F1B2D}
+.in-card h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.5625rem;line-height:1.2;color:var(--navy)}
 .in-card p{font-size:0.9375rem;line-height:1.6}
 .in-tag{font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.125rem;text-transform:uppercase;font-weight:600;color:#0B7A7A}
 .in-date{margin-top:auto;font-size:0.8125rem;color:#64748B}
 .in-filters{display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1.75rem}
-.in-filters button{font-family:'DM Sans',sans-serif;font-size:0.8125rem;font-weight:600;letter-spacing:1px;padding:0.625rem 1rem;min-height:2.75rem;background:#FFFFFF;color:#0F1B2D;border:1px solid #0F1B2D;cursor:pointer}
-.in-filters button.on{background:#0F1B2D;color:#FFFFFF}
+.in-filters button{font-family:'DM Sans',sans-serif;font-size:0.8125rem;font-weight:600;letter-spacing:1px;padding:0.625rem 1rem;min-height:2.75rem;background:#FFFFFF;color:var(--navy);border:1px solid var(--navy);cursor:pointer}
+.in-filters button.on{background:var(--navy);color:#FFFFFF}
 .in-follow{margin-top:1.75rem;font-size:0.9375rem;color:#475569}
-.in-follow a,.in-link{color:#0F1B2D;font-weight:600;text-underline-offset:0.1875rem}
+.in-follow a,.in-link{color:var(--navy);font-weight:600;text-underline-offset:0.1875rem}
 .in-more{margin-top:1.75rem}
 /* On the home page the teaser sits on the site's navy, as every section there does. (The owner,
    2026-11-27, of the one light section the home page had: "weirdly all white in a sea of blue".) */
-.section-light.in-home{background:#0F1B2D}
+.section-light.in-home{background:var(--navy)}
 .in-home .section-heading-light{color:#FFFFFF}
-.in-home .in-card{background:rgba(255,255,255,0.045);border-color:rgba(203,213,225,0.16);color:#CBD5E1}
+.in-home .in-card{background:rgba(var(--lift),0.045);border-color:rgba(var(--line),0.16);color:var(--g2)}
 .in-home .in-card:hover{box-shadow:0 0.625rem 1.75rem rgba(0,0,0,.35)}
 .in-home .in-card h3{color:#FFFFFF}
-.in-home .in-tag{color:#3DD8D8}
-.in-home .in-date{color:#94A3B8}
-.in-home .in-link{color:#E2E8F0}
+.in-home .in-tag{color:var(--cyan)}
+.in-home .in-date{color:var(--text-light)}
+.in-home .in-link{color:var(--g1)}
 .in-post{max-width:45rem;margin:0 auto;font-size:1.125rem;line-height:1.75;color:#334155}
 .in-post>*+*{margin-top:1.375rem}
-.in-summary{font-family:'Cormorant Garamond',serif;font-size:1.625rem;line-height:1.4;color:#0F1B2D}
-.in-post h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.875rem;line-height:1.25;color:#0F1B2D;margin-top:2.5rem}
+.in-summary{font-family:'Cormorant Garamond',serif;font-size:1.625rem;line-height:1.4;color:var(--navy)}
+.in-post h2{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.875rem;line-height:1.25;color:var(--navy);margin-top:2.5rem}
 .in-post ul{padding-left:1.375rem}
 .in-post li+li{margin-top:0.5rem}
-.in-post blockquote{border-left:0.1875rem solid #3DD8D8;padding:0.25rem 0 0.25rem 1.375rem;font-family:'Cormorant Garamond',serif;font-size:1.625rem;line-height:1.4;color:#0F1B2D}
+.in-post blockquote{border-left:0.1875rem solid var(--cyan);padding:0.25rem 0 0.25rem 1.375rem;font-family:'Cormorant Garamond',serif;font-size:1.625rem;line-height:1.4;color:var(--navy)}
 .in-post blockquote cite{display:block;margin-top:0.625rem;font-family:'DM Sans',sans-serif;font-size:0.875rem;font-style:normal;color:#64748B}
 .in-post figure img{max-width:100%;height:auto;display:block}
 .in-post figcaption{font-size:0.875rem;color:#64748B;margin-top:0.5rem}
-.in-stat{padding:1.375rem 1.5rem;background:#0F1B2D;color:#FFFFFF}
-.in-stat-num{font-family:'Cormorant Garamond',serif;font-size:3.25rem;line-height:1;color:#3DD8D8}
-.in-stat-label{font-size:1rem;line-height:1.5;margin-top:0.5rem;color:#E2E8F0}
-.in-end{margin-top:3rem;padding-top:1.75rem;border-top:1px solid #0F1B2D;font-size:1rem}
+.in-stat{padding:1.375rem 1.5rem;background:var(--navy);color:#FFFFFF}
+.in-stat-num{font-family:'Cormorant Garamond',serif;font-size:3.25rem;line-height:1;color:var(--cyan)}
+.in-stat-label{font-size:1rem;line-height:1.5;margin-top:0.5rem;color:var(--g1)}
+.in-end{margin-top:3rem;padding-top:1.75rem;border-top:1px solid var(--navy);font-size:1rem}
 .in-end p+p{margin-top:1rem}
 .in-end .btn-primary{margin-right:1rem}

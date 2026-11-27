@@ -8,7 +8,7 @@ html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.937
 :root{--tfloor:0px}
 @media(max-width:760px){:root{--tfloor:0.8125rem}}
 ::selection { background:rgba(61,216,216,0.3); color:#0F1B2D; }
-body { font-family:'DM Sans',sans-serif; color:#334155; background:#0F1B2D; -webkit-font-smoothing:antialiased; }
+body { font-family:'DM Sans',sans-serif; color:#334155; background:var(--navy); -webkit-font-smoothing:antialiased; }
 
 :root {
   --navy:#0F1B2D; --navy-light:#162640; --navy-mid:#1C3352;
@@ -18,6 +18,13 @@ body { font-family:'DM Sans',sans-serif; color:#334155; background:#0F1B2D; -web
   --slate:#64748B; --charcoal:#1E293B; --text:#334155; --text-light:#94A3B8;
   --border:#E2E8F0; --red:#C8102E;
 }
+
+/* theme:begin (written by scripts/theme_css.py) */
+:root,.sa-dark{--navy:#0F1B2D;--navy-light:#162640;--navy-mid:#1C3352;--cyan:#3DD8D8;--cyan-light:#5EE4E4;--purple:#7B5CFF;--purple-light:#9B82FF;--blue:#5B8DEF;--white:#FFFFFF;--text-light:#94A3B8;--g1:#E2E8F0;--g2:#CBD5E1;--g3:#A9B8CC;--g4:#8FA0B8;--cy:61,216,216;--lift:255,255,255;--line:203,213,225;--nv:15,27,45;--pu:123,92,255;--bl:91,141,239}
+:root[data-theme="light"]{--navy:#F6F8FB;--navy-light:#FFFFFF;--navy-mid:#E9EEF5;--cyan:#006E7C;--cyan-light:#005A66;--purple:#5B3FE0;--purple-light:#6A4DF0;--blue:#2A5BC7;--white:#0F1B2D;--text-light:#52627A;--g1:#1E293B;--g2:#334155;--g3:#475569;--g4:#52627A;--cy:0,110,124;--lift:15,27,45;--line:15,27,45;--nv:246,248,251;--pu:91,63,224;--bl:42,91,199}
+:root[data-theme="light"] nav,:root[data-theme="light"] footer,:root[data-theme="light"] .sa-dark,:root[data-theme="light"] .section-light{--navy:#0F1B2D;--navy-light:#162640;--navy-mid:#1C3352;--cyan:#3DD8D8;--cyan-light:#5EE4E4;--purple:#7B5CFF;--purple-light:#9B82FF;--blue:#5B8DEF;--white:#FFFFFF;--text-light:#94A3B8;--g1:#E2E8F0;--g2:#CBD5E1;--g3:#A9B8CC;--g4:#8FA0B8;--cy:61,216,216;--lift:255,255,255;--line:203,213,225;--nv:15,27,45;--pu:123,92,255;--bl:91,141,239}
+:root[data-theme="light"] nav{background:rgba(15,27,45,0.97)}
+/* theme:end */
 
 /* ===== ANIMATIONS ===== */
 @keyframes fadeUp { from{opacity:0;transform:translateY(2rem)} to{opacity:1;transform:translateY(0)} }
@@ -31,7 +38,7 @@ body { font-family:'DM Sans',sans-serif; color:#334155; background:#0F1B2D; -web
 .reveal.d15{transition-delay:.15s} .reveal.d20{transition-delay:.2s}
 
 /* ===== NAV ===== */
-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:0.875rem 3rem;background:rgba(15,27,45,0.85);backdrop-filter:blur(1rem);-webkit-backdrop-filter:blur(1rem);border-bottom:1px solid rgba(61,216,216,0.08);opacity:0;transform:translateY(-0.75rem);transition:opacity .6s,transform .6s}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;align-items:center;padding:0.875rem 3rem;background:rgba(var(--nv),0.85);backdrop-filter:blur(1rem);-webkit-backdrop-filter:blur(1rem);border-bottom:1px solid rgba(var(--cy),0.08);opacity:0;transform:translateY(-0.75rem);transition:opacity .6s,transform .6s}
 nav.loaded{opacity:1;transform:translateY(0)}
 /* The menu's logo is the wordmark alone, cut out of its white square and made for
    dark ground (scripts/logo_cutout.py). It was a 36px white square with the name
@@ -39,7 +46,7 @@ nav.loaded{opacity:1;transform:translateY(0)}
 nav .brand{display:block;line-height:0}
 nav .logo{height:3rem;width:auto;display:block}
 nav .nav-links{display:flex;gap:1.875rem;align-items:center}
-nav .nav-links a{font-size:0.875rem;letter-spacing:0.125rem;text-transform:uppercase;color:#CBD5E1;text-decoration:none;font-weight:600;padding:0.375rem 0;border-bottom:0.125rem solid transparent;transition:color .3s,border-color .3s}
+nav .nav-links a{font-size:0.875rem;letter-spacing:0.125rem;text-transform:uppercase;color:var(--g2);text-decoration:none;font-weight:600;padding:0.375rem 0;border-bottom:0.125rem solid transparent;transition:color .3s,border-color .3s}
 nav .nav-links a:hover{color:var(--cyan)}
 nav .nav-links a.active{color:var(--cyan);border-bottom-color:var(--cyan)}
 nav .nav-links a.unleash-link{color:var(--red);font-weight:700;letter-spacing:0.1875rem;text-shadow:0 0 0.5rem rgba(200,16,46,0.3);transition:color .3s,text-shadow .3s}
@@ -49,7 +56,7 @@ nav .nav-links a.unleash-link:hover{color:#FF1744;text-shadow:0 0 1rem rgba(200,
    source in view and a source card behind it (css/cite.css), as the home page's
    figures have. The owner's standard, 2026-11-26. */
 /* (z-index: its card opens over whatever follows it in the section, which is drawn later) */
-.hero-stat{z-index:5;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:1.125rem;align-items:center;max-width:33.75rem;margin-top:1.625rem;padding-top:1.25rem;border-top:1px solid rgba(61,216,216,0.14);opacity:0;animation:fadeUp .9s .7s forwards}
+.hero-stat{z-index:5;display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:1.125rem;align-items:center;max-width:33.75rem;margin-top:1.625rem;padding-top:1.25rem;border-top:1px solid rgba(var(--cy),0.14);opacity:0;animation:fadeUp .9s .7s forwards}
 .hero-stat .stat-num{grid-row:1 / span 2;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:3.125rem;line-height:1;color:var(--cyan);font-variant-numeric:lining-nums}
 .hero-stat .stat-label{font-size:max(0.75rem,var(--tfloor,0px));line-height:1.5;letter-spacing:0.09375rem;text-transform:uppercase;color:var(--text-light)}
 .hero-stat .sa-cite-src{justify-self:start;margin-top:0.3125rem}
@@ -71,13 +78,15 @@ nav .nav-links a.unleash-link:hover{color:#FF1744;text-shadow:0 0 1rem rgba(200,
 .section-light{background:var(--off-white);padding:6.25rem 3rem}
 .section-inner{max-width:68.75rem;margin:0 auto}
 .section-tag{font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.1875rem;text-transform:uppercase;color:var(--cyan);font-weight:600;margin-bottom:1rem}
+/* (on a light section the bright cyan cannot be read: a teal) */
+.section-light .section-tag{color:#007482}
 .section-heading{font-family:'Cormorant Garamond',serif;font-weight:400;line-height:1.25;margin-bottom:1.25rem}
 .section-heading-dark{color:var(--white);font-size:clamp(1.75rem,3.5vw,2.625rem)}
 .section-heading-light{color:var(--charcoal);font-size:clamp(1.75rem,3.5vw,2.625rem)}
 .accent-line{width:3rem;height:0.125rem;background:linear-gradient(135deg,var(--cyan),var(--purple));margin-bottom:3rem}
 
 /* ===== FOOTER ===== */
-footer{background:var(--navy);border-top:1px solid rgba(61,216,216,0.1);padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+footer{background:var(--navy);border-top:1px solid rgba(var(--cy),0.1);padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
 /* The footer signs off with the wordmark. The SA mark on its white tile stands at the far right, after the line of
    text, as a reference: beside the wordmark the two competed (the owner, 2026-11-27: "move it to the right side so
    it's more of a reference"). */
@@ -90,7 +99,7 @@ footer a:hover{color:var(--cyan)}
 
 /* ===== PAGE HERO (for inner pages) ===== */
 .page-hero{padding:10rem 3rem 5rem;background:linear-gradient(170deg,var(--navy) 0%,var(--navy-light) 60%,var(--navy-mid) 100%);position:relative;overflow:hidden}
-.page-hero::before{content:'';position:absolute;top:-12.5rem;right:-12.5rem;width:37.5rem;height:37.5rem;border-radius:50%;background:radial-gradient(circle,rgba(61,216,216,0.06) 0%,transparent 70%);animation:glowPulse 6s ease-in-out infinite}
+.page-hero::before{content:'';position:absolute;top:-12.5rem;right:-12.5rem;width:37.5rem;height:37.5rem;border-radius:50%;background:radial-gradient(circle,rgba(var(--cy),0.06) 0%,transparent 70%);animation:glowPulse 6s ease-in-out infinite}
 .page-hero .page-hero-inner{max-width:56.25rem;margin:0 auto;position:relative;z-index:2}
 .page-hero .page-hero-tag{display:inline-block;font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.1875rem;text-transform:uppercase;color:var(--cyan);font-weight:600;margin-bottom:1rem;opacity:0;animation:slideRight .8s .3s forwards}
 .page-hero h1{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(2.25rem,4.5vw,3.5rem);line-height:1.12;color:var(--white);margin-bottom:1.25rem;opacity:0;animation:fadeUp .9s .4s forwards}
@@ -100,7 +109,7 @@ footer a:hover{color:var(--cyan)}
 
 /* ===== BUTTONS ===== */
 .btn-primary{display:inline-block;font-size:max(0.75rem,var(--tfloor,0px));letter-spacing:0.15625rem;text-transform:uppercase;color:var(--navy);font-weight:600;text-decoration:none;background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 50%,var(--purple) 100%);padding:1.125rem 3rem;transition:all .3s}
-.btn-primary:hover{transform:translateY(-0.125rem);box-shadow:0 0.5rem 1.5rem rgba(61,216,216,0.25)}
+.btn-primary:hover{transform:translateY(-0.125rem);box-shadow:0 0.5rem 1.5rem rgba(var(--cy),0.25)}
 
 /* ===== RESPONSIVE ===== */
 @media(max-width:768px){
