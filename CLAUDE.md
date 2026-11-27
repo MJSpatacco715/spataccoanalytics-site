@@ -276,6 +276,14 @@ lives and says which pieces are not in this repo yet.
   page is never offered as a firm's site. What the search wrote is shown as
   text, never as markup. When the lookup cannot run (the relay not pasted in
   yet, a daily limit) the visitor is asked for the address instead.
+  The whole of it works from the keyboard. The owner, 2026-11-27: "when i type
+  a firm in and hit enter nothing happens. I shouldn't ask people to click
+  confirm with mouse if they prefer keyboard entry". Enter in the website or
+  the LinkedIn field does what the Analyze button does, and when the matches
+  come the likeliest one's button has the keyboard, so Enter again scores it.
+  While it looks, the line says that choices come next (the owner, the same
+  day: "looking for ... and will give you options to choose from"), so nobody
+  waits thinking a score has started on a guess.
   `tests/scorer_browser.cjs` opens it with the relay stood in for: no test runs
   a real lookup or a real score.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
