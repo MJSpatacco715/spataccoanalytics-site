@@ -115,15 +115,16 @@ lives and says which pieces are not in this repo yet.
   begin with. Every tool is of exactly one kind; a platform that runs privately
   is filed with what it is for (the CRM under Business, the league platform and
   the golf pick'em under Sports). Do not add a fourth kind or an "All".
-  A tile goes to its tool, or, for a platform that runs privately, to where it
-  is described lower down. A tool added to the page needs a tile, and a tile
-  needs its tool: `tests/pages_test.sh` fails until they match.
+  A tile goes to its tool, or, for a platform that runs privately, opens what
+  it is (its address is still its card lower down, `#built-...`, which is where
+  it goes without the script). A tool added to the page needs a tile, and a
+  tile needs its tool: `tests/pages_test.sh` fails until they match.
   A tile says what it is. The owner, 2026-11-27, of the Business tools on a
   phone: "RIA digital presence scorecard and Resume parser should be
   bigger/stand alone there as interactive tools or named as interactive versus
   merely descriptive". So a tool a visitor can use now (`tl-live`) has a filled
   badge and says "Interactive: try it now", and a platform described lower down
-  (`tl-see`) is quieter and says "Built to order". Which one a tile is follows
+  (`tl-see`) is quieter and stands under "Built to order". Which one a tile is follows
   from where it leads (`#built-...` is described), and in each kind the tools to
   use come first. Where the kind chosen has four tools or fewer (Business,
   Movies) the tiles are large and the words show, the tools to use the larger;
@@ -135,12 +136,28 @@ lives and says which pieces are not in this repo yet.
   delineation beyond just the blue logo/icon"). The chips stand under the words
   "Browse by category" and each says how many tools it holds; the tiles stand
   in two named groups, the tools to use under "Interactive" and the platforms
-  under "Built to order", whose tiles are in a dashed line and say "Details".
-  From 761px the two groups are side by side, which costs one line of height.
-  On a phone, which has none to spare, the chips fill the row unlabelled, the
-  tools to use lead without a heading and one named line parts them from the
-  platforms; the same height came out of the gaps. A kind with no platform
-  (Movies) shows no second group.
+  under "Built to order", whose tiles are in a dashed line.
+  The platforms are a level down, and each is a press with a caret. The two
+  groups stood side by side from 761px, the platforms' tiles saying "Details"
+  with a down arrow and jumping to their cards, until the owner, 2026-11-27, of
+  that group: "this ... should be down a level and should have the commonly
+  understood (theres text if you click here) carrot". So "Built to order" is
+  one slim row under the tools, its name at its left, and a platform's tile
+  ends in a caret (`.tl-caret`). Pressed, what it is opens under the row
+  (`#tl-more`): its card's heading, two sentences and three figures, "Ask for a
+  walkthrough", and "What it does", which goes to the card with its list open.
+  The words are read from the card when the tile is pressed, so there is one
+  copy of them. One is open at a time; pressed again, or another kind chosen,
+  it closes. Opening one may push the strip off the first screen (the visitor
+  asked for the text); closed, the strip still closes the first screen with
+  every kind chosen, and the row for it was paid for on a short window by
+  lowering the small tiles (`min-height` in the two short-window rules, one by
+  `max-height` and one by `min-aspect-ratio` for the same window enlarged).
+  "What it does" on a card lower down wears the same caret: it was a plus sign.
+  On a phone, which has no height to spare, the chips fill the row unlabelled,
+  the tools to use lead without a heading and one named line parts them from
+  the platforms, which share a row; the same height came out of the gaps. A
+  kind with no platform (Movies) shows no second group.
   The scorecard's tile and its card are named as the rest of the site names it,
   Free Website Score, with "The RIA Digital Presence Scorecard" under the name
   (the owner: "RIA digital scorecard should also be clear that this is THE same
