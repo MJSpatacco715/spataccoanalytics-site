@@ -476,6 +476,43 @@ lives and says which pieces are not in this repo yet.
   it knows a score by how its instructions begin and by their length, and both
   held (`tests/worker_test.mjs`, and `tests/scorer_browser.cjs` holds the
   length).
+  The results open on the firm. The owner, 2026-11-27: "assessment results
+  should show firm logo, website should be a link, some small info about
+  discerned (or taken from Taccobox CRM's known info about the firm) qualities
+  and specialties the firm holds". The scoring pass is asked for them (the
+  firm's place, the year it was founded, up to four phrases for what it is
+  known for, its logo's address, and the pages it read), and the header shows
+  the logo on a white tile, the site as a link, the place and the year, and the
+  phrases as chips. It is all discerned from the firm's own site: this public
+  page cannot read the owner's CRM, and must not show a visitor what is in it.
+  A firm's assets are never shown, a phrase too long is cut at a word, and a
+  logo that will not load gives way to the site's icon and then to the firm's
+  initials (`showLogo`). The record and the lead keep the profile
+  (`lead_profile`), for the CRM.
+  What to do about it comes straight under the score. It was the last thing on
+  the page; the owner: "the what to do about it and call to action are too low.
+  prospect shouldn't be dragged to the bottom of the page to buy if they like
+  what they see ... put it above exec summary and beneath scorer". The score's
+  card gave up height for it (`.score-card`), the band (`#next-band`) shows
+  locked or not, and at the owner's window both are on the first screen.
+  The PDF scorecard is laid out by measure. The owner, of the first one: "the
+  PDF output from the scorer SUCKS" (it printed wrong characters for its
+  markers, set its label over the firm's name and each bar over its own note,
+  had no footer on its first page and left a second page nearly empty). In
+  `generatePDF` every block knows its height and asks for room before it is
+  drawn, every word goes through `pdfText` (the built-in typefaces draw Western
+  European letters only: a curly quote or an arrow printed as two wrong
+  characters), and markers are drawn, never typed. Its order is the page's: the
+  site's wordmark on its navy, who it is for, the score, a held rating, what to
+  do about it with a link, then the summary and the reasons, with a foot on
+  every page. `tests/scorer_browser.cjs` reads every word, bar and link off the
+  library as it is drawn and fails if a word is one the typeface cannot draw,
+  if words are set over words, or if a bar runs through a line. When its layout
+  changes, make one and look at it.
+  The PDF library is the site's own file, `site/js/vendor/jspdf-4.2.1.umd.min.js`
+  (MIT, its licence beside it), fetched when the button is first pressed. It was
+  a script from another site's server in the page's head, loaded by every
+  visitor. Its version is in its name, so a newer one is a new address.
   Its marks are drawn: a globe for a website and LinkedIn's own mark, in
   LinkedIn's blue with white letters, wherever LinkedIn is named with a mark
   (the owner: "use the Linkedin Logo on the page where appropriate instead of a

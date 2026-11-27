@@ -20,7 +20,6 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Spatacco Analytics: websites, CRM, and data for independent advisors">
 <meta name="twitter:card" content="summary_large_image">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -242,7 +241,19 @@
   .res-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem; }
   .res-eyebrow { font-size: max(0.6875rem,var(--tfloor,0px)); font-weight: 600; letter-spacing: 0.1875rem; color: var(--teal); text-transform: uppercase; margin-bottom: 0.375rem; }
   .res-firm-name { font-family: var(--serif); font-size: 2.25rem; font-weight: 400; color: var(--white); line-height: 1.1; margin-bottom: 0.25rem; }
-  .res-firm-url { font-size: max(0.8125rem,var(--tfloor,0px)); color: var(--text-light); overflow-wrap: anywhere; }
+  .res-firm { display: flex; align-items: flex-start; gap: 1rem; min-width: 0; flex: 1 1 22rem; }
+  .res-firm-text { min-width: 0; }
+  /* the firm's own logo, on a white tile as the footer shows ours: most logos are drawn for a white page */
+  .res-logo { flex: none; width: 4rem; height: 4rem; border-radius: 0.5rem; background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .res-logo img { max-width: 100%; max-height: 100%; padding: 0.375rem; object-fit: contain; display: block; }
+  .res-logo.mono { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--teal); font-family: var(--serif); font-size: 1.75rem; }
+  .res-firm-line { font-size: max(0.875rem,var(--tfloor,0px)); color: var(--text-light); line-height: 1.5; }
+  .res-firm-url { color: var(--teal); text-decoration: none; border-bottom: 1px solid var(--teal-border); overflow-wrap: anywhere; }
+  .res-firm-url:hover { color: var(--white); border-color: var(--white); }
+  .res-firm-url:not([href]) { color: var(--text-light); border: 0; }
+  .res-chips { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 0.5rem; }
+  .res-chips span { padding: 0.125rem 0.625rem; border: 1px solid var(--border); border-radius: 1.25rem; font-size: max(0.75rem,var(--tfloor,0px)); color: var(--text-mid); background: rgba(255,255,255,0.04); }
+  .res-chips:empty { display: none; }
   .res-meta { text-align: right; font-size: max(0.75rem,var(--tfloor,0px)); color: var(--text-light); line-height: 1.7; }
 
   /* SCORE OVERVIEW */
@@ -251,6 +262,22 @@
   .score-big-num { font-family: var(--serif); font-size: 4.5rem; font-weight: 300; line-height: 1; margin-bottom: 0.25rem; font-variant-numeric: lining-nums; }
   .score-big-denom { font-size: 0.875rem; color: var(--text-light); }
   .score-big-tier { margin-top: 0.75rem; }
+  /* the score's own card is no taller than it needs: the height it gave up is where the call to action went */
+  .score-card { padding: 1.25rem 1.5rem; margin-bottom: 0.875rem; }
+  .score-card .card-label { margin-bottom: 0.75rem; }
+  .score-card .score-overview { grid-template-columns: 8.5rem 1fr; gap: 1.5rem; }
+  .score-card .score-big { padding: 0.875rem 0.75rem; }
+  .score-card .score-big-num { font-size: 3.5rem; margin-bottom: 0.125rem; }
+  .score-card .score-big-tier { margin-top: 0.5rem; }
+  .score-card .score-groups { gap: 0.75rem; }
+  .score-card .lock-note { font-size: 1.25rem; line-height: 1.4; }
+  .next-band { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem 1.5rem; flex-wrap: wrap; padding: 1rem 1.5rem; margin-bottom: 1.25rem; background: rgba(61,216,216,0.06); border: 1px solid var(--teal-border); border-radius: var(--radius); }
+  .next-band .card-label { margin-bottom: 0.25rem; }
+  .next-band p { font-size: max(0.9375rem,var(--tfloor,0px)); color: var(--text-mid); line-height: 1.5; }
+  .next-text { flex: 1 1 18rem; min-width: 0; }
+  .next-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+  .next-actions .btn-primary { padding: 0.8125rem 1.5rem; }
+  .next-actions .btn-outline { padding: 0.75rem 1.25rem; text-decoration: none; display: inline-block; }
   .score-side { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
   .score-side .lock-note { flex: none; align-self: stretch; }
   .score-held { font-size: max(0.9375rem,var(--tfloor,0px)); line-height: 1.5; color: var(--gold); border-left: 0.1875rem solid var(--gold); padding: 0.125rem 0 0.125rem 0.75rem; }
@@ -291,6 +318,8 @@
   .cat-card-note { font-size: 1.0625rem; font-style: italic; line-height: 1.45; margin-top: 0.5625rem; font-family: var(--serif); }
 
   /* ACTION BAR */
+  .pdf-error { text-align: center; margin-top: 0.75rem; font-size: max(0.875rem,var(--tfloor,0px)); color: var(--red); }
+  .pdf-error:empty { display: none; }
   .action-bar { display: flex; gap: 0.875rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
 
   /* ERROR */
@@ -339,7 +368,10 @@
   @media (max-width: 640px) {
     .sc-hero h1 { font-size: 2rem; }
     .scope-options { grid-template-columns: 1fr; }
-    .score-overview { grid-template-columns: 1fr; }
+    .score-overview, .score-card .score-overview { grid-template-columns: 1fr; }
+    .score-card { padding: 1.25rem; }
+    .next-band { padding: 1rem 1.25rem; }
+    .res-logo { width: 3.25rem; height: 3.25rem; }
     .dual-panel { grid-template-columns: 1fr; }
     .cat-grid { grid-template-columns: 1fr; }
     .score-group-row { grid-template-columns: 7.5rem 1fr 3.125rem; }
@@ -474,7 +506,7 @@
       </div>
     </div>
 
-    <!-- URL FIELDS — shown/hidden based on selection -->
+    <!-- URL FIELDS: shown or hidden by what is chosen -->
     <div class="field" id="field-website">
       <label for="inp-website">Your Website <span style="color:var(--red)">*</span> <span class="opt">(or your firm's name, and we will find it)</span></label>
       <!-- (no url keyboard: a phone's has no space bar, and a firm's name has spaces) -->
@@ -512,23 +544,27 @@
   <div id="screen-results" class="hidden">
 
     <div class="res-header">
-      <div>
-        <div class="res-eyebrow">Assessment Results</div>
-        <div class="res-firm-name" id="res-firm-name">—</div>
-        <div class="res-firm-url" id="res-firm-url">—</div>
+      <div class="res-firm">
+        <div class="res-logo" id="res-logo" aria-hidden="true"></div>
+        <div class="res-firm-text">
+          <div class="res-eyebrow">Assessment Results</div>
+          <div class="res-firm-name" id="res-firm-name">&nbsp;</div>
+          <div class="res-firm-line"><a class="res-firm-url" id="res-firm-url" target="_blank" rel="noopener">&nbsp;</a><span class="res-firm-facts" id="res-firm-facts"></span></div>
+          <div class="res-chips" id="res-chips"></div>
+        </div>
       </div>
       <div class="res-meta">
-        <div id="res-date">—</div>
+        <div id="res-date">&nbsp;</div>
         <div>Spatacco Analytics LLC</div>
-        <div id="res-scope-label" style="color:var(--teal);font-weight:600;font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.1em;text-transform:uppercase;margin-top:0.125rem;">—</div>
+        <div id="res-scope-label" style="color:var(--teal);font-weight:600;font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.1em;text-transform:uppercase;margin-top:0.125rem;">&nbsp;</div>
       </div>
     </div>
 
-    <div class="card card-accent-gold" style="margin-bottom:1.25rem;">
+    <div class="card card-accent-gold score-card">
       <div class="card-label">Overall Score</div>
       <div class="score-overview">
         <div class="score-big" id="score-big-wrap">
-          <div class="score-big-num" id="score-big-num">—</div>
+          <div class="score-big-num" id="score-big-num">&nbsp;</div>
           <div class="score-big-denom" id="score-big-denom">/100</div>
           <div class="score-big-tier" id="score-big-tier"></div>
         </div>
@@ -537,6 +573,20 @@
         <div class="score-groups gated" id="score-groups-wrap"></div>
         <div class="lock-note">This is your overall score. The score for each category, with what is working and what to fix, is ready below.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- What to do about it, straight under the score. It was the last thing on the page; the owner, 2026-11-27: "the
+         what to do about it and call to action are too low. prospect shouldn't be dragged to the bottom of the page to
+         buy if they like what they see ... put it above exec summary and beneath scorer". It shows locked or not. -->
+    <div class="next-band" id="next-band">
+      <div class="next-text">
+        <div class="card-label">What to do about it</div>
+        <p>A score shows where a site stands. An Audit Report shows what to fix first, and a redesign fixes it.</p>
+      </div>
+      <div class="next-actions">
+        <a class="btn-primary" href="/services/?utm_source=scorer">See services and pricing →</a>
+        <a class="btn-outline" href="/contact/?utm_source=scorer">Talk to us</a>
       </div>
     </div>
 
@@ -561,7 +611,7 @@
 
     <div class="summary-block gated">
       <div class="summary-label">Executive Summary</div>
-      <div class="summary-text" id="res-summary">—</div>
+      <div class="summary-text" id="res-summary">&nbsp;</div>
     </div>
 
     <div class="card gated" style="margin-bottom:1.25rem;">
@@ -576,19 +626,15 @@
 
     <div id="linkedin-row" class="hidden gated" style="margin-bottom:1.25rem;padding:0.75rem 1.125rem;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:0.625rem;">
       <svg class="li-mark small" aria-hidden="true" style="margin-right:0"><use href="#i-linkedin"/></svg><span style="font-size:max(0.6875rem,var(--tfloor,0px));font-weight:700;letter-spacing:0.14em;color:var(--teal);text-transform:uppercase;">LinkedIn</span>
-      <a id="linkedin-link" href="#" target="_blank" rel="noopener" style="font-size:0.875rem;color:var(--teal);text-decoration:none;border-bottom:1px solid var(--teal-border);overflow-wrap:anywhere;">—</a>
+      <a id="linkedin-link" href="#" target="_blank" rel="noopener" style="font-size:0.875rem;color:var(--teal);text-decoration:none;border-bottom:1px solid var(--teal-border);overflow-wrap:anywhere;">&nbsp;</a>
     </div>
 
     <div class="action-bar gated">
       <button class="btn-gold" id="btn-pdf">↓ &nbsp;Download PDF Scorecard</button>
       <button class="btn-outline" id="btn-restart">Score Another Site</button>
     </div>
+    <p class="pdf-error gated" id="pdf-error" role="status"></p>
 
-    <div class="card card-accent-top gated" style="margin-top:1.25rem;">
-      <div class="card-label">What to do about it</div>
-      <p style="font-size:0.9375rem;color:var(--text-mid);line-height:1.7;margin-bottom:1.125rem;">A score shows where a site stands. An Audit Report shows what to fix first, and a redesign fixes it. See each service, how long it takes, and what it costs.</p>
-      <a class="btn-primary" href="/services/?utm_source=scorer">See services and pricing →</a>
-    </div>
   </div>
 
 </main>
@@ -882,6 +928,9 @@ const WEBSITE_SCHEMA = obj({
   scores: obj(Object.fromEntries(WEBSITE_KEYS.map(k => [k, { type:"integer" }]))),
   notes:  obj(Object.fromEntries(WEBSITE_KEYS.map(k => [k, STR]))),
   compliance_flags: { type:"array", items: obj({ kind:STR, text:STR }) },
+  profile: obj({ location:STR, founded:STR, specialties:STR_LIST }),
+  logo_url: STR,
+  pages: obj({ team:STR, contact:STR, disclosures:STR, services:STR }),
 });
 const LINKEDIN_SCHEMA = obj({
   firm_name:STR, linkedin_url:{ anyOf:[STR, { type:"null" }] }, score:{ type:"integer" },
@@ -905,6 +954,30 @@ async function readAnswer(text, schema) {
     if (data.stop_reason !== "end_turn") return null;
     return extractJson((data.content || []).filter(b => b.type === "text").map(b => b.text).join("\n"));
   } catch { return null; }
+}
+
+// What the scorer discerned about the firm, made safe: one line each, a real year, four phrases at most, and never
+// a firm's assets. The owner, 2026-11-27: "assessment results should show firm logo, website should be a link, some
+// small info about discerned ... qualities and specialties the firm holds". It is read off the firm's own site by
+// the scoring pass; this public page cannot read the owner's CRM, and should not show a visitor what is in it.
+const oneLine = (v, max) => String(v == null ? "" : v).replace(/\s+/g, " ").trim().slice(0, max);
+function readProfile(p) {
+  p = p && typeof p === "object" ? p : {};
+  const y = oneLine(p.founded, 8);
+  const phrase = (x) => { const t = oneLine(x, 200); return t.length <= 40 ? t : t.slice(0, 41).replace(/\s+\S*$/, ""); };      // cut at a word, never through one
+  const specialties = (Array.isArray(p.specialties) ? p.specialties : []).map(phrase)
+    .filter((x) => x && !/\bAUM\b|assets under management|\$\s*\d/i.test(x)).slice(0, 4);
+  return { location: oneLine(p.location, 60), founded: /^(1[6-9]|20)\d\d$/.test(y) && Number(y) <= new Date().getFullYear() ? y : "", specialties };
+}
+// The pages it read, kept only when each is on the site that was scored.
+const bare = (u) => { try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ""); } catch { return ""; } };
+function readPages(p, site) {
+  const out = {}, home = bare(site);
+  ["team", "contact", "disclosures", "services"].forEach((k) => {
+    const u = safeUrl(p && p[k]), h = u ? bare(u) : "";
+    if (u && home && (h === home || h.endsWith("." + home))) out[k] = u;
+  });
+  return out;
 }
 
 // Scores stay whole numbers inside their range, whatever came back.
@@ -942,8 +1015,15 @@ COMPLIANCE RED FLAGS (compliance_red_flags, where 10 means none were found). Loo
 - stale_info: contact or firm details that are out of date or contradict each other: an old address, a dead phone number or email, people shown who have left, dated events or news presented as current, pages that say coming soon.
 Report only what you saw. If you could not open a page or a document, say so in the note and do not flag it. Each is a possible red flag for the firm's compliance officer to review, never a finding of a violation: word each one that way, in one plain sentence that says what was seen and where.
 
+FIRM PROFILE, from the site only. Leave a part empty when the site does not say:
+- location: the city and state of its main office, like "Tampa, FL"
+- founded: the year it was founded
+- specialties: up to four short phrases, in the site's own words, for who it serves or what it is known for (never AUM)
+- logo_url: the full address of the firm's own logo image, as its home page shows it
+- pages: the full addresses, on this site, of its team or about page, its contact page, its disclosures or Form CRS page, and its services page
+
 Return ONLY valid JSON, no markdown, no backticks:
-{"firm_name":"string","summary":"2 sentences: clearest strength AND single biggest improvement opportunity","pros":["strength 1","strength 2","strength 3"],"cons":["opportunity 1","opportunity 2","opportunity 3"],"scores":{"visual_design":<0-10>,"content_messaging":<0-10>,"navigation_ux":<0-10>,"credibility_signals":<0-10>,"compliance_red_flags":<0-10>,"team_leadership":<0-15>,"contact_availability":<0-15>},"notes":{"visual_design":"observation","content_messaging":"observation","navigation_ux":"observation","credibility_signals":"observation (no AUM)","compliance_red_flags":"observation","team_leadership":"observation","contact_availability":"observation"},"compliance_flags":[{"kind":"testimonials, form_crs, adv, disclosures, footer_year or stale_info","text":"what was seen and where"}]}
+{"firm_name":"string","summary":"2 sentences: clearest strength AND single biggest improvement opportunity","pros":["strength 1","strength 2","strength 3"],"cons":["opportunity 1","opportunity 2","opportunity 3"],"scores":{"visual_design":<0-10>,"content_messaging":<0-10>,"navigation_ux":<0-10>,"credibility_signals":<0-10>,"compliance_red_flags":<0-10>,"team_leadership":<0-15>,"contact_availability":<0-15>},"notes":{"visual_design":"observation","content_messaging":"observation","navigation_ux":"observation","credibility_signals":"observation (no AUM)","compliance_red_flags":"observation","team_leadership":"observation","contact_availability":"observation"},"compliance_flags":[{"kind":"testimonials, form_crs, adv, disclosures, footer_year or stale_info","text":"what was seen and where"}],"profile":{"location":"City, ST","founded":"year","specialties":["phrase"]},"logo_url":"address or empty","pages":{"team":"address or empty","contact":"address or empty","disclosures":"address or empty","services":"address or empty"}}
 compliance_flags is an empty list when none of the six was found.
 
 Rubrics:
@@ -962,7 +1042,9 @@ Rubrics:
   // site with a serious flag 4 at most, so the number is brought down to what was reported.
   const flags = (Array.isArray(parsed.compliance_flags) ? parsed.compliance_flags : []).map(readFlag).filter(Boolean).slice(0, 8);
   if (flags.some(f => f.serious)) scores.compliance_red_flags = Math.min(scores.compliance_red_flags, 4);
-  return { firm_name:textOf(parsed.firm_name), summary:textOf(parsed.summary), pros:listOf(parsed.pros), cons:listOf(parsed.cons), scores, notes, flags };
+  const logo = safeUrl(parsed.logo_url);
+  return { firm_name:textOf(parsed.firm_name), summary:textOf(parsed.summary), pros:listOf(parsed.pros), cons:listOf(parsed.cons), scores, notes, flags,
+    profile: readProfile(parsed.profile), logo_url: logo && logo.startsWith("https://") ? logo : "", pages: readPages(parsed.pages, url) };
 }
 
 async function scoreLinkedin(linkedinUrl, firmName) {
@@ -1117,6 +1199,28 @@ async function lookUpFirm(name) {
 $("inp-website").addEventListener("input", () => { if (!finding) hideMatches(); });
 
 // ── RENDER ───────────────────────────────────────────────────────
+// The firm's logo beside its name. First the image the scoring pass found on the firm's own home page; if that will
+// not load, the site's own icon; if that will not either, the firm's initials. It is only ever an image's address:
+// nothing the search wrote is put into the page as markup.
+function showLogo(result, where) {
+  const box = $("res-logo"); box.textContent = ""; box.className = "res-logo";
+  const name = String(result.firm_name || "").trim();
+  const mono = () => { box.textContent = ""; box.className = "res-logo mono"; box.appendChild(document.createTextNode((name.match(/\b[A-Za-z0-9]/g) || ["?"]).slice(0, 2).join("").toUpperCase())); };
+  const host = bare(where);
+  const tries = [result.logo_url, host && !/linkedin\.com$/.test(host) ? "https://www.google.com/s2/favicons?sz=128&domain=" + encodeURIComponent(host) : ""].filter(Boolean);
+  const next = () => {
+    const src = tries.shift();
+    if (!src) return mono();
+    const img = new Image();
+    img.alt = ""; img.referrerPolicy = "no-referrer"; img.decoding = "async";
+    img.onload = () => { if (img.naturalWidth < 24) return next(); box.textContent = ""; box.className = "res-logo"; box.appendChild(img); };
+    img.onerror = next;
+    img.src = src;
+  };
+  mono();      // the initials stand in until an image has loaded
+  next();
+}
+
 function renderResults(result, scope, websiteUrl) {
   const scores  = result.scores || {};
   const isWeb   = scope === "website" || scope === "both";
@@ -1134,7 +1238,16 @@ function renderResults(result, scope, websiteUrl) {
   const tier  = ratingOf(total, totalMax, flags);
 
   $("res-firm-name").textContent = result.firm_name || "Your Firm";
-  $("res-firm-url").textContent  = websiteUrl || result.linkedin_url || "";
+  // the site that was scored, as a link to it
+  const link = $("res-firm-url"), where = safeUrl(websiteUrl) || safeUrl(result.linkedin_url) || "";
+  link.textContent = where ? where.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") : "";
+  if (where) link.href = where; else link.removeAttribute("href");
+  // where the firm is and how long it has been there, then what it is known for: discerned from its own site
+  const prof = isWeb ? (result.profile || {}) : {};
+  $("res-firm-facts").textContent = [prof.location, prof.founded ? "Founded " + prof.founded : ""].filter(Boolean).map((x) => " \u00b7 " + x).join("");
+  const chips = $("res-chips"); chips.textContent = "";
+  (prof.specialties || []).forEach((x) => { const c = document.createElement("span"); c.textContent = x; chips.appendChild(c); });
+  showLogo(result, where);
   $("res-date").textContent = "Scored " + new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
   $("res-scope-label").textContent = scope === "both" ? "Website + LinkedIn" : scope === "website" ? "Website Assessment" : "LinkedIn Assessment";
 
@@ -1300,7 +1413,7 @@ $("btn-analyze").addEventListener("click", async () => {
     renderResults(result, scope, website);
     track("score", { website, linkedin: result.linkedin_url || linkedin || "", found: runFound, firm_scored: result.firm_name || "",
       score: appState.total, score_max: appState.totalMax, tier: appState.tier, held_from: appState.held || "",
-      flags: (result.flags || []).map(f => ({ kind:f.kind, text:f.text })), scores: result.scores || {}, known: !!known });
+      flags: (result.flags || []).map(f => ({ kind:f.kind, text:f.text })), profile: result.profile || {}, scores: result.scores || {}, known: !!known });
     if (known) { appState.leadName=known.name; appState.leadEmail=known.email; appState.leadFirm=known.firm||""; sendLead(known.name, known.email, known.firm||""); }
     window.scrollTo({ top:0, behavior:"smooth" });
 
@@ -1341,150 +1454,231 @@ function hexToRgb(hex) {
   return[(n>>16)&255,(n>>8)&255,n&255];
 }
 
-function generatePDF() {
+// The built-in PDF typefaces hold Western European letters only. A character outside them was printed as two wrong
+// ones (a percent sign and a superscript two where an up arrow was meant), so every word that goes on the paper comes through here: curly quotes and
+// long dashes become plain ones, and what the typeface cannot draw is left out. Markers are drawn, never typed.
+function pdfText(v) {
+  return String(v == null ? "" : v)
+    .replace(/[\u2018\u2019\u201A\u2032]/g, "'").replace(/[\u201C\u201D\u201E\u2033]/g, '"')
+    .replace(/[\u2010-\u2015\u2212]/g, "-").replace(/\u2026/g, "...").replace(/[\u2022\u25CF\u25AA\u00B7]/g, "\u00B7")
+    .replace(/[\u00A0\u2000-\u200A\u202F]/g, " ").replace(/[\u2192\u2197\u279C]/g, "->")
+    .replace(/[^\x0A\x20-\x7E\u00A1-\u00FF]/g, "").replace(/[ \t]+/g, " ").trim();
+}
+// An image of the site's own, as the PDF library takes one. Null when it cannot be had: the paper is made without it.
+async function pdfImage(src) {
+  try {
+    const r = await fetch(src); if (!r.ok) return null;
+    const blob = await r.blob();
+    return await new Promise((ok) => { const f = new FileReader(); f.onload = () => ok(String(f.result)); f.onerror = () => ok(null); f.readAsDataURL(blob); });
+  } catch (e) { return null; }
+}
+
+// The scorecard on paper. The owner, 2026-11-27, of the first one: "the PDF output from the scorer SUCKS". It printed
+// wrong characters for its markers, set the firm's name over its label and each bar over its own note, had no footer
+// on its first page and left a second page nearly empty. This one is laid out by measure: every block knows its own
+// height and asks for room before it is drawn, so nothing is set over anything and no block is cut by a page's end.
+// The order is the page's: who it is for, the score, what to do about it, then the reasons.
+async function generatePDF() {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:"pt",format:"letter"});
-  const result = appState.result;
-  const scope  = appState.scope;
-  const scores = result.scores;
-  const isWeb  = scope==="website"||scope==="both";
-  const isLI   = scope==="linkedin"||scope==="both";
+  const doc = new jsPDF({ unit:"pt", format:"letter" });
+  const result = appState.result || {}, scope = appState.scope, scores = result.scores || {};
+  const isWeb = scope==="website"||scope==="both", isLI = scope==="linkedin"||scope==="both";
   let activeCats = [];
   if (isWeb) activeCats = [...WEBSITE_CATS];
   if (isLI)  activeCats = [...activeCats, LINKEDIN_CAT];
+  const groups = { ...(isWeb ? WEBSITE_GROUPS : {}), ...(isLI ? LINKEDIN_GROUP : {}) };
   const totalMax = (isWeb?80:0)+(isLI?20:0);
   const total = activeCats.reduce((s,c)=>s+(scores[c.id]||0),0);
   const flags = isWeb ? (result.flags || []) : [];
   const tier  = ratingOf(total, totalMax, flags);
-  const W=612,ML=48,MR=48,CW=W-ML-MR;
-  let y=0;
+  const prof  = isWeb ? (result.profile || {}) : {};
+  const firm  = pdfText(result.firm_name) || "Your Firm";
+  const site  = safeUrl(appState.websiteUrl) || safeUrl(result.linkedin_url) || "";
+  const when  = new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"});
+  const scopeStr = scope==="both"?"Website + LinkedIn":scope==="website"?"Website":"LinkedIn";
 
-  doc.setFillColor(255,255,255); doc.rect(0,0,W,72,"F");
-  doc.setFillColor(31,168,168);  doc.rect(0,72,W/2,3,"F");
-  doc.setFillColor(184,134,11);  doc.rect(W/2,72,W/2,3,"F");
-  doc.setFillColor(12,31,63);    doc.rect(ML,14,42,42,"F");
-  doc.setTextColor(61,200,200);  doc.setFontSize(12); doc.setFont("helvetica","bold");
-  doc.text("SA",ML+21,42,{align:"center"});
-  doc.setTextColor(12,31,63); doc.setFontSize(16); doc.setFont("helvetica","bold");
-  doc.text("Digital Presence Scorecard",ML+52,32);
-  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(122,128,144);
-  const scopeStr = scope==="both"?"Website + LinkedIn Assessment":scope==="website"?"Website Assessment":"LinkedIn Assessment";
-  doc.text(`Spatacco Analytics LLC  ·  ${scopeStr}`,ML+52,46);
-  doc.setFontSize(8); doc.setTextColor(168,175,188);
-  doc.text(new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}),W-MR,24,{align:"right"});
+  const W=612, ML=48, MR=48, CW=W-ML-MR, FOOT=736;       // nothing but the footer is drawn below FOOT
+  const NAVY="#0C1F3F", TEAL="#1FA8A8", INK="#1A1E28", MID="#4A5060", SOFT="#7A8090", HAIR="#E2E4DE", TRACK="#ECEEEA";
+  const fill = (h) => doc.setFillColor(...hexToRgb(h));
+  const ink  = (h) => doc.setTextColor(...hexToRgb(h));
+  const pen  = (h, w) => { doc.setDrawColor(...hexToRgb(h)); doc.setLineWidth(w || 0.5); };
+  const font = (f, st, sz) => { doc.setFont(f, st); doc.setFontSize(sz); };
+  const wrap = (t, w) => doc.splitTextToSize(pdfText(t), w);
+  let y = 0;
+  const put  = (ls, x, lh) => { ls.forEach((ln, i) => doc.text(ln, x, y + i * lh)); y += ls.length * lh; };
+  const label = (t, x, yy, color) => { font("helvetica","bold",7.5); ink(color || SOFT); doc.setCharSpace(1.1); doc.text(pdfText(t).toUpperCase(), x, yy); doc.setCharSpace(0); };
+  const bar = (x, yy, w, h, pct, color) => { fill(TRACK); doc.roundedRect(x, yy, w, h, h/2, h/2, "F"); if (pct > 0) { fill(color); doc.roundedRect(x, yy, Math.max(h, w * Math.min(1, pct)), h, h/2, h/2, "F"); } };
+  // a later page opens small: whose scorecard this is, over a hairline
+  const top = () => {
+    font("helvetica","bold",8.5); ink(NAVY); doc.text(doc.splitTextToSize(firm, CW - 150)[0] || "", ML, 40);
+    font("helvetica","normal",8.5); ink(SOFT); doc.text("Digital Presence Scorecard", W-MR, 40, {align:"right"});
+    pen(HAIR); doc.line(ML, 48, W-MR, 48); y = 66;
+  };
+  const room = (h) => { if (y + h > FOOT) { doc.addPage(); top(); } };
 
-  y=96;
-  doc.setFontSize(7); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("FIRM",ML,y);
-  y+=12; doc.setFontSize(16); doc.setFont("helvetica","bold"); doc.setTextColor(12,31,63);
-  doc.text(result.firm_name||"Your Firm",ML,y);
-  y+=10; doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188);
-  doc.text(appState.websiteUrl||result.linkedin_url||"",ML,y);
-  y+=18;
+  // ---- the head: the site's own wordmark on its navy, and its three colours under it
+  fill(NAVY); doc.rect(0, 0, W, 80, "F");
+  const stops = ["#3DD8D8","#5B8DEF","#9B82FF"].map(hexToRgb), mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  for (let i = 0; i < 102; i++) { const t = i / 101; doc.setFillColor(...(t < 0.5 ? mix(stops[0], stops[1], t * 2) : mix(stops[1], stops[2], (t - 0.5) * 2))); doc.rect(i * 6, 80, 6.3, 3, "F"); }
+  const nav = document.querySelector("nav .logo");
+  const mark = nav ? await pdfImage(nav.getAttribute("src")) : null;
+  let drawn = false;
+  if (mark) { try { doc.addImage(mark, "PNG", ML, 22, 115, 36); drawn = true; } catch (e) { drawn = false; } }
+  if (!drawn) { font("helvetica","bold",13); ink("#FFFFFF"); doc.text("SPATACCO ANALYTICS", ML, 46); }
+  font("helvetica","bold",13); ink("#FFFFFF"); doc.text("Digital Presence Scorecard", W-MR, 38, {align:"right"});
+  font("helvetica","normal",8.5); ink("#AFC0D8"); doc.text(pdfText(scopeStr + " assessment  ·  " + when), W-MR, 53, {align:"right"});
 
-  doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(ML,y,W-MR,y); y+=16;
+  // ---- who it is for: the firm, its site as a link, where it is, what it is known for
+  y = 110;
+  label("Prepared for", ML, y); y += 22;
+  font("times","bold",23); ink(NAVY);
+  const nameLines = doc.splitTextToSize(firm, CW).slice(0, 2);
+  put(nameLines, ML, 25); y -= 9;
+  if (site) {
+    const shown = pdfText(site.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, ""));
+    font("helvetica","normal",9.5); ink(TEAL);
+    const cut = doc.splitTextToSize(shown, CW - 220)[0] || shown;
+    doc.textWithLink(cut, ML, y, { url: site });
+    const sw = doc.getTextWidth(cut);
+    pen(TEAL, 0.4); doc.line(ML, y + 1.6, ML + sw, y + 1.6);
+    const facts = [prof.location, prof.founded ? "Founded " + prof.founded : ""].filter(Boolean).map((x) => "  ·  " + pdfText(x)).join("");
+    if (facts) { ink(SOFT); doc.text(doc.splitTextToSize(facts, CW - sw)[0] || "", ML + sw, y); }
+    y += 16;
+  }
+  const chips = (prof.specialties || []).map(pdfText).filter(Boolean);
+  if (chips.length) {
+    font("helvetica","normal",8); let x = ML;
+    chips.forEach((c) => {
+      const w = doc.getTextWidth(c) + 14;
+      if (x + w > W - MR) { x = ML; y += 18; }
+      pen("#C9CED6", 0.6); fill("#F3F5F8"); doc.roundedRect(x, y - 9, w, 14, 7, 7, "FD");
+      ink(MID); doc.text(c, x + 7, y + 0.8); x += w + 6;
+    });
+    y += 18;
+  }
+  y += 2; pen(HAIR); doc.line(ML, y, W-MR, y); y += 16;
 
-  // Score box
-  const bW=110,bH=68;
-  const [tr,tg,tb]=hexToRgb(tier.color);
-  doc.setFillColor(parseInt(tier.bg.slice(1,3),16),parseInt(tier.bg.slice(3,5),16),parseInt(tier.bg.slice(5,7),16));
-  doc.rect(ML,y,bW,bH,"F");
-  doc.setDrawColor(tr,tg,tb); doc.setLineWidth(1); doc.rect(ML,y,bW,bH,"S");
-  doc.setTextColor(tr,tg,tb); doc.setFontSize(34); doc.setFont("helvetica","bold");
-  doc.text(String(total),ML+bW/2,y+28,{align:"center"});
-  doc.setFontSize(9); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188);
-  doc.text(`/${totalMax}`,ML+bW/2,y+40,{align:"center"});
-  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(tr,tg,tb);
-  // the rating's name: on two lines, a size smaller, when it is too long for the box ("Red Flags and Violations")
-  const tierText = tier.label.toUpperCase();
-  if (doc.getTextWidth(tierText) > bW - 10) { doc.setFontSize(7); doc.text(doc.splitTextToSize(tierText, bW - 10).slice(0, 2), ML+bW/2, y+51, {align:"center"}); }
-  else doc.text(tierText,ML+bW/2,y+55,{align:"center"});
-
-  const bX=ML+bW+18,bW2=CW-bW-18; let by=y+8;
-  const allGroups = {...(isWeb?WEBSITE_GROUPS:{}),...(isLI?LINKEDIN_GROUP:{})};
-  Object.entries(allGroups).forEach(([g,meta])=>{
-    const cats=activeCats.filter(c=>c.group===g);
-    const gs=cats.reduce((s,c)=>s+(scores[c.id]||0),0);
-    const pct=gs/meta.max;
-    const [mr,mg,mb]=hexToRgb(meta.color);
-    doc.setFontSize(8); doc.setFont("helvetica","normal"); doc.setTextColor(74,80,96); doc.text(meta.label,bX,by);
-    doc.setFillColor(240,241,238); doc.rect(bX,by+3,bW2-46,6,"F");
-    doc.setFillColor(mr,mg,mb); doc.rect(bX,by+3,(bW2-46)*pct,6,"F");
-    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(mr,mg,mb);
-    doc.text(`${gs}/${meta.max}`,bX+bW2-42,by);
-    by+=22;
+  // ---- the score, and the three parts of it
+  const bW = 120, bH = 88, rows = Object.entries(groups);
+  fill(tier.bg); pen(tier.color, 1); doc.roundedRect(ML, y, bW, bH, 4, 4, "FD");
+  font("times","bold",42); ink(tier.color); doc.text(String(total), ML + bW/2, y + 41, {align:"center"});
+  font("helvetica","normal",9); ink(SOFT); doc.text("/" + totalMax, ML + bW/2, y + 56, {align:"center"});
+  font("helvetica","bold",8); ink(tier.color);
+  const rating = doc.splitTextToSize(tier.label.toUpperCase(), bW - 16).slice(0, 2);
+  if (rating.length > 1) { doc.setFontSize(7.5); doc.text(rating, ML + bW/2, y + 67, {align:"center", lineHeightFactor:1.25}); } else doc.text(rating, ML + bW/2, y + 72, {align:"center"});
+  const bX = ML + bW + 24, bW2 = W - MR - bX;
+  let by = y + (bH - rows.length * 27) / 2 + 10;
+  rows.forEach(([g, meta]) => {
+    const gs = activeCats.filter((c) => c.group === g).reduce((s, c) => s + (scores[c.id] || 0), 0);
+    font("helvetica","normal",9.5); ink(MID); doc.text(meta.label, bX, by);
+    font("helvetica","bold",10); ink(meta.color); doc.text(gs + "/" + meta.max, W - MR, by, {align:"right"});
+    bar(bX, by + 5.5, bW2, 5, gs / meta.max, meta.color);
+    by += 27;
   });
-  y+=bH+18;
+  y += bH + 12;
   // a rating a red flag held down says so, under the score
   if (tier.held) {
-    doc.setFontSize(8.5); doc.setFont("helvetica","italic"); doc.setTextColor(140,90,16);
-    const hl = doc.splitTextToSize(heldLine(tier.held), CW); doc.text(hl, ML, y-4); y += hl.length*11 + 4;
+    font("helvetica","italic",8.5);
+    const hl = wrap(heldLine(tier.held), CW - 20), h = hl.length * 11 + 11;
+    fill("#FDF4E8"); pen("#E0C090", 0.6); doc.roundedRect(ML, y, CW, h, 3, 3, "FD");
+    ink("#8C5A10"); y += 13; hl.forEach((ln, i) => doc.text(ln, ML + 10, y + i * 11)); y += h - 13 + 10;
   }
 
-  doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(ML,y,W-MR,y); y+=12;
+  // ---- what to do about it, straight under the score: nobody is taken to the last page to find the next step
+  const cta = "https://spataccoanalytics.com/services/?utm_source=scorecard&utm_medium=pdf";
+  fill(NAVY); doc.roundedRect(ML, y, CW, 52, 4, 4, "F");
+  label("What to do about it", ML + 14, y + 18, "#3DD8D8");
+  font("helvetica","normal",9.5); ink("#FFFFFF");
+  doc.text(doc.splitTextToSize("An Audit Report shows what to fix first, and a redesign fixes it.", CW - 200).slice(0, 2), ML + 14, y + 33, {lineHeightFactor:1.25});
+  const kx = W - MR - 14 - 156;
+  fill("#3DD8D8"); doc.roundedRect(kx, y + 14, 156, 24, 3, 3, "F");
+  font("helvetica","bold",8); ink(NAVY);
+  const kt = "SEE SERVICES AND PRICING", kw = doc.getTextWidth(kt) + (kt.length - 1) * 0.6;       // letter spacing is not counted by the library's own centring
+  doc.setCharSpace(0.6); doc.text(kt, kx + (156 - kw) / 2, y + 29); doc.setCharSpace(0);
+  doc.link(kx, y + 14, 156, 24, { url: cta });
+  y += 52 + 22;
 
-  // Summary
-  doc.setFillColor(234,246,246); doc.rect(ML,y-4,CW,4,"F");
-  doc.setFillColor(31,168,168); doc.rect(ML,y-4,3,30,"F");
-  doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(31,168,168); doc.text("EXECUTIVE SUMMARY",ML+8,y+6);
-  y+=16; doc.setFontSize(10); doc.setFont("helvetica","bolditalic"); doc.setTextColor(12,31,63);
-  const sl=doc.splitTextToSize(result.summary||"",CW-12); doc.text(sl,ML+8,y);
-  y+=sl.length*13+16;
-
-  // Pros/Cons
-  doc.setDrawColor(226,228,222); doc.line(ML,y,W-MR,y); y+=12;
-  const colW=(CW-10)/2;
-  doc.setFillColor(234,245,238); doc.rect(ML,y,colW,14,"F");
-  doc.setFontSize(7); doc.setFont("helvetica","bold"); doc.setTextColor(26,107,64); doc.text("WHAT'S WORKING",ML+6,y+9);
-  doc.setFillColor(253,240,240); doc.rect(ML+colW+10,y,colW,14,"F");
-  doc.setTextColor(184,50,50); doc.text("OPPORTUNITIES TO IMPROVE",ML+colW+16,y+9);
-  y+=20;
-  const pros=result.pros||[],cons=result.cons||[],mx=Math.max(pros.length,cons.length);
-  for(let i=0;i<mx;i++){
-    doc.setFontSize(9); doc.setFont("helvetica","normal");
-    let rowH=12;
-    if(pros[i]){ doc.setTextColor(42,148,88); doc.text("▲",ML+2,y); doc.setTextColor(26,30,40); const pl=doc.splitTextToSize(pros[i],colW-16); doc.text(pl,ML+11,y); rowH=Math.max(rowH,pl.length*12); }
-    if(cons[i]){ doc.setTextColor(184,50,50); doc.text("▼",ML+colW+12,y); const cl=doc.splitTextToSize(cons[i],colW-16); doc.text(cl,ML+colW+22,y); rowH=Math.max(rowH,cl.length*12); }
-    y+=rowH+4;
+  // ---- the summary
+  font("times","normal",11.5);
+  const sl = wrap(result.summary || "", CW - 14);
+  if (sl.length) {
+    room(16 + sl.length * 15 + 8);
+    const y0 = y - 8;
+    label("Executive summary", ML + 14, y, TEAL); y += 17;
+    font("times","normal",11.5); ink(INK); put(sl, ML + 14, 15);
+    fill(TEAL); doc.rect(ML, y0, 2.5, y - y0 - 9, "F");
+    y += 12;
   }
-  y+=10;
 
-  // Categories
-  doc.setDrawColor(226,228,222); doc.line(ML,y,W-MR,y); y+=12;
-  doc.setFontSize(7); doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("CATEGORY BREAKDOWN",ML,y); y+=11;
-  activeCats.forEach(cat=>{
-    if(y>720){doc.addPage();y=48;}
-    const val=scores[cat.id]||0,pct=val/cat.max,sc=getScoreColor(val,cat.max);
-    const [scr,scg,scb]=hexToRgb(sc);
-    const note=result.notes?.[cat.id]||"";
-    doc.setFontSize(9); doc.setFont("helvetica","bold"); doc.setTextColor(74,80,96); doc.text(cat.label,ML,y);
-    doc.setTextColor(scr,scg,scb); doc.text(`${val}/${cat.max}`,W-MR,y,{align:"right"});
-    y+=4; doc.setFillColor(240,241,238); doc.rect(ML,y,CW-46,5,"F");
-    doc.setFillColor(scr,scg,scb); doc.rect(ML,y,(CW-46)*pct,5,"F");
-    y+=9;
-    if(note){ doc.setFontSize(8.5); doc.setFont("helvetica","italic"); doc.setTextColor(pct<0.4?184:122,pct<0.4?50:128,pct<0.4?50:144); const nl=doc.splitTextToSize(note,CW); doc.text(nl,ML,y); y+=nl.length*11+3; } else y+=4;
-    // the red flags named, and what they are: possible flags off public pages, never a finding
-    if (cat.id === "compliance_red_flags") {
-      flags.forEach(f => {
-        if(y>716){doc.addPage();y=48;}
-        doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(f.serious?184:140, f.serious?50:90, f.serious?50:16);
-        const fl = doc.splitTextToSize(`${f.label}: ${f.text}`, CW-10); doc.text(fl, ML+10, y); y += fl.length*11 + 2;
-      });
-      if(y>716){doc.addPage();y=48;}
-      doc.setFontSize(7.5); doc.setFont("helvetica","normal"); doc.setTextColor(122,128,144);
-      const cl = doc.splitTextToSize(FLAG_CAVEAT, CW); doc.text(cl, ML, y); y += cl.length*10 + 5;
+  // ---- what is working, and what to improve: side by side, each pair on one line
+  const pros = result.pros || [], cons = result.cons || [], colW = (CW - 18) / 2, cX = ML + colW + 18;
+  if (pros.length || cons.length) {
+    room(64);
+    fill("#EAF5EE"); doc.roundedRect(ML, y, colW, 17, 2, 2, "F"); label("What's working", ML + 8, y + 11.5, "#1A6B40");
+    fill("#FDF0F0"); doc.roundedRect(cX, y, colW, 17, 2, 2, "F"); label("Opportunities to improve", cX + 8, y + 11.5, "#B83232");
+    y += 32;
+    for (let i = 0; i < Math.max(pros.length, cons.length); i++) {
+      font("helvetica","normal",9.5);
+      const pl = pros[i] ? wrap(pros[i], colW - 16) : [], cl = cons[i] ? wrap(cons[i], colW - 16) : [];
+      const h = Math.max(pl.length, cl.length) * 12.5;
+      room(h + 4);
+      ink(INK);
+      if (pl.length) { fill("#2A9458"); doc.triangle(ML + 1, y - 0.5, ML + 8, y - 0.5, ML + 4.5, y - 6.5, "F"); pl.forEach((ln, k) => doc.text(ln, ML + 15, y + k * 12.5)); }
+      if (cl.length) { fill("#B83232"); doc.triangle(cX + 1, y - 6.5, cX + 8, y - 6.5, cX + 4.5, y - 0.5, "F"); cl.forEach((ln, k) => doc.text(ln, cX + 15, y + k * 12.5)); }
+      y += h + 7;
     }
+    y += 6;
+  }
+
+  // ---- every category, under the part of the score it belongs to
+  room(120);
+  if (y > 70) { pen(HAIR); doc.line(ML, y, W-MR, y); y += 18; } else y += 6;      // a new page has its own hairline
+  label("Category breakdown", ML, y); y += 4;
+  rows.forEach(([g, meta]) => {
+    const cats = activeCats.filter((c) => c.group === g);
+    cats.forEach((cat, ci) => {
+      const val = scores[cat.id] || 0, sc = getScoreColor(val, cat.max);
+      font("helvetica","normal",9);
+      const nl = (result.notes && result.notes[cat.id]) ? wrap(result.notes[cat.id], CW) : [];
+      const own = cat.id === "compliance_red_flags";
+      const fl = own ? flags.map((f) => ({ f, lines: wrap(f.text, CW - 16) })) : [];
+      font("helvetica","normal",7.5);
+      const cav = own ? wrap(FLAG_CAVEAT, CW) : [];
+      const head = ci === 0 ? 22 : 0;
+      const h = head + 14 + 11 + nl.length * 12 + fl.reduce((s, x) => s + 12 + x.lines.length * 12 + 3, 0) + (cav.length ? cav.length * 10 + 5 : 0) + 10;
+      room(h);
+      if (ci === 0) { y += 16; label(meta.label, ML, y, meta.color); y += 6; }
+      y += 14;
+      font("helvetica","bold",10); ink(INK); doc.text(cat.label, ML, y);
+      ink(sc); doc.text(val + "/" + cat.max, W - MR, y, {align:"right"});
+      bar(ML, y + 5, CW, 4, val / cat.max, sc);
+      y += 11;
+      if (nl.length) { y += 11; font("helvetica","normal",9); ink(MID); put(nl, ML, 12); y -= 11; }
+      // the red flags named, and what they are: possible flags off public pages, never a finding
+      fl.forEach(({ f, lines }) => {
+        const c = f.serious ? "#B83232" : "#8C5A10";
+        y += 14; fill(c); doc.rect(ML + 1, y - 5.5, 5, 5, "F");
+        font("helvetica","bold",8); ink(c); doc.setCharSpace(0.5); doc.text(pdfText(f.label).toUpperCase(), ML + 12, y); doc.setCharSpace(0);
+        y += 12; font("helvetica","normal",9); ink(INK); lines.forEach((ln, k) => doc.text(ln, ML + 12, y + k * 12)); y += (lines.length - 1) * 12 + 1;
+      });
+      if (cav.length) { y += 13; font("helvetica","normal",7.5); ink(SOFT); cav.forEach((ln, k) => doc.text(ln, ML, y + k * 10)); y += (cav.length - 1) * 10; }
+      y += 10;
+    });
   });
 
-  // Footer
-  doc.setFillColor(246,247,245); doc.rect(0,758,W,52,"F");
-  doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(0,758,W,758);
-  doc.setFillColor(31,168,168); doc.rect(0,758,W/2,2,"F");
-  doc.setFillColor(184,134,11); doc.rect(W/2,758,W/2,2,"F");
-  doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(12,31,63); doc.text("SPATACCO ANALYTICS LLC",ML,774);
-  doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("spataccoanalytics.com  ·  CRM · DATA · WEB · STRATEGY",ML,786);
-  doc.setTextColor(200,204,210); doc.text("For informational purposes only. Not legal or compliance advice.",W-MR,774,{align:"right"});
+  // ---- the foot of every page
+  const pages = doc.getNumberOfPages();
+  for (let p = 1; p <= pages; p++) {
+    doc.setPage(p);
+    pen(HAIR); doc.line(ML, 750, W-MR, 750);
+    font("helvetica","bold",8); ink(NAVY); doc.text("Spatacco Analytics LLC", ML, 763);
+    const fw = doc.getTextWidth("Spatacco Analytics LLC");
+    font("helvetica","normal",8); ink(TEAL); doc.textWithLink("spataccoanalytics.com", ML + fw + 10, 763, { url: "https://spataccoanalytics.com/?utm_source=scorecard&utm_medium=pdf" });
+    ink(SOFT); doc.text("Page " + p + " of " + pages, W - MR, 763, {align:"right"});
+    font("helvetica","normal",7); doc.text("For informational purposes only. Not legal or compliance advice.", ML, 774);
+  }
 
-  const fn=`${(result.firm_name||"Digital-Presence").replace(/[^a-z0-9]/gi,"-")}_Scorecard_${new Date().toISOString().slice(0,10)}.pdf`;
+  const fn = (firm.replace(/[^a-z0-9]+/gi, "-").replace(/^-+|-+$/g, "") || "Digital-Presence") + "_Scorecard_" + new Date().toISOString().slice(0,10) + ".pdf";
   doc.save(fn);
 }
 
@@ -1518,7 +1712,7 @@ async function sendLead(name,email,firm) {
     website: appState.websiteUrl, linkedin: r.linkedin_url || appState.linkedinUrl || "",
     scope: appState.scope, firm_scored: r.firm_name || "",
     score: appState.total, score_max: appState.totalMax, tier: appState.tier, held_from: appState.held || "",
-    flags: (r.flags || []).map(f => ({ kind:f.kind, text:f.text })),
+    flags: (r.flags || []).map(f => ({ kind:f.kind, text:f.text })), profile: r.profile || {},
     scores: r.scores || {},
     utm_source: ARRIVED.source, utm_medium: ARRIVED.medium, utm_campaign: ARRIVED.campaign,
     company: $("gate-website2").value,
@@ -1531,7 +1725,23 @@ async function sendLead(name,email,firm) {
   } catch(e){ console.warn("Lead not recorded:", e); }
 }
 
-$("btn-pdf").addEventListener("click", generatePDF);
+// The PDF library is the site's own file (site/js/vendor), fetched the first time the button is pressed: it was a
+// script from another site's server in the head of the page, loaded by every visitor whether or not they wanted a PDF.
+const PDF_LIB = "/js/vendor/jspdf-4.2.1.umd.min.js";
+let pdfLib = null;
+const loadPdfLib = () => pdfLib || (pdfLib = new Promise((ok, no) => {
+  if (window.jspdf) return ok();
+  const tag = document.createElement("script");
+  tag.src = PDF_LIB; tag.onload = () => ok(); tag.onerror = () => { pdfLib = null; no(new Error("The PDF could not be prepared.")); };
+  document.head.appendChild(tag);
+}));
+$("btn-pdf").addEventListener("click", async () => {
+  const b = $("btn-pdf"), was = b.innerHTML, say = $("pdf-error");
+  b.disabled = true; b.textContent = "Preparing your PDF\u2026"; say.textContent = "";
+  try { await loadPdfLib(); await generatePDF(); }
+  catch (e) { say.textContent = "The PDF could not be prepared. Please try again, or write to us and we will send it to you."; }
+  b.innerHTML = was; b.disabled = false;
+});
 $("btn-restart").addEventListener("click", ()=>{
   runId = newRun(); runTyped = ""; runFound = "typed";      // scoring another site is a run of its own
   appState={websiteUrl:"",linkedinUrl:"",scope:"both",result:null,leadName:"",leadEmail:"",leadFirm:""};

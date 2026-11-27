@@ -42,6 +42,7 @@ $lead = [
     'tier' => lead_text($in['tier'] ?? '', 40),
     'held_from' => lead_held($in['held_from'] ?? ''),
     'flags' => lead_flags($in['flags'] ?? null),
+    'profile' => lead_profile($in['profile'] ?? null),
     'scores' => $scores,
     'utm_source' => $who['utm_source'],
     'utm_medium' => $who['utm_medium'],

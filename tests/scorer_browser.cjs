@@ -479,6 +479,105 @@ const FOUND = JSON.stringify({ candidates: [
     open.scored = null;
   }
 
+  // --- The top of the results, and the scorecard on paper. The owner, 2026-11-27: "assessment results should show firm
+  // logo, website should be a link, some small info about discerned ... qualities and specialties the firm holds"; "the
+  // what to do about it and call to action are too low ... put it above exec summary and beneath scorer"; and of the
+  // PDF: "the PDF output from the scorer SUCKS" (wrong characters for its markers, its label over the firm's name, each
+  // bar over its own note, no footer on its first page).
+  {
+    const fs = require('fs'), path = require('path');
+    const LOGO = fs.readFileSync(path.join(__dirname, '..', 'site', 'img', 'logo-square.png'));
+    const answer = (logo) => JSON.stringify({ firm_name: 'Polished & Sons Advisors', summary: 'A \u201cpolished\u201d site \u2014 with clear contact paths.', pros: ['Distinctive design \u2192 memorable', 'Full bios'], cons: ['Testimonials carry no disclosure', 'No Form ADV link', 'A third thing to improve'],
+      scores: { visual_design: 9, content_messaging: 9, navigation_ux: 9, credibility_signals: 9, compliance_red_flags: 9, team_leadership: 14, contact_availability: 14 },
+      notes: { visual_design: 'Distinctive.', content_messaging: 'Sharp.', navigation_ux: 'Seamless.', credibility_signals: 'Strong.', compliance_red_flags: 'Client quotes appear with no disclosure.', team_leadership: 'Rich bios.', contact_availability: 'Many options.' },
+      compliance_flags: [{ kind: 'testimonials', text: 'Three client quotes \u2014 \u201cthey changed our retirement\u201d \u2014 with no disclosure.' }],
+      profile: { location: 'Wayne, PA <b>', founded: '1987', specialties: ['Retirement income planning for physicians and dentists', 'Business owners', '$2 billion in AUM', 'Families', 'A fifth', 'A sixth'] },
+      logo_url: logo, pages: { team: 'https://www.polished.example/team', contact: 'https://elsewhere.example/contact', disclosures: 'javascript:alert(1)', services: 'https://www.polished.example/services' } });
+    const openTop = async (vp, logo, logoOk) => {
+      open.scored = answer(logo);
+      const a = await open(vp, () => says(FOUND));
+      await a.page.route(/polished\.example\/logo\.png/, (r) => logoOk ? r.fulfill({ status: 200, contentType: 'image/png', body: LOGO }) : r.abort());
+      await a.page.route(/google\.com\/s2\/favicons/, (r) => r.abort());
+      await type(a.page, 'www.polished.example');
+      await a.page.waitForSelector('#screen-results:not(.hidden)', { timeout: 15000 }).catch(() => {});
+      await a.page.waitForTimeout(500);
+      return a;
+    };
+    const a = await openTop({ viewport: { width: 1255, height: 607 } }, 'https://www.polished.example/logo.png', true);
+    const h = await a.page.evaluate(() => {
+      const link = document.getElementById('res-firm-url'), logo = document.getElementById('res-logo'), img = logo.querySelector('img');
+      const band = document.getElementById('next-band'), unlock = document.getElementById('unlock-card'), score = document.querySelector('.score-card'), sum = document.querySelector('.summary-block');
+      const r = (e) => e.getBoundingClientRect();
+      return { href: link.getAttribute('href'), text: link.textContent, target: link.target, rel: link.rel, facts: document.getElementById('res-firm-facts').textContent,
+        chips: [...document.querySelectorAll('#res-chips span')].map((c) => c.textContent), bolds: document.querySelectorAll('.res-header b').length,
+        logo: !!img && img.naturalWidth > 0 && r(logo).width >= 48 && img.getAttribute('src'), scripts: document.querySelectorAll('head script[src*="jspdf"], head script[src*="cdnjs"]').length,
+        bandTop: r(band).top, bandBottom: r(band).bottom, scoreBottom: r(score).bottom, unlockTop: r(unlock).top, vh: window.innerHeight, scoreH: r(score).height,
+        locked: document.getElementById('screen-results').classList.contains('locked'), go: [...band.querySelectorAll('a')].map((x) => x.getAttribute('href')),
+        gatedBand: band.classList.contains('gated'), oldCard: [...document.querySelectorAll('#screen-results .card .card-label')].filter((x) => x.textContent === 'What to do about it').length,
+        sumOrder: !!(band.compareDocumentPosition(sum) & Node.DOCUMENT_POSITION_FOLLOWING), wide: document.documentElement.scrollWidth <= window.innerWidth };
+    });
+    check('the results name the site as a link to it, opened beside this page (' + h.text + ')', String(h.href).replace(/\/$/, '') === 'https://www.polished.example' && h.text === 'polished.example' && h.target === '_blank' && /noopener/.test(h.rel));
+    check('under the name: where the firm is and when it was founded, as text, never as markup (' + h.facts + ')', h.facts === ' · Wayne, PA <b> · Founded 1987' && h.bolds === 0);
+    check('and what it is known for: four phrases at most, a long one cut at a word, and never its assets (' + h.chips.join(' | ') + ')', h.chips.join('|') === 'Retirement income planning for|Business owners|Families|A fifth');
+    check('the firm\'s own logo stands beside its name', h.logo === 'https://www.polished.example/logo.png');
+    check('what to do about it is straight under the score and above the unlock and the summary, locked or not, with both ways on', h.locked && !h.gatedBand && h.bandTop >= h.scoreBottom && h.bandBottom <= h.unlockTop && h.sumOrder && h.oldCard === 0 && h.go.join(',') === '/services/?utm_source=scorer,/contact/?utm_source=scorer');
+    check('at the owner\'s window the score and the call to action are both on the first screen (the band ends at ' + Math.round(h.bandBottom) + ' of ' + h.vh + ', the score card is ' + Math.round(h.scoreH) + ' tall)', h.bandBottom <= h.vh && h.wide);
+    check('the page loads no PDF library until a PDF is asked for, and none from another site\'s server', h.scripts === 0 && !a.sent.some(() => false) && await a.page.evaluate(() => typeof window.jspdf === 'undefined' && !document.querySelector('script[src*="cdnjs"]')));
+    const rec = (a.runs.filter((x) => x.kind === 'score')[0] || {}).profile || {};
+    check('the record carries what was discerned about the firm', rec.location === 'Wayne, PA <b>' && rec.founded === '1987' && Array.isArray(rec.specialties) && rec.specialties.length === 4);
+
+    // the scorecard on paper: every word it sets, where, and every bar and link, read off the library as it is drawn
+    await a.page.fill('#gate-name', 'Test Visitor'); await a.page.fill('#gate-email', 'visitor@example.com');
+    await a.page.click('#btn-gate-submit');
+    await a.page.waitForSelector('#screen-results:not(.locked)', { timeout: 15000 }).catch(() => {});
+    await a.page.addScriptTag({ url: '/js/vendor/jspdf-4.2.1.umd.min.js' });
+    await a.page.evaluate(() => {
+      const Real = window.jspdf.jsPDF, log = window.__pdf = { text: [], bars: [], links: [], images: 0, name: '', pages: 0 };
+      window.jspdf.jsPDF = function (o) {
+        const d = new Real(o), page = () => d.getCurrentPageInfo().pageNumber;
+        const text = d.text.bind(d), rr = d.roundedRect.bind(d), link = d.link.bind(d), twl = d.textWithLink.bind(d), img = d.addImage.bind(d);
+        d.text = (t, x, y, opt) => { [].concat(t).forEach((ln, i) => { const w = d.getTextWidth(String(ln)), al = opt && opt.align, size = d.getFontSize(), lh = size * ((opt && opt.lineHeightFactor) || 1.15);
+          log.text.push({ s: String(ln), page: page(), x: al === 'right' ? x - w : al === 'center' ? x - w / 2 : x, y: y + i * lh, w, size }); }); return text(t, x, y, opt); };
+        d.roundedRect = (x, y, w, h, a, b, st) => { if (h <= 6) log.bars.push({ page: page(), x, y, w, h }); return rr(x, y, w, h, a, b, st); };
+        d.link = (x, y, w, h, o2) => { log.links.push(o2.url); return link(x, y, w, h, o2); };
+        d.textWithLink = (t, x, y, o2) => { log.links.push(o2.url); return twl(t, x, y, o2); };
+        d.addImage = (...args) => { log.images++; return img(...args); };
+        d.save = (fn) => { log.name = fn; log.pages = d.getNumberOfPages(); log.bytes = d.output('arraybuffer').byteLength; };
+        return d;
+      };
+    });
+    await a.page.click('#btn-pdf');
+    await a.page.waitForFunction(() => window.__pdf && window.__pdf.name, null, { timeout: 20000 }).catch(() => {});
+    const pdf = await a.page.evaluate(() => window.__pdf);
+    const words = pdf.text.map((t) => t.s), has = (w) => words.some((x) => x.includes(w)), at = (w, pg) => pdf.text.find((t) => t.s.includes(w) && (!pg || t.page === pg));
+    check('the PDF is made, by the site\'s own copy of the library, named for the firm (' + pdf.name + ', ' + pdf.pages + ' pages, ' + pdf.bytes + ' bytes)', /^Polished-Sons-Advisors_Scorecard_\d{4}-\d\d-\d\d\.pdf$/.test(pdf.name) && pdf.pages >= 1 && pdf.bytes > 20000);
+    check('every word on it is one its typeface can draw: no wrong characters where a marker or a curly quote was meant', words.length > 30 && words.every((w) => /^[\x20-\x7E¡-ÿ]*$/.test(w)) && has('Three client quotes - "they changed our retirement" - with no disclosure.') && has('A "polished" site - with clear contact paths.'));
+    check('it opens on the site\'s wordmark, who it is for, the site as a link, where the firm is and what it is known for', pdf.images === 1 && has('PREPARED FOR') && has('Polished & Sons Advisors') && has('polished.example') && has('Wayne, PA') && has('Founded 1987') && has('Business owners') && pdf.links.some((u) => u.replace(/\/$/, '') === 'https://www.polished.example'));
+    const ctaY = (at('WHAT TO DO ABOUT IT', 1) || {}).y, sumY = (at('EXECUTIVE SUMMARY') || {}), heldY = (at('Held at Adequate', 1) || {}).y;
+    check('what to do about it is on the first page, under the score and above the summary, with a link to the services', ctaY > 0 && has('SEE SERVICES AND PRICING') && pdf.links.some((u) => u.startsWith('https://spataccoanalytics.com/services/')) && (sumY.page > 1 || sumY.y > ctaY) && heldY > 0 && heldY < ctaY);
+    check('it lists the red flag by kind with what it is, and says the rating was held', has('TESTIMONIALS AND ENDORSEMENTS') && has('Possible red flags, read from the public pages.') && has('Not legal or compliance advice'));
+    const foot = (t) => t.y > 745;
+    const pagesWithFoot = new Set(pdf.text.filter((t) => foot(t) && /^Page \d+ of \d+$/.test(t.s)).map((t) => t.page));
+    check('every page has its foot, and nothing else is set that low', pagesWithFoot.size === pdf.pages && pdf.text.filter(foot).every((t) => /^(Spatacco Analytics LLC|spataccoanalytics\.com|Page \d+ of \d+|For informational purposes only\. Not legal or compliance advice\.)$/.test(t.s)));
+    // nothing is set over anything: no two lines of words share ground, and no bar runs through a line
+    const box = (t) => ({ page: t.page, l: t.x, r: t.x + t.w, t: t.y - t.size * 0.72, b: t.y + t.size * 0.18 });
+    const hit = (p, q) => p.page === q.page && p.l < q.r - 1 && q.l < p.r - 1 && p.t < q.b - 1 && q.t < p.b - 1;
+    const boxes = pdf.text.filter((t) => t.s.trim()).map(box);
+    let over = 0, which = ''; const lines = pdf.text.filter((t) => t.s.trim()); for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) if (hit(boxes[i], boxes[j])) { over++; which = which || (lines[i].s + ' / ' + lines[j].s); }
+    const barred = pdf.bars.filter((bb) => boxes.some((t) => hit(t, { page: bb.page, l: bb.x, r: bb.x + bb.w, t: bb.y, b: bb.y + bb.h }))).length;
+    check('no words are set over other words, and no bar is drawn through a line (' + over + ' and ' + barred + ', of ' + boxes.length + ' lines and ' + pdf.bars.length + ' bars' + (which ? ': ' + which : '') + ')', over === 0 && barred === 0 && pdf.bars.length >= 8);
+    await a.ctx.close();
+
+    // a logo that will not load, on a phone: the firm's initials stand in, and the header keeps to the screen
+    const b = await openTop({ viewport: { width: 390, height: 664 }, hasTouch: true, isMobile: true }, 'https://www.polished.example/logo.png', false);
+    const m = await b.page.evaluate(() => { const logo = document.getElementById('res-logo'), band = document.getElementById('next-band'); const fs = (e) => parseFloat(getComputedStyle(e).fontSize);
+      return { mono: logo.classList.contains('mono') && !logo.querySelector('img'), letters: logo.textContent, wide: document.documentElement.scrollWidth <= window.innerWidth,
+        small: [...document.querySelectorAll('.res-firm-line, .res-firm-line a, #res-chips span, #next-band p, #next-band a')].filter((e) => fs(e) < 13).length, bandIn: band.getBoundingClientRect().right <= window.innerWidth }; });
+    check('a logo that will not load leaves the firm\'s initials in its place (' + m.letters + '), and on a phone the header and the call to action keep to the screen with nothing under 13px', m.mono && m.letters === 'PS' && m.wide && m.bandIn && m.small === 0);
+    await b.ctx.close();
+    open.scored = null;
+  }
+
   await browser.close();
   if (fails.length) { console.log(fails.map((f) => 'FAIL ' + f).join('\n')); console.log(fails.length + ' of ' + n + ' scorer checks failed'); process.exit(1); }
   console.log('ok: ' + n + ' scorer checks');

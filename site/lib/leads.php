@@ -73,6 +73,40 @@ function lead_flags($v): array
     return $out;
 }
 
+// What the scorer discerned about the firm from its own site: where it is, when it was founded, and up to four
+// phrases for what it is known for. One line each. It is the firm's public description of itself, kept so the
+// owner's CRM has it when the visit is accepted there.
+function lead_profile($v): array
+{
+    $v = is_array($v) ? $v : [];
+    $year = lead_text($v['founded'] ?? '', 8);      // read whole, so 19877 is not taken for 1987
+    $spec = [];
+    foreach (array_slice(is_array($v['specialties'] ?? null) ? array_values($v['specialties']) : [], 0, 4) as $s) {
+        $s = lead_text($s, 40);
+        if ($s !== '') {
+            $spec[] = $s;
+        }
+    }
+    return [
+        'location' => lead_text($v['location'] ?? '', 60),
+        'founded' => preg_match('/^(1[6-9]|20)\d\d$/', $year) ? $year : '',
+        'specialties' => $spec,
+    ];
+}
+
+function lead_profile_lines(array $p): array
+{
+    $bits = array_filter([$p['location'] ?? '', ($p['founded'] ?? '') !== '' ? 'Founded ' . $p['founded'] : '']);
+    $lines = [];
+    if ($bits) {
+        $lines[] = 'Where:    ' . implode(', ', $bits);
+    }
+    if (!empty($p['specialties'])) {
+        $lines[] = 'Known for: ' . implode('; ', $p['specialties']);
+    }
+    return $lines;
+}
+
 function lead_held($v): string
 {
     $held = lead_text($v, 20);

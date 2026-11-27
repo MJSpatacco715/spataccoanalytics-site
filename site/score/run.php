@@ -106,6 +106,7 @@ if ($kind === 'lookup') {
     $event['tier'] = lead_text($in['tier'] ?? '', 40);
     $event['held_from'] = lead_held($in['held_from'] ?? '');
     $event['flags'] = lead_flags($in['flags'] ?? null);
+    $event['profile'] = lead_profile($in['profile'] ?? null);
     $event['scores'] = $scores;
     $event['known'] = ($in['known'] ?? false) === true;
 } else {
@@ -148,6 +149,7 @@ if ($kind === 'score' && !$event['known']) {
                 '',
                 'Scored:   ' . $what . ' (' . $event['scope'] . ')',
                 'Firm:     ' . ($event['firm_scored'] !== '' ? $event['firm_scored'] : '(not named)'),
+                ...lead_profile_lines($event['profile']),
                 'Typed:    ' . ($event['typed'] !== '' ? $event['typed'] : '(the address itself)'),
                 'Found by: ' . ($event['found'] === 'lookup' ? 'firm-name lookup, then chosen from the matches' : 'the address as typed'),
                 'Score:    ' . $scoreLine,
