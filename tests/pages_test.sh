@@ -66,7 +66,7 @@ check "it says what it has to in under 480 words (now $words)" '[ "$words" -lt 4
 check "the first screen's button goes straight to the contact page" 'grep -q "<a href=\"/contact/\" class=\"hero-cta\">Start a Conversation</a>" "$home"'
 check "the first screen warns that a slow answer draws a harder look" 'grep -q "The longer each answer takes, the harder they look at everything else." "$home"'
 check "the second screen is about the website, in the first screen's two lines" 'grep -q "<h2 class=\"screen-title\"><span class=\"h1-main\">Prospects will look at your website.</span> <em>Make sure it works for you.</em></h2>" "$home"'
-check "and sends the visitor to the website scorer" 'grep -q "<a href=\"/tools/website-scorer.html?scope=website&amp;utm_source=home\" class=\"screen-cta\">Score Your Website</a>" "$home" && [ -s "$dist/tools/website-scorer.html" ]'
+check "and sends the visitor to the website scorer" 'grep -q "<a href=\"/tools/website-scorer/?scope=website&amp;utm_source=home\" class=\"screen-cta\">Score Your Website</a>" "$home" && [ -s "$dist/tools/website-scorer/index.html" ]'
 check "it does not call the website the number one way advisors are checked (no study says so)" '! ask "$home" said | grep -qiE "number one|#1|no\. 1|top way|most important"'
 check "How We Work keeps its headline and its line, and leads to its own page" 'ask "$home" said | grep -qE "Keep the way you work\. +Lose the mess\." && ! grep -qi "messy system" "$home" "$here/site/approach/index.html" && grep -q "<p class=\"approach-kicker reveal d05\">Adoption shouldn&rsquo;t be a battle. It should be a non-event.</p>" "$home" && grep -q "<a href=\"/approach/\" class=\"section-go\">Read how we work</a>" "$home"'
 check "the place posts are added to the home page is still there, above the closing band" 'grep -q "<!-- sa-insights -->" "$home" && [ "$(grep -bo "<!-- sa-insights -->" "$home" | cut -d: -f1)" -lt "$(grep -bo "class=\"contact-section\"" "$home" | cut -d: -f1)" ]'
@@ -111,7 +111,7 @@ want="/services/,/approach/,/tools/,/about/,/contact/"
 for f in "$home" "$site/services/index.html" "$site/tools/index.html" "$site/contact/index.html" "$site/approach/index.html" "$site/about/index.html"; do
   check "the menu on ${f#$site} reaches all five pages" '[ "$(ask "$f" nav | sed "s#^/,##")" = "$want" ]'
 done
-check "the scorer carries the same menu, in the same order" '[ "$(ask "$site/tools/website-scorer.html" nav | sed "s#^/,##")" = "$want" ]'
+check "the scorer carries the same menu, in the same order" '[ "$(ask "$site/tools/website-scorer/index.html" nav | sed "s#^/,##")" = "$want" ]'
 check "posts carry the same menu, in the same order" '[ "$(ask "$dist/insights/index.html" nav | sed "s#^/,##")" = "$want" ] && [ "$(ask "$dist/insights/most-firms-dont-need-more-software/index.html" nav | sed "s#^/,##")" = "$want" ]'
 check "and so does each tool page, which is built with the tools page menu" '[ "$(ask "$dist/tools/football/nfl-lines-tracker.html" nav | sed "s#^/,##")" = "$want" ]'
 check "nothing points at a section that left the home page" '! grep -rnE "/#(approach|about)|href=\"#(approach|about|contact)\"" "$site" "$here/scripts" --include=*.html --include=*.py --include=*.txt --include=.htaccess'
@@ -126,6 +126,16 @@ for u in $(grep -o '<loc>[^<]*</loc>' "$site/sitemap.xml" | sed 's#<loc>https://
   p="$dist$u"; [ "${u: -1}" = / ] && p="${p}index.html"; [ -s "$p" ] || { missing=$((missing+1)); echo "  not built: $u"; }
 done
 check "every address in the sitemap is a page that is built" '[ "$missing" = 0 ]'
+# A page people are sent to is addressed by its folder, never by a file name. The host hands out a page asked
+# for by file name from its own layer: a browser may keep it 180 days, and none of the rules in site/.htaccess
+# are applied to it (not "check before reuse", not www to the bare domain). Found 2026-11-27, when the owner's
+# own scores were missing from his record: a browser can go on running an old scorer, and on www the scorer's
+# record and lead calls were redirected and dropped.
+check "no page search engines are given is addressed by file name" '! grep -q "\.html</loc>" "$site/sitemap.xml"'
+check "the scorer lives at its folder address, and the file at its old address is gone" '[ -s "$dist/tools/website-scorer/index.html" ] && [ ! -e "$site/tools/website-scorer.html" ] && [ ! -e "$dist/tools/website-scorer.html" ]'
+check "its old address forwards to the folder, with whatever followed the question mark" 'grep -qF "RewriteRule ^tools/website-scorer\.html\$ https://spataccoanalytics.com/tools/website-scorer/ [R=301,L]" "$site/.htaccess"'
+check "nothing that is published still points at the old address" '! grep -rq "website-scorer\.html" "$dist" --include="*.html" --include="*.xml" --include="*.txt" --include="*.json" --include="*.js"'
+check "the page names its folder as its own address, and the printed code forwards there" 'grep -q "<link rel=\"canonical\" href=\"https://spataccoanalytics.com/tools/website-scorer/\">" "$site/tools/website-scorer/index.html" && grep -q "url=https://spataccoanalytics.com/tools/website-scorer/?scope=website&amp;utm_source=leave-behind&amp;utm_medium=qr" "$site/score/index.html"'
 check "the summary for AI tools lists both new pages" 'grep -q "https://spataccoanalytics.com/approach/" "$site/llms.txt" && grep -q "https://spataccoanalytics.com/about/" "$site/llms.txt"'
 long=0; hidden=0
 for u in $(grep -o '<loc>[^<]*</loc>' "$site/sitemap.xml" | sed 's#<loc>https://spataccoanalytics.com##; s#</loc>##'); do
@@ -145,12 +155,12 @@ done
 key=$(cd "$site" && ls | grep -E '^[0-9a-f]{32}\.txt$' | sed 's/\.txt$//')
 check "the site serves one IndexNow key, and the file holds its own name" '[ "$(printf "%s\n" "$key" | grep -c .)" = 1 ] && [ "$(cat "$site/$key.txt")" = "$key" ] && [ -s "$dist/$key.txt" ]'
 tell() { printf '%s\n' "$@" | python3 "$here/scripts/indexnow.py" --site "$site" --dist "$dist"; }
-told=$(tell site/services/index.html site/index.html site/tools/website-scorer.html site/services/index.html)
+told=$(tell site/services/index.html site/index.html site/tools/website-scorer/index.html site/services/index.html)
 check "a changed page is named once, by its own address, with the key and where to read it" 'python3 - "$told" "$key" <<'"'"'PY'"'"'
 import json, sys
 d = json.loads(sys.argv[1]); k = sys.argv[2]
 ok = (d["host"] == "spataccoanalytics.com" and d["key"] == k and d["keyLocation"] == "https://spataccoanalytics.com/%s.txt" % k
-      and d["urlList"] == ["https://spataccoanalytics.com/services/", "https://spataccoanalytics.com/", "https://spataccoanalytics.com/tools/website-scorer.html"])
+      and d["urlList"] == ["https://spataccoanalytics.com/services/", "https://spataccoanalytics.com/", "https://spataccoanalytics.com/tools/website-scorer/"])
 sys.exit(0 if ok else 1)
 PY'
 check "a style, a script, a picture or a test changing names nothing" '[ -z "$(tell site/css/ticker.css site/js/ticker.js site/img/logo-square.png tests/pages_test.sh site/lib/market.php README.md)" ]'
@@ -199,7 +209,7 @@ sys.exit(0 if want == has else 1)
 PY'
 
 # --- the scorer reads an address however it is typed
-scorer="$site/tools/website-scorer.html"
+scorer="$site/tools/website-scorer/index.html"
 # The scorer wears the site's own look. The owner, 2026-11-27: "scorer has a bland SA logo and
 # all white screen ... it contrasts with the style and feel of the site overall and feels
 # imported, rather than in house. match the visual style of the scorer to the overall site".
@@ -300,8 +310,8 @@ card = re.search(r"<fieldset class=\"sv-card reveal\" id=\"audit\".*?</fieldset>
 opt = re.search(r"<div class=\"sv-opt sv-opt-go\">(.*?)</div>", card, re.S)
 if not opt: sys.exit(1)
 o = opt.group(1)
-go = re.findall(r"<a class=\"sv-go\" href=\"(/tools/website-scorer\.html)\?scope=website&amp;utm_source=services\">Score my site</a>", o)
-ok = len(go) == 1 and o.count("<a ") == 1 and os.path.isfile(sys.argv[2] + go[0])     # one link, to a page that is in the built site
+go = re.findall(r"<a class=\"sv-go\" href=\"(/tools/website-scorer/)\?scope=website&amp;utm_source=services\">Score my site</a>", o)
+ok = len(go) == 1 and o.count("<a ") == 1 and os.path.isfile(sys.argv[2] + go[0] + "index.html")     # one link, to a page that is in the built site
 ok = ok and "Website Score" in o and "<span class=\"sv-price\">Free</span>" in o and "Included with every project." in o
 # the link is laid over the card, and the one button sits above it
 ok = ok and ".sv-go::after{content:\"\";position:absolute;inset:0}".replace(chr(34), chr(39)) in s and re.search(r"\.sv-opt\{position:relative;", s)
@@ -447,7 +457,7 @@ for how, href, kind, inside in tiles:
     ok = ok and ("&rarr;" if how == "live" else "&darr;") in inside
 # the two an advisor would use are tools to use, and lead the page as it opens
 first = [(how, href) for how, href, kind, _ in tiles if kind == "business"]
-ok = ok and first == [("live", "/tools/website-scorer.html"), ("live", "/tools/resume-parser/"), ("see", "#built-crm")]
+ok = ok and first == [("live", "/tools/website-scorer/"), ("live", "/tools/resume-parser/"), ("see", "#built-crm")]
 # in each kind the tools to use come before the platforms described
 for kind in ("business", "sports", "movies"):
     hows = [how for how, _, k, _ in tiles if k == kind]
@@ -602,7 +612,7 @@ check "and the built pages carry those versions, the Insights pages and each too
 # better at 150% size than 100%, there should be some adjustment. with a target market of
 # 50-80 year olds I shouldn't ask people to squint". Chosen of three: match the 150% view.
 check "every size on the main pages, the scorer and the Insights pages is in rem, and each says it grows: $(python3 "$here/scripts/scale_css.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/scale_css.py" --check >/dev/null'
-check "the rule that grows them is the one written down, in the shared stylesheet and on the home page, which does not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -q "href=\"/css/shared.css?v=" "$site/tools/website-scorer.html"'
+check "the rule that grows them is the one written down, in the shared stylesheet and on the home page, which does not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -q "href=\"/css/shared.css?v=" "$site/tools/website-scorer/index.html"'
 check "on a phone no text is under 13px: the floor is set in the same two places" 'f="@media(max-width:760px){:root{--tfloor:0.8125rem}}"; grep -qF "$f" "$site/css/shared.css" && grep -qF "$f" "$home"'
 check "the Insights pages grow too, and a tool page built with the tools head does not until its own styles are in rem" 'grep -q "<html lang=\"en\" class=\"sa-scale\">" "$dist/insights/index.html" && ! grep -q "sa-scale" "$dist/tools/football/nfl-lines-tracker.html"'
 if node -e "require('playwright')" 2>/dev/null; then

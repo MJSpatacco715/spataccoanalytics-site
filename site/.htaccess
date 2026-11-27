@@ -30,5 +30,13 @@ RewriteRule ^about\.php$ https://spataccoanalytics.com/about/ [R=301,QSD,L]
 RewriteRule ^approach\.php$ https://spataccoanalytics.com/approach/ [R=301,QSD,L]
 # the resume parser has one address
 RewriteRule ^tools/resume-parser\.html$ https://spataccoanalytics.com/tools/resume-parser/ [R=301,L]
+# and so has the website scorer, a folder (2026-11-27). The host hands out a
+# page that is asked for by file name from its own layer: a browser may keep
+# it 180 days, and none of the rules in this file are applied to it (not
+# "check before reuse", not the www rule above). A browser went on running an
+# old scorer, and on www the scorer's record and lead calls were redirected
+# and dropped. A folder address is served through these rules. The old file
+# is gone, so a request for it reaches this line.
+RewriteRule ^tools/website-scorer\.html$ https://spataccoanalytics.com/tools/website-scorer/ [R=301,L]
 
 RewriteRule ^_(header|footer)\.php$ https://spataccoanalytics.com/ [R=301,L]

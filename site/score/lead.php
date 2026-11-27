@@ -2,7 +2,7 @@
 /*
  * Records a Website Scorer lead.
  *
- * The scorer (tools/website-scorer.html) shows the overall score, then asks
+ * The scorer (tools/website-scorer/index.html) shows the overall score, then asks
  * for a name and an email before it opens the full breakdown. That form posts
  * here. The lead goes to sa-leads/scorer.jsonl and a notice is mailed; the
  * checks and the storage are in lib/leads.php.

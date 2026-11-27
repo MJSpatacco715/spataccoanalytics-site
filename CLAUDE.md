@@ -246,6 +246,29 @@ lives and says which pieces are not in this repo yet.
   clearing a cache. Scripts, styles and images are kept for a year: when one
   changes, its address must change (a `?v=`), or returning visitors never get
   it.
+  That holds for a page reached by its folder (`/tools/`, `/services/`) and
+  not for one asked for by file name. Measured on the live host 2026-11-27:
+  `/tools/` answers `private, no-cache`, while `/tools/index.html` and every
+  other `.html` address answer `max-age=15552000` (180 days) with
+  `x-proxy-cache-info: DT:1`. The host (SiteGround's NGINX Direct Delivery)
+  hands such a file out itself, and none of `site/.htaccess` is applied to
+  it: not "check before reuse", and not www to the bare domain either. It was
+  found when the owner's own scores were missing from his record ("i only see
+  the tests though, not the ones I've tested"): the scorer was
+  `/tools/website-scorer.html`, so a browser could go on running a copy from
+  before the recorder existed, and on `www` the page opened but its calls to
+  `score/run.php` and `score/lead.php` were redirected and dropped. So a page
+  people are sent to has a folder address. The scorer is
+  `/tools/website-scorer/` (`site/tools/website-scorer/index.html`); its old
+  address forwards from `site/.htaccess`, which works because the old file is
+  gone and the request reaches Apache. `tests/pages_test.sh` holds that no
+  sitemap address ends in `.html` and that nothing published points at the old
+  one. Still addressed by file name, and so still kept by browsers for up to
+  180 days: the tools' own pages (`/tools/*.html`, `/tools/football/*.html`).
+  Turning NGINX Direct Delivery off for the site (Site Tools > Speed >
+  Caching) would put every address under these rules; that is the owner's
+  setting. To check a page's cache life, read its headers at the address a
+  visitor uses, not at its folder.
   The site is behind Cloudflare, which keeps a script, style or image for that
   year under its full address, `?v=` included, at each of its locations. So a
   new address must never be asked for before the publish that brings the file
@@ -362,7 +385,7 @@ lives and says which pieces are not in this repo yet.
   bland SA logo and all white screen (like the one home/page scroll that's
   weirdly all white in a sea of blue). it contrasts with the style and feel of
   the site overall and feels imported, rather than in house. match the visual
-  style of the scorer to the overall site". So `site/tools/website-scorer.html`
+  style of the scorer to the overall site". So `site/tools/website-scorer/index.html`
   uses the shared stylesheet, the site's menu (Tools lit) and footer, its navy
   ground, its two typefaces and its cyan-to-purple buttons, and opens on the
   site's page hero with the blue line of the headline on a line of its own.
@@ -409,7 +432,7 @@ lives and says which pieces are not in this repo yet.
   carries `scroll-margin-top`.
 - A field for a web address takes what people type. The owner, after the scorer
   turned away `www.` and a domain with no `https://`: "This cannot require https
-  etc. too rigid". `tidyAddress` in `site/tools/website-scorer.html` makes a
+  etc. too rigid". `tidyAddress` in `site/tools/website-scorer/index.html` makes a
   typed address whole, and `lead_url` in `site/lib/leads.php` reads it the same
   way. No field asks for `https://`, in its hint or in its message.
 - A firm's name typed into the scorer is looked up, not turned away. The owner,

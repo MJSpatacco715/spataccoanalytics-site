@@ -9,7 +9,7 @@ let n = 0, fails = 0;
 const check = (name, cond) => { n++; if (!cond) { fails++; console.log('FAIL ' + name); } };
 
 // the instructions as the live pages send them, lifted from the pages
-const scorer = fs.readFileSync(new URL('../site/tools/website-scorer.html', import.meta.url), 'utf8');
+const scorer = fs.readFileSync(new URL('../site/tools/website-scorer/index.html', import.meta.url), 'utf8');
 const parser = fs.readFileSync(new URL('../site/tools/resume-parser/index.html', import.meta.url), 'utf8');
 const lift = (src, re) => { const m = src.match(re); if (!m) throw new Error('page changed: ' + re); return m[1]; };
 const websitePrompt = lift(scorer, /askClaude\(`(You are a knowledgeable digital marketing consultant[\s\S]*?)`\)/).replace('${url}', 'https://example.com');
