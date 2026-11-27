@@ -45,6 +45,7 @@ SHEETS = ["site/css/shared.css", "site/css/cite.css", "site/css/ticker.css", "si
 PAGES = [
     "site/index.html", "site/services/index.html", "site/approach/index.html", "site/about/index.html",
     "site/contact/index.html", "site/tools/index.html", "site/tools/website-scorer/index.html",
+    "site/privacy/index.html",
 ]
 
 # A page grows only if it says so: its <html> carries class="sa-scale" (MARK). A page that

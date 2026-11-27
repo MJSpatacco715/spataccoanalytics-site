@@ -42,6 +42,7 @@ SHEETS = ["site/css/shared.css", "site/css/cite.css", "site/css/insights.css"]
 PAGES = [
     "site/index.html", "site/services/index.html", "site/approach/index.html", "site/about/index.html",
     "site/contact/index.html", "site/tools/index.html", "site/tools/website-scorer/index.html",
+    "site/privacy/index.html",
 ]
 
 # A colour written as six hex digits, and the variable that holds it in the dark version.

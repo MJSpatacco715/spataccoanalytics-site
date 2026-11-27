@@ -174,7 +174,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {body}
 <footer>
   <a href="/" class="footer-brand"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="footer-logo" width="520" height="163"></a>
-  <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; {sign_off_link("/insights/", "Insights")}{follow}</div>
+  <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; {sign_off_link("/insights/", "Insights")}{follow} &middot; {sign_off_link("/privacy/", "Privacy")}</div>
   <img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512">
 </footer>
 <script src="/js/shared.js"></script>
@@ -224,7 +224,8 @@ def build(out: Path, posts_dir: Path | None = None, drafts: bool = False) -> int
     # visitor and a search engine can reach it from any page, then the firm's
     # LinkedIn page. The home page also tells search engines the page is the firm's.
     tail = (f' &middot; {sign_off_link("/insights/", "Insights")}' if posts else "") + \
-           (f' &middot; {sign_off_link(linkedin, "LinkedIn")}' if linkedin else "")
+           (f' &middot; {sign_off_link(linkedin, "LinkedIn")}' if linkedin else "") + \
+           f' &middot; {sign_off_link("/privacy/", "Privacy")}'
     if tail:
         sign = "&copy; 2026 Spatacco Analytics LLC"
         for f in out.rglob("*.html"):
