@@ -62,7 +62,7 @@ const lum = (rgb) => { const p = rgb.match(/[\d.]+/g).map(Number); const f = (v)
       return { theme: document.documentElement.getAttribute('data-theme') || 'dark', body: g(document.body), nav: g(document.getElementById('main-nav')), foot: g(document.querySelector('footer')), ink: getComputedStyle(document.querySelector('h1')).color,
         sw: !!sw && r.width >= 34 && r.height >= 34 && r.top >= nav.top && r.bottom <= nav.bottom && r.right <= window.innerWidth && r.left >= 0, pressed: sw && sw.getAttribute('aria-pressed'), label: sw && sw.getAttribute('aria-label'),
         // the sun fills most of the box and is set in its top right corner; the moon is the small one, bottom left
-        sunBig: !!sb && sb.width >= r.width * 0.6 && sb.height >= r.height * 0.6, sunCorner: !!sb && (r.right - sb.right) <= r.width * 0.08 && (sb.top - r.top) <= r.height * 0.08 && (sb.left - r.left) >= r.width * 0.2,
+        sunBig: !!sb && sb.width >= r.width * 0.6 && sb.height >= r.height * 0.6, sunCorner: !!sb && (r.right - sb.right) <= r.width * 0.08 && (sb.top - r.top) <= r.height * 0.08 && (sb.left - r.left) >= r.width * 0.04,
         moonSmall: !!mb && mb.width <= r.width * 0.45 && mb.left - r.left <= r.width * 0.15 && r.bottom - mb.bottom <= r.height * 0.15, sunLit: sun && parseFloat(getComputedStyle(sun).opacity), moonLit: moon && parseFloat(getComputedStyle(moon).opacity),
         wide: document.documentElement.scrollWidth <= window.innerWidth, navH: Math.round(nav.height) }; });
     for (const [name, url] of PAGES) {
