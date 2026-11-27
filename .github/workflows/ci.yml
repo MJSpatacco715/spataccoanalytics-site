@@ -167,5 +167,5 @@ jobs:
           site=site
           [ -f site/tools/index.html ] || site=reference/live
           python scripts/build_site.py --site "$site" --out dist --live build/live
-          grep -q 'class="nfl-app"' dist/tools/football/nfl-depth-charts.html
+          grep -q 'class="nfl-app"' dist/tools/football/nfl-depth-charts/index.html
           python scripts/validate_showcase.py --html dist/tools/football

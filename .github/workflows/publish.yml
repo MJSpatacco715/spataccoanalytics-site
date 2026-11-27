@@ -288,7 +288,7 @@ jobs:
           root="$HOME/$1"
           grep -q 'sa-tools:nfl-cards:start' "$root/tools/index.html"
           grep -q 'class="scorecard"' "$root/tools/index.html"
-          for f in nfl-lines-tracker nfl-injury-tracker nfl-depth-charts; do test -s "$root/tools/football/$f.html"; done
+          for f in nfl-lines-tracker nfl-injury-tracker nfl-depth-charts; do test -s "$root/tools/football/$f/index.html"; test ! -e "$root/tools/football/$f.html"; done
           test -d "$root/saratoga" && echo "saratoga/ still present"
           # The relay, end to end from the server: one call through feed.php.
           live="$root/tools/football/live"

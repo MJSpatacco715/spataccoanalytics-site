@@ -113,7 +113,7 @@ for f in "$home" "$site/services/index.html" "$site/tools/index.html" "$site/con
 done
 check "the scorer carries the same menu, in the same order" '[ "$(ask "$site/tools/website-scorer/index.html" nav | sed "s#^/,##")" = "$want" ]'
 check "posts carry the same menu, in the same order" '[ "$(ask "$dist/insights/index.html" nav | sed "s#^/,##")" = "$want" ] && [ "$(ask "$dist/insights/most-firms-dont-need-more-software/index.html" nav | sed "s#^/,##")" = "$want" ]'
-check "and so does each tool page, which is built with the tools page menu" '[ "$(ask "$dist/tools/football/nfl-lines-tracker.html" nav | sed "s#^/,##")" = "$want" ]'
+check "and so does each tool page, which is built with the tools page menu" '[ "$(ask "$dist/tools/football/nfl-lines-tracker/index.html" nav | sed "s#^/,##")" = "$want" ]'
 check "nothing points at a section that left the home page" '! grep -rnE "/#(approach|about)|href=\"#(approach|about|contact)\"" "$site" "$here/scripts" --include=*.html --include=*.py --include=*.txt --include=.htaccess'
 check "the earlier site's pages go to the new ones" 'grep -q "^RewriteRule \^about\\\\.php\$ https://spataccoanalytics.com/about/ \[R=301,QSD,L\]" "$site/.htaccess" && grep -q "^RewriteRule \^approach\\\\.php\$ https://spataccoanalytics.com/approach/ \[R=301,QSD,L\]" "$site/.htaccess"'
 
@@ -136,6 +136,16 @@ check "the scorer lives at its folder address, and the file at its old address i
 check "its old address forwards to the folder, with whatever followed the question mark" 'grep -qF "RewriteRule ^tools/website-scorer\.html\$ https://spataccoanalytics.com/tools/website-scorer/ [R=301,L]" "$site/.htaccess"'
 check "nothing that is published still points at the old address" '! grep -rq "website-scorer\.html" "$dist" --include="*.html" --include="*.xml" --include="*.txt" --include="*.json" --include="*.js"'
 check "the page names its folder as its own address, and the printed code forwards there" 'grep -q "<link rel=\"canonical\" href=\"https://spataccoanalytics.com/tools/website-scorer/\">" "$site/tools/website-scorer/index.html" && grep -q "url=https://spataccoanalytics.com/tools/website-scorer/?scope=website&amp;utm_source=leave-behind&amp;utm_medium=qr" "$site/score/index.html"'
+# Every tool's own page has a folder address too. Shown the nine still addressed by file name and three ways to deal
+# with them, the owner, 2026-11-27: "re the decision: A" (move them, the old addresses forwarding).
+check "every page in the build is its folder's index: none is addressed by file name (the framed live tools apart)" '[ -z "$(cd "$dist" && find . -name "*.html" ! -name index.html ! -path "./tools/football/live/*")" ]'
+check "each tool's old address forwards to its folder: the five in tools/, the three NFL tools and the delisted page" 'grep -qF "RewriteRule ^tools/(afi-tracker|card-evaluator|cricket-explainer|curling-explainer|oscar-tracker)\.html\$ https://spataccoanalytics.com/tools/\$1/ [R=301,L]" "$site/.htaccess" && grep -qF "RewriteRule ^tools/football/(nfl-lines-tracker|nfl-injury-tracker|nfl-depth-charts)\.html\$ https://spataccoanalytics.com/tools/football/\$1/ [R=301,L]" "$site/.htaccess" && grep -qF "RewriteRule ^unleash/kraken\.html\$ https://spataccoanalytics.com/unleash/kraken/ [R=301,L]" "$site/.htaccess"'
+check "nothing that is published points at an old tool address, and every tool the Tools page links is there" '! grep -rqE "/tools/(football/nfl-[a-z-]+|afi-tracker|card-evaluator|cricket-explainer|curling-explainer|oscar-tracker)\.html|/unleash/kraken\.html" "$dist" --include="*.html" --include="*.xml" --include="*.txt" --include="*.json" --include="*.js" && for h in $(grep -oE "href=\"/tools/[a-z/-]+/\"" "$dist/tools/index.html" | sort -u | sed "s/^href=\"//; s/\"\$//"); do [ -s "$dist${h}index.html" ] || exit 1; done'
+# A framed live tool is still a file the host hands out by name, so the page that frames it names it by its whole
+# address with the file's own version: when the tool changes, the address changes. (A stand-in for the live build.)
+mkdir -p "$t/live" && for a in lines injuries depth-charts; do printf '<html><body>%s</body></html>' "$a" > "$t/live/$a.html"; done
+python3 "$here/scripts/build_site.py" --site "$site" --out "$t/dist-live" --live "$t/live" >/dev/null 2>&1
+check "a tool page frames its live tool by its whole address and the file's version, and carries what follows the question mark into it" 'v=$(sha1sum "$t/live/lines.html" | cut -c1-8); f="$t/dist-live/tools/football/nfl-lines-tracker/index.html"; grep -q "<iframe id=\"nfl-app\" src=\"/tools/football/live/lines.html?v=$v\"" "$f" && grep -q "href=\"/tools/football/live/lines.html?v=$v\">Open full screen" "$f" && grep -qF "s.indexOf(\"?\")<0?q:\"&\"+q.slice(1)" "$f" && [ -s "$t/dist-live/tools/football/live/lines.html" ]'
 check "the summary for AI tools lists both new pages" 'grep -q "https://spataccoanalytics.com/approach/" "$site/llms.txt" && grep -q "https://spataccoanalytics.com/about/" "$site/llms.txt"'
 long=0; hidden=0
 for u in $(grep -o '<loc>[^<]*</loc>' "$site/sitemap.xml" | sed 's#<loc>https://spataccoanalytics.com##; s#</loc>##'); do
@@ -147,7 +157,7 @@ check "every page in the sitemap has a description a results page shows whole" '
 check "no page in the sitemap is kept out of search" '[ "$hidden" = 0 ]'
 check "the services page is titled with what it sells, not the word Services" 'grep -q "<title>CRM Repair, Websites and Audits for RIAs | Spatacco Analytics</title>" "$site/services/index.html" && grep -q "<meta property=\"og:title\" content=\"CRM Repair, Websites and Audits for RIAs | Spatacco Analytics\">" "$site/services/index.html"'
 check "the resume parser is titled with what it does" 'grep -q "<title>Resume Parser: Resume to Excel or CSV | Spatacco Analytics</title>" "$site/tools/resume-parser/index.html"'
-for f in unleash/index.html unleash/kraken.html; do
+for f in unleash/index.html unleash/kraken/index.html; do
   check "the delisted page /$f is kept out of search and out of the sitemap" 'grep -q "<meta name=\"robots\" content=\"noindex\">" "$dist/$f" && ! grep -q "unleash" "$site/sitemap.xml"'
 done
 
@@ -164,7 +174,7 @@ ok = (d["host"] == "spataccoanalytics.com" and d["key"] == k and d["keyLocation"
 sys.exit(0 if ok else 1)
 PY'
 check "a style, a script, a picture or a test changing names nothing" '[ -z "$(tell site/css/ticker.css site/js/ticker.js site/img/logo-square.png tests/pages_test.sh site/lib/market.php README.md)" ]'
-check "a page kept out of search is never named" '[ -z "$(tell site/unleash/index.html site/unleash/kraken.html site/score/index.html site/bank/index.html)" ]'
+check "a page kept out of search is never named" '[ -z "$(tell site/unleash/index.html site/unleash/kraken/index.html site/score/index.html site/bank/index.html)" ]'
 check "a post that is not published names nothing, not even the Insights page" '[ -z "$(tell content/posts/2026-12-01-not-published-yet.json)" ]'
 python3 "$here/scripts/build_site.py" --site "$site" --out "$t/withposts" --posts "$here/tests/fixtures/posts" >/dev/null 2>&1
 check "a published post is named by its own address, without the date in its file name, with the Insights page" '[[ "$(printf "%s\n" content/posts/2026-01-05-sample-practice.json content/posts/2026-01-07-sample-draft.json | python3 "$here/scripts/indexnow.py" --site "$site" --dist "$t/withposts")" == *"\"urlList\": [\"https://spataccoanalytics.com/insights/sample-practice/\", \"https://spataccoanalytics.com/insights/\"]"* ]]'
@@ -418,7 +428,7 @@ for href, kind, inside in cards:                                             # t
     parts = [m.start() for m in (re.search(p, inside) for p in (r"<svg class=\"[a-z]+-icon\" aria-hidden=\"true\"><use href=\"#i-[a-z]+\"/></svg>", r"<h4>[^<]+</h4>", r"<p>.+?</p>", r"<span class=\"scorecard-stat\">Interactive[^<]*</span>", r"<span class=\"scorecard-launch\">(Open|See it)</span>")) if m]
     ok = ok and len(parts) == 5 and parts == sorted(parts)
 order = [c[0] for c in cards]
-ok = ok and order.index("/tools/card-evaluator.html") < order.index("/tools/oscar-tracker.html")       # the card evaluator is filed with Sports
+ok = ok and order.index("/tools/card-evaluator/") < order.index("/tools/oscar-tracker/")       # the card evaluator is filed with Sports
 ok = ok and not re.search(r"playbill-ticket|tradingcard-holo|tradingcard-stats|Now Showing|From the Collection", fun)
 ok = ok and ".fun-band .subgroup,.fun-band .subgroup-grid{display:contents}" in s
 sys.exit(0 if ok else 1)
@@ -476,7 +486,7 @@ ok = ok and not re.search(r"class=\"(?:tl-ico|tool-icon|scorecard-icon|playbill-
 ok = ok and not re.search(r"&#(?:1[0-9]{4,5}|9[0-9]{3});", s)                    # no emoji entity left on the page
 sys.exit(0 if ok else 1)
 PY'
-check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more|group)(-[a-z]+)?[ .:,{\[]"'
+check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker/index.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more|group)(-[a-z]+)?[ .:,{\[]"'
 
 # --- every inner page opens on a supporting figure with its source
 # The owner, 2026-11-26: "each of the page heros should be consistent. white
@@ -549,7 +559,7 @@ sys.exit(0 if clear and w >= 450 and w > h * 2.5 and len(b) < 60000 else 1)
 PY'
 check "the tool that makes it from the logo file is kept with it" '[ -s "$here/scripts/logo_cutout.py" ] && grep -q "site. / .img. / .logo.jpg" "$here/scripts/logo_cutout.py" && [ -s "$site/img/logo.jpg" ]'
 logos_ok=0; logo_pages=0
-for f in "$dist/index.html" "$dist/services/index.html" "$dist/approach/index.html" "$dist/tools/index.html" "$dist/about/index.html" "$dist/contact/index.html" "$dist/insights/index.html" "$dist/insights/most-firms-dont-need-more-software/index.html" "$dist/tools/football/nfl-lines-tracker.html"; do
+for f in "$dist/index.html" "$dist/services/index.html" "$dist/approach/index.html" "$dist/tools/index.html" "$dist/about/index.html" "$dist/contact/index.html" "$dist/insights/index.html" "$dist/insights/most-firms-dont-need-more-software/index.html" "$dist/tools/football/nfl-lines-tracker/index.html"; do
   logo_pages=$((logo_pages+1))
   if python3 - "$f" "$vword" $dims <<'PY'
 import re, sys
@@ -609,7 +619,7 @@ check "every page that uses the shared stylesheet asks for its current version (
 # The same goes for every stylesheet and script the pages share (scripts/asset_versions.py):
 # the source cards' and the Insights pages' had no version at all until November 2026.
 check "every shared stylesheet and script is asked for by its current version: $(python3 "$here/scripts/asset_versions.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/asset_versions.py" --check >/dev/null'
-check "and the built pages carry those versions, the Insights pages and each tool page included" 'v1=$(sha1sum "$site/css/cite.css" | cut -c1-8); v2=$(sha1sum "$site/css/insights.css" | cut -c1-8); ! grep -rlE "href=\"/css/(cite|insights)\.css\"" "$dist" --include=*.html | grep -q . && grep -q "href=\"/css/cite.css?v=$v1\"" "$dist/insights/index.html" && grep -q "href=\"/css/insights.css?v=$v2\"" "$dist/insights/index.html" && grep -q "href=\"/css/cite.css?v=$v1\"" "$dist/tools/football/nfl-lines-tracker.html"'
+check "and the built pages carry those versions, the Insights pages and each tool page included" 'v1=$(sha1sum "$site/css/cite.css" | cut -c1-8); v2=$(sha1sum "$site/css/insights.css" | cut -c1-8); ! grep -rlE "href=\"/css/(cite|insights)\.css\"" "$dist" --include=*.html | grep -q . && grep -q "href=\"/css/cite.css?v=$v1\"" "$dist/insights/index.html" && grep -q "href=\"/css/insights.css?v=$v2\"" "$dist/insights/index.html" && grep -q "href=\"/css/cite.css?v=$v1\"" "$dist/tools/football/nfl-lines-tracker/index.html"'
 
 # --- the page grows with the window (scripts/scale_css.py)
 # The owner, 2026-11-27, with the site at 100% beside the same page at 150%: "the site looks
@@ -618,7 +628,7 @@ check "and the built pages carry those versions, the Insights pages and each too
 check "every size on the main pages, the scorer and the Insights pages is in rem, and each says it grows: $(python3 "$here/scripts/scale_css.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/scale_css.py" --check >/dev/null'
 check "the rule that grows them is the one written down, in the shared stylesheet and on the home page, which does not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -q "href=\"/css/shared.css?v=" "$site/tools/website-scorer/index.html"'
 check "on a phone no text is under 13px: the floor is set in the same two places" 'f="@media(max-width:760px){:root{--tfloor:0.8125rem}}"; grep -qF "$f" "$site/css/shared.css" && grep -qF "$f" "$home"'
-check "the Insights pages grow too, and a tool page built with the tools head does not until its own styles are in rem" 'grep -q "<html lang=\"en\" class=\"sa-scale\">" "$dist/insights/index.html" && ! grep -q "sa-scale" "$dist/tools/football/nfl-lines-tracker.html"'
+check "the Insights pages grow too, and a tool page built with the tools head does not until its own styles are in rem" 'grep -q "<html lang=\"en\" class=\"sa-scale\">" "$dist/insights/index.html" && ! grep -q "sa-scale" "$dist/tools/football/nfl-lines-tracker/index.html"'
 if node -e "require('playwright')" 2>/dev/null; then
   (cd "$dist" && exec python3 -m http.server 18747 --bind 127.0.0.1 >/dev/null 2>&1) & lpid=$!
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18747/" && break; sleep 0.1; done

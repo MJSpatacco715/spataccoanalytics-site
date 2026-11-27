@@ -58,7 +58,7 @@ either page is not asked again on the other for 30 days.
  ──────────────────────────────────────────        ─────────                         ─────────────────────
  code and data files ── read-only token ──────►    Publish workflow                  /tools/  (Sports Desk:
                                                     1. live numbers and dates         three NFL cards on top)
-                                                    2. the working tools, built       /tools/football/<tool>.html
+                                                    2. the working tools, built       /tools/football/<tool>/
                                                        and opened in a browser          (the tool, running, framed
                                                     3. build site/ + generated  ──►     by what it is and how it
                                                     4. deploy over SSH                  is built)

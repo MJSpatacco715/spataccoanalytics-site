@@ -41,7 +41,7 @@ function measure(page) {
 
 (async () => {
   const browser = await chromium.launch();
-  const pages = ['/', '/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/football/nfl-lines-tracker.html', '/tools/website-scorer/'];
+  const pages = ['/', '/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/football/nfl-lines-tracker/', '/tools/website-scorer/'];
 
   // --- a desktop
   {

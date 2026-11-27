@@ -269,12 +269,28 @@ lives and says which pieces are not in this repo yet.
   address forwards from `site/.htaccess`, which works because the old file is
   gone and the request reaches Apache. `tests/pages_test.sh` holds that no
   sitemap address ends in `.html` and that nothing published points at the old
-  one. Still addressed by file name, and so still kept by browsers for up to
-  180 days: the tools' own pages (`/tools/*.html`, `/tools/football/*.html`).
+  one.
+  Every tool's own page has a folder address as well. Nine were still asked
+  for by file name (five in `/tools/`, the three NFL tools, and the delisted
+  `/unleash/kraken.html`); shown three ways to deal with them (move them, a
+  host setting, leave them), the owner, 2026-11-27: "re the decision: A". Each
+  is `<name>/index.html` now, the build writes each NFL tool's page to
+  `tools/football/<id>/index.html`, and the old addresses forward from
+  `site/.htaccess`. `tests/pages_test.sh` holds that no page in the build is
+  addressed by file name, and the publish checks on the host that the old
+  files are gone.
+  What is still a file asked for by name: the live NFL tools a page frames
+  (`/tools/football/live/*.html`) and the scripts and data beside them, which
+  the football folder's own `.htaccess` marks "ask before reuse" and the host
+  hands out for months all the same. The page that frames one names it by its
+  whole address with the file's version (`?v=`, `scripts/build_site.py`), so
+  a tool that changes is fetched afresh; its scripts are not versioned yet.
   Turning NGINX Direct Delivery off for the site (Site Tools > Speed >
-  Caching) would put every address under these rules; that is the owner's
-  setting. To check a page's cache life, read its headers at the address a
-  visitor uses, not at its folder.
+  Caching) would put every address under the site's rules; that is the
+  owner's setting, and before it is turned off the long life of scripts,
+  styles and images has to be written into `site/.htaccess`, since the host's
+  own layer is what gives it to them today. To check a page's cache life, read
+  its headers at the address a visitor uses, not at its folder.
   The site is behind Cloudflare, which keeps a script, style or image for that
   year under its full address, `?v=` included, at each of its locations. So a
   new address must never be asked for before the publish that brings the file
