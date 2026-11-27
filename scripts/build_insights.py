@@ -141,9 +141,9 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 <title>{esc(title)} | Spatacco Analytics</title>
 <meta name="description" content="{esc(desc)}">
 <link rel="canonical" href="{BASE}{path}">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png">
+<link rel="icon" type="image/x-icon" href="/favicon.ico?v=2">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon-180x180.png?v=2">
 <link rel="alternate" type="application/rss+xml" title="Spatacco Analytics Insights" href="/insights/feed.xml">
 <meta property="og:site_name" content="Spatacco Analytics">
 <meta property="og:title" content="{esc(title)}">
