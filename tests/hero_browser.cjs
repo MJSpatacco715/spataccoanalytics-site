@@ -42,7 +42,7 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
   for (const [w, h, mobile] of [[1440, 900, false], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
-    for (const path of ['/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/']) {
+    for (const path of ['/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/website-scorer.html']) {
       await page.goto(base + path, { waitUntil: 'load' });
       await page.waitForTimeout(150);
       const b = await blueLine(page);

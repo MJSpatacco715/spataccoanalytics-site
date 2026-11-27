@@ -53,6 +53,42 @@ const FOUND = JSON.stringify({ candidates: [
     await page.goto(base + '/tools/website-scorer.html?scope=website', { waitUntil: 'load' });
     return { ctx, page, sent, errors };
   };
+  // The scorer wears the site's look (the owner, 2026-11-27: "scorer has a bland SA logo and all white
+  // screen ... feels imported, rather than in house. match the visual style of the scorer to the overall
+  // site"). What a visitor sees, in whatever state the page is in: the ground, the type, the menu and
+  // footer, and whether anything is still a light panel or dark words on the dark ground.
+  const look = (page) => page.evaluate(() => {
+    const rgb = (s) => (s.match(/[\d.]+/g) || []).map(Number);
+    const lum = (c) => (0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]) / 255;
+    const shown = (e) => { const r = e.getBoundingClientRect(), st = getComputedStyle(e); return r.width > 0 && r.height > 0 && st.visibility !== 'hidden' && st.display !== 'none' && !e.closest('.hidden,[hidden],.hp'); };
+    const light = [], dim = [];
+    for (const e of document.querySelectorAll('body *')) {
+      if (!shown(e) || e.closest('#main-nav, footer')) continue;
+      if (e.closest('.score-bar-track, .match-bar, .progress-track, .cat-card [style*="width"]')) continue;   // a bar's lit fill is a mark, not a ground
+      const st = getComputedStyle(e), bg = rgb(st.backgroundColor), r = e.getBoundingClientRect();
+      // a light panel: a pale, solid ground of any size that matters (a gradient button has no ground colour)
+      if (bg.length >= 3 && (bg.length < 4 || bg[3] > 0.5) && lum(bg) > 0.75 && r.width * r.height > 1500) light.push(e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0]);
+      // dark words on the dark ground: text of its own, in a dark colour, with no light ground of its own behind it
+      const own = [...e.childNodes].some((n) => n.nodeType === 3 && n.nodeValue.trim());
+      if (own && st.backgroundImage === 'none' && !(bg.length >= 3 && (bg.length < 4 || bg[3] > 0.5) && lum(bg) > 0.5) && lum(rgb(st.color)) < 0.42 && !e.closest('.btn-primary,.btn-gold,.match-go')) dim.push(e.tagName.toLowerCase() + '.' + String(e.className).split(' ')[0] + ' ' + st.color);
+    }
+    const nav = document.getElementById('main-nav'), foot = document.querySelector('body > footer'), h1 = document.querySelector('h1');
+    const first = document.querySelector('.card:not(.hidden), #screen-results:not(.hidden)');
+    return {
+      ground: getComputedStyle(document.body).backgroundColor, face: getComputedStyle(document.body).fontFamily.split(',')[0].replace(/['"]/g, ''),
+      headFace: h1 && h1.getBoundingClientRect().width ? getComputedStyle(h1).fontFamily.split(',')[0].replace(/['"]/g, '') : 'Cormorant Garamond',
+      nav: !!nav && nav.querySelectorAll('.nav-links a').length === 5 && !!nav.querySelector('img.logo') && getComputedStyle(nav).position === 'fixed', lit: (document.querySelector('#main-nav a.active') || {}).textContent,
+      footer: !!foot && !!foot.querySelector('img.footer-mark') && !!foot.querySelector('img.footer-logo') && document.querySelectorAll('footer').length === 1, footAtEnd: !!foot && foot.getBoundingClientRect().bottom >= window.innerHeight - 1,
+      light: [...new Set(light)], dim: [...new Set(dim)],
+      clear: !first || first.getBoundingClientRect().top >= (nav ? nav.getBoundingClientRect().bottom : 0) - 1 || window.scrollY > 0,
+      formTop: first ? Math.round(first.getBoundingClientRect().top) : -1, vh: window.innerHeight,
+    };
+  });
+  const dressed = (name, l) => {
+    check(name + ': navy ground, the site\'s typefaces, its menu with Tools lit and its one footer', l.ground === 'rgb(15, 27, 45)' && l.face === 'DM Sans' && l.headFace === 'Cormorant Garamond' && l.nav && l.lit === 'Tools' && l.footer && l.footAtEnd);
+    check(name + ': no light panel anywhere (not: ' + l.light.join(', ') + ')', l.light.length === 0);
+    check(name + ': no dark words on the dark ground (not: ' + l.dim.slice(0, 5).join(', ') + ')', l.dim.length === 0);
+  };
   const type = async (page, text) => { await page.fill('#inp-website', text); await page.click('#btn-analyze'); };
   const cards = (page) => page.evaluate(() => {
     const box = document.getElementById('firm-matches'), b = box.getBoundingClientRect();
@@ -72,6 +108,10 @@ const FOUND = JSON.stringify({ candidates: [
   for (const [w, h, mobile] of [[1255, 607, false], [430, 744, true]]) {
     const { ctx, page, sent, errors } = await open({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile }, () => says(FOUND));
     const at = w + ' by ' + h + ': ';
+    await page.waitForTimeout(1200);
+    const l0 = await look(page);
+    dressed(at + 'as it opens', l0);
+    check(at + 'the form starts on the first screen, under the menu (at ' + l0.formTop + ' of ' + l0.vh + ')', l0.formTop > 0 && l0.formTop < l0.vh - 40 || mobile);
     await type(page, '  Smith "Wealth"\n<b>Management</b>  ');
     await page.waitForSelector('#firm-matches .match-card', { timeout: 8000 });
     const c = await cards(page);
@@ -86,6 +126,7 @@ const FOUND = JSON.stringify({ candidates: [
     check(at + 'what the search wrote is shown as text, never run', c.imgs === 0 && !c.hit && c.list[1].name.includes('<img'));
     check(at + 'the matches fit the screen, and the button is itself again', c.inside && c.pageWide && c.button.startsWith('Analyze') && !c.off);
     check(at + 'there is a way out: none of these', c.none === 'None of these. Enter the website instead.');
+    dressed(at + 'with the matches up', await look(page));
     if (!mobile) await page.screenshot({ path: process.env.SCORER_SHOTS ? process.env.SCORER_SHOTS + '/matches-desk.png' : undefined }).catch(() => {});
     if (mobile && process.env.SCORER_SHOTS) await page.locator('#firm-matches').screenshot({ path: process.env.SCORER_SHOTS + '/matches-phone.png' }).catch(() => {});
     // choose the first
@@ -94,6 +135,17 @@ const FOUND = JSON.stringify({ candidates: [
     await page.waitForTimeout(400);
     const second = sent[1] || { text: '' };
     check(at + 'choosing one scores that firm\'s site, and only then', sent.length >= 2 && second.text.startsWith(SCORE) && second.text.includes('Website: https://www.smithwealth.example\n'));
+    // the score, and then the full breakdown, in the same dress (the lead endpoint is stood in for: nothing is sent)
+    await page.waitForSelector('#screen-results:not(.hidden)', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(600);
+    dressed(at + 'with the score up', await look(page));
+    await page.fill('#gate-name', 'Test Visitor'); await page.fill('#gate-email', 'visitor@example.com');
+    await page.click('#btn-gate-submit');
+    await page.waitForSelector('.cat-card', { timeout: 8000 }).catch(() => {});
+    await page.waitForTimeout(600);
+    const lr = await look(page);
+    dressed(at + 'with the full breakdown up', lr);
+    check(at + 'the results are in view under the menu, not behind it', await page.evaluate(() => { const n = document.getElementById('main-nav').getBoundingClientRect().bottom, s = document.getElementById('res-summary').getBoundingClientRect(); return s.top >= n && s.bottom <= window.innerHeight; }));
     check(at + 'no script error', errors.length === 0);
     await ctx.close();
   }
