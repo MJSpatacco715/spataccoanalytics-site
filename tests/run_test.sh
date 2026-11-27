@@ -61,17 +61,21 @@ check "the firm chosen is kept" '[ "$CODE" = 200 ] && [ "$(lines)" = 2 ] && last
 post '{"kind":"choose","run":"'$run'","typed":"Smith Wealth","chose":"none","website":"https://www.smithwealth.example/"}'
 check "and so is none of them, with no site against it" '[ "$CODE" = 200 ] && [ "$(lines)" = 3 ] && last | grep -q "\"chose\":\"none\"" && last | grep -q "\"website\":\"\""'
 
-score='{"kind":"score","run":"'$run'","scope":"website","typed":"Smith Wealth","found":"lookup","website":"https://www.smithwealth.example","firm_scored":"Smith Wealth Management","score":52,"score_max":80,"tier":"Adequate","scores":{"visual_design":9,"navigation_ux":6,"<b>":5,"big":900},"utm_source":"services","utm_medium":"qr"}'
+score='{"kind":"score","run":"'$run'","scope":"website","typed":"Smith Wealth","found":"lookup","website":"https://www.smithwealth.example","firm_scored":"Smith Wealth Management","score":52,"score_max":80,"tier":"Adequate","held_from":"Excellent","flags":[{"kind":"testimonials","text":"Client quotes with no disclosure.\r\nBcc: x@example.com"},{"kind":"made_up","text":"Something else"},{"kind":"adv","text":"  "},"not a flag"],"scores":{"visual_design":9,"navigation_ux":6,"compliance_red_flags":4,"<b>":5,"big":900},"utm_source":"services","utm_medium":"qr"}'
 post "$score"
-check "a finished score is kept, its category scores bounded" '[ "$CODE" = 200 ] && [ "$(lines)" = 4 ] && last | grep -q "\"kind\":\"score\"" && last | grep -q "\"score\":52" && last | grep -q "\"found\":\"lookup\"" && last | grep -q "\"scores\":{\"visual_design\":9,\"navigation_ux\":6,\"big\":100}"'
+check "a finished score is kept, its category scores bounded" '[ "$CODE" = 200 ] && [ "$(lines)" = 4 ] && last | grep -q "\"kind\":\"score\"" && last | grep -q "\"score\":52" && last | grep -q "\"found\":\"lookup\"" && last | grep -q "\"scores\":{\"visual_design\":9,\"navigation_ux\":6,\"compliance_red_flags\":4,\"big\":100}"'
+# Compliance Red Flags (the owner, 2026-11-27: "Yes Cap at adequate, and tell as much"): what held the rating, and what was flagged
+check "it keeps the rating it was held from and the flags by kind: a kind it does not know as other, an empty one dropped, each on one line" 'last | grep -q "\"held_from\":\"Excellent\"" && last | grep -q "\"flags\":\[{\"kind\":\"testimonials\",\"text\":\"Client quotes with no disclosure. Bcc: x@example.com\"},{\"kind\":\"other\",\"text\":\"Something else\"}\]"'
 check "and the owner is mailed about it, once" '[ "$(mails)" = 1 ]'
 msg=$(find "$t/out" -name 'msg.*' | head -1)
 check "the notice goes to the firm, from the firm, and says no name has been left yet" 'grep -q "^To: mike@spataccoanalytics.com" "$msg" && grep -q "^From: Spatacco Analytics Website <mike@spataccoanalytics.com>" "$msg" && grep -q "^Reply-To: mike@spataccoanalytics.com" "$msg" && grep -q "No name or email yet" "$msg"'
 check "it says what was scored, what was typed, how it was found and the score" 'grep -q "Scored:   https://www.smithwealth.example (website)" "$msg" && grep -q "Typed:    Smith Wealth" "$msg" && grep -q "Found by: firm-name lookup" "$msg" && grep -q "Score:    52/80 Adequate" "$msg" && grep -q "Arrived:  services qr" "$msg" && grep -q "  visual_design: 9" "$msg"'
+check "the notice says the rating was held and from what, and lists the flags as possible ones" 'grep -q "Score:    52/80 Adequate (held at Adequate by a compliance red flag; on points alone, Excellent)" "$msg" && grep -q "^Compliance red flags (possible, read from public pages):" "$msg" && grep -q "^  testimonials: Client quotes with no disclosure. Bcc: x@example.com" "$msg" && grep -q "^  other: Something else" "$msg"'
 check "the envelope sender is left to the host" '! grep -q "^ARGS:.* -f" "$msg"'
 
-post '{"kind":"score","run":"'$run'","scope":"website","typed":"example.com","found":"typed","website":"example.com","score":70,"score_max":80,"tier":"Strong","known":true}'
+post '{"kind":"score","run":"'$run'","scope":"website","typed":"example.com","found":"typed","website":"example.com","score":70,"score_max":80,"tier":"Strong","held_from":"Needs Work","known":true}'
 check "a score from a visitor already known is kept, and not mailed: the lead notice that follows says it all" '[ "$CODE" = 200 ] && [ "$(lines)" = 5 ] && last | grep -q "\"known\":true" && last | grep -q "\"website\":\"https://example.com\"" && [ "$(mails)" = 1 ]'
+check "only Excellent or Strong can be what a rating was held from, and a score with no flags keeps none" 'last | grep -q "\"held_from\":\"\"" && last | grep -q "\"flags\":\[\]"'
 
 post '{"kind":"failed","run":"'$run'","website":"example.com","why":"You have reached today'"'"'s free limit for this tool.\r\nBcc: x@example.com"}'
 check "a score that did not finish is kept with why, on one line" '[ "$CODE" = 200 ] && [ "$(lines)" = 6 ] && last | grep -q "\"kind\":\"failed\"" && last | grep -q "free limit for this tool. Bcc: x@example.com\"" && [ "$(mails)" = 1 ]'
@@ -98,9 +102,11 @@ check "and nothing a visitor typed adds a header to the notice or changes who it
 # --- the counts: its own, apart from the forms'
 forget
 for i in $(seq 1 12); do post '{"kind":"choose","run":"'$run'","chose":"none"}'; done
-URL=$base/score/lead.php post '{"name":"Pat Advisor","email":"pat@example.com","firm":"Example Wealth","website":"example.com","scope":"website","score":52,"score_max":80,"tier":"Adequate","run":"'$run'"}'
+URL=$base/score/lead.php post '{"name":"Pat Advisor","email":"pat@example.com","firm":"Example Wealth","website":"example.com","scope":"website","score":52,"score_max":80,"tier":"Adequate","held_from":"Strong","flags":[{"kind":"form_crs","text":"No Form CRS link was found."}],"scores":{"compliance_red_flags":3},"run":"'$run'"}'
 check "looking firms up and scoring does not use up the leads a visitor may leave" '[ "$CODE" = 200 ] && [ -f "$leads" ] && [ "$(wc -l < "$leads" | tr -d " ")" = 1 ]'
 check "the lead carries the run it belongs to, and an id" 'grep -q "\"run\":\"'$run'\"" "$leads" && grep -Eq "\"id\":\"[a-f0-9]{16}\"" "$leads"'
+leadmsg=$(grep -l "^Subject: Website Scorer lead" "$t"/out/msg.* | head -1)
+check "the lead keeps what held the rating and the flags, and its notice says both" 'grep -q "\"held_from\":\"Strong\"" "$leads" && grep -q "\"flags\":\[{\"kind\":\"form_crs\",\"text\":\"No Form CRS link was found.\"}\]" "$leads" && grep -q "Score:    52/80 Adequate (held at Adequate by a compliance red flag; on points alone, Strong)" "$leadmsg" && grep -q "^  form_crs: No Form CRS link was found." "$leadmsg"'
 for i in $(seq 1 28); do post '{"kind":"choose","run":"'$run'","chose":"none"}'; done
 check "forty in the hour are kept" '[ "$CODE" = 200 ]'
 before=$(lines)

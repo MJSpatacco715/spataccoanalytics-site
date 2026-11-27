@@ -104,6 +104,8 @@ if ($kind === 'lookup') {
     $event['score'] = $whole($in['score'] ?? null);
     $event['score_max'] = $whole($in['score_max'] ?? null);
     $event['tier'] = lead_text($in['tier'] ?? '', 40);
+    $event['held_from'] = lead_held($in['held_from'] ?? '');
+    $event['flags'] = lead_flags($in['flags'] ?? null);
     $event['scores'] = $scores;
     $event['known'] = ($in['known'] ?? false) === true;
 } else {
@@ -135,6 +137,7 @@ if ($kind === 'score' && !$event['known']) {
             }
         }
         $score = $event['score'] === null ? 'no score' : $event['score'] . '/' . ($event['score_max'] ?? '?') . ' ' . $event['tier'];
+        $scoreLine = lead_score_line($event['score'], $event['score_max'], $event['tier'], $event['held_from']);
         $what = $event['website'] !== '' ? $event['website'] : $event['linkedin'];
         $via = trim($event['utm_source'] . ' ' . $event['utm_medium']);
         lead_notice(
@@ -147,13 +150,14 @@ if ($kind === 'score' && !$event['known']) {
                 'Firm:     ' . ($event['firm_scored'] !== '' ? $event['firm_scored'] : '(not named)'),
                 'Typed:    ' . ($event['typed'] !== '' ? $event['typed'] : '(the address itself)'),
                 'Found by: ' . ($event['found'] === 'lookup' ? 'firm-name lookup, then chosen from the matches' : 'the address as typed'),
-                'Score:    ' . $score,
+                'Score:    ' . $scoreLine,
                 'Arrived:  ' . ($via !== '' ? $via : 'direct'),
                 'When:     ' . $event['at'],
                 'Run:      ' . $event['run'],
                 '',
                 'Category scores:',
                 ...array_map(static fn(string $k, int $v): string => '  ' . $k . ': ' . $v, array_keys($event['scores']), $event['scores']),
+                ...lead_flag_lines($event['flags'], $event['scores']),
                 '',
                 'Kept in sa-leads/scorer-runs.jsonl.',
             ],

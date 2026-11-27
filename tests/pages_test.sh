@@ -558,16 +558,20 @@ word = r'<img src="/img/wordmark-on-dark\.png\?v=' + v + r'" alt="Spatacco Analy
 nav = re.search(r"<nav[^>]*>.*?</nav>", s, re.S); foot = re.search(r"<footer>.*?</footer>", s, re.S)
 ok = bool(nav and foot)
 ok = ok and len(re.findall(word % "logo", nav.group(0))) == 1 and len(re.findall(r"<img\b", nav.group(0))) == 1
-# the footer: the SA mark on its tile, then the wordmark, and nothing else pictured
-pair = r'<img src="/img/logo-square\.png" alt="" class="footer-mark" width="512" height="512">' + word % "footer-logo"
-ok = ok and len(re.findall(pair, foot.group(0))) == 1 and len(re.findall(r"<img\b", foot.group(0))) == 2
+# the footer: the wordmark first, alone in its place at the left; the SA mark on its tile last, after the line of
+# text, at the right (the owner, 2026-11-27: "move it to the right side so it's more of a reference rather than
+# competing"); and nothing else pictured
+F = foot.group(0)
+mark = '<img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512">'
+ok = ok and len(re.findall(r'class="footer-brand">' + word % "footer-logo" + r"</(?:a|span)>", F)) == 1 and len(re.findall(r"<img\b", F)) == 2
+ok = ok and F.count(mark) == 1 and re.search(r'<div class="footer-text">.*?</div>\s*' + re.escape(mark) + r"\s*</footer>$", F, re.S) is not None
 # the square is not shown anywhere on the page, and no logo is written into the page itself
 ok = ok and "/img/logo.jpg" not in s and not re.search(r"<img[^>]*src=\"data:", s)
 sys.exit(0 if ok else 1)
 PY
   then logos_ok=$((logos_ok+1)); else echo "  the logo is not right on ${f#$dist}"; fi
 done
-check "every page shows the wordmark in its menu and both logos in its footer, at the picture's current address (now ?v=$vword): $logos_ok of $logo_pages" '[ "$logos_ok" = "$logo_pages" ]'
+check "every page shows the wordmark in its menu, and in its footer the wordmark first and the SA mark last, at the picture's current address (now ?v=$vword): $logos_ok of $logo_pages" '[ "$logos_ok" = "$logo_pages" ]'
 check "the home page no longer carries the logo written into the page twice (it is now $(wc -c < "$home") bytes)" '[ "$(wc -c < "$home")" -lt 60000 ]'
 check "the menu shows it 48px tall as drawn (3rem), and the bar is no taller for it" 'grep -q "nav .logo{height:3rem;width:auto;display:block}" "$site/css/shared.css" && grep -q "nav .logo{height:3rem;width:auto;display:block}" "$home" && grep -q "align-items:center;padding:0.875rem 3rem;" "$site/css/shared.css" && grep -q "align-items:center;padding:0.875rem 3rem;" "$home"'
 # --- the picture a link to the site shows

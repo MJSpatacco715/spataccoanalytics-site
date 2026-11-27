@@ -48,6 +48,61 @@ function lead_text($v, int $max): string
     return mb_substr(trim($s), 0, $max);
 }
 
+// What the scorer's Compliance Red Flags category named: at most eight, each a kind the page knows by a short
+// word and one line of text. And the rating the points alone would have earned, when a serious flag held the
+// rating at Adequate: only the two ratings above Adequate can be held.
+const LEAD_FLAG_KINDS = ['testimonials', 'form_crs', 'adv', 'disclosures', 'footer_year', 'stale_info', 'other'];
+
+function lead_flags($v): array
+{
+    $out = [];
+    if (!is_array($v)) {
+        return $out;
+    }
+    foreach (array_slice(array_values($v), 0, 8) as $f) {
+        if (!is_array($f)) {
+            continue;
+        }
+        $kind = lead_text($f['kind'] ?? '', 20);
+        $text = lead_text($f['text'] ?? '', 300);
+        if ($text === '') {
+            continue;
+        }
+        $out[] = ['kind' => in_array($kind, LEAD_FLAG_KINDS, true) ? $kind : 'other', 'text' => $text];
+    }
+    return $out;
+}
+
+function lead_held($v): string
+{
+    $held = lead_text($v, 20);
+    return in_array($held, ['Excellent', 'Strong'], true) ? $held : '';
+}
+
+// The lines a notice gives them: the rating's own line says when it was held, and the flags follow by kind.
+function lead_score_line(?int $score, ?int $max, string $tier, string $held): string
+{
+    if ($score === null) {
+        return 'no score';
+    }
+    return $score . '/' . ($max ?? '?') . ' ' . $tier . ($held !== '' ? ' (held at Adequate by a compliance red flag; on points alone, ' . $held . ')' : '');
+}
+
+function lead_flag_lines(array $flags, array $scores): array
+{
+    if (!array_key_exists('compliance_red_flags', $scores)) {
+        return [];          // a LinkedIn-only score looks for none
+    }
+    $lines = ['', 'Compliance red flags (possible, read from public pages):'];
+    if (!$flags) {
+        $lines[] = '  none named';
+    }
+    foreach ($flags as $f) {
+        $lines[] = '  ' . $f['kind'] . ': ' . $f['text'];
+    }
+    return $lines;
+}
+
 function lead_url($v): string
 {
     $s = lead_text($v, 300);

@@ -217,10 +217,16 @@ lives and says which pieces are not in this repo yet.
   with C where appropriate". So: the menu on every page shows the wordmark
   alone, cut out of its square, lettering white (`site/img/wordmark-on-dark.png`,
   made by `scripts/logo_cutout.py`), 48px tall on a desktop as drawn (3rem: it
-  grows with the page) and never under 36px; and both logos together, the SA mark on its white tile and then the
-  wordmark, go where there is room for both, which is the footer. The two are
+  grows with the page) and never under 36px; and both logos go where there is room for both, which is the footer. The two are
   not put side by side in the menu, and `logo.jpg` is never shown directly on a
-  dark page. The SA mark (`site/img/logo-square.png`) stays the picture for the
+  dark page.
+  In the footer they are apart. They stood together at the left, the SA mark on
+  its white tile and then the wordmark, until the owner, 2026-11-27: "take the
+  SA mark that's running at the bottom of the page and move it to the right side
+  so it's more of a reference rather than competing". The wordmark signs off at
+  the left; the mark is the last thing at the right, after the line of text. Up
+  to 900px wide the wordmark and the mark share the first row, left and right,
+  and the line of text is under them. The SA mark (`site/img/logo-square.png`) stays the picture for the
   browser tab, search and profiles. `tests/pages_test.sh` and
   `tests/logo_browser.cjs` hold all of it.
   The wordmark's tags and the `shared.css` link carry `?v=` and the first eight
@@ -421,6 +427,39 @@ lives and says which pieces are not in this repo yet.
   legend over the form and the PDF say the same five, and the servers keep forty
   characters of a rating so the longest is whole on the record, in the notice
   and in the CRM.
+  The website's fifty are five tens, and the fifth is Compliance Red Flags (the
+  owner, 2026-11-27, of the breakdown's card: "this should have compliance red
+  flags (or something like it in the scoring rubric)"; asked how it should
+  count, he chose a fifth category worth 10 under that name, so Visual Design
+  and Content & Messaging came down from 15 to 10). What it looks for is his
+  list: testimonials and endorsements shown without disclosure, Form CRS and
+  disclosures, "CRS and ADV II not linking correctly or at all", "Year in the
+  footer off", "Bad / old / stale contact or firm info". Ratings and awards, and
+  claims and performance, were offered and not chosen: do not add them unasked.
+  `FLAG_KINDS` in the page names the six kinds and which are serious. Two are,
+  the two a rule speaks to directly: testimonials with none of the disclosures
+  the SEC's marketing rule asks for, and an SEC-registered firm with no working
+  Form CRS on its site (a firm that cannot be told to be SEC-registered gets
+  `disclosures`, which is not serious: a state-registered firm files no Form
+  CRS). Asked whether a serious flag should hold the overall rating down by
+  itself, the owner: "Yes Cap at adequate, and tell as much". So `ratingOf`
+  gives a site with a serious flag Adequate at most, and the page says so in
+  four places: on the Website card of the opening, under the ratings, beside
+  the score before anything is unlocked ("Held at Adequate. On points alone
+  this site would rate ..."), and on the PDF. A serious flag also brings the
+  category's own number down to 4, the most the rubric gives such a site, so
+  the number and the flags cannot disagree.
+  The scorer never calls anything a violation. A flag is a possible red flag,
+  read from public pages, for the firm's compliance officer; the card and the
+  PDF say so (`FLAG_CAVEAT`), and the instructions tell the search to word each
+  one that way and to flag only what it saw. What it wrote about a flag is shown
+  as text, never as markup.
+  The record and the lead carry the rating given, the rating it was held from
+  (`held_from`) and the flags by kind (`lead_held`, `lead_flags` in
+  `site/lib/leads.php`), and both notices say them. The relay did not change:
+  it knows a score by how its instructions begin and by their length, and both
+  held (`tests/worker_test.mjs`, and `tests/scorer_browser.cjs` holds the
+  length).
   Its marks are drawn: a globe for a website and LinkedIn's own mark, in
   LinkedIn's blue with white letters, wherever LinkedIn is named with a mark
   (the owner: "use the Linkedin Logo on the page where appropriate instead of a
