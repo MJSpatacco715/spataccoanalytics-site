@@ -40,8 +40,8 @@
     {
       "file": "tools/index.html",
       "why": "Where the generated NFL cards go: the top of the Sports Desk grid",
-      "find": "<div class=\"subgroup-grid\">\n          <a href=\"/tools/cricket-explainer.html\" class=\"scorecard\">",
-      "replace": "<div class=\"subgroup-grid\">\n<!-- sa-tools:nfl-cards:start -->\n<!-- sa-tools:nfl-cards:end -->\n          <a href=\"/tools/cricket-explainer.html\" class=\"scorecard\">"
+      "find": "<div class=\"subgroup-grid\">\n          <a href=\"/tools/cricket-explainer/\" class=\"scorecard\">",
+      "replace": "<div class=\"subgroup-grid\">\n<!-- sa-tools:nfl-cards:start -->\n<!-- sa-tools:nfl-cards:end -->\n          <a href=\"/tools/cricket-explainer/\" class=\"scorecard\">"
     }
   ]
 }

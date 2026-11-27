@@ -46,11 +46,11 @@ const fail = (msg) => { console.error('build: ' + msg); process.exit(1); };
 
 // ---- what ships --------------------------------------------------------------
 const PAGES = [
-  { file: 'lines.html', name: 'Lines Tracker', home: '/tools/football/nfl-lines-tracker.html',
+  { file: 'lines.html', name: 'Lines Tracker', home: '/tools/football/nfl-lines-tracker/',
     desc: 'NFL game lines from open to close, graded against the closing line, with the injury news that moved them.' },
-  { file: 'injuries.html', name: 'Injury Tracker', home: '/tools/football/nfl-injury-tracker.html',
+  { file: 'injuries.html', name: 'Injury Tracker', home: '/tools/football/nfl-injury-tracker/',
     desc: 'Every NFL injury designation, when it began, what changed, and whether it moved a betting line.' },
-  { file: 'depth-charts.html', name: 'Depth Charts', home: '/tools/football/nfl-depth-charts.html',
+  { file: 'depth-charts.html', name: 'Depth Charts', home: '/tools/football/nfl-depth-charts/',
     desc: 'Every NFL depth chart with injury tags, contracts, how each player arrived, and Madden ratings.' },
 ];
 // the source's scripts these pages load, shipped as they are (minified)

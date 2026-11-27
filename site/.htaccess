@@ -38,5 +38,10 @@ RewriteRule ^tools/resume-parser\.html$ https://spataccoanalytics.com/tools/resu
 # and dropped. A folder address is served through these rules. The old file
 # is gone, so a request for it reaches this line.
 RewriteRule ^tools/website-scorer\.html$ https://spataccoanalytics.com/tools/website-scorer/ [R=301,L]
+# and so has every tool's own page (the owner, 2026-11-27, chose this over a host setting): each is a folder now,
+# and its old address, the file by name, forwards
+RewriteRule ^tools/(afi-tracker|card-evaluator|cricket-explainer|curling-explainer|oscar-tracker)\.html$ https://spataccoanalytics.com/tools/$1/ [R=301,L]
+RewriteRule ^tools/football/(nfl-lines-tracker|nfl-injury-tracker|nfl-depth-charts)\.html$ https://spataccoanalytics.com/tools/football/$1/ [R=301,L]
+RewriteRule ^unleash/kraken\.html$ https://spataccoanalytics.com/unleash/kraken/ [R=301,L]
 
 RewriteRule ^_(header|footer)\.php$ https://spataccoanalytics.com/ [R=301,L]

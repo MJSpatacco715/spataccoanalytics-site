@@ -117,7 +117,7 @@ const places = (page) => page.evaluate(() => {
 
   // --- a page that has not been converted is left exactly as it was
   {
-    const { ctx, page } = await open(1880, 910, '/tools/football/nfl-lines-tracker.html');
+    const { ctx, page } = await open(1880, 910, '/tools/football/nfl-lines-tracker/');
     const m = await page.evaluate(() => ({ root: parseFloat(getComputedStyle(document.documentElement).fontSize), nav: document.getElementById('main-nav').offsetHeight, link: parseFloat(getComputedStyle(document.querySelector('#main-nav .nav-links a')).fontSize) }));
     check('a tool\'s own page, not converted yet, is drawn as it always was: no big menu over small text (menu ' + m.nav + 'px, its links ' + m.link + 'px)', m.root === 16 && m.nav <= 80 && m.link === 14);
     await ctx.close();

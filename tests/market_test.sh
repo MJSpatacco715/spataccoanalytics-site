@@ -297,7 +297,7 @@ check "no long dash in any of it" '! grep -l $'"'"'\xe2\x80\x94'"'"' "$js" "$her
 check "no licensed index or metal is named as a figure" '! grep -qiE "s&p|dow jones|gold" "$js" && ! grep -qE "\x27(spx|dow|gold)\x27 =>" "$here/site/lib/market.php"'
 if python3 "$here/scripts/build_site.py" --site "$here/site" --out "$t/dist" >/dev/null 2>&1; then
   check "the built site carries the feed, its library, the script and the styles" '[ -s "$t/dist/market/feed.php" ] && [ -s "$t/dist/lib/market.php" ] && [ -s "$t/dist/js/ticker.js" ] && [ -s "$t/dist/css/ticker.css" ]'
-  check "in the built site only the tools page loads the strip: not the home page, and not the tool pages that reuse its head, menu and footer" '[ "$(grep -rlE "sa-ticker|ticker\.(css|js)" "$t/dist" --include=*.html)" = "$t/dist/tools/index.html" ] && [ "$(ls "$t/dist/tools/football/"*.html | wc -l)" -ge 3 ]'
+  check "in the built site only the tools page loads the strip: not the home page, and not the tool pages that reuse its head, menu and footer" '[ "$(grep -rlE "sa-ticker|ticker\.(css|js)" "$t/dist" --include=*.html)" = "$t/dist/tools/index.html" ] && [ "$(ls "$t/dist/tools/football/"*/index.html | wc -l)" -ge 3 ]'
 else
   check "the site builds" 'false'
 fi

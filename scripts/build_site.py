@@ -7,8 +7,12 @@
 2. Applies site-edits.json (approved copy edits and the card markers).
 3. Fills the NFL cards between the markers on tools/index.html, in the page's
    own Sports Desk "scorecard" markup.
-4. Writes one page per tool at tools/football/<id>.html, using the tools
-   page's own head, navigation and footer, so the pages match the site.
+4. Writes one page per tool at tools/football/<id>/ (a folder, with its page
+   as index.html), using the tools page's own head, navigation and footer, so
+   the pages match the site. A page has a folder address because the host
+   hands out a file asked for by name from its own layer, where a browser may
+   keep it 180 days and none of the site's rules apply (CLAUDE.md, "Pages are
+   never kept").
 5. Copies each tool's screenshot: a fresh capture from --shots when there is
    one, otherwise the committed baseline in showcase/img/.
 
@@ -116,7 +120,7 @@ def card(tool: dict, n: int, live: bool = False) -> str:
     drawn = CARD_ICONS.get(tool["id"])
     icon = (f'<svg class="scorecard-icon" aria-hidden="true"><use href="#{drawn}"/></svg>' if drawn
             else f'<span class="scorecard-icon">{esc(tool["emoji"])}</span>')
-    return f"""          <a href="/tools/football/{esc(tool['id'])}.html" class="scorecard">
+    return f"""          <a href="/tools/football/{esc(tool['id'])}/" class="scorecard">
             <span class="scorecard-num">Sport &middot; {n:02d}</span>
             {icon}
             <h4>{esc(tool['name'])}</h4>
@@ -222,7 +226,7 @@ PAGE_CSS = """
 
 
 def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, nav: str, foot: str,
-         app: str | None = None) -> str:
+         app: str | None = None, app_v: str = "") -> str:
     head = re.sub(r"(?is)<title>.*?</title>", f"<title>{esc(tool['name'])} | Spatacco Analytics</title>", head, count=1)
     head = re.sub(r'(?is)<meta name="description" content="[^"]*">',
                   f'<meta name="description" content="{esc(tool["tagline"])}">', head, count=1)
@@ -241,13 +245,16 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
     if app:
         # the tool itself, framed; a link that names a week, a game or a team
         # (?week=6&game=CAR-PHI) carries into the frame
-        src = f"live/{app}"
+        # The framed tool is a file the host hands out by name, which a browser may keep for months, so
+        # its address carries the file's own version: when the tool changes, so does the address this
+        # page (always read afresh) frames. The page sits in a folder of its own now, so the address is whole.
+        src = f"/tools/football/live/{app}" + (f"?v={app_v}" if app_v else "")
         figure = (f'<div class="nfl-app"><div class="nfl-app-bar"><span class="nfl-app-tag">Live &middot; try it</span>'
                   f'<span class="nfl-app-try">{esc(tool.get("try", ""))}</span>'
                   f'<a class="nfl-app-full" id="nfl-app-full" href="{esc(src)}">Open full screen &#8599;</a></div>'
                   f'<iframe id="nfl-app" src="{esc(src)}" title="{esc(tool["name"])}, live" loading="eager"></iframe></div>'
-                  f'<script>(function(){{var q=location.search+location.hash;if(!q)return;'
-                  f'var u={json.dumps(src)}+q;document.getElementById("nfl-app").src=u;document.getElementById("nfl-app-full").href=u}})();</script>')
+                  f'<script>(function(){{var s={json.dumps(src)},q=location.search,h=location.hash;if(!q&&!h)return;'
+                  f'var u=s+(q?(s.indexOf("?")<0?q:"&"+q.slice(1)):"")+h;document.getElementById("nfl-app").src=u;document.getElementById("nfl-app-full").href=u}})();</script>')
     elif img:
         figure = (f'<figure class="nfl-shot reveal"><img src="{esc(img)}" alt="{esc(tool["image_alt"])}" loading="eager">'
                   f"<figcaption>Screenshot of the running tool, refreshed automatically.</figcaption></figure>")
@@ -266,7 +273,7 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
     sources = ""
     if tool.get("data_sources"):
         sources = f'<p><strong>Data:</strong> {esc(", ".join(tool["data_sources"]))}</p>'
-    here = f"/tools/football/{tool['id']}.html"
+    here = f"/tools/football/{tool['id']}/"
     tabs = "".join(
         f'<a href="{esc(c["href"])}"{" aria-current=\"page\"" if c["href"] == here else ""}>'
         f'<span class="ic" aria-hidden="true">{esc(c["icon"])}</span>{esc(c.get("short") or c["name"])}</a>'
@@ -381,7 +388,7 @@ def main() -> None:
 
     head, nav, foot = chrome(s)
     desk = desk_cards(s)
-    shorts = {f"/tools/football/{t['id']}.html": t.get("short") for t in tools}
+    shorts = {f"/tools/football/{t['id']}/": t.get("short") for t in tools}
     for c in desk:
         c["short"] = shorts.get(c["href"])
     football = out / "tools" / "football"
@@ -392,7 +399,10 @@ def main() -> None:
     for t in tools:
         live = live_all.get(t["id"], {})
         img = image_for(t, shots, football / "img")
-        (football / f"{t['id']}.html").write_text(page(t, live, img, desk, head, nav, foot, apps.get(t["id"])))
+        app = apps.get(t["id"])
+        app_v = hashlib.sha1((live_dir / app).read_bytes()).hexdigest()[:8] if app else ""
+        (football / t["id"]).mkdir(parents=True, exist_ok=True)
+        (football / t["id"] / "index.html").write_text(page(t, live, img, desk, head, nav, foot, app, app_v))
     import build_insights
     posts = build_insights.build(out, Path(a.posts))
     print(f"built {out}: {posts} insights post(s)")
