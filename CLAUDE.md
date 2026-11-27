@@ -115,6 +115,22 @@ lives and says which pieces are not in this repo yet.
   A tile goes to its tool, or, for a platform that runs privately, to where it
   is described lower down. A tool added to the page needs a tile, and a tile
   needs its tool: `tests/pages_test.sh` fails until they match.
+  A tile says what it is. The owner, 2026-11-27, of the Business tools on a
+  phone: "RIA digital presence scorecard and Resume parser should be
+  bigger/stand alone there as interactive tools or named as interactive versus
+  merely descriptive". So a tool a visitor can use now (`tl-live`) has a filled
+  badge and says "Interactive: try it now", and a platform described lower down
+  (`tl-see`) is quieter and says "Built to order". Which one a tile is follows
+  from where it leads (`#built-...` is described), and in each kind the tools to
+  use come first. Where the kind chosen has four tools or fewer (Business,
+  Movies) the tiles are large and the words show, the tools to use the larger;
+  a longer list (Sports) keeps the small tiles, told apart by the badge. On a
+  phone too short for the large tiles they fall back to the small ones.
+  Icons are drawn, not emoji (the owner, the same message: "Icons could be MUCH
+  better"): thirteen symbols at the top of `site/tools/index.html`, one a tool,
+  used by its tile and by its card lower down. A card the build adds takes its
+  icon from `CARD_ICONS` in `scripts/build_site.py`. No emoji stands in for an
+  icon on that page.
   That section is as tall as the first screen less the market strip, which comes
   next in the page, so the strip lies along the bottom of the first screen, all
   of it showing (`min-height` in `svh`, the screen as a phone shows it with its

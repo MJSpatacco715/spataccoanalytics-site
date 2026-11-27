@@ -28,14 +28,14 @@
     {
       "file": "tools/index.html",
       "why": "Cricket moves to fourth behind the three NFL tools",
-      "find": "<span class=\"scorecard-num\">Sport &middot; 01</span>\n            <span class=\"scorecard-icon\">&#127951;</span>",
-      "replace": "<span class=\"scorecard-num\">Sport &middot; 04</span>\n            <span class=\"scorecard-icon\">&#127951;</span>"
+      "find": "<span class=\"scorecard-num\">Sport &middot; 01</span>\n            <svg class=\"scorecard-icon\" aria-hidden=\"true\"><use href=\"#i-cricket\"/></svg>",
+      "replace": "<span class=\"scorecard-num\">Sport &middot; 04</span>\n            <svg class=\"scorecard-icon\" aria-hidden=\"true\"><use href=\"#i-cricket\"/></svg>"
     },
     {
       "file": "tools/index.html",
       "why": "Curling moves to fifth",
-      "find": "<span class=\"scorecard-num\">Sport &middot; 02</span>\n            <span class=\"scorecard-icon\">&#129482;</span>",
-      "replace": "<span class=\"scorecard-num\">Sport &middot; 05</span>\n            <span class=\"scorecard-icon\">&#129482;</span>"
+      "find": "<span class=\"scorecard-num\">Sport &middot; 02</span>\n            <svg class=\"scorecard-icon\" aria-hidden=\"true\"><use href=\"#i-curling\"/></svg>",
+      "replace": "<span class=\"scorecard-num\">Sport &middot; 05</span>\n            <svg class=\"scorecard-icon\" aria-hidden=\"true\"><use href=\"#i-curling\"/></svg>"
     },
     {
       "file": "tools/index.html",

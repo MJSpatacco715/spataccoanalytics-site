@@ -337,11 +337,11 @@ s = open(sys.argv[1], encoding="utf-8").read()
 hero = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S)
 if not hero: sys.exit(1)
 h = hero.group(0); rest = s[hero.end():]
-tiles = re.findall(r"<a class=\"tl-tile\" href=\"([^\"]+)\" data-kind=\"([a-z]+)\"( hidden)?>", h)
+tiles = re.findall(r"<a class=\"tl-tile tl-(?:live|see)\" href=\"([^\"]+)\" data-kind=\"([a-z]+)\"( hidden)?>", h)
 # the tools the page itself shows: the two that launch, the three kinds of card below them, and the platforms described
 shown = set(re.findall(r"<a href=\"(/tools/[^\"]+)\" class=\"(?:tool-link|scorecard|playbill|tradingcard)\"", rest))
 shown |= {"#" + i for i in re.findall(r"class=\"tool-card build-card[^\"]*\" id=\"([a-z-]+)\"", rest)}
-ok = len(tiles) == h.count("class=\"tl-tile\"") and len(tiles) == len(set(t[0] for t in tiles)) and set(t[0] for t in tiles) == shown and len(shown) >= 13
+ok = len(tiles) == h.count("class=\"tl-tile ") and len(tiles) == len(set(t[0] for t in tiles)) and set(t[0] for t in tiles) == shown and len(shown) >= 13
 chips = re.findall(r"<button type=\"button\" class=\"tl-chip( on)?\" data-kind=\"([a-z]+)\" aria-pressed=\"(true|false)\">[^<]+<span>(\d+)</span>", h)
 ok = ok and len(chips) == len(re.findall(r"class=\"tl-chip[ \"]", h)) and [c[1] for c in chips] == ["business", "sports", "movies"]
 ok = ok and [(c[0], c[2]) for c in chips] == [(" on", "true"), ("", "false"), ("", "false")]
@@ -369,7 +369,42 @@ PY'
 # more..... what can/should your website do for you?") and chose, of four: the white
 # line as it was, with "website", and the question in blue on a line of its own.
 check "its headline keeps its line and adds the question, in blue, on a line of its own like every page's: no rule of its own keeps it on one line any more" 'grep -q "<h1>Your website can do more than describe you. <em>What should it do for you?</em></h1>" "$site/tools/index.html" && ! grep -q "tl-hero h1 em{display:inline}" "$site/tools/index.html"'
-check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile\"" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind)[ .:{\[]"'
+# A tile says what it is. The owner, 2026-11-27, of the Business tools on a phone: "RIA digital
+# presence scorecard and Resume parser should be bigger/stand alone there as interactive tools
+# or named as interactive versus merely descriptive". And of the emoji: "Icons could be MUCH better".
+check "a tile for a tool to use says it is interactive, and one for a platform described below says it is built to order: by where it leads" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+h = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S).group(0)
+tiles = re.findall(r"<a class=\"tl-tile tl-(live|see)\" href=\"([^\"]+)\" data-kind=\"([a-z]+)\"(?: hidden)?>(.*?)</a>", h, re.S)
+ok = len(tiles) == 13
+for how, href, kind, inside in tiles:
+    ok = ok and (how == "see") == href.startswith("#built-")                       # described lower down, or a tool of its own
+    tag = re.search(r"<span class=\"tl-tag\">(.*?)</span>(?:</span>)?<span class=\"tl-go\"", inside, re.S)
+    ok = ok and bool(tag) and (tag.group(1) == "Interactive &middot; try it now" if how == "live" else tag.group(1).startswith("Built to order"))
+    ok = ok and ("&rarr;" if how == "live" else "&darr;") in inside
+# the two an advisor would use are tools to use, and lead the page as it opens
+first = [(how, href) for how, href, kind, _ in tiles if kind == "business"]
+ok = ok and first == [("live", "/tools/website-scorer.html"), ("live", "/tools/resume-parser/"), ("see", "#built-crm")]
+# in each kind the tools to use come before the platforms described
+for kind in ("business", "sports", "movies"):
+    hows = [how for how, _, k, _ in tiles if k == kind]
+    ok = ok and hows == sorted(hows)
+ok = ok and "<div class=\"tl-tiles few\" id=\"tl-tiles\">" in h                # Business, three tools: the large tiles from the start
+sys.exit(0 if ok else 1)
+PY'
+check "every icon on the Tools page is drawn: one of the page own symbols, and no emoji stands in for one" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+import re, sys
+s = open(sys.argv[1], encoding="utf-8").read()
+have = set(re.findall(r"<symbol id=\"(i-[a-z]+)\" viewBox=\"0 0 24 24\">", s))
+used = re.findall(r"<svg class=\"(tl-ico|tool-icon|scorecard-icon|playbill-icon|tradingcard-icon)\" aria-hidden=\"true\"><use href=\"#(i-[a-z]+)\"/></svg>", s)
+ok = len(have) == 13 and len(used) == 13 + 13 and all(i in have for _, i in used) and {i for _, i in used} == have
+ok = ok and sum(1 for c, _ in used if c == "tl-ico") == 13
+ok = ok and not re.search(r"class=\"(?:tl-ico|tool-icon|scorecard-icon|playbill-icon|tradingcard-icon)\"[^>]*>[^<]", s)   # no text or emoji in an icon
+ok = ok and not re.search(r"&#(?:1[0-9]{4,5}|9[0-9]{3});", s)                    # no emoji entity left on the page
+sys.exit(0 if ok else 1)
+PY'
+check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more)[ .:,{\[]"'
 
 # --- every inner page opens on a supporting figure with its source
 # The owner, 2026-11-26: "each of the page heros should be consistent. white

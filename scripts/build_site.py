@@ -107,10 +107,18 @@ def image_for(tool: dict, shots: Path | None, dest: Path) -> str | None:
     return f"/tools/football/img/{out.name}?v={v}"
 
 
+# A tool's icon on its card: one of the drawn ones at the top of the tools page (the owner,
+# 2026-11-27: "Icons could be MUCH better"). A tool with none drawn yet shows its emoji.
+CARD_ICONS = {"nfl-lines-tracker": "i-lines", "nfl-injury-tracker": "i-injury", "nfl-depth-charts": "i-depth"}
+
+
 def card(tool: dict, n: int, live: bool = False) -> str:
+    drawn = CARD_ICONS.get(tool["id"])
+    icon = (f'<svg class="scorecard-icon" aria-hidden="true"><use href="#{drawn}"/></svg>' if drawn
+            else f'<span class="scorecard-icon">{esc(tool["emoji"])}</span>')
     return f"""          <a href="/tools/football/{esc(tool['id'])}.html" class="scorecard">
             <span class="scorecard-num">Sport &middot; {n:02d}</span>
-            <span class="scorecard-icon">{esc(tool['emoji'])}</span>
+            {icon}
             <h4>{esc(tool['name'])}</h4>
             <p>{esc(tool['tagline'])}</p>
             <div class="scorecard-foot">
