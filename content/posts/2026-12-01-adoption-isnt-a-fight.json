@@ -1,0 +1,16 @@
+{
+  "title": "Adoption isn't a fight",
+  "date": "2026-12-01",
+  "category": "business",
+  "summary": "Most firms already have a system, in spreadsheets, sticky notes and a shared inbox. We build the clean version around it.",
+  "blocks": [
+    {"type": "quote", "text": "A messy system that gets used beats a clean system that doesn't."},
+    {"type": "p", "text": "True, but it is a false choice."},
+    {"type": "p", "text": "Most firms already have a system. It lives in spreadsheets, sticky notes, and a shared inbox, and it works well enough that nobody wants to give it up."},
+    {"type": "p", "text": "Our approach is to finish what you started. We build the clean version around the workflow your team already follows, so there is nothing to retrain and nothing to resist."},
+    {"type": "p", "text": "We watch how your firm actually works, then design the system around that. Same instincts, same shortcuts, same logic, now queryable, reportable, and built to scale."},
+    {"type": "p", "text": "Adoption isn't a fight. It's a non-event."},
+    {"type": "link", "text": "Read how we work", "url": "/approach/"}
+  ],
+  "linkedin": "\"A messy system that gets used beats a clean system that doesn't.\"\n\nTrue, but it is a false choice.\n\nMost firms already have a system. It lives in spreadsheets, sticky notes, and a shared inbox, and it works well enough that nobody wants to give it up.\n\nOur approach is to finish what you started. We build the clean version around the workflow your team already follows, so there is nothing to retrain and nothing to resist.\n\nAdoption isn't a fight. It's a non-event."
+}
