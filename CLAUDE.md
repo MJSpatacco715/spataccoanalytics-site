@@ -95,6 +95,9 @@ lives and says which pieces are not in this repo yet.
   the market strip's deal count and changes with it each quarter
   (`docs/stat-bank.md`). On the Services and Tools pages a phone shows the
   figure after the services and the tiles, which keep the first screen.
+  The line that closes How We Work, on the home page and on the Approach page,
+  is the owner's (2026-11-27): "Adoption shouldn't be a battle. It should be a
+  non-event." It had read "Adoption isn't a fight. It's a non-event."
   A claim with a number or a "most" in it needs a source or it goes. The
   Approach page said "Adoption dies in week three", which came over with the
   first site's copy and had no source (the owner: "how do i know that? how do
@@ -334,6 +337,37 @@ lives and says which pieces are not in this repo yet.
   hairline. Nothing on it is a light panel, and nothing is dark words on the
   dark ground: `tests/scorer_browser.cjs` looks, in each state (as it opens, the
   matches, the score, the full breakdown), on a desktop and a phone.
+  Its opening says how the hundred points are made up, the hundred first and
+  the three under it (the owner, 2026-11-27: "this 100 breakdown should have 100
+  at the top and trickle down to the breakdown 50 / 30 / 20 with a look more
+  like the logo"). The figures hang off traces drawn the way the logo draws its
+  own: a hexagon at the hundred, 45 degree elbows, round ends, cyan to blue to
+  purple. There are two drawings of the one thing, both inline SVG with every
+  measure in rem: from 1000px the three stand one under another beside the
+  headline (`.sc-trace.v`), and under it they stand side by side beneath the
+  hundred (`.sc-trace.h`), which keeps the opening short on a phone. Change a
+  row's height or a column's width and the drawing's paths must change with it:
+  `tests/scorer_browser.cjs` holds that each trace ends at its figure.
+  Each of the three is a button, and what it is made of opens on a card (the
+  owner, the same day: "if there is a more granular underpinning to the
+  components I wouldn't mind them being shown on a hover (without giving the
+  secret sauce away)"): the category names and their points, filled by the
+  script from `WEBSITE_CATS` and `LINKEDIN_CAT`, so the card and the scoring
+  cannot differ. Names and points only: how each is judged is not said on the
+  card. From 1000px the card stands to the left of the breakdown once the
+  pointer has rested 300ms, and a click or a key opens it at once; under 1000px
+  it opens in place on a tap. The opening clips what leaves it, so the card is
+  placed inside it.
+  Its five ratings are the owner's names (2026-11-27: "I don't love the category
+  titles Distinction ...Poor"): Excellent (85 and up), Strong (70), Adequate
+  (55), Needs Work (40), Red Flags and Violations (under 40). `getTier`, the
+  legend over the form and the PDF say the same five, and the servers keep forty
+  characters of a rating so the longest is whole on the record, in the notice
+  and in the CRM.
+  Its marks are drawn: a globe for a website and LinkedIn's own mark, in
+  LinkedIn's blue with white letters, wherever LinkedIn is named with a mark
+  (the owner: "use the Linkedin Logo on the page where appropriate instead of a
+  briefcase"). No emoji stands in for an icon on the form.
   The PDF scorecard is paper and keeps its paper colours: `getTier` and
   `getScoreColor` give those, and `lit()` and `wash()` turn them into what is
   drawn on the page. Change a colour for the page there, not in `getTier`.

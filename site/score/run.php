@@ -103,7 +103,7 @@ if ($kind === 'lookup') {
     $event['firm_scored'] = lead_text($in['firm_scored'] ?? '', 160);
     $event['score'] = $whole($in['score'] ?? null);
     $event['score_max'] = $whole($in['score_max'] ?? null);
-    $event['tier'] = lead_text($in['tier'] ?? '', 20);
+    $event['tier'] = lead_text($in['tier'] ?? '', 40);
     $event['scores'] = $scores;
     $event['known'] = ($in['known'] ?? false) === true;
 } else {
