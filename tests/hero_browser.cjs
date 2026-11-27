@@ -208,6 +208,14 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
       await page.waitForTimeout(750);
       const card = await page.evaluate(() => { const c = document.querySelector('.page-hero .hero-stat .sa-cite-card'), r = c.getBoundingClientRect(), st = getComputedStyle(c); const on = (x, y) => { const e = document.elementFromPoint(x, y); return !!(e && c.contains(e)); }; return { shown: st.visibility === 'visible' && Number(st.opacity) > 0.9, top: r.top, bottom: r.bottom, left: r.left, right: r.right, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, vw: window.innerWidth, clear: on(r.left + 12, r.top + 12) && on(r.right - 12, r.bottom - 12), link: (c.querySelector('a') || {}).href || '' }; });
       check(path + ': pointing at it opens its source card, whole, clear of the menu, with a link to the source', card.shown && card.top >= card.nav && card.bottom <= card.vh && card.left >= 0 && card.right <= card.vw && card.clear && /^https:\/\//.test(card.link));
+      if (path === '/tools/') {
+        // The owner, 2026-11-27, of this card opening downward over the chips and tiles: "i'd prefer this popup to
+        // utilize the dead space rather than cover the tools links".
+        const over = await page.evaluate(() => { const c = document.querySelector('.page-hero .hero-stat .sa-cite-card').getBoundingClientRect(), f = document.querySelector('.page-hero .hero-stat').getBoundingClientRect();
+          const hit = (sel) => [...document.querySelectorAll(sel)].filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !(r.right <= c.left || r.left >= c.right || r.bottom <= c.top || r.top >= c.bottom); }).length;
+          return { links: hit('.tl-chip') + hit('.tl-tile') + hit('.tl-group-label'), figure: c.bottom <= f.top + 1, right: Math.round(document.querySelector('.tl-hero .page-hero-inner').getBoundingClientRect().right - c.right) }; });
+        check(path + ': its source card opens over the empty side of the headline, above the figure: it covers no category and no tool (' + over.links + ' covered)', over.links === 0 && over.figure && Math.abs(over.right) <= 1);
+      }
       await page.mouse.move(5, card.vh - 5);
     }
     await ctx.close();
