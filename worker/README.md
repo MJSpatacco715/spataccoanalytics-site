@@ -28,6 +28,7 @@ Workers & Pages > `ria-scorer` > Settings > Variables and Secrets.
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Secret. The key for the reading service. | required |
 | `SCORES_PER_DAY` | Per visitor: website scores, and LinkedIn scores, each. | 8 |
+| `LOOKUPS_PER_DAY` | Per visitor: a firm's name looked up for its website (the scorer's "Is this the right one?"). | 8 |
 | `RESUMES_PER_DAY` | Per visitor: resume reads. | 4 |
 | `DAILY_TOTAL` | All visitors together, every kind. | 150 |
 | `TRUSTED_IPS` | Comma-separated addresses that are not held to the per-visitor allowance. | none |
@@ -37,7 +38,9 @@ network shares an allowance, which is why the defaults are generous.
 
 ## What it refuses
 
-Anything that is not one of the four requests the site's tools make: another
+Anything that is not one of the five requests the site's tools make (a
+website score, a LinkedIn score, a firm's name looked up for its website, an
+answer rewritten in its shape, a resume read): another
 reader, other instructions, a system instruction, other tools, more output
 than a tool needs, a request from a page on another site. `tests/worker_test.mjs`
 checks this against the requests the pages in `site/` send today, so a change
