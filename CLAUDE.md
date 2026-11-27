@@ -316,8 +316,11 @@ lives and says which pieces are not in this repo yet.
   sure the new logo is front and center for linkedin / google search, etc?"):
   the share picture every page names (`site/img/social-card.png`, with a `?v=`),
   and the LinkedIn banner and Google cover in `brand/profile/`, all drawn by
-  `scripts/brand_images.cjs`. Three places stay the SA mark because they are
-  small squares where the wordmark cannot be read: the browser-tab icon, the
+  `scripts/brand_images.cjs`. The browser-tab icon is its own drawing: SA in white on a navy tile over the
+  cyan-to-purple line (`scripts/favicon.cjs`), every icon tag carrying `?v=`.
+  It was the SA mark on white, which at tab size was a pale smudge (the owner,
+  2026-11-27: "icon in tab not good either"). Three places stay the SA mark because they are
+  small squares where the wordmark cannot be read: the browser-tab icon (as that drawing), the
   logo search engines are given in the home page's structured data (Google
   asks that it look right on white, where white lettering would vanish), and a profile
   picture unless the owner chooses the wordmark square. The profiles are the
