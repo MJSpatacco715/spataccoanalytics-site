@@ -44,8 +44,12 @@ lives and says which pieces are not in this repo yet.
   ("navy from top to bottom", "no light section", "nothing is a light panel")
   is about that dark version, which did not change: before and after the
   colours moved to variables the pages were photographed and compared pixel for
-  pixel. The switch is one box at the end of the menu (top right of the first
-  row on a phone), drawn by `site/js/theme.js`: the sun in sunglasses fills
+  pixel. The switch is one small box fixed in the bottom right corner of the
+  window, faint until the pointer or the keyboard reaches it. It stood at the
+  end of the menu for an hour, until the owner: "light dark pod too prominent.
+  should be hidden(ish) bottom of the screen, not confusing the value prop on
+  the top main menu". Do not put it back in the menu. It is drawn by
+  `site/js/theme.js`: the sun in sunglasses fills
   most of it from the top right corner, a small moon sits bottom left, and the
   one in use is lit. A press turns the page and the choice is kept
   (`localStorage` `sa_theme`); each page's first line after `<body>` sets it
