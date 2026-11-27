@@ -156,7 +156,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/shared.css?v=6139e5c8">
 <link rel="stylesheet" href="/css/cite.css?v=d9368be7">
-<link rel="stylesheet" href="/css/insights.css?v=7f7e1254">
+<link rel="stylesheet" href="/css/insights.css?v=36df3a69">
 </head>
 <body>
 <nav id="main-nav">
@@ -315,7 +315,7 @@ document.querySelectorAll('.in-filters button').forEach(function (b) {{
     s = home.read_text(encoding="utf-8")
     front = [p for p in posts if p["category"] == "practice"][:HOME_COUNT]
     if HOME_MARK in s and front:
-        teaser = ('<link rel="stylesheet" href="/css/insights.css?v=7f7e1254"><section class="section-light in-home"><div class="section-inner">'
+        teaser = ('<link rel="stylesheet" href="/css/insights.css?v=36df3a69"><section class="section-light in-home"><div class="section-inner">'
                   '<div class="section-tag">Insights</div><h2 class="section-heading section-heading-light">What the data says about practices like yours.</h2>'
                   f'<div class="accent-line"></div><div class="in-grid">{"".join(card(p) for p in front)}</div>'
                   '<p class="in-more"><a class="in-link" href="/insights/">All insights &rarr;</a></p></div></section>')

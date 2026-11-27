@@ -79,6 +79,10 @@ check "the first screen says what we do in the owner's softer words" 'grep -q "W
 check "on a desktop the first screen and the website screen put their figures in a column on the right" 'grep -q "@media(min-width:1080px){" "$home" && grep -q "\.hero-content{display:grid;grid-template-columns:minmax(0,1fr) 18.125rem;" "$home" && grep -q "\.screen-inner{display:grid;grid-template-columns:minmax(0,1fr) 18.125rem;" "$home"'
 check "on a phone the figures are one vertical stack, not side by side" 'grep -q "\.stat-bar{flex-direction:column;gap:1.25rem}" "$home" && ! grep -q "\.hero \.stat-bar{display:grid" "$home"'
 check "the pillars are one height with their links on one line" 'grep -q "a.service-card{display:flex;flex-direction:column;" "$home" && grep -q "\.service-go{display:block;margin-top:auto;" "$home"'
+# The pillars were the one light section of the home page. The owner, 2026-11-27: "weirdly all
+# white in a sea of blue". Asked, with a picture of it in navy: "Yes, make it navy".
+check "no section of the home page is light: the pillars sit on the navy, each one the site panel" '! grep -q "class=\"section-light" "$home" && grep -q "<section class=\"section-dark section-pillars\" id=\"services\">" "$home" && grep -q "\.service-card{background:rgba(255,255,255,0.045);border:1px solid rgba(203,213,225,0.16);" "$home" && grep -q "\.service-card h3{font-size:1.25rem;font-weight:600;color:var(--white);" "$home" && grep -q "<h2 class=\"section-heading section-heading-dark\">Three pillars. One consultative engagement.</h2>" "$home"'
+check "and the Insights teaser, when the home page has one, sits on the navy too" 'grep -qF ".section-light.in-home{background:#0F1B2D}" "$site/css/insights.css" && grep -qF ".in-home .in-card h3{color:#FFFFFF}" "$site/css/insights.css" && grep -qF ".in-home .in-card{background:rgba(255,255,255,0.045);" "$site/css/insights.css"'
 check "there are three pillars and each is a link" '[ "$(grep -o "<a class=\"service-card " "$home" | wc -l)" = 3 ] && ! grep -q "<div class=\"service-card" "$home"'
 
 # --- every statistic carries its source

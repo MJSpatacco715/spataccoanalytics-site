@@ -27,6 +27,13 @@ lives and says which pieces are not in this repo yet.
   more than it needs. On a phone everything is one vertical stack, section by
   section: nothing sits side by side there. A change that adds a section or a tall block has to take as
   much height out somewhere else.
+  It is navy from top to bottom. The three pillars were its one light section;
+  the owner, 2026-11-27: "the one home/page scroll that's weirdly all white in a
+  sea of blue", and, shown it in navy and asked: "Yes, make it navy". A pillar
+  is the site's panel (a faint lift off the navy inside a hairline), and the
+  Insights teaser, when a `practice` post puts one on the page, sits on the navy
+  too (`.in-home` in `site/css/insights.css`). Do not put a light section on the
+  home page. `tests/hero_browser.cjs` looks for one.
 - The pages grow with the window. The owner, 2026-11-27, with the site at 100%
   beside the same page zoomed to 150%: "the site looks better at 150% size than
   100%, there should be some adjustment. with a target market of 50-80 year olds
