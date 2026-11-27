@@ -353,6 +353,33 @@ lives and says which pieces are not in this repo yet.
   waits thinking a score has started on a guess.
   `tests/scorer_browser.cjs` opens it with the relay stood in for: no test runs
   a real lookup or a real score.
+- The scorer keeps the owner a record of what goes into it. The owner,
+  2026-11-27: "the scorer should also keep a record for me and only me to see
+  what has gone into the mechanism. This should feed into the Taccobox CRM in
+  some fashion as well, that will be the best/main spot for the leads and flow
+  that comes through the system. Though I absolutely want to maintain getting
+  an email when someone hits the button(s)". So the page tells
+  `site/score/run.php` each step (a firm's name looked up and the firms
+  offered, the one chosen or none of them, a score that finished or did not),
+  and each is a line in `sa-leads/scorer-runs.jsonl`, off the web, beside the
+  leads. Steps that share a `run` are one visit to the form, and the lead left
+  afterwards carries the same run. No address of the visitor's is written down.
+  The record never holds a visitor up and never shows: if it cannot be kept,
+  the scorer does everything it did.
+  Which presses mail the owner (asked, of four: "Each score + each unlock"): a
+  finished score mails a notice with what was typed, the site scored and the
+  score, and the lead's own notice follows when a name and email are left. A
+  score from a visitor already known sends only the lead's notice, which says
+  both. Score notices stop at sixty a day, everyone together; the record is
+  still kept.
+  It reaches the CRM through `site/score/feed.php`, which answers only to the
+  token in the `SCORER_FEED_TOKEN` secret (written beside the web root by the
+  publish, never in this repository) and is not there at all until the secret
+  is set. In the CRM it lands in an inbox the owner approves from (asked:
+  "Scorer inbox to approve"): nothing becomes a firm or a person there until
+  the owner accepts it. The CRM is another repository with rules of its own.
+  `tests/run_test.sh` holds the record, the notice and the feed;
+  `tests/scorer_browser.cjs` holds what the page tells it.
 - The scorer and the resume parser talk to the `ria-scorer` Cloudflare
   Worker. Its source is `worker/ria-scorer.js`, and it refuses any request
   it does not recognise. Change a tool's instructions, reader, tools or
@@ -370,6 +397,7 @@ python3 scripts/build_site.py --site site --out dist
 bash tests/remote_deploy_test.sh
 bash tests/feed_test.sh
 bash tests/lead_test.sh
+bash tests/run_test.sh
 bash tests/contact_test.sh
 bash tests/notice_test.sh
 bash tests/bank_test.sh
@@ -379,5 +407,5 @@ bash tests/pages_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
 bash tests/insights_test.sh
-for f in site/score/lead.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/bank/api.php site/lib/bank.php site/market/feed.php site/lib/market.php; do php -l "$f"; done
+for f in site/score/lead.php site/score/run.php site/score/feed.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/bank/api.php site/lib/bank.php site/market/feed.php site/lib/market.php; do php -l "$f"; done
 ```

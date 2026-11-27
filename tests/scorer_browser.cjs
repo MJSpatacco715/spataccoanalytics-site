@@ -49,9 +49,13 @@ const FOUND = JSON.stringify({ candidates: [
       if (text.startsWith(SCORE)) return route.fulfill(says(SCORED));
       return route.fulfill(refuses(400, 'This relay only serves the Spatacco Analytics tools.'));
     });
-    await page.route(/\/score\/lead\.php/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
-    await page.goto(base + '/tools/website-scorer.html?scope=website', { waitUntil: 'load' });
-    return { ctx, page, sent, errors };
+    // The owner's record (score/run.php) and the lead (score/lead.php) are stood in for: what the page
+    // would have kept is held here, and nothing is written or mailed. `recorder` answers for the record.
+    const runs = [], leads = [];
+    await page.route(/\/score\/run\.php/, (r) => { try { runs.push(JSON.parse(r.request().postData() || '{}')); } catch (e) { runs.push({ kind: 'unreadable' }); } return r.fulfill(open.recorder ? open.recorder() : { status: 200, contentType: 'application/json', body: '{"ok":true}' }); });
+    await page.route(/\/score\/lead\.php/, (r) => { try { leads.push(JSON.parse(r.request().postData() || '{}')); } catch (e) {} return r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }); });
+    await page.goto(base + '/tools/website-scorer.html?scope=website&utm_source=test', { waitUntil: 'load' });
+    return { ctx, page, sent, errors, runs, leads };
   };
   // The scorer wears the site's look (the owner, 2026-11-27: "scorer has a bland SA logo and all white
   // screen ... feels imported, rather than in house. match the visual style of the scorer to the overall
@@ -106,7 +110,7 @@ const FOUND = JSON.stringify({ candidates: [
 
   // --- a firm's name: the matches, each with how sure and why
   for (const [w, h, mobile] of [[1255, 607, false], [430, 744, true]]) {
-    const { ctx, page, sent, errors } = await open({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile }, () => says(FOUND));
+    const { ctx, page, sent, errors, runs, leads } = await open({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile }, () => says(FOUND));
     const at = w + ' by ' + h + ': ';
     await page.waitForTimeout(1200);
     const l0 = await look(page);
@@ -146,6 +150,15 @@ const FOUND = JSON.stringify({ candidates: [
     const lr = await look(page);
     dressed(at + 'with the full breakdown up', lr);
     check(at + 'the results are in view under the menu, not behind it', await page.evaluate(() => { const n = document.getElementById('main-nav').getBoundingClientRect().bottom, s = document.getElementById('res-summary').getBoundingClientRect(); return s.top >= n && s.bottom <= window.innerHeight; }));
+    // The owner's own record of it. The owner, 2026-11-27: "the scorer should also keep a record for me and
+    // only me to see what has gone into the mechanism".
+    const kinds = runs.map((r) => r.kind).join(',');
+    const [lk, ch, sc] = runs;
+    check(at + 'the record is told each step, in order: the lookup, the choice, the score (' + kinds + ')', kinds === 'lookup,choose,score');
+    check(at + 'the lookup: what was typed, and the firms offered with how sure', !!lk && lk.typed === 'Smith Wealth b Management /b' && lk.outcome === 'offered' && lk.matches.length === 2 && lk.matches[0].website === 'https://www.smithwealth.example' && lk.matches[0].confidence === 88 && lk.matches[0].place === 'Austin, TX' && lk.utm_source === 'test');
+    check(at + 'the choice: which firm, and how sure the search was of it', !!ch && ch.chose === 'match' && ch.website === 'https://www.smithwealth.example' && ch.confidence === 88 && ch.name === 'Smith Wealth Management');
+    check(at + 'the score: the site, that it was found by lookup, the score and its parts, and that nobody is known yet', !!sc && sc.website === 'https://www.smithwealth.example' && sc.found === 'lookup' && sc.typed === 'Smith Wealth b Management /b' && sc.firm_scored === 'Smith Wealth Management' && sc.score === 47 && sc.score_max === 80 && sc.tier === 'Adequate' && sc.scores.visual_design === 9 && sc.known === false);
+    check(at + 'the three are one run, and the lead left afterwards carries the same', !!sc && /^[a-f0-9]{24}$/.test(sc.run) && runs.every((r) => r.run === sc.run) && leads.length === 1 && leads[0].run === sc.run && leads[0].email === 'visitor@example.com');
     check(at + 'no script error', errors.length === 0);
     await ctx.close();
   }
@@ -154,10 +167,11 @@ const FOUND = JSON.stringify({ candidates: [
   {
     const one = JSON.stringify({ candidates: [{ name: 'Harbor Planning', website: 'harborplanning.example', location: '', confidence: 71, why: [] }] });
     let reply = FOUND;
-    const { ctx, page, sent } = await open({ viewport: { width: 1255, height: 607 } }, () => says(reply));
+    const { ctx, page, sent, runs } = await open({ viewport: { width: 1255, height: 607 } }, () => says(reply));
     await type(page, 'smith wealth');
     await page.waitForSelector('#firm-matches .match-card', { timeout: 8000 });
     await page.click('#firm-matches .match-none');
+    check('the record is told when none of the firms offered was the one', runs.map((r) => r.kind).join(',') === 'lookup,choose' && runs[1].chose === 'none' && runs[1].typed === 'smith wealth');
     const none = await page.evaluate(() => ({ hidden: document.getElementById('firm-matches').classList.contains('hidden'), field: document.getElementById('inp-website').value, focus: document.activeElement.id }));
     check('"None of these" puts the matches away and hands back an empty field, ready to type in', none.hidden && none.field === '' && none.focus === 'inp-website' && sent.length === 1);
     reply = one;
@@ -231,7 +245,7 @@ const FOUND = JSON.stringify({ candidates: [
   // --- when the lookup has nothing, or cannot run
   {
     let reply = () => says('{"candidates":[]}');
-    const { ctx, page, sent } = await open({ viewport: { width: 1255, height: 607 } }, () => reply());
+    const { ctx, page, sent, runs } = await open({ viewport: { width: 1255, height: 607 } }, () => reply());
     await type(page, 'Zzyzx Nowhere Partners');
     await page.waitForFunction(() => getComputedStyle(document.getElementById('input-error')).display !== 'none', null, { timeout: 8000 });
     let c = await cards(page);
@@ -248,14 +262,21 @@ const FOUND = JSON.stringify({ candidates: [
     c = await cards(page);
     check('a daily limit is said in the relay\'s own words', !c.shown && c.error.includes("today's free limit") && !c.off);
     check('none of those ran a score', sent.every((s) => !s.text.startsWith(SCORE)));
+    check('the record has each of the three: nothing found, and two lookups that could not run (' + runs.map((r) => r.outcome).join(',') + ')', runs.map((r) => r.kind + ':' + r.outcome).join(',') === 'lookup:none,lookup:failed,lookup:failed' && runs[0].typed === 'Zzyzx Nowhere Partners');
     await ctx.close();
   }
 
   // --- an address is still an address, and what is neither is still turned away
   {
-    const { ctx, page, sent } = await open({ viewport: { width: 1255, height: 607 } }, () => says(FOUND));
+    // (here the record cannot be kept at all: the visitor is not held up and sees nothing of it)
+    open.recorder = () => ({ status: 500, contentType: 'text/plain', body: 'no' });
+    const { ctx, page, sent, runs, errors } = await open({ viewport: { width: 1255, height: 607 } }, () => says(FOUND));
+    open.recorder = null;
     await type(page, 'www.Example-Advisors.com');
-    await page.waitForTimeout(500);
+    await page.waitForSelector('#screen-results:not(.hidden)', { timeout: 15000 }).catch(() => {});
+    await page.waitForTimeout(300);
+    check('an address that is scored is recorded as typed, with no lookup before it', runs.length === 1 && runs[0].kind === 'score' && runs[0].found === 'typed' && runs[0].typed === 'www.Example-Advisors.com' && runs[0].website === 'https://www.example-advisors.com');
+    check('a record that cannot be kept changes nothing for the visitor: the score still shows, with no error', await page.evaluate(() => !document.getElementById('screen-results').classList.contains('hidden') && getComputedStyle(document.getElementById('input-error')).display === 'none') && errors.length === 0);
     check('an address typed any way goes straight to the score, with no lookup', sent.length >= 1 && sent[0].text.startsWith(SCORE) && sent[0].text.includes('Website: https://www.example-advisors.com\n') && sent.every((s) => !s.text.startsWith(FIND)));
     await ctx.close();
     const b = await open({ viewport: { width: 1255, height: 607 } }, () => says(FOUND));

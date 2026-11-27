@@ -47,6 +47,9 @@ jobs:
       - name: The scorer's lead endpoint keeps real leads and nothing else
         run: bash tests/lead_test.sh
 
+      - name: The scorer's own record is kept for the owner, and only the CRM can read it
+        run: bash tests/run_test.sh
+
       - name: The contact form keeps real messages and nothing else
         run: bash tests/contact_test.sh
 
@@ -86,6 +89,8 @@ jobs:
           php -l capture/stub_api.php
           php -l live/feed.php
           php -l site/score/lead.php
+          php -l site/score/run.php
+          php -l site/score/feed.php
           php -l site/contact/submit.php
           php -l site/bank/api.php
           php -l site/lib/bank.php

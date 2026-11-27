@@ -120,7 +120,11 @@ function lead_person(array $in): array
 
 // Appends the lead to sa-leads/$file. Answers and stops when the address has
 // left ten this hour or the file cannot be written.
-function lead_keep(string $file, array $lead): void
+// ($gate and $perHour: what is counted together. The forms share one count of
+// ten an hour; the scorer's own record of its runs (score/run.php) keeps its
+// own, so that looking a firm up and scoring it does not use up the leads a
+// visitor may leave.)
+function lead_keep(string $file, array $lead, string $gate = 'rate', int $perHour = LEAD_PER_HOUR): void
 {
     $home = dirname((string)($_SERVER['DOCUMENT_ROOT'] ?? __DIR__));
     $dir = $home . '/sa-leads';
@@ -130,13 +134,13 @@ function lead_keep(string $file, array $lead): void
     // The times of this address's recent leads, in one small file named by a
     // hash, so no address is written down beside the leads.
     $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
-    $gate = $dir . '/rate-' . substr(hash('sha256', $ip), 0, 24) . '.txt';
+    $gate = $dir . '/' . (preg_match('/^[a-z]{2,12}$/', $gate) ? $gate : 'rate') . '-' . substr(hash('sha256', $ip), 0, 24) . '.txt';
     $now = time();
     $seen = array_values(array_filter(
         array_map('intval', (array)@file($gate, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES)),
         static fn(int $t): bool => $t > $now - 3600
     ));
-    if (count($seen) >= LEAD_PER_HOUR) {
+    if (count($seen) >= $perHour) {
         lead_out(429, ['ok' => false, 'error' => 'slow down']);
     }
     $seen[] = $now;
