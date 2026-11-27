@@ -263,13 +263,48 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
       await press('business');
       await page.waitForTimeout(150);
     }
-    if (w === 1255) {
-      await page.click('.tl-chip[data-kind="sports"]');
-      await page.waitForTimeout(150);
-      await page.click('.tl-tile[href="#built-golf"]');
+    // The owner, 2026-11-27, of the platforms' group: "this ... should be down a level and should have the commonly
+    // understood (theres text if you click here) carrot". A platform pressed opens what it is under the row.
+    if (w === 1255 || w === 430) {
+      const tap = (sel) => (mobile ? page.tap(sel) : page.click(sel));
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await tap('.tl-chip[data-kind="sports"]');
+      await page.waitForTimeout(200);
+      const state = () => page.evaluate(() => { const t = document.querySelector('.tl-tile[href="#built-golf"]'), o = document.querySelector('.tl-tile[href="#built-league"]'), m = document.getElementById('tl-more'), r = t.getBoundingClientRect(), mr = m.getBoundingClientRect(), c = t.querySelector('.tl-caret').getBoundingClientRect();
+        const card = document.getElementById('built-golf');
+        return { role: t.getAttribute('role'), open: t.getAttribute('aria-expanded'), other: o.getAttribute('aria-expanded'), controls: t.getAttribute('aria-controls'), tileTop: Math.round(r.top + window.scrollY), tileBottom: r.bottom, caret: c.width > 4 && c.height > 4 && c.left >= r.left && c.right <= r.right, turn: getComputedStyle(t.querySelector('.tl-caret')).transform,
+          shown: !m.hidden && mr.height > 40, under: mr.top >= r.bottom - 1, inView: mr.bottom <= window.innerHeight + 1 && mr.top >= document.getElementById('main-nav').getBoundingClientRect().bottom, wide: mr.left >= 0 && mr.right <= window.innerWidth,
+          text: m.innerText.replace(/\s+/g, ' ').trim(), same: !!card && m.innerText.includes(card.querySelector('.build-head ~ p').innerText.trim()) && m.innerText.toLowerCase().includes(card.querySelector('h3').innerText.trim().toLowerCase()),
+          facts: m.querySelectorAll('.build-facts span').length, ask: (m.querySelector('a.tool-link') || {}).href || '', down: (m.querySelector('a.tl-more-down') || {}).hash || '', px: Math.min(...[...m.querySelectorAll('p, span, a')].map((x) => parseFloat(getComputedStyle(x).fontSize))) }; });
+      const shut = await state();
+      check('/tools/ at ' + w + ' by ' + h + ': a platform is a press with a caret, closed to begin with', shut.role === 'button' && shut.open === 'false' && shut.controls === 'tl-more' && shut.caret && !shut.shown);
+      await tap('.tl-tile[href="#built-golf"]');
+      await page.waitForTimeout(700);
+      const open = await state();
+      check('/tools/ at ' + w + ' by ' + h + ': pressed, what it is opens under the row, in view, in the words of its own card, and its caret turns (' + open.text.slice(0, 60) + ')', open.open === 'true' && open.other === 'false' && open.shown && open.under && open.inView && open.wide && open.same && open.facts === 3 && open.turn !== shut.turn && (!mobile || open.px >= 13));
+      check('/tools/ at ' + w + ' by ' + h + ': opening it does not push the pressed row down the page (it stood at ' + shut.tileTop + ', stands at ' + open.tileTop + ')', open.tileTop <= shut.tileTop);
+      check('/tools/ at ' + w + ' by ' + h + ': it offers the walkthrough and the way to the whole card', /\/contact\/\?about=golf$/.test(open.ask) && open.down === '#built-golf');
+      await tap('.tl-tile[href="#built-league"]');
+      await page.waitForTimeout(500);
+      const other = await state();
+      check('/tools/ at ' + w + ' by ' + h + ': another platform pressed takes its place: one is open at a time', other.open === 'false' && other.other === 'true' && other.shown && /league/i.test(other.text));
+      await tap('.tl-tile[href="#built-league"]');
       await page.waitForTimeout(400);
-      const at = await page.evaluate(() => { const r = document.getElementById('built-golf').getBoundingClientRect(), s = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: r.top, strip: s.bottom, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight }; });
-      check('a platform\'s tile goes to where it is described, clear of the menu and the strip under it', at.top >= Math.max(at.nav, at.strip) - 1 && at.top < at.vh * 0.6);
+      const closed = await state();
+      check('/tools/ at ' + w + ' by ' + h + ': pressed again, it closes', closed.other === 'false' && !closed.shown && closed.turn === shut.turn);
+      await tap('.tl-tile[href="#built-golf"]');
+      await page.waitForTimeout(500);
+      await tap('.tl-chip[data-kind="business"]');
+      await page.waitForTimeout(300);
+      check('/tools/ at ' + w + ' by ' + h + ': another kind chosen closes it', !(await state()).shown);
+      await tap('.tl-chip[data-kind="sports"]');
+      await page.waitForTimeout(200);
+      await tap('.tl-tile[href="#built-golf"]');
+      await page.waitForTimeout(600);
+      await tap('#tl-more a.tl-more-down');
+      await page.waitForTimeout(900);
+      const at = await page.evaluate(() => { const c = document.getElementById('built-golf'), r = c.getBoundingClientRect(), s = document.getElementById('sa-ticker').getBoundingClientRect(); return { top: r.top, strip: s.bottom, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, list: c.querySelector('details').open }; });
+      check('/tools/ at ' + w + ' by ' + h + ': from there "What it does" goes to the platform\'s card, clear of the menu and the strip under it, with its list open', at.top >= Math.max(at.nav, at.strip) - 1 && at.top < at.vh * 0.6 && at.list);
     }
     await ctx.close();
   }
@@ -286,7 +321,7 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     const seen = () => page.evaluate(() => [...document.querySelectorAll('.page-hero .tl-tile')].filter((x) => !x.hidden).map((x) => {
       const r = x.getBoundingClientRect(), tag = x.querySelector('.tl-tag'), ico = x.querySelector('.tl-ico'), name = x.querySelector('.tl-name'), use = ico.querySelector('use');
       const tr = tag.getBoundingClientRect(), ir = ico.getBoundingClientRect(), nr = name.getBoundingClientRect();
-      return { live: x.classList.contains('tl-live'), area: r.width * r.height, tag: tr.width > 0 && tr.height > 0 ? tag.innerText.replace(/\s+/g, ' ').trim() : '', tagPx: parseFloat(getComputedStyle(tag).fontSize),
+      return { live: x.classList.contains('tl-live'), area: r.width * r.height, top: r.top, bottom: r.bottom, height: r.height, caret: (() => { const c = x.querySelector('.tl-caret'); if (!c) return false; const cr = c.getBoundingClientRect(); return cr.width > 4 && cr.height > 4 && cr.left >= r.left && cr.right <= r.right; })(), tag: tr.width > 0 && tr.height > 0 ? tag.innerText.replace(/\s+/g, ' ').trim() : '', tagPx: parseFloat(getComputedStyle(tag).fontSize),
         tagLines: tr.height > 0 ? Math.round(tr.height / parseFloat(getComputedStyle(tag).lineHeight)) : 0,
         ico: Math.round(ir.width), square: Math.abs(ir.width - ir.height) < 1, filled: getComputedStyle(ico).backgroundImage.includes('gradient'),
         drawn: !!use && !!document.querySelector(use.getAttribute('href')) && ico.getBBox().width > 4 && getComputedStyle(ico).fill === 'none' && getComputedStyle(ico).stroke !== 'none',
@@ -304,20 +339,21 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
       cats.label === 'Show tools by category' && (mobile ? cats.said === '' : cats.said === 'BROWSE BY CATEGORY' && cats.before && cats.counts.join(' | ') === 'Business 3 tools | Sports 8 tools | Movies 2 tools'));
     const b = await seen();
     check('/tools/ at ' + w + ' by ' + h + ': the two Business tools to use say so in words, each on one line (' + b.map((x) => x.tag).join(' | ') + ')', b.length === 3 && b[0].live && b[1].live && b[0].tag === 'INTERACTIVE · TRY IT NOW' && b[1].tag === 'INTERACTIVE · TRY IT NOW' && b[0].tagLines === 1 && b[1].tagLines === 1 && (!mobile || b[0].tagPx >= 13));
-    check('/tools/ at ' + w + ' by ' + h + ': they are the larger tiles, their icons filled; the platform described below is quieter and says it is built to order', b[0].area > b[2].area * 1.25 && b[1].area > b[2].area * 1.25 && b[0].filled && b[1].filled && !b[2].live && !b[2].filled && (b[2].tag.startsWith('BUILT TO ORDER') ? b[2].tagLines === 1 : b[2].group.said.startsWith('BUILT TO ORDER')) && b[0].ico > b[2].ico);
-    check('/tools/ at ' + w + ' by ' + h + ': the tools to use and the platform stand in two groups, the platform under the words "Built to order" and in a dashed line' + (mobile ? '' : ', side by side, the tools under "Interactive"') + ' (' + b[0].group.said + ' | ' + b[2].group.said + ')',
+    check('/tools/ at ' + w + ' by ' + h + ': they are the larger tiles, their icons filled; the platform a level down is quieter and is named as built to order', b[0].area > b[2].area * 1.25 && b[1].area > b[2].area * 1.25 && b[0].filled && b[1].filled && !b[2].live && !b[2].filled && (b[2].tag.startsWith('BUILT TO ORDER') ? b[2].tagLines === 1 : b[2].group.said.startsWith('BUILT TO ORDER')) && b[0].ico > b[2].ico);
+    check('/tools/ at ' + w + ' by ' + h + ': the tools to use and the platform stand in two groups, the platform a level down under the words "Built to order", in a dashed line, slim, with a caret' + (mobile ? '' : ', the tools under "Interactive"') + ' (' + b[0].group.said + ' | ' + b[2].group.said + ')',
       b[0].group.live && b[1].group.live && !b[2].group.live && b[2].group.said.startsWith('BUILT TO ORDER') && b[2].dashed && !b[0].dashed && (!mobile || b[2].group.px >= 13)
-      && (mobile ? b[2].group.top > b[0].group.top : b[0].group.said.startsWith('INTERACTIVE') && b[2].group.left > b[0].group.left && Math.abs(b[2].group.top - b[0].group.top) < 2));
+      && b[2].group.top > b[0].group.top && b[2].top >= Math.max(b[0].bottom, b[1].bottom) && b[2].caret && !b[0].caret && b[2].height <= b[0].height * 0.75 && b[2].tag === ''
+      && (mobile || (b[0].group.said.startsWith('INTERACTIVE') && Math.abs(b[2].group.left - b[0].group.left) < 2)));
     check('/tools/ at ' + w + ' by ' + h + ': the scorecard is named as the rest of the site names it, the free website score, and says which scorecard it is (' + b[0].name + ')', b[0].name === 'Free Website Score' && /RIA Digital Presence Scorecard/.test(b[0].text));
     check('/tools/ at ' + w + ' by ' + h + ': each icon is drawn, square and in its badge, with the name beside it and not cut', b.every((x) => x.drawn && x.square && x.ico >= 24 && x.nameIn && !/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/u.test(x.text)));
     if (mobile) await page.tap('.tl-chip[data-kind="sports"]'); else await page.click('.tl-chip[data-kind="sports"]');
     await page.waitForTimeout(250);
     const s = await seen();
-    check('/tools/ at ' + w + ' by ' + h + ': of the eight Sports tools the six to use come first with filled icons, the two described after them without', s.length === 8 && s.slice(0, 6).every((x) => x.live && x.filled && x.group.live && !x.dashed) && s.slice(6).every((x) => !x.live && !x.filled && !x.group.live && x.dashed && x.group.said.startsWith('BUILT TO ORDER')) && s.every((x) => x.drawn && x.square && x.ico >= 22 && x.nameIn));
+    check('/tools/ at ' + w + ' by ' + h + ': of the eight Sports tools the six to use come first with filled icons, the two described after them without', s.length === 8 && s.slice(0, 6).every((x) => x.live && x.filled && x.group.live && !x.dashed) && s.slice(6).every((x) => !x.live && !x.filled && !x.group.live && x.dashed && x.caret && x.group.said.startsWith('BUILT TO ORDER')) && s.slice(6).every((x) => x.top >= Math.max(...s.slice(0, 6).map((y) => y.bottom))) && s.every((x) => x.drawn && x.square && x.ico >= 22 && x.nameIn));
     if (mobile) await page.tap('.tl-chip[data-kind="movies"]'); else await page.click('.tl-chip[data-kind="movies"]');
     await page.waitForTimeout(250);
     const mv = await seen();
-    check('/tools/ at ' + w + ' by ' + h + ': Movies has no platform, so no "Built to order" group shows and its two tools take the row', mv.length === 2 && mv.every((x) => x.live) && await page.evaluate(() => { const g = document.querySelector('.tl-group-see'); return g.hidden && g.getBoundingClientRect().height === 0 && document.getElementById('tl-tiles').classList.contains('solo'); }));
+    check('/tools/ at ' + w + ' by ' + h + ': Movies has no platform, so no "Built to order" group shows and its two tools take the row', mv.length === 2 && mv.every((x) => x.live) && await page.evaluate(() => { const g = document.querySelector('.tl-group-see'); return g.hidden && g.getBoundingClientRect().height === 0 && document.getElementById('tl-more').hidden; }));
     await ctx.close();
   }
 

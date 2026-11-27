@@ -70,8 +70,9 @@
 .build-more{margin:0 0 1rem}
 .build-more summary{display:inline-block;cursor:pointer;list-style:none;font-size:max(0.75rem,var(--tfloor,0px));font-weight:600;letter-spacing:0.0625rem;color:#CBD5E1;border-bottom:1px dotted #94A3B8;padding-bottom:0.0625rem}
 .build-more summary::-webkit-details-marker{display:none}
-.build-more summary::after{content:' +';color:var(--cyan)}
-.build-more[open] summary::after{content:' \2212'}
+/* (the same caret as a platform's tile at the top of the page: it was a plus sign) */
+.build-more summary::after{content:'';display:inline-block;box-sizing:border-box;width:0.5em;height:0.5em;margin:0 0.125em 0.1875em 0.5em;border:solid var(--cyan);border-width:0 0.125rem 0.125rem 0;transform:rotate(45deg);transition:transform .2s}
+.build-more[open] summary::after{margin-bottom:-0.0625em;transform:rotate(-135deg)}
 .build-more summary:hover{color:var(--white)}
 .build-more summary:focus-visible{outline:0.125rem solid var(--purple-light);outline-offset:0.1875rem}
 .build-more .build-points{margin:0.75rem 0 0}
@@ -181,9 +182,13 @@
   .tl-hero{min-height:calc(100vh - 2rem)}
   @supports (height:100svh){.tl-hero{min-height:calc(100svh - 2rem)}}
 }
-/* a short window (the owner's own is 607px tall): less padding, so that the longest list of tools
-   still fits under the copy where it stands and choosing it moves nothing */
-@media(min-width:561px) and (max-height:680px){.tl-hero{padding-top:6rem;padding-bottom:0.875rem}}
+/* a short window (the owner's own is 607px tall): less padding, and the small tiles a little lower, so that the
+   longest list of tools, with the platforms' row under it, still fits under the copy where it stands and choosing
+   it moves nothing */
+@media(min-width:561px) and (max-height:680px){.tl-hero{padding-top:6rem;padding-bottom:0.875rem}.tl-tiles:not(.few) .tl-live{min-height:3.125rem}}
+/* (and the same window enlarged: past 1255px wide the page grows with the window, so a screen of the owner's
+   shape is as short, in the page's own measure, as his window is. 1846/1000 is that 680px for a page 78.4375rem wide.) */
+@media(min-width:1256px) and (min-aspect-ratio:1846/1000){.tl-hero{padding-top:6rem;padding-bottom:0.875rem}.tl-tiles:not(.few) .tl-live{min-height:3.125rem}}
 .tl-hero .page-hero-inner{width:100%;max-width:68.75rem}
 .tl-hero h1{font-size:clamp(2.125rem,3.7vw,3rem);margin-bottom:0.625rem}
 /* (The headline was one sentence kept on one line, by a rule here, until the owner asked for it to
@@ -207,12 +212,16 @@
 .tl-chip.on span{color:var(--navy)}
 .tl-chips-label{align-self:center;margin-right:0.25rem;font-size:max(0.6875rem,var(--tfloor,0px));font-weight:600;letter-spacing:0.15rem;text-transform:uppercase;color:#8FA0B8}
 @media(min-width:561px){.tl-chip span::after{content:' tools'}}
-/* The tiles stand in two named groups: the tools to use, and the platforms described below. Side by side from
-   761px (so naming them costs one line of height, not two), one under the other on a phone. */
-.tl-tiles{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:0.625rem 1.25rem;align-items:start;opacity:0;animation:fadeUp .9s .7s forwards}
-.tl-tiles.solo{grid-template-columns:minmax(0,1fr)}
+/* The tiles stand in two named groups, one under the other: the tools to use, and a level down the platforms we
+   build to order. The two stood side by side until the owner, 2026-11-27, of the platforms' group: "this ... should
+   be down a level and should have the commonly understood (theres text if you click here) carrot". So it is one slim
+   row under the tools, its name at the left, and each platform in it is a press that opens what it is, in place,
+   with a caret that says so. */
+.tl-tiles{display:grid;grid-template-columns:minmax(0,1fr);gap:0.625rem;align-items:start;opacity:0;animation:fadeUp .9s .7s forwards}
 .tl-group[hidden]{display:none}
-.tl-group-see{padding-left:1.25rem;border-left:1px solid rgba(203,213,225,0.18)}
+.tl-group-see{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 1rem}
+.tl-group-see .tl-group-label{margin-bottom:0}
+.tl-group-see .tl-group-tiles{display:flex;flex-wrap:wrap;gap:0.625rem}
 .tl-group-label{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;font-size:max(0.6875rem,var(--tfloor,0px));line-height:1.2;white-space:nowrap}
 .tl-group-label::before{content:'';flex:none;box-sizing:border-box;width:0.5rem;height:0.5rem;border-radius:50%}
 .tl-group-label b{font-weight:700;letter-spacing:0.125rem;text-transform:uppercase}
@@ -238,14 +247,30 @@
 .tl-live .tl-ico{background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 55%,var(--purple) 100%);color:var(--navy)}
 .tl-live .tl-tag,.tl-live .tl-go{color:var(--cyan)}
 .tl-live:hover .tl-go,.tl-live:focus-visible .tl-go{transform:translateX(0.1875rem)}
-/* a platform that runs privately and is described lower down: quieter, in a dashed line, and it says "Details" */
+/* a platform that runs privately: quieter and slim, in a dashed line, with a caret. Pressed, what it is opens under
+   the row (.tl-more), filled from its own card lower down so the two cannot differ; pressed again, it closes. */
 .tl-see{border-style:dashed;border-color:rgba(203,213,225,0.34)}
-.tl-see .tl-ico{border:1px solid rgba(203,213,225,0.32);color:#CBD5E1}
-.tl-see .tl-name{color:#E2E8F0}
-.tl-see .tl-tag,.tl-see .tl-go{color:#94A3B8}
+/* (by the grid's id: these hold whichever size the tools above are drawn at) */
+#tl-tiles .tl-see{min-height:2.5rem;padding:0.25rem 0.75rem 0.25rem 0.5rem;gap:0.5625rem;cursor:pointer}
+#tl-tiles .tl-see .tl-ico{width:1.625rem;height:1.625rem;padding:0.25rem;border-radius:0.375rem;border:1px solid rgba(203,213,225,0.32);color:#CBD5E1}
+#tl-tiles .tl-see .tl-name{font-size:1.0625rem;color:#E2E8F0}
+#tl-tiles .tl-see .tl-tag{display:none}
+#tl-tiles .tl-see .tl-go{display:block;font-size:0.875rem;line-height:1;letter-spacing:0;color:#CBD5E1}
+.tl-caret{display:block;box-sizing:border-box;width:0.5625em;height:0.5625em;margin:-0.25em 0.125rem 0 0.25rem;border:solid currentColor;border-width:0 0.125rem 0.125rem 0;transform:rotate(45deg);transition:transform .2s,margin .2s}
+.tl-see[aria-expanded="true"]{border-style:solid;border-color:var(--cyan);background:rgba(61,216,216,0.09)}
+#tl-tiles .tl-see[aria-expanded="true"] .tl-go{color:var(--cyan)}
+.tl-see[aria-expanded="true"] .tl-caret{margin-top:0.25em;transform:rotate(-135deg)}
+.tl-more{padding:0.875rem 1.125rem;background:rgba(255,255,255,0.045);border:1px solid rgba(203,213,225,0.16);border-left:0.125rem solid var(--cyan)}
+.tl-more[hidden]{display:none}
+.tl-more p{max-width:52rem;margin:0 0 0.75rem;font-size:0.9375rem;line-height:1.6;color:#CBD5E1}
+.tl-more p b{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.1875rem;color:var(--white)}
+.tl-more .build-facts{margin-bottom:0.75rem}
+.tl-more-links{display:flex;flex-wrap:wrap;gap:0.5rem 1.5rem;align-items:center}
+.tl-more-down{font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.125rem;text-transform:uppercase;font-weight:600;color:#CBD5E1;text-decoration:none}
+.tl-more-down::after{content:' \2193';color:var(--cyan)}
+.tl-more-down:hover{color:var(--white)}
+.tl-more a:focus-visible{outline:0.125rem solid var(--purple-light);outline-offset:0.1875rem}
 /* a short list (four tools or fewer): the tiles large, the words showing */
-.tl-tiles.few{grid-template-columns:minmax(0,2.6fr) minmax(0,1fr)}
-.tl-tiles.few.solo{grid-template-columns:minmax(0,1fr)}
 .tl-tiles.few .tl-group-live .tl-group-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
 .tl-tiles.few .tl-tag{display:block}
 .tl-tiles.few .tl-name small{display:block;margin-top:0.125rem}
@@ -289,14 +314,7 @@
 /* a platform's tile lands on its card, clear of the menu and the strip pinned under it */
 #built-crm,#built-league,#built-golf{scroll-margin-top:8.5rem}
 .build-card.reveal{transform:none}
-@media(max-width:1000px){.tl-group-live .tl-group-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.tl-tiles,.tl-tiles.few{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}}
-@media(max-width:760px){
-  /* one group under the other */
-  .tl-tiles,.tl-tiles.few{grid-template-columns:minmax(0,1fr)}
-  .tl-group-see{padding-left:0;border-left:0}
-  .tl-group-see .tl-group-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .tl-tiles.few .tl-group-see .tl-group-tiles{grid-template-columns:minmax(0,1fr)}
-}
+@media(max-width:1000px){.tl-group-live .tl-group-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){
   .tl-hero{padding-top:8rem;padding-bottom:1.625rem}
   .tl-hero .page-hero-inner{display:flex;flex-direction:column}
@@ -323,9 +341,16 @@
   .tl-tiles.few .tl-go{display:block;font-size:1rem;letter-spacing:0}
   /* (the arrow alone on a phone: the word beside it would crowd the tile's own line out) */
   .tl-tiles.few .tl-go i{display:none}
-  /* the platform described below: one slim line under them, its name and that there is more */
-  .tl-tiles.few .tl-see{min-height:2.75rem}
-  .tl-tiles.few .tl-see .tl-tag{display:none}
+  /* the platforms: their name on a line of its own, then one slim row of them, each filling its share */
+  .tl-group-see{display:block}
+  .tl-group-see .tl-group-label{margin-bottom:0.3125rem}
+  .tl-group-see .tl-group-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.5rem}
+  .tl-tiles.few .tl-group-see .tl-group-tiles{grid-template-columns:minmax(0,1fr)}
+  #tl-tiles .tl-see{min-height:2.75rem;padding:0.25rem 0.5rem 0.25rem 0.4375rem;gap:0.4375rem}
+  #tl-tiles .tl-see .tl-name{font-size:0.9375rem}
+  #tl-tiles .tl-see .tl-ico{width:1.5rem;height:1.5rem;padding:0.21875rem}
+  .tl-caret{margin-left:0;margin-right:0.0625rem}
+  .tl-more{padding:0.75rem 0.875rem}
 @media(max-width:370px){
   .tl-tile{padding-left:0.5rem;padding-right:0.5rem;gap:0.4375rem}
   .tl-ico{width:1.5rem;height:1.5rem;padding:0.21875rem}
@@ -348,7 +373,9 @@
   .tl-tiles.few .tl-live .tl-ico{width:2.25rem;height:2.25rem;padding:0.40625rem}
   .tl-tiles.few .tl-live .tl-name{font-size:1.125rem}
   .tl-tiles.few .tl-text{gap:0.0625rem}
-  .tl-tiles.few .tl-see{min-height:2.0625rem;padding-top:0.1875rem;padding-bottom:0.1875rem}
+  .tl-group-see .tl-group-label{margin-bottom:0.1875rem}
+  .tl-group-see .tl-group-tiles{gap:0.3125rem}
+  #tl-tiles .tl-see{min-height:2.0625rem;padding-top:0.1875rem;padding-bottom:0.1875rem}
 }
 /* (narrow as well as short: the large tiles a little lower, so the strip still closes the screen) */
 @media(max-width:370px) and (max-height:700px){
@@ -364,7 +391,7 @@
   /* no room here for the large tiles: the small ones, two across, told apart by the badge */
   .tl-tiles.few .tl-group-live .tl-group-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
   .tl-tiles.few .tl-tag,.tl-tiles.few .tl-go{display:none}
-  .tl-tiles.few .tl-live,.tl-tiles.few .tl-see{min-height:2.75rem;padding:0.3125rem 0.75rem;gap:0.625rem}
+  .tl-tiles.few .tl-live{min-height:2.75rem;padding:0.3125rem 0.75rem;gap:0.625rem}
   .tl-tiles.few .tl-live .tl-ico{width:1.625rem;height:1.625rem;padding:0.25rem;border-radius:0.375rem}
   .tl-tiles.few .tl-live .tl-name{font-size:0.96875rem}
   .tl-chip{padding:0.4375rem 0.625rem}
@@ -421,9 +448,9 @@
          The same day, of that first screen: "this needs better / greater definition of the three
          up top are categories and some sort of greater interactive/non delineation beyond just
          the blue logo/icon". So the three are under the words "Browse by category" and each says
-         how many tools it holds, and the tiles stand in two named groups, side by side from 761px:
-         the tools to use under "Interactive", the platforms under "Built to order", whose tiles are
-         dashed and say "Details". And: "RIA digital scorecard should also be clear that this is THE
+         how many tools it holds, and the tiles stand in two named groups: the tools to use under
+         "Interactive", and a level down the platforms under "Built to order", whose tiles are dashed,
+         slim, and end in a caret: pressed, what the platform is opens under the row. And: "RIA digital scorecard should also be clear that this is THE
          same free (and genuinely useful) tool that you see other parts of the site": its tile is
          named as the rest of the site names it, Free Website Score. -->
     <div class="tl-chips" role="group" aria-label="Show tools by category">
@@ -449,13 +476,14 @@
         </div>
       </div>
       <div class="tl-group tl-group-see">
-        <div class="tl-group-label"><b>Built to order</b><span>described below</span></div>
+        <div class="tl-group-label"><b>Built to order</b><span>open one to read about it</span></div>
         <div class="tl-group-tiles">
-          <a class="tl-tile tl-see" href="#built-crm" data-kind="business"><svg class="tl-ico" aria-hidden="true"><use href="#i-crm"/></svg><span class="tl-text"><span class="tl-name">Custom CRM</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true"><i>Details</i> &darr;</span></a>
-          <a class="tl-tile tl-see" href="#built-league" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-league"/></svg><span class="tl-text"><span class="tl-name">Fantasy League Platform</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true"><i>Details</i> &darr;</span></a>
-          <a class="tl-tile tl-see" href="#built-golf" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-golf"/></svg><span class="tl-text"><span class="tl-name">Golf Pick&rsquo;em</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true"><i>Details</i> &darr;</span></a>
+          <a class="tl-tile tl-see" href="#built-crm" data-kind="business"><svg class="tl-ico" aria-hidden="true"><use href="#i-crm"/></svg><span class="tl-text"><span class="tl-name">Custom CRM</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true"><b class="tl-caret"></b></span></a>
+          <a class="tl-tile tl-see" href="#built-league" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-league"/></svg><span class="tl-text"><span class="tl-name">Fantasy League Platform</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true"><b class="tl-caret"></b></span></a>
+          <a class="tl-tile tl-see" href="#built-golf" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-golf"/></svg><span class="tl-text"><span class="tl-name">Golf Pick&rsquo;em</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true"><b class="tl-caret"></b></span></a>
         </div>
       </div>
+      <div class="tl-more" id="tl-more" hidden></div>
     </div>
     <script>
     /* A kind chosen: its tools show, the others step aside.
@@ -476,13 +504,44 @@
         inner.style.marginTop = Math.max(0, fit ? Math.min(was, spare) : was) + 'px';
         size = p.size;
       }
+      /* A platform pressed: what it is opens under the row, and its caret turns. The words are its own card's, read
+         from lower down the page when it is pressed, so the two cannot differ. Pressed again, or another kind
+         chosen, it closes. Without this script the tile is a plain link to that card. */
+      var more = document.getElementById('tl-more'), sees = grid.querySelectorAll('.tl-see'), open = '';
+      function el(tag, cls, text) { var x = document.createElement(tag); if (cls) x.className = cls; if (text) x.textContent = text; return x; }
+      function fill(id) {
+        var card = document.getElementById(id); more.textContent = '';
+        if (!card) return false;
+        var h = card.querySelector('h3'), para = card.querySelector('.build-head ~ p'), facts = card.querySelector('.build-facts'), ask = card.querySelector('a.tool-link'), list = card.querySelector('details');
+        var p = el('p'); if (h) { p.appendChild(el('b', '', h.textContent.replace(/\s+$/, '') + '.')); p.appendChild(document.createTextNode(' ')); }
+        if (para) p.appendChild(document.createTextNode(para.textContent)); more.appendChild(p);
+        if (facts) more.appendChild(facts.cloneNode(true));
+        var links = el('div', 'tl-more-links');
+        if (ask) { var a = el('a', 'tool-link', ask.textContent); a.href = ask.getAttribute('href'); links.appendChild(a); }
+        var down = el('a', 'tl-more-down', list ? list.querySelector('summary').textContent : 'More'); down.href = '#' + id;
+        down.addEventListener('click', function () { if (list) list.open = true; });       // it lands on the list, open
+        links.appendChild(down); more.appendChild(links);
+        return true;
+      }
+      function mark() { for (var i = 0; i < sees.length; i++) sees[i].setAttribute('aria-expanded', sees[i].getAttribute('href') === '#' + open ? 'true' : 'false'); }
+      function shut() { open = ''; more.hidden = true; more.textContent = ''; mark(); }
+      function press(tile) {
+        var id = tile.getAttribute('href').slice(1);
+        hold(function () { if (open === id || !fill(id)) shut(); else { open = id; more.hidden = false; mark(); } });
+        if (open) { var r = more.getBoundingClientRect(), over = r.bottom + 12 - window.innerHeight; if (over > 0) window.scrollBy({ top: over, behavior: 'smooth' }); }
+      }
+      for (var q = 0; q < sees.length; q++) {
+        sees[q].setAttribute('role', 'button'); sees[q].setAttribute('aria-controls', 'tl-more'); sees[q].setAttribute('aria-expanded', 'false');
+        sees[q].addEventListener('click', function (e) { e.preventDefault(); press(this); });
+        sees[q].addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); press(this); } });
+      }
       function show(kind) {
         hold(function () {
           var n = 0;
+          shut();
           for (var i = 0; i < tiles.length; i++) { tiles[i].hidden = tiles[i].getAttribute('data-kind') !== kind; if (!tiles[i].hidden) n++; }
           grid.classList.toggle('few', n <= 4);      // four tools or fewer: the large tiles, with their words
           for (var g = 0; g < groups.length; g++) groups[g].hidden = !groups[g].querySelector('.tl-tile:not([hidden])');
-          grid.classList.toggle('solo', groups[1].hidden);   // no platform of this kind: the tools take the row
           for (var j = 0; j < chips.length; j++) { var on = chips[j].getAttribute('data-kind') === kind; chips[j].classList.toggle('on', on); chips[j].setAttribute('aria-pressed', on ? 'true' : 'false'); }
         });
       }

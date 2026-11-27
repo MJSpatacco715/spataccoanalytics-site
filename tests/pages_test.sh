@@ -381,7 +381,9 @@ PY'
 # categories and some sort of greater interactive/non delineation beyond just the blue logo/icon", and "RIA digital
 # scorecard should also be clear that this is THE same free (and genuinely useful) tool that you see other parts of
 # the site".
-check "the three chips are named as categories, and the tiles stand in two named groups: the tools to use, then the platforms described below" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
+# The owner, the same day, of the platforms' group, which stood beside the tools: "this ... should be down a level and
+# should have the commonly understood (theres text if you click here) carrot".
+check "the three chips are named as categories, and the tiles stand in two named groups, one under the other: the tools to use, then the platforms, each a press with a caret that opens what it is" 'python3 - "$dist/tools/index.html" <<'"'"'PY'"'"'
 import re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
 h = re.search(r"<section class=\"page-hero tl-hero\">.*?</section>", s, re.S).group(0)
@@ -393,6 +395,12 @@ for kind, _, _, inside in groups:
     ok = ok and len(kinds) > 0 and set(kinds) == {kind}                    # every tile is in the group that says what it is
 ok = ok and sum(len(re.findall(r"<a class=\"tl-tile ", g[3])) for g in groups) == 13
 ok = ok and ".tl-see{border-style:dashed" in s and ".tl-group[hidden]{display:none}" in s
+ok = ok and groups[1][2] == "open one to read about it"
+ok = ok and ".tl-tiles{display:grid;grid-template-columns:minmax(0,1fr);" in s and "minmax(0,3fr) minmax(0,1fr)" not in s    # one under the other
+see = re.findall(r"<a class=\"tl-tile tl-see\"[^>]*>(.*?)</a>", groups[1][3], re.S)
+ok = ok and len(see) == 3 and all(x.count("<b class=\"tl-caret\"></b>") == 1 for x in see) and "tl-caret" not in groups[0][3]
+# what opens is the words of its own card, read when it is pressed: the page holds an empty place for it and no second copy
+ok = ok and h.count("<div class=\"tl-more\" id=\"tl-more\" hidden></div>") == 1 and "card.querySelector(\x27.build-head ~ p\x27)" in h
 sys.exit(0 if ok else 1)
 PY'
 check "the scorecard is named on the Tools page as the rest of the site names it: the free website score" 'f="$site/tools/index.html"; grep -q "<span class=\"tl-name\">Free Website Score <small>The RIA Digital Presence Scorecard</small></span>" "$f" && grep -q "<h3>Free Website Score</h3>" "$f" && grep -q "The RIA Digital Presence Scorecard: the same free score offered on our home page and under Services." "$f" && ! grep -q "<h3>RIA Digital Presence Scorecard</h3>" "$f"'
@@ -464,7 +472,7 @@ for how, href, kind, inside in tiles:
     ok = ok and (how == "see") == href.startswith("#built-")                       # described lower down, or a tool of its own
     tag = re.search(r"<span class=\"tl-tag\">(.*?)</span>(?:</span>)?<span class=\"tl-go\"", inside, re.S)
     ok = ok and bool(tag) and (tag.group(1) == "Interactive &middot; try it now" if how == "live" else tag.group(1).startswith("Built to order"))
-    ok = ok and ("&rarr;" if how == "live" else "&darr;") in inside
+    ok = ok and ("&rarr;" if how == "live" else "class=\"tl-caret\"") in inside and ("&darr;" not in inside)
 # the two an advisor would use are tools to use, and lead the page as it opens
 first = [(how, href) for how, href, kind, _ in tiles if kind == "business"]
 ok = ok and first == [("live", "/tools/website-scorer/"), ("live", "/tools/resume-parser/"), ("see", "#built-crm")]
@@ -486,7 +494,7 @@ ok = ok and not re.search(r"class=\"(?:tl-ico|tool-icon|scorecard-icon|playbill-
 ok = ok and not re.search(r"&#(?:1[0-9]{4,5}|9[0-9]{3});", s)                    # no emoji entity left on the page
 sys.exit(0 if ok else 1)
 PY'
-check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker/index.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more|group)(-[a-z]+)?[ .:,{\[]"'
+check "the rules for its first section are for that section alone: a tool page, built with the same head, opens on a plain one with no tiles" 'f="$dist/tools/football/nfl-lines-tracker/index.html"; grep -q "<section class=\"page-hero\">" "$f" && ! grep -q "class=\"page-hero tl-hero\"" "$f" && ! grep -q "class=\"tl-tile" "$f" && ! grep -E "^\.tl-[a-z]+" "$site/tools/index.html" | grep -vqE "^\.tl-(hero|chips|chip|tiles|tile|ico|text|name|kind|tag|go|live|see|more|group|caret)(-[a-z]+)?[ .:,{\[]"'
 
 # --- every inner page opens on a supporting figure with its source
 # The owner, 2026-11-26: "each of the page heros should be consistent. white
