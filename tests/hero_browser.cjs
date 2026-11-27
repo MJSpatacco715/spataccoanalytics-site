@@ -266,6 +266,35 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     await ctx.close();
   }
 
+  // --- a tile says what it is, and its icon is drawn. The owner, 2026-11-27, of the Business tools on a
+  // phone: "RIA digital presence scorecard and Resume parser should be bigger/stand alone there as
+  // interactive tools or named as interactive versus merely descriptive ... Icons could be MUCH better".
+  for (const [w, h, mobile] of [[1255, 607, false], [430, 744, true], [390, 664, true]]) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
+    const page = await ctx.newPage();
+    await page.route(/\/market\/feed\.php/, (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify(FEED) }));
+    await page.goto(base + '/tools/', { waitUntil: 'load' });
+    await page.waitForTimeout(1800);
+    const seen = () => page.evaluate(() => [...document.querySelectorAll('.page-hero .tl-tile')].filter((x) => !x.hidden).map((x) => {
+      const r = x.getBoundingClientRect(), tag = x.querySelector('.tl-tag'), ico = x.querySelector('.tl-ico'), name = x.querySelector('.tl-name'), use = ico.querySelector('use');
+      const tr = tag.getBoundingClientRect(), ir = ico.getBoundingClientRect(), nr = name.getBoundingClientRect();
+      return { live: x.classList.contains('tl-live'), area: r.width * r.height, tag: tr.width > 0 && tr.height > 0 ? tag.innerText.replace(/\s+/g, ' ').trim() : '', tagPx: parseFloat(getComputedStyle(tag).fontSize),
+        tagLines: tr.height > 0 ? Math.round(tr.height / parseFloat(getComputedStyle(tag).lineHeight)) : 0,
+        ico: Math.round(ir.width), square: Math.abs(ir.width - ir.height) < 1, filled: getComputedStyle(ico).backgroundImage.includes('gradient'),
+        drawn: !!use && !!document.querySelector(use.getAttribute('href')) && ico.getBBox().width > 4 && getComputedStyle(ico).fill === 'none' && getComputedStyle(ico).stroke !== 'none',
+        nameIn: nr.left >= ir.right && nr.right <= r.right + 1 && name.scrollWidth <= name.clientWidth + 1, text: x.textContent };
+    }));
+    const b = await seen();
+    check('/tools/ at ' + w + ' by ' + h + ': the two Business tools to use say so in words, each on one line (' + b.map((x) => x.tag).join(' | ') + ')', b.length === 3 && b[0].live && b[1].live && b[0].tag === 'INTERACTIVE · TRY IT NOW' && b[1].tag === 'INTERACTIVE · TRY IT NOW' && b[0].tagLines === 1 && b[1].tagLines === 1 && (!mobile || b[0].tagPx >= 13));
+    check('/tools/ at ' + w + ' by ' + h + ': they are the larger tiles, their icons filled; the platform described below is quieter and says it is built to order', b[0].area > b[2].area * 1.25 && b[1].area > b[2].area * 1.25 && b[0].filled && b[1].filled && !b[2].live && !b[2].filled && b[2].tag.startsWith('BUILT TO ORDER') && b[2].tagLines === 1 && b[0].ico > b[2].ico);
+    check('/tools/ at ' + w + ' by ' + h + ': each icon is drawn, square and in its badge, with the name beside it and not cut', b.every((x) => x.drawn && x.square && x.ico >= 24 && x.nameIn && !/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]/u.test(x.text)));
+    if (mobile) await page.tap('.tl-chip[data-kind="sports"]'); else await page.click('.tl-chip[data-kind="sports"]');
+    await page.waitForTimeout(250);
+    const s = await seen();
+    check('/tools/ at ' + w + ' by ' + h + ': of the eight Sports tools the six to use come first with filled icons, the two described after them without', s.length === 8 && s.slice(0, 6).every((x) => x.live && x.filled) && s.slice(6).every((x) => !x.live && !x.filled) && s.every((x) => x.drawn && x.square && x.ico >= 22 && x.nameIn));
+    await ctx.close();
+  }
+
   // --- a small phone with its bars up: what the page opens on still ends on the strip
   // (the eight Sports tools do not fit there with the figure, and push the strip just under)
   for (const [w, h] of [[375, 629], [360, 640], [375, 548]]) {

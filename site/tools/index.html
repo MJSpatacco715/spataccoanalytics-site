@@ -32,7 +32,9 @@
 .tool-card:hover{border-color:rgba(61,216,216,0.25);transform:translateY(-0.25rem)}
 .tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:0.1875rem;background:linear-gradient(135deg,var(--cyan),var(--purple));opacity:0;transition:opacity .4s}
 .tool-card:hover::before{opacity:1}
-.tool-icon{font-size:1.75rem;margin-bottom:1rem;display:inline-block}
+/* a card's icon is its tool's, drawn (the symbols are at the top of the page): outlined on a platform
+   that is described, filled on a tool to use, as on the tiles */
+.tool-icon{display:block;box-sizing:border-box;width:3rem;height:3rem;padding:0.6875rem;margin-bottom:1rem;border-radius:0.75rem;border:1px solid rgba(203,213,225,0.3);color:#CBD5E1;stroke-width:1.6;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .tool-card h3{font-family:'Cormorant Garamond',serif;font-size:1.375rem;font-weight:500;color:var(--white);margin-bottom:0.625rem}
 .tool-card p{font-size:0.875rem;line-height:1.7;color:var(--text-light);margin-bottom:1.25rem}
 .tool-badge{display:inline-block;font-size:max(0.625rem,var(--tfloor,0px));letter-spacing:0.09375rem;text-transform:uppercase;font-weight:600;padding:0.25rem 0.75rem;border-radius:0.125rem;margin-bottom:1rem}
@@ -46,7 +48,7 @@
 
 /* Featured (financial services) cards: ~10% scale-up of heading/badge/icon, bolder */
 .tool-card.featured h3{font-size:1.5rem;font-weight:600;letter-spacing:-0.005em}
-.tool-card.featured .tool-icon{font-size:1.9375rem}
+.tool-card.featured .tool-icon{width:3.25rem;height:3.25rem;border:0;background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 55%,var(--purple) 100%);color:var(--navy)}
 .tool-card.featured .tool-badge{font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.10625rem;padding:0.3125rem 0.8125rem}
 .tool-card.featured p{font-size:0.9375rem}
 
@@ -84,7 +86,7 @@
 .scorecard:hover{transform:translateY(-0.1875rem);box-shadow:0 0.75rem 2rem rgba(0,0,0,0.25);border-color:rgba(61,216,216,0.4)}
 .scorecard::before{content:"";position:absolute;top:0;left:0;right:0;height:0.1875rem;background:linear-gradient(90deg,#3DD8D8 0%,#F4D744 100%)}
 .scorecard-num{font-family:'Courier Prime',monospace;font-size:max(0.5625rem,var(--tfloor,0px));letter-spacing:0.1875rem;color:rgba(244,215,68,0.85);text-transform:uppercase;margin-bottom:0.625rem;display:block}
-.scorecard-icon{font-size:2.375rem;margin-bottom:0.75rem;display:block;line-height:1}
+.scorecard-icon{display:block;width:2.5rem;height:2.5rem;margin-bottom:0.75rem;color:var(--cyan);stroke-width:1.5;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .scorecard h4{font-family:'DM Sans',sans-serif;font-size:1.0625rem;font-weight:700;color:#fff;letter-spacing:0.05em;line-height:1.25;margin-bottom:0.625rem;text-transform:uppercase}
 .scorecard p{font-size:0.8125rem;line-height:1.65;color:rgba(255,255,255,0.7);margin-bottom:1.125rem}
 .scorecard-foot{display:flex;justify-content:space-between;align-items:center;padding-top:0.875rem;border-top:1px dashed rgba(61,216,216,0.25)}
@@ -103,7 +105,7 @@
 .playbill:hover{transform:translateY(-0.1875rem) rotate(-0.4deg);box-shadow:0 1rem 2.25rem rgba(0,0,0,0.45)}
 .playbill::before{content:"";position:absolute;top:0.375rem;left:0.375rem;right:0.375rem;bottom:0.375rem;border:1px solid #C9A961;border-radius:0.125rem;pointer-events:none}
 .playbill-ticket{font-family:'DM Sans',sans-serif;font-size:max(0.5625rem,var(--tfloor,0px));letter-spacing:0.1875rem;color:#F4ECD8;background:#7A1F2B;padding:0.25rem 0.625rem;border-radius:0.125rem;text-transform:uppercase;font-weight:700;display:inline-block;margin-bottom:0.875rem;position:relative;z-index:1}
-.playbill-icon{font-size:2.25rem;margin-bottom:0.625rem;display:block;position:relative;z-index:1;line-height:1}
+.playbill-icon{display:block;width:2.375rem;height:2.375rem;margin-bottom:0.625rem;position:relative;z-index:1;color:#1A1310;stroke-width:1.5;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .playbill h4{font-family:'Cormorant Garamond',serif;font-size:1.4375rem;line-height:1.15;font-weight:700;color:#1A1310;margin-bottom:0.25rem;position:relative;z-index:1}
 .playbill-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:0.8125rem;color:#7A1F2B;margin-bottom:0.75rem;position:relative;z-index:1}
 .playbill p{font-size:0.8125rem;line-height:1.65;color:#3A2818;margin-bottom:1.125rem;position:relative;z-index:1}
@@ -124,7 +126,7 @@
 .tradingcard-inner{padding:1.375rem}
 .tradingcard-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.875rem;font-family:'Courier Prime',monospace;font-size:max(0.5625rem,var(--tfloor,0px));letter-spacing:0.125rem;color:#7A8090;text-transform:uppercase}
 .tradingcard-meta strong{color:#0C1F3F;font-weight:700}
-.tradingcard-icon{font-size:2.875rem;margin-bottom:0.5rem;display:block;text-align:center;line-height:1}
+.tradingcard-icon{display:block;width:3rem;height:3rem;margin:0 auto 0.5rem;color:#0C1F3F;stroke-width:1.5;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
 .tradingcard h4{font-family:'Cormorant Garamond',serif;font-size:1.625rem;text-align:center;font-weight:700;color:#0C1F3F;line-height:1.15;margin-bottom:0.875rem;letter-spacing:-0.005em}
 .tradingcard-stats{background:#0C1F3F;color:#fff;padding:0.875rem 1rem;border-radius:0.25rem;margin-bottom:0.875rem;font-family:'Courier Prime',monospace;font-size:max(0.6875rem,var(--tfloor,0px));line-height:1.85}
 .tradingcard-stat{display:flex;justify-content:space-between}
@@ -183,11 +185,31 @@
 .tl-chip.on{background:var(--cyan);border-color:var(--cyan);color:var(--navy)}
 .tl-chip.on span{color:var(--navy)}
 .tl-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.75rem;opacity:0;animation:fadeUp .9s .7s forwards}
-.tl-tile{display:flex;align-items:center;gap:0.75rem;min-height:3.75rem;padding:0.625rem 1rem;border:1px solid rgba(61,216,216,0.28);background:rgba(255,255,255,0.03);text-decoration:none;transition:border-color .2s,background .2s}
+.tl-tile{display:flex;align-items:center;gap:0.75rem;min-height:3.75rem;padding:0.5rem 0.875rem;border:1px solid rgba(203,213,225,0.2);background:rgba(255,255,255,0.03);text-decoration:none;transition:border-color .2s,background .2s}
 .tl-tile[hidden]{display:none}
 .tl-tile:hover,.tl-tile:focus-visible{border-color:var(--cyan);background:rgba(61,216,216,0.09)}
-.tl-ico{flex:none;font-size:1.125rem;line-height:1}
-.tl-name{flex:1;min-width:0;font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.1875rem;line-height:1.15;color:var(--white)}
+/* a tool's icon, drawn (the symbols are at the top of the page), in a badge */
+.tl-ico{flex:none;box-sizing:border-box;width:2.125rem;height:2.125rem;padding:0.375rem;border-radius:0.5rem;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tl-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.1875rem}
+.tl-name{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:1.1875rem;line-height:1.15;color:var(--white)}
+.tl-tag{display:none;font-size:max(0.6875rem,var(--tfloor,0px));line-height:1.3;letter-spacing:0.09375rem;text-transform:uppercase;font-weight:600}
+.tl-go{flex:none;font-size:1rem;line-height:1;transition:transform .2s}
+/* a tool to use now: its badge filled, as the site fills a button */
+.tl-live{border-color:rgba(61,216,216,0.42);background:rgba(61,216,216,0.055)}
+.tl-live .tl-ico{background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 55%,var(--purple) 100%);color:var(--navy)}
+.tl-live .tl-tag,.tl-live .tl-go{color:var(--cyan)}
+.tl-live:hover .tl-go,.tl-live:focus-visible .tl-go{transform:translateX(0.1875rem)}
+/* a platform described lower down: the same tile, quieter */
+.tl-see .tl-ico{border:1px solid rgba(203,213,225,0.32);color:#CBD5E1}
+.tl-see .tl-name{color:#E2E8F0}
+.tl-see .tl-tag,.tl-see .tl-go{color:#94A3B8}
+/* four tools or fewer: large tiles that say what each is, the ones to use the larger */
+.tl-tiles.few{display:flex;flex-wrap:wrap}
+.tl-tiles.few .tl-tag{display:block}
+.tl-tiles.few .tl-live{flex:1 1 18rem;min-height:4.5rem;padding:0.75rem 1.125rem;gap:0.9375rem}
+.tl-tiles.few .tl-live .tl-ico{width:2.75rem;height:2.75rem;padding:0.5rem;border-radius:0.625rem}
+.tl-tiles.few .tl-live .tl-name{font-size:1.4375rem}
+.tl-tiles.few .tl-see{flex:0 1 14.5rem;min-height:4.5rem}
 .fun-note{font-size:0.9375rem;line-height:1.7;color:var(--slate);max-width:40rem;margin-top:0.25rem}
 /* a platform's tile lands on its card, clear of the menu and the strip pinned under it */
 #built-crm,#built-league,#built-golf{scroll-margin-top:8.5rem}
@@ -204,7 +226,20 @@
   .tl-tiles{gap:0.5rem}
   .tl-tile{min-height:3.25rem;padding:0.5rem 0.75rem;gap:0.625rem}
   .tl-name{font-size:1rem}
-  .tl-ico{font-size:1rem}
+  .tl-ico{width:1.625rem;height:1.625rem;padding:0.25rem;border-radius:0.375rem}
+  .tl-go{display:none}
+  /* a short list: each tool to use takes the row, with its words; the described one under them */
+  .tl-tiles.few .tl-live{flex:1 1 100%;min-height:4rem;padding:0.5rem 0.75rem;gap:0.75rem}
+  .tl-tiles.few .tl-live .tl-ico{width:2.625rem;height:2.625rem;padding:0.5rem;border-radius:0.5625rem}
+  .tl-tiles.few .tl-live .tl-name{font-size:1.25rem}
+  .tl-tiles.few .tl-go{display:block}
+  /* the platform described below: one slim line under them, its name and what it is */
+  .tl-tiles.few .tl-see{flex:1 1 100%;min-height:2.75rem}
+  .tl-tiles.few .tl-see .tl-text{flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 0.625rem}
+@media(max-width:370px){
+  .tl-tile{padding-left:0.5rem;padding-right:0.5rem;gap:0.4375rem}
+  .tl-ico{width:1.5rem;height:1.5rem;padding:0.21875rem}
+}
 /* a phone that shows less height than the owner's (most do, with their bars up): the same
    screen, set a little tighter, so the strip still closes it */
 @media(max-width:560px) and (max-height:700px){
@@ -216,12 +251,29 @@
   .tl-tiles{gap:0.375rem}
   .tl-tile{min-height:2.75rem;padding:0.3125rem 0.75rem}
   .tl-name{font-size:0.96875rem}
+  .tl-tiles.few .tl-live{min-height:3rem;padding:0.25rem 0.75rem}
+  .tl-tiles.few .tl-live .tl-ico{width:2.25rem;height:2.25rem;padding:0.40625rem}
+  .tl-tiles.few .tl-live .tl-name{font-size:1.125rem}
+  .tl-tiles.few .tl-text{gap:0.0625rem}
+  .tl-tiles.few .tl-see{min-height:2.25rem;padding-top:0.25rem;padding-bottom:0.25rem}
+}
+/* (narrow as well as short: the large tiles a little lower, so the strip still closes the screen) */
+@media(max-width:370px) and (max-height:700px){
+  .tl-tiles.few .tl-live{min-height:3.125rem;padding-top:0.25rem;padding-bottom:0.25rem}
+  .tl-tiles.few .tl-live .tl-ico{width:2.125rem;height:2.125rem;padding:0.375rem}
+  .tl-tiles.few .tl-live .tl-name{font-size:1.125rem}
 }
 /* and a short one (a small phone with its bars up) */
 @media(max-width:560px) and (max-height:580px){
   .tl-hero{padding-top:7.25rem;padding-bottom:0.5rem}
   .tl-hero h1{font-size:1.6875rem;margin-bottom:0.5rem}
   .tl-hero .hero-stat{margin-top:0.375rem}
+  /* no room here for the large tiles: the small ones, two across, told apart by the badge */
+  .tl-tiles.few{display:grid}
+  .tl-tiles.few .tl-tag,.tl-tiles.few .tl-go{display:none}
+  .tl-tiles.few .tl-live,.tl-tiles.few .tl-see{min-height:2.75rem;padding:0.3125rem 0.75rem;gap:0.625rem}
+  .tl-tiles.few .tl-live .tl-ico{width:1.625rem;height:1.625rem;padding:0.25rem;border-radius:0.375rem}
+  .tl-tiles.few .tl-live .tl-name{font-size:0.96875rem}
   .tl-chip{padding:0.4375rem 0.625rem}
 }
 }
@@ -240,6 +292,24 @@
   </div>
 </nav>
 
+<!-- The tools' icons, drawn. They were emoji; the owner, 2026-11-27, of the tiles on a phone:
+     "Icons could be MUCH better". One a tool, in one weight of line, the colour of whatever
+     shows them (a tile's badge, a card). Used by name: <svg><use href="#i-..."/></svg>. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-score" viewBox="0 0 24 24"><path d="M4 17a8 8 0 0 1 16 0"/><path d="M12 17l4.2-5.6"/><circle cx="12" cy="17" r="1.1"/><path d="M4 20.5h16"/></symbol>
+  <symbol id="i-resume" viewBox="0 0 24 24"><path d="M7 3h7.5L18 6.5V21H7z"/><path d="M14.5 3v3.5H18"/><circle cx="12.5" cy="10.5" r="1.6"/><path d="M9.8 15h5.4M9.8 17.8h5.4"/></symbol>
+  <symbol id="i-crm" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.8" cy="10.6" r="2"/><path d="M5.6 16c.5-1.6 1.7-2.4 3.2-2.4s2.7.8 3.2 2.4"/><path d="M14.8 10h3.6M14.8 13.4h3.6"/></symbol>
+  <symbol id="i-lines" viewBox="0 0 24 24"><path d="M4 4v16h16"/><path d="M7.5 15l3.2-4 3 2.4L19 7"/><path d="M16 7h3v3"/></symbol>
+  <symbol id="i-injury" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M12 8.4v7.2M8.4 12h7.2"/></symbol>
+  <symbol id="i-depth" viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="4.5" rx="1"/><rect x="3" y="16" width="6" height="4.5" rx="1"/><rect x="15" y="16" width="6" height="4.5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></symbol>
+  <symbol id="i-league" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 5.5H5.2A2.8 2.8 0 0 0 8 9M16 5.5h2.8A2.8 2.8 0 0 1 16 9"/><path d="M12 13v3.5M9 20h6M10 16.5h4"/></symbol>
+  <symbol id="i-golf" viewBox="0 0 24 24"><path d="M10 19V3.5l7.5 3.2L10 10"/><ellipse cx="11" cy="19.5" rx="6.5" ry="1.6"/></symbol>
+  <symbol id="i-cricket" viewBox="0 0 24 24"><path d="M5 19l3.6-3.6"/><path d="M8.2 13.3L16.5 5a1.6 1.6 0 0 1 2.3 0l.2.2a1.6 1.6 0 0 1 0 2.3l-8.3 8.3z"/><circle cx="18.2" cy="18.2" r="2.1"/></symbol>
+  <symbol id="i-curling" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M12 8l1.2 2.5 2.7.4-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.4z"/></symbol>
+  <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5.5"/><path d="M8.6 13.4L7.2 21l4.8-2.4 4.8 2.4-1.4-7.6"/><path d="M12 6.6l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v16M16 4v16M4 8h4M4 12h4M4 16h4M16 8h4M16 12h4M16 16h4"/></symbol>
+</svg>
 <section class="page-hero tl-hero">
   <div class="page-hero-inner">
     <div class="page-hero-tag">Tools &amp; Projects</div>
@@ -248,26 +318,33 @@
     <!-- Three kinds of tool, and the tools of the kind chosen: Business to begin with.
          The owner, of a first screen with five kinds and all thirteen tools on it: "This
          is too many categories/tiles/chips". Every tool is of one kind. Each tile goes
-         to its tool, or, for a platform that runs privately, to where it is described below. -->
+         to its tool, or, for a platform that runs privately, to where it is described below.
+         A tile says which it is. The owner, 2026-11-27, of the Business tools on a phone:
+         "RIA digital presence scorecard and Resume parser should be bigger/stand alone there
+         as interactive tools or named as interactive versus merely descriptive". So a tool a
+         visitor can use now (tl-live) has a filled badge and says "Interactive: try it now",
+         and a platform described below (tl-see) is quieter and says "Built to order: see how".
+         Where a kind has four tools or fewer (class "few") the tiles are large and the words
+         show; a longer list keeps the small tiles, the tools to use first, told apart by the badge. -->
     <div class="tl-chips" role="group" aria-label="Show tools by kind">
       <button type="button" class="tl-chip on" data-kind="business" aria-pressed="true">Business <span>3</span></button>
       <button type="button" class="tl-chip" data-kind="sports" aria-pressed="false">Sports <span>8</span></button>
       <button type="button" class="tl-chip" data-kind="movies" aria-pressed="false">Movies <span>2</span></button>
     </div>
-    <div class="tl-tiles" id="tl-tiles">
-      <a class="tl-tile" href="/tools/website-scorer.html" data-kind="business"><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-name">RIA Digital Presence Scorecard</span></a>
-      <a class="tl-tile" href="/tools/resume-parser/" data-kind="business"><span class="tl-ico" aria-hidden="true">&#128196;</span><span class="tl-name">Resume Parser</span></a>
-      <a class="tl-tile" href="#built-crm" data-kind="business"><span class="tl-ico" aria-hidden="true">&#128199;</span><span class="tl-name">Custom CRM</span></a>
-      <a class="tl-tile" href="/tools/football/nfl-lines-tracker.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#128200;</span><span class="tl-name">NFL Lines Tracker</span></a>
-      <a class="tl-tile" href="/tools/football/nfl-injury-tracker.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#129657;</span><span class="tl-name">NFL Injury Tracker</span></a>
-      <a class="tl-tile" href="/tools/football/nfl-depth-charts.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-name">NFL Depth Charts</span></a>
-      <a class="tl-tile" href="#built-league" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127944;</span><span class="tl-name">Fantasy League Platform</span></a>
-      <a class="tl-tile" href="#built-golf" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#9971;</span><span class="tl-name">Golf Pick&rsquo;em</span></a>
-      <a class="tl-tile" href="/tools/cricket-explainer.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127951;</span><span class="tl-name">Cricket vs. Baseball</span></a>
-      <a class="tl-tile" href="/tools/curling-explainer.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#129482;</span><span class="tl-name">Curling Explainer</span></a>
-      <a class="tl-tile" href="/tools/card-evaluator.html" data-kind="sports" hidden><span class="tl-ico" aria-hidden="true">&#127183;</span><span class="tl-name">Card Evaluator</span></a>
-      <a class="tl-tile" href="/tools/oscar-tracker.html" data-kind="movies" hidden><span class="tl-ico" aria-hidden="true">&#127942;</span><span class="tl-name">Best Picture Tracker</span></a>
-      <a class="tl-tile" href="/tools/afi-tracker.html" data-kind="movies" hidden><span class="tl-ico" aria-hidden="true">&#127916;</span><span class="tl-name">AFI 100 Tracker</span></a>
+    <div class="tl-tiles few" id="tl-tiles">
+      <a class="tl-tile tl-live" href="/tools/website-scorer.html" data-kind="business"><svg class="tl-ico" aria-hidden="true"><use href="#i-score"/></svg><span class="tl-text"><span class="tl-name">RIA Digital Presence Scorecard</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/resume-parser/" data-kind="business"><svg class="tl-ico" aria-hidden="true"><use href="#i-resume"/></svg><span class="tl-text"><span class="tl-name">Resume Parser</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-see" href="#built-crm" data-kind="business"><svg class="tl-ico" aria-hidden="true"><use href="#i-crm"/></svg><span class="tl-text"><span class="tl-name">Custom CRM</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true">&darr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/football/nfl-lines-tracker.html" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-lines"/></svg><span class="tl-text"><span class="tl-name">NFL Lines Tracker</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/football/nfl-injury-tracker.html" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-injury"/></svg><span class="tl-text"><span class="tl-name">NFL Injury Tracker</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/football/nfl-depth-charts.html" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-depth"/></svg><span class="tl-text"><span class="tl-name">NFL Depth Charts</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/cricket-explainer.html" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-cricket"/></svg><span class="tl-text"><span class="tl-name">Cricket vs. Baseball</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/curling-explainer.html" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-curling"/></svg><span class="tl-text"><span class="tl-name">Curling Explainer</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/card-evaluator.html" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-card"/></svg><span class="tl-text"><span class="tl-name">Card Evaluator</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-see" href="#built-league" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-league"/></svg><span class="tl-text"><span class="tl-name">Fantasy League Platform</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true">&darr;</span></a>
+      <a class="tl-tile tl-see" href="#built-golf" data-kind="sports" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-golf"/></svg><span class="tl-text"><span class="tl-name">Golf Pick&rsquo;em</span><span class="tl-tag">Built to order</span></span><span class="tl-go" aria-hidden="true">&darr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/oscar-tracker.html" data-kind="movies" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-award"/></svg><span class="tl-text"><span class="tl-name">Best Picture Tracker</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
+      <a class="tl-tile tl-live" href="/tools/afi-tracker.html" data-kind="movies" hidden><svg class="tl-ico" aria-hidden="true"><use href="#i-film"/></svg><span class="tl-text"><span class="tl-name">AFI 100 Tracker</span><span class="tl-tag">Interactive &middot; try it now</span></span><span class="tl-go" aria-hidden="true">&rarr;</span></a>
     </div>
     <script>
     /* A kind chosen: its tools show, the others step aside.
@@ -277,7 +354,7 @@
        as far as keeps the strip on the first screen, and is centred again when the window
        changes size (not when a phone's own bars slide away: the section's height is the same). */
     (function () {
-      var chips = document.querySelectorAll('.tl-chip'), tiles = document.querySelectorAll('.tl-tile');
+      var chips = document.querySelectorAll('.tl-chip'), tiles = document.querySelectorAll('.tl-tile'), grid = document.getElementById('tl-tiles');
       var hero = document.querySelector('.tl-hero'), inner = hero.querySelector('.page-hero-inner'), size = '';
       function pads() { var cs = getComputedStyle(hero); return { top: parseFloat(cs.paddingTop) || 0, foot: parseFloat(cs.paddingBottom) || 0, size: window.innerWidth + ' ' + cs.minHeight }; }
       function hold(fit) {
@@ -290,7 +367,9 @@
       }
       function show(kind) {
         hold(function () {
-          for (var i = 0; i < tiles.length; i++) tiles[i].hidden = tiles[i].getAttribute('data-kind') !== kind;
+          var n = 0;
+          for (var i = 0; i < tiles.length; i++) { tiles[i].hidden = tiles[i].getAttribute('data-kind') !== kind; if (!tiles[i].hidden) n++; }
+          grid.classList.toggle('few', n <= 4);      // four tools or fewer: the large tiles, with their words
           for (var j = 0; j < chips.length; j++) { var on = chips[j].getAttribute('data-kind') === kind; chips[j].classList.toggle('on', on); chips[j].setAttribute('aria-pressed', on ? 'true' : 'false'); }
         });
       }
@@ -324,14 +403,14 @@
     <div class="tools-grid">
       <div class="tool-card featured reveal d05">
         <span class="tool-badge fs">Financial Services</span>
-        <div class="tool-icon">&#128200;</div>
+        <svg class="tool-icon" aria-hidden="true"><use href="#i-score"/></svg>
         <h3>RIA Digital Presence Scorecard</h3>
         <p>Score your firm&rsquo;s website across six categories: design, messaging, navigation, credibility, advisor profiles and contact accessibility. LinkedIn presence is an optional seventh. Enter your URL and see your overall score. A name and an email open the full breakdown and a downloadable PDF.</p>
         <a href="/tools/website-scorer.html" class="tool-link">Launch Tool</a>
       </div>
       <div class="tool-card featured reveal d10">
         <span class="tool-badge fs">Financial Services</span>
-        <div class="tool-icon">&#128196;</div>
+        <svg class="tool-icon" aria-hidden="true"><use href="#i-resume"/></svg>
         <h3>Resume Parser</h3>
         <p>Drop in a resume and get its contents back as structured data: contact details, qualifications, every job with its dates, and education. Download as Excel or CSV. Try it on a real one of your own: two reads are free.</p>
         <a href="/tools/resume-parser/" class="tool-link">Launch Tool</a>
@@ -353,7 +432,7 @@
 
       <div class="tool-card build-card reveal d05" id="built-crm">
         <span class="tool-badge built">Custom CRM</span>
-        <div class="tool-icon">&#128199;</div>
+        <svg class="tool-icon" aria-hidden="true"><use href="#i-crm"/></svg>
         <h3>A CRM built for the way the work is done</h3>
         <p>Built for my own everyday use and recordkeeping, after growing frustrated with the limitations of industry-leading software. It is shaped to deal work and executive search in wealth management, with access levels from read-only to administrator and a separate portal for buyers and sellers.</p>
         <ul class="build-points">
@@ -370,7 +449,7 @@
 
       <div class="tool-card build-card reveal d10" id="built-league">
         <span class="tool-badge built">Multi-user Platform</span>
-        <div class="tool-icon">&#127944;</div>
+        <svg class="tool-icon" aria-hidden="true"><use href="#i-league"/></svg>
         <h3>A league&rsquo;s whole season, live and archived</h3>
         <p>Built for a private twelve-team fantasy football league. Members sign in on a phone, a computer or a TV, and commissioners get controls that members do not. Its archive covers every season from 2005 to 2025.</p>
         <ul class="build-points">
@@ -387,7 +466,7 @@
 
       <div class="tool-card build-card reveal d15" id="built-golf">
         <span class="tool-badge built">Game</span>
-        <div class="tool-icon">&#9971;</div>
+        <svg class="tool-icon" aria-hidden="true"><use href="#i-golf"/></svg>
         <h3>A season-long golf pick&rsquo;em</h3>
         <p>Built for a private group of twelve. Each week every player picks one golfer, and that golfer&rsquo;s prize money counts toward the player&rsquo;s season total. No golfer can be used twice.</p>
         <ul class="build-points">
@@ -427,7 +506,7 @@
         <div class="subgroup-grid">
           <a href="/tools/cricket-explainer.html" class="scorecard">
             <span class="scorecard-num">Sport &middot; 01</span>
-            <span class="scorecard-icon">&#127951;</span>
+            <svg class="scorecard-icon" aria-hidden="true"><use href="#i-cricket"/></svg>
             <h4>Cricket vs. Baseball</h4>
             <p>An interactive visual guide that maps cricket concepts to baseball equivalents. Built for Americans who keep hearing about cricket and want to finally understand what&rsquo;s going on.</p>
             <div class="scorecard-foot">
@@ -437,7 +516,7 @@
           </a>
           <a href="/tools/curling-explainer.html" class="scorecard">
             <span class="scorecard-num">Sport &middot; 02</span>
-            <span class="scorecard-icon">&#129482;</span>
+            <svg class="scorecard-icon" aria-hidden="true"><use href="#i-curling"/></svg>
             <h4>Curling Explainer</h4>
             <p>An interactive visual guide that demystifies curling: the sweeping, the hammer, the house, the bonspiel. Built for casual viewers who tune in every Olympics and want to actually follow the action.</p>
             <div class="scorecard-foot">
@@ -458,7 +537,7 @@
         <div class="subgroup-grid">
           <a href="/tools/oscar-tracker.html" class="playbill">
             <span class="playbill-ticket">Feature 01</span>
-            <span class="playbill-icon">&#127942;</span>
+            <svg class="playbill-icon" aria-hidden="true"><use href="#i-award"/></svg>
             <h4>Best Picture Tracker</h4>
             <div class="playbill-tagline">Ninety-five years of golden statues.</div>
             <p>Track your progress through every Best Picture winner in Academy Awards history. Check them off, see what&rsquo;s left, and find out just how many you haven&rsquo;t seen.</p>
@@ -466,7 +545,7 @@
           </a>
           <a href="/tools/afi-tracker.html" class="playbill">
             <span class="playbill-ticket">Feature 02</span>
-            <span class="playbill-icon">&#127916;</span>
+            <svg class="playbill-icon" aria-hidden="true"><use href="#i-film"/></svg>
             <h4>AFI 100 Tracker</h4>
             <div class="playbill-tagline">The American canon, checklist style.</div>
             <p>Work your way through the American Film Institute&rsquo;s 100 greatest American films of all time. A checklist with context for the cinephile and the casually curious alike.</p>
@@ -490,7 +569,7 @@
                 <span><strong>Series</strong> 2026</span>
                 <span><strong>Card</strong> #001</span>
               </div>
-              <span class="tradingcard-icon">&#127183;</span>
+              <svg class="tradingcard-icon" aria-hidden="true"><use href="#i-card"/></svg>
               <h4>Card Evaluator</h4>
               <div class="tradingcard-stats">
                 <div class="tradingcard-stat"><span class="tradingcard-stat-label">Input</span><span class="tradingcard-stat-value">Photo</span></div>
