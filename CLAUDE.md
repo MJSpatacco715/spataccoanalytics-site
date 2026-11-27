@@ -479,6 +479,18 @@ lives and says which pieces are not in this repo yet.
   Bing. Its key is the 32-character `.txt` file in `site/`, public by design:
   do not treat it as a secret or delete it. Google is reached through Search
   Console and the sitemap, which only the owner's account can do.
+- The privacy policy is `site/privacy/index.html`, published 2026-11-27 from
+  the owner's draft; its wording is his and is not edited here. Every page's
+  footer links to it: `scripts/build_insights.py` adds "Privacy" after LinkedIn
+  to each page that signs off with the copyright line, and the six tool pages
+  with footers of their own carry it in their markup. Its email address is put
+  together by script and never written as a plain `mailto:`. In visible text
+  the site is SpataccoAnalytics.com; in an address it stays lowercase.
+  The policy describes site analytics, the LinkedIn Insight Tag and a /C QR
+  redirect that are not installed yet. When the Insight Tag is installed it
+  must be loaded only inside `if (!navigator.globalPrivacyControl) { ... }`,
+  because the policy says a browser sending Global Privacy Control does not
+  get it; or that line comes out of the policy.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer wears the site's own look. The owner, 2026-11-27: "scorer has a
