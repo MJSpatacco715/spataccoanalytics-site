@@ -160,7 +160,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 </head>
 <body>
 <script>try{{if(localStorage.getItem("sa_theme")==="light")document.documentElement.setAttribute("data-theme","light")}}catch(e){{}}</script>
-<script src="/js/theme.js?v=0f5dce0a" defer></script>
+<script src="/js/theme.js?v=fb7a1f7d" defer></script>
 <nav id="main-nav">
   <a href="/" class="brand"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="logo" width="520" height="163"></a>
   <div class="nav-links">
