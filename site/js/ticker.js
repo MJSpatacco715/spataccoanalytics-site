@@ -22,7 +22,8 @@
 
   var FEED = '/market/feed.php';
   var EVERY = 120000;       // ask again every two minutes while the page is in view
-  var SPEED = 38;           // pixels a second
+  var SPEED = 38;           // pixels a second, at the size the page was drawn for (see rootScale)
+  var LINGER = 300;         // a mouse has to rest on a figure this long before its card opens
   var MIN_ITEMS = 3;
   var NOTE = 'These quotes are latest published figures and not necessarily live.';
   var FREE = 'This tool runs entirely on free public data. Yours could too.';
@@ -32,7 +33,7 @@
   var data = [];            // the figures as the feed gave them
   var sources = [];         // who published them, once each
   var byId = {};
-  var openItem = null, closing = null, userPaused = false, lastWidth = 0, pointer = 'mouse';
+  var openItem = null, closing = null, lingering = null, userPaused = false, lastWidth = 0, pointer = 'mouse';
   var quiet = false;        // focus put back by Escape does not reopen the card
 
   function el(tag, cls, text) {
@@ -57,10 +58,30 @@
     try { return e.matches(':focus-visible'); } catch (x) { return true; }
   }
 
+  // The whole page grows with the window (scripts/scale_css.py): how far, against the
+  // size it was drawn for. What this script sizes itself has to grow by the same.
+  function rootScale() {
+    var px = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return px > 0 ? px / 16 : 1;
+  }
+
   // A figure, the note or the label: each opens a card the same way.
+  // A mouse has to rest on it for a moment first. The owner, 2026-11-27: "the hover
+  // cards are very sensitive. if i even glance over it (and people are likely to) it
+  // is BOOM taking up screen space. Someone should have to linger on the link for
+  // just a split second for it to pop." A click, a tap and the keyboard open it at once.
   function wire(btn) {
-    btn.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') show(btn); });
-    btn.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') closeSoon(); });
+    btn.addEventListener('pointerenter', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(lingering);
+      if (openItem === btn) { clearTimeout(closing); return; }
+      lingering = setTimeout(function () { if (btn.matches(':hover')) show(btn); }, LINGER);
+    });
+    btn.addEventListener('pointerleave', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      clearTimeout(lingering);
+      closeSoon();
+    });
     btn.addEventListener('focus', function () { if (!quiet && keyed(btn)) show(btn); });
     btn.addEventListener('click', function (e) {
       if (e.detail === 0) {                        // Enter or Space: into the card, to its first link
@@ -160,7 +181,7 @@
     if (!round || !lastWidth) return;
     var half = Math.max(1, Math.ceil(lastWidth / round));
     for (var i = 1; i < half * 2; i++) { track.appendChild(oneSet(false, true)); track.appendChild(oneSet(false, false)); }
-    track.style.setProperty('--sa-tk-dur', Math.max(20, Math.round((half * round) / SPEED)) + 's');
+    track.style.setProperty('--sa-tk-dur', Math.max(20, Math.round((half * round) / (SPEED * rootScale()))) + 's');
   }
 
   // The strip is pinned just under the menu, whatever height the menu is:
@@ -254,7 +275,7 @@
 
   // Two years side by side, a pair of columns a quarter, each with its number
   // on top. A quarter still to come shows what it would need, drawn hollow.
-  var TALL = 58;            // pixels: the tallest column
+  var TALL = 3.625;         // rem: the tallest column (58px at the size the page was drawn for)
   function chart(ch) {
     var rows = Array.isArray(ch.rows) ? ch.rows.slice(0, 4) : [];
     var top = 0, needs = false;
@@ -284,7 +305,7 @@
         var col = el('span', 'sa-tk-col ' + k);
         col.appendChild(el('span', 'sa-tk-n', String(n)));
         var bar = el('i');
-        bar.style.height = Math.max(2, Math.round(n / top * TALL)) + 'px';
+        bar.style.height = Math.max(0.125, n / top * TALL).toFixed(3) + 'rem';
         col.appendChild(bar);
         cols.appendChild(col);
       });
@@ -492,6 +513,7 @@
     var it = byId[id];
     if (!it && id !== 'about') return;
     clearTimeout(closing);
+    clearTimeout(lingering);
     if (openItem && openItem !== btn) { openItem.classList.remove('open'); openItem.setAttribute('aria-expanded', 'false'); }
     openItem = btn;
     btn.classList.add('open');
@@ -511,8 +533,10 @@
     sync();
   }
 
-  function shut() {
+  // (keep: a card about to open for another figure is not this one's to cancel)
+  function shut(keep) {
     clearTimeout(closing);
+    if (keep !== true) clearTimeout(lingering);
     if (openItem) { openItem.classList.remove('open'); openItem.setAttribute('aria-expanded', 'false'); }
     openItem = null;
     if (card) card.hidden = true;
@@ -525,7 +549,7 @@
       if (!openItem) return;
       if (card.matches(':hover') || card.contains(document.activeElement)) return;
       if (openItem.matches(':hover') || (openItem === document.activeElement && keyed(openItem))) return;
-      shut();
+      shut(true);
     }, 220);
   }
 

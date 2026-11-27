@@ -167,8 +167,18 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
       await page.waitForTimeout(1800);
       const at = await page.evaluate(() => { const f = document.querySelector('.page-hero .hero-stat'), r = f.getBoundingClientRect(), n = f.querySelector('.stat-num'), src = f.querySelector('.sa-cite-src').getBoundingClientRect(); return { num: n.textContent, top: r.top, bottom: r.bottom, x: src.left + src.width / 2, y: src.top + src.height / 2, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, srcShown: src.width > 0 && src.bottom <= window.innerHeight }; });
       check(path + ': its figure (' + num + ') is on the first screen with its source in view', at.num === num && at.top >= at.nav && at.bottom <= at.vh && at.srcShown);
+      // A glance across it opens nothing; resting on it does. The owner, 2026-11-27: "the hover cards are
+      // very sensitive. if i even glance over it (and people are likely to) it is BOOM taking up screen
+      // space. Someone should have to linger on the link for just a split second for it to pop."
+      const seen = () => page.evaluate(() => { const st = getComputedStyle(document.querySelector('.page-hero .hero-stat .sa-cite-card')); return st.visibility === 'visible' && Number(st.opacity) > 0.05; });
       await page.mouse.move(at.x, at.y, { steps: 2 });
-      await page.waitForTimeout(350);
+      await page.waitForTimeout(140);
+      const early = await seen();
+      await page.mouse.move(5, at.vh - 5);
+      await page.waitForTimeout(450);
+      check(path + ': a pointer passing over the figure does not open its source card', !early && !(await seen()));
+      await page.mouse.move(at.x, at.y, { steps: 2 });
+      await page.waitForTimeout(750);
       const card = await page.evaluate(() => { const c = document.querySelector('.page-hero .hero-stat .sa-cite-card'), r = c.getBoundingClientRect(), st = getComputedStyle(c); const on = (x, y) => { const e = document.elementFromPoint(x, y); return !!(e && c.contains(e)); }; return { shown: st.visibility === 'visible' && Number(st.opacity) > 0.9, top: r.top, bottom: r.bottom, left: r.left, right: r.right, nav: document.getElementById('main-nav').getBoundingClientRect().bottom, vh: window.innerHeight, vw: window.innerWidth, clear: on(r.left + 12, r.top + 12) && on(r.right - 12, r.bottom - 12), link: (c.querySelector('a') || {}).href || '' }; });
       check(path + ': pointing at it opens its source card, whole, clear of the menu, with a link to the source', card.shown && card.top >= card.nav && card.bottom <= card.vh && card.left >= 0 && card.right <= card.vw && card.clear && /^https:\/\//.test(card.link));
       await page.mouse.move(5, card.vh - 5);
