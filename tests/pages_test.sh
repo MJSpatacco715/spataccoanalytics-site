@@ -270,7 +270,8 @@ PY'
 #  - it was a level to tick like the others, and a tap only ticked it: "This should
 #    (obviously) link to the web scorer";
 #  - it then left the plan: "Add it to the builder. Essentially will be auto-checked on
-#    all paid engagements";
+#    all paid engagements" (and, asked whether a hosting plan alone counts: "Project work
+#    only");
 #  - "Maybe an option to add/bundle with other services or other option to go to the
 #    scorer", and of three ways to do that the owner chose two buttons, a tap anywhere
 #    else opening the scorer.
@@ -283,7 +284,7 @@ if not opt: sys.exit(1)
 o = opt.group(1)
 go = re.findall(r"<a class=\"sv-go\" href=\"(/tools/website-scorer\.html)\?scope=website&amp;utm_source=services\">Score my site</a>", o)
 ok = len(go) == 1 and o.count("<a ") == 1 and os.path.isfile(sys.argv[2] + go[0])     # one link, to a page that is in the built site
-ok = ok and "Website Score" in o and "<span class=\"sv-price\">Free</span>" in o and "Included with every paid engagement." in o
+ok = ok and "Website Score" in o and "<span class=\"sv-price\">Free</span>" in o and "Included with every project." in o
 # the link is laid over the card, and the one button sits above it
 ok = ok and ".sv-go::after{content:\"\";position:absolute;inset:0}".replace(chr(34), chr(39)) in s and re.search(r"\.sv-opt\{position:relative;", s)
 ok = ok and re.findall(r"<button type=\"button\" class=\"sv-add\" id=\"sv-score-add\" aria-pressed=\"false\">([^<]+)</button>", o) == ["Bundle with other services"] and o.count("<button") == 1

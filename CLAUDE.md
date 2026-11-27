@@ -105,11 +105,13 @@ lives and says which pieces are not in this repo yet.
   that edge which puts the score in the plan, or takes it out. A button is
   never put inside a link: that is why the card is a `div` and the link is
   stretched.
-  With anything paid picked (a project level or hosting) it is in the plan by
-  itself (the owner: "Add it to the builder. Essentially will be auto-checked
-  on all paid engagements"): the card shows ticked, the plan lists it first as
-  included and free, and its button only says "Included in your plan". Its card
-  says it comes with every paid engagement.
+  With a project level picked (an audit, a design or a CRM level) it is in the
+  plan by itself (the owner: "Add it to the builder. Essentially will be
+  auto-checked on all paid engagements"): the card shows ticked, the plan lists
+  it first as included and free, and its button only says "Included in your
+  plan". A hosting plan alone does not bring it in: asked whether hosting
+  counts, the owner answered "Project work only". Its card says it comes with
+  every project.
 - The logo. The owner, 2026-11-26: "the logo is small and near invisible on the
   site". The menu had shown the logo file whole (`site/img/logo.jpg`: the
   wordmark small in the middle of a white square), 36px tall, which left the

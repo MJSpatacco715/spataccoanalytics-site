@@ -106,7 +106,7 @@
 .sv-add[aria-pressed="true"]::before{content:'\2713'}
 .sv-add[aria-pressed="true"]:hover,.sv-add[aria-pressed="true"]:focus-visible{color:var(--white);background:var(--purple);border-color:var(--purple)}
 .sv-add:disabled{cursor:default;color:var(--purple);background:var(--white);border-color:var(--purple)}
-/* in the plan (bundled, or by itself with anything paid): it shows ticked, as a level chosen does */
+/* in the plan (bundled, or by itself with any project level): it shows ticked, as a level chosen does */
 .sv-opt-go.inc{box-shadow:inset 0 0 0 3px var(--purple)}
 .sv-opt-go.inc .sv-tick{border:1.5px solid var(--purple);border-radius:50%;background:var(--purple);box-shadow:inset 0 0 0 3px var(--white)}
 .sv-opt-go.inc .sv-tick::before{content:none}
@@ -258,16 +258,17 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
         <!-- The free level is the website scorer itself. The owner, 2026-11-26, having tapped it
              and seen it only ticked: "This should (obviously) link to the web scorer"; then, of
              its place in the plan: "Add it to the builder. Essentially will be auto-checked on
-             all paid engagements"; then: "Maybe an option to add/bundle with other services or
+             all paid engagements" (asked whether a hosting plan alone counts: "Project work
+             only"); then: "Maybe an option to add/bundle with other services or
              other option to go to the scorer", and of three ways to do that chose two buttons
              with a tap anywhere else opening the scorer.
              So: "Score my site" is a link whose own edge is stretched over the whole card (the
              ::after in the styles), and "Bundle with other services" sits above that edge and
-             puts the score in the plan. The script below ticks it by itself once anything paid
-             is picked. -->
+             puts the score in the plan. The script below ticks it by itself once any project
+             level is picked. -->
         <div class="sv-opt sv-opt-go">
           <span class="sv-name"><span class="sv-tick" aria-hidden="true"></span>Website Score<span class="sv-hp sv-in" hidden>, in your plan</span><span class="sv-tier-tag">Essential</span></span>
-          <span class="sv-desc">Instant overall score for your site. Included with every paid engagement.</span>
+          <span class="sv-desc">Instant overall score for your site. Included with every project.</span>
           <button type="button" class="sv-add" id="sv-score-add" aria-pressed="false">Bundle with other services</button>
           <span class="sv-foot"><span class="sv-price">Free</span><a class="sv-go" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">Score my site</a><span class="sv-time">Instant</span></span>
         </div>
@@ -551,23 +552,25 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
     ['audit', 'design', 'crm', 'hosting'].forEach(function (n) {
       var b = document.querySelector('[data-clear="' + n + '"]'); if (b) b.hidden = !picked(n);
     });
-    // The free Website Score. It comes with every paid engagement, so once
-    // anything paid is picked it is in the plan by itself and its button only
-    // says so. With nothing paid picked, its button puts it in or takes it out.
-    // In the plan it shows ticked on its card, and leads the plan.
-    var paid = !!(audit || design || crm || host);
+    // The free Website Score. It comes with every project, so once a project
+    // level is picked (an audit, a design or a CRM level) it is in the plan by
+    // itself and its button only says so. A hosting plan alone does not bring
+    // it in: the owner, asked, "Project work only". With no project level
+    // picked, its button puts it in or takes it out. In the plan it shows
+    // ticked on its card, and leads the plan.
+    var work = !!(audit || design || crm);
     var score = document.querySelector('.sv-opt-go'), add = $('sv-score-add');
-    var inPlan = paid || bundled;
+    var inPlan = work || bundled;
     score.classList.toggle('inc', inPlan); score.querySelector('.sv-in').hidden = !inPlan;
-    add.disabled = paid; add.setAttribute('aria-pressed', inPlan ? 'true' : 'false');
-    add.textContent = paid ? 'Included in your plan' : (bundled ? 'In your plan: remove' : 'Bundle with other services');
-    if (!inPlan) {
+    add.disabled = work; add.setAttribute('aria-pressed', inPlan ? 'true' : 'false');
+    add.textContent = work ? 'Included in your plan' : (bundled ? 'In your plan: remove' : 'Bundle with other services');
+    if (!inPlan && !host) {
       var p = document.createElement('p'); p.className = 'sv-empty';
       p.textContent = 'Nothing picked yet. Choose a level in any service above and it shows up here.';
       box.appendChild(p); $('sv-note').textContent = ''; return;
     }
-    box.appendChild(line(paid ? 'Website Score (included)' : 'Website Score', 'Free', 'inc'));
-    if (!paid) { $('sv-note').textContent = 'The Website Score is free. Choose a level in any service above to bundle it with.'; return; }
+    if (inPlan) box.appendChild(line(work ? 'Website Score (included)' : 'Website Score', 'Free', 'inc'));
+    if (!work && !host) { $('sv-note').textContent = 'The Website Score is free. Choose a level in any service above to bundle it with.'; return; }
     var oneTime = 0, anyFrom = false, missing = false;
     function cost(service, tier) {
       if (service === 'audit' && tier === 'essential') return 0;
