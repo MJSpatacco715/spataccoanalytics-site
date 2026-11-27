@@ -137,16 +137,21 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     await press('#audit .sv-opt.rec .sv-desc'); await page.waitForTimeout(200);
     const paid = await plan();
     check('/services/ at ' + w + ' by ' + h + ': the audit levels beside it still tick into the plan and stay on the page', paid.picked === 'professional' && paid.lines.some((l) => /Audit Report/.test(l)) && paid.path === '/services/');
-    check('/services/ at ' + w + ' by ' + h + ': with a paid level picked the Website Score is in the plan by itself, first and free, and its button only says so', paid.ticked && paid.said && paid.lines[0] === 'Website Score (included)=Free' && paid.btn === 'Included in your plan' && paid.off);
+    check('/services/ at ' + w + ' by ' + h + ': with a project level picked the Website Score is in the plan by itself, first and free, and its button only says so', paid.ticked && paid.said && paid.lines[0] === 'Website Score (included)=Free' && paid.btn === 'Included in your plan' && paid.off);
     await press('#sv-score-add'); await page.waitForTimeout(200);
     const still = await plan();
     check('/services/ at ' + w + ' by ' + h + ': pressing its button then changes nothing and goes nowhere', still.ticked && still.lines[0] === 'Website Score (included)=Free' && still.path === '/services/');
     await press('[data-clear="audit"]'); await page.waitForTimeout(200);
     const none = await plan();
-    check('/services/ at ' + w + ' by ' + h + ': with the paid level removed it is out of the plan again', !none.ticked && !none.said && none.empty && none.btn === 'Bundle with other services' && !none.off);
+    check('/services/ at ' + w + ' by ' + h + ': with the project level removed it is out of the plan again', !none.ticked && !none.said && none.empty && none.btn === 'Bundle with other services' && !none.off);
     await press('label.sv-plan.rec .sv-desc'); await page.waitForTimeout(200);
+    // A hosting plan alone does not bring it in (the owner, asked: "Project work only"): the plan
+    // is the hosting, and its button still offers to bundle it.
     const host = await plan();
-    check('/services/ at ' + w + ' by ' + h + ': hosting alone is a paid engagement too: the Website Score is ticked and in the plan', host.ticked && host.lines[0] === 'Website Score (included)=Free' && host.lines.some((l) => /^Managed Hosting/.test(l)));
+    check('/services/ at ' + w + ' by ' + h + ': hosting alone does not put the Website Score in the plan, and its button still offers to bundle it', !host.ticked && !host.said && !host.off && host.btn === 'Bundle with other services' && host.lines.length >= 1 && host.lines.every((l) => !/Website Score/.test(l)) && host.lines.some((l) => /^Managed Hosting/.test(l)));
+    await press('#sv-score-add'); await page.waitForTimeout(200);
+    const both = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': bundled with a hosting plan it leads the plan, free, and can be taken out again', both.ticked && both.lines[0] === 'Website Score=Free' && both.lines.some((l) => /^Managed Hosting/.test(l)) && both.btn === 'In your plan: remove' && !both.off);
     // ticked, the card still opens the scorer
     await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go .sv-desc')]);
     check('/services/ at ' + w + ' by ' + h + ': ticked, a tap on it still opens the scorer', new URL(page.url()).pathname === '/tools/website-scorer.html');
