@@ -252,23 +252,30 @@ ok = ok and go["crm"] == "From " + times("crm")[0].split()[0] + " week"
 ok = ok and go["hosting"] == "From $%d/mo" % min(int(x) for x in re.findall(r"data-monthly=\"(\d+)\"", s))
 sys.exit(0 if ok else 1)
 PY'
-# The audit's free level is the website scorer. It was a level to tick like the others, and
-# a tap only ticked it; the owner, 2026-11-26: "This should (obviously) link to the web
-# scorer". All of it is a link there now, and it is not a level to choose.
-# It is in the plan all the same. The owner, told it could no longer be added: "Add it to
-# the builder. Essentially will be auto-checked on all paid engagements". So the page says
-# it comes with every paid engagement, and the plan lists it, free, once anything is picked.
-check "the free Website Score on the Services page is a link to the scorer, all of it, and not a level to tick" 'python3 - "$svc" "$dist" <<'"'"'PY'"'"'
+# The free Website Score on the Services page, in three asks of the owner's, 2026-11-26:
+#  - it was a level to tick like the others, and a tap only ticked it: "This should
+#    (obviously) link to the web scorer";
+#  - it then left the plan: "Add it to the builder. Essentially will be auto-checked on
+#    all paid engagements";
+#  - "Maybe an option to add/bundle with other services or other option to go to the
+#    scorer", and of three ways to do that the owner chose two buttons, a tap anywhere
+#    else opening the scorer.
+check "the free Website Score on the Services page has its two ways: a link to the scorer laid over the whole card, and a button that bundles it into the plan" 'python3 - "$svc" "$dist" <<'"'"'PY'"'"'
 import os, re, sys
 s = open(sys.argv[1], encoding="utf-8").read()
 card = re.search(r"<fieldset class=\"sv-card reveal\" id=\"audit\".*?</fieldset>", s, re.S).group(0)
-go = re.search(r"<a class=\"sv-opt sv-opt-go\" href=\"(/tools/website-scorer\.html)\?scope=website&amp;utm_source=services\">(.*?)</a>", card, re.S)
-ok = bool(go) and "Website Score" in go.group(2) and "<span class=\"sv-price\">Free</span>" in go.group(2) and "<span class=\"sv-go\">Score my site</span>" in go.group(2)
-ok = ok and "<input" not in go.group(2) and "<button" not in go.group(2)          # nothing inside it that a tap would land on instead
-ok = ok and os.path.isfile(sys.argv[2] + go.group(1))                                # the page it goes to is in the built site
+opt = re.search(r"<div class=\"sv-opt sv-opt-go\">(.*?)</div>", card, re.S)
+if not opt: sys.exit(1)
+o = opt.group(1)
+go = re.findall(r"<a class=\"sv-go\" href=\"(/tools/website-scorer\.html)\?scope=website&amp;utm_source=services\">Score my site</a>", o)
+ok = len(go) == 1 and o.count("<a ") == 1 and os.path.isfile(sys.argv[2] + go[0])     # one link, to a page that is in the built site
+ok = ok and "Website Score" in o and "<span class=\"sv-price\">Free</span>" in o and "Included with every paid engagement." in o
+# the link is laid over the card, and the one button sits above it
+ok = ok and ".sv-go::after{content:\"\";position:absolute;inset:0}".replace(chr(34), chr(39)) in s and re.search(r"\.sv-opt\{position:relative;", s)
+ok = ok and re.findall(r"<button type=\"button\" class=\"sv-add\" id=\"sv-score-add\" aria-pressed=\"false\">([^<]+)</button>", o) == ["Bundle with other services"] and o.count("<button") == 1
+ok = ok and re.search(r"\.sv-add\{position:relative;z-index:1;", s) and "<input" not in o
+# it is not one of the levels to choose
 ok = ok and re.findall(r"<input type=\"radio\" name=\"audit\" value=\"([a-z]+)\"", card) == ["professional", "complete"]
-ok = ok and "Included with every paid engagement." in go.group(2)
-ok = ok and "box.appendChild(line(\"Website Score (included)\", \"Free\", \"inc\"))".replace(chr(34), chr(39)) in s    # the line the plan draws for it
 sys.exit(0 if ok else 1)
 PY'
 check "its headline ends on the line the owner chose, and the one the owner did not love is gone" 'grep -q "<h1>Websites, CRM, and data for independent advisors. <em>Pick where to start.</em></h1>" "$svc" && ! grep -rqi "scoped before you commit" "$site" "$here/scripts" "$here/content"'

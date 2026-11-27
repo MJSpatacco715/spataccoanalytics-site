@@ -94,17 +94,22 @@ lives and says which pieces are not in this repo yet.
   own parts by `tests/pages_test.sh`; `tests/hero_browser.cjs` opens it in a
   browser. A block of links inside a page is a `div`, never a `nav`: the
   shared stylesheet pins every `nav` to the top of the window.
-  The audit's free level, Website Score, is the website scorer, and all of it
-  is a link there (`a.sv-opt-go`), not a level to choose. It was a radio like
-  the levels beside it, and a tap only ticked it; the owner, 2026-11-26: "This
-  should (obviously) link to the web scorer". Anything on the site that offers
-  the free score goes to the scorer.
-  It is in the plan all the same, by itself. The owner, told it could no longer
-  be added: "Add it to the builder. Essentially will be auto-checked on all
-  paid engagements". Its card says it comes with every paid engagement, and
-  once anything paid is picked (a project level or hosting) the plan's script
-  shows it ticked and lists it first in the plan, free. Nobody ticks or unticks
-  it, and ticked it is still the link.
+  The audit's free level, Website Score, is the website scorer, and it is not a
+  level to choose. It was a radio like the levels beside it, and a tap only
+  ticked it; the owner, 2026-11-26: "This should (obviously) link to the web
+  scorer". Anything on the site that offers the free score goes to the scorer.
+  Its card has two ways, the owner's choice of three ("Maybe an option to
+  add/bundle with other services or other option to go to the scorer"): "Score
+  my site" is a link whose own edge is laid over the whole card, so a tap
+  anywhere opens the scorer, and "Bundle with other services" is a button above
+  that edge which puts the score in the plan, or takes it out. A button is
+  never put inside a link: that is why the card is a `div` and the link is
+  stretched.
+  With anything paid picked (a project level or hosting) it is in the plan by
+  itself (the owner: "Add it to the builder. Essentially will be auto-checked
+  on all paid engagements"): the card shows ticked, the plan lists it first as
+  included and free, and its button only says "Included in your plan". Its card
+  says it comes with every paid engagement.
 - The logo. The owner, 2026-11-26: "the logo is small and near invisible on the
   site". The menu had shown the logo file whole (`site/img/logo.jpg`: the
   wordmark small in the middle of a white square), 36px tall, which left the

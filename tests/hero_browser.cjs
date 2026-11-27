@@ -93,53 +93,63 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     await ctx.close();
   }
 
-  // --- the free Website Score on the Services page goes to the scorer, wherever it is pressed
-  // (the owner, having tapped it and seen it only ticked: "This should (obviously) link to the web scorer")
+  // --- the free Website Score on the Services page: a tap opens the scorer, one button bundles it
+  // The owner, in three asks: "This should (obviously) link to the web scorer"; "Add it to the
+  // builder. Essentially will be auto-checked on all paid engagements"; "Maybe an option to
+  // add/bundle with other services or other option to go to the scorer" (two buttons, the
+  // owner chose, with a tap anywhere else opening the scorer).
   for (const [w, h, mobile] of [[1255, 607, false], [430, 744, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
+    // Press the middle of a thing as a finger or a pointer does: whatever is on top there takes it.
+    const press = async (sel) => {
+      const at = await page.evaluate((sel) => { const e = document.querySelector(sel); e.scrollIntoView({ block: 'center' }); const r = e.getBoundingClientRect(); return { x: r.left + Math.min(r.width / 2, 60), y: r.top + r.height / 2 }; }, sel);
+      await page.waitForTimeout(250);
+      if (mobile) await page.touchscreen.tap(at.x, at.y); else await page.mouse.click(at.x, at.y);
+    };
+    const open = async () => { await page.goto(base + '/services/', { waitUntil: 'load' }); await page.evaluate(() => { document.documentElement.style.scrollBehavior = 'auto'; }); await page.waitForTimeout(500); };
     const went = [];
-    for (const part of ['.sv-name', '.sv-desc', '.sv-price', '.sv-go']) {
-      await page.goto(base + '/services/', { waitUntil: 'load' });
-      await page.locator('.sv-opt-go ' + part).scrollIntoViewIfNeeded();
-      await page.waitForTimeout(700);
-      const press = mobile ? page.tap('.sv-opt-go ' + part) : page.click('.sv-opt-go ' + part);
-      await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press]);
+    for (const part of ['.sv-name', '.sv-desc', '.sv-price', '.sv-go', '.sv-time']) {
+      await open();
+      await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go ' + part)]);
       const u = new URL(page.url());
       if (u.pathname === '/tools/website-scorer.html' && u.searchParams.get('scope') === 'website' && u.searchParams.get('utm_source') === 'services') went.push(part);
     }
-    check('/services/ at ' + w + ' by ' + h + ': the free Website Score opens the scorer, whichever part of it is pressed (' + went.length + ' of 4)', went.length === 4);
+    check('/services/ at ' + w + ' by ' + h + ': the free Website Score opens the scorer wherever it is pressed but on its bundle button (' + went.length + ' of 5)', went.length === 5);
     check('and the scorer is what opens', /Website Score/.test(await page.title()) && (await page.locator('input').count()) > 0);
-    // the two levels beside it are still levels to tick: a press ticks one into the plan and goes nowhere
-    await page.goto(base + '/services/', { waitUntil: 'load' });
-    await page.locator('#audit .sv-opt.rec .sv-desc').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(700);
-    if (mobile) await page.tap('#audit .sv-opt.rec .sv-desc'); else await page.click('#audit .sv-opt.rec .sv-desc');
-    await page.waitForTimeout(200);
-    const k = await page.evaluate(() => { const e = document.querySelector('input[name="audit"]:checked'); return { picked: e ? e.value : '', plan: document.getElementById('sv-lines').textContent, path: location.pathname }; });
-    check('/services/ at ' + w + ' by ' + h + ': the audit levels beside it still tick into the plan and stay on the page', k.picked === 'professional' && k.plan.includes('Audit Report') && k.path === '/services/');
-    // It is in the plan with every paid engagement, by itself (the owner: "Add it to the builder.
-    // Essentially will be auto-checked on all paid engagements"): ticked on its card, first in the plan.
-    const plan = () => page.evaluate(() => { const o = document.querySelector('.sv-opt-go'), t = getComputedStyle(o.querySelector('.sv-tick')); return { ticked: o.classList.contains('inc') && t.backgroundColor === 'rgb(123, 92, 255)', said: !o.querySelector('.sv-in').hidden, lines: [...document.querySelectorAll('#sv-lines .sv-line')].map((l) => l.children[0].textContent + '=' + l.children[1].textContent), link: o.tagName === 'A' && o.getAttribute('href').indexOf('/tools/website-scorer.html') === 0 }; });
-    const withAudit = await plan();
-    check('/services/ at ' + w + ' by ' + h + ': with a paid level picked the Website Score shows ticked and leads the plan, free', withAudit.ticked && withAudit.said && withAudit.lines[0] === 'Website Score (included)=Free' && withAudit.lines.length >= 2 && withAudit.link);
-    await page.locator('[data-clear="audit"]').scrollIntoViewIfNeeded();
-    if (mobile) await page.tap('[data-clear="audit"]'); else await page.click('[data-clear="audit"]');
-    await page.waitForTimeout(200);
+
+    const plan = () => page.evaluate(() => {
+      const o = document.querySelector('.sv-opt-go'), a = document.getElementById('sv-score-add'), t = getComputedStyle(o.querySelector('.sv-tick'));
+      return { ticked: o.classList.contains('inc') && t.backgroundColor === 'rgb(123, 92, 255)', said: !o.querySelector('.sv-in').hidden, btn: a.textContent, pressed: a.getAttribute('aria-pressed') === 'true', off: a.disabled,
+        lines: [...document.querySelectorAll('#sv-lines .sv-line')].map((l) => l.children[0].textContent + '=' + l.children[1].textContent), empty: !!document.querySelector('#sv-lines .sv-empty'), path: location.pathname,
+        picked: (document.querySelector('input[name="audit"]:checked') || {}).value || '' };
+    });
+    await open();
+    const start = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': to begin with it is not in the plan, and its button offers to bundle it', !start.ticked && !start.said && start.btn === 'Bundle with other services' && !start.pressed && !start.off && start.empty);
+    await press('#sv-score-add'); await page.waitForTimeout(200);
+    const bundled = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': its button bundles it: ticked, in the plan free, and the page stays put', bundled.ticked && bundled.said && bundled.pressed && bundled.btn === 'In your plan: remove' && bundled.lines.join('|') === 'Website Score=Free' && bundled.path === '/services/');
+    await press('#sv-score-add'); await page.waitForTimeout(200);
+    const out = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': and takes it out again', !out.ticked && !out.pressed && out.btn === 'Bundle with other services' && out.empty);
+    // with a paid level it is in by itself, and its button only says so
+    await press('#audit .sv-opt.rec .sv-desc'); await page.waitForTimeout(200);
+    const paid = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': the audit levels beside it still tick into the plan and stay on the page', paid.picked === 'professional' && paid.lines.some((l) => /Audit Report/.test(l)) && paid.path === '/services/');
+    check('/services/ at ' + w + ' by ' + h + ': with a paid level picked the Website Score is in the plan by itself, first and free, and its button only says so', paid.ticked && paid.said && paid.lines[0] === 'Website Score (included)=Free' && paid.btn === 'Included in your plan' && paid.off);
+    await press('#sv-score-add'); await page.waitForTimeout(200);
+    const still = await plan();
+    check('/services/ at ' + w + ' by ' + h + ': pressing its button then changes nothing and goes nowhere', still.ticked && still.lines[0] === 'Website Score (included)=Free' && still.path === '/services/');
+    await press('[data-clear="audit"]'); await page.waitForTimeout(200);
     const none = await plan();
-    check('/services/ at ' + w + ' by ' + h + ': with nothing picked it is not ticked and not in the plan', !none.ticked && !none.said && none.lines.length === 0 && none.link);
-    await page.locator('label.sv-plan.rec .sv-desc').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(600);
-    if (mobile) await page.tap('label.sv-plan.rec .sv-desc'); else await page.click('label.sv-plan.rec .sv-desc');
-    await page.waitForTimeout(200);
+    check('/services/ at ' + w + ' by ' + h + ': with the paid level removed it is out of the plan again', !none.ticked && !none.said && none.empty && none.btn === 'Bundle with other services' && !none.off);
+    await press('label.sv-plan.rec .sv-desc'); await page.waitForTimeout(200);
     const host = await plan();
     check('/services/ at ' + w + ' by ' + h + ': hosting alone is a paid engagement too: the Website Score is ticked and in the plan', host.ticked && host.lines[0] === 'Website Score (included)=Free' && host.lines.some((l) => /^Managed Hosting/.test(l)));
-    // ticked, it is still the link
-    await page.locator('.sv-opt-go .sv-go').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(600);
-    const again = mobile ? page.tap('.sv-opt-go .sv-go') : page.click('.sv-opt-go .sv-go');
-    await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), again]);
-    check('/services/ at ' + w + ' by ' + h + ': ticked, it still opens the scorer', new URL(page.url()).pathname === '/tools/website-scorer.html');
+    // ticked, the card still opens the scorer
+    await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go .sv-desc')]);
+    check('/services/ at ' + w + ' by ' + h + ': ticked, a tap on it still opens the scorer', new URL(page.url()).pathname === '/tools/website-scorer.html');
     await ctx.close();
   }
 
