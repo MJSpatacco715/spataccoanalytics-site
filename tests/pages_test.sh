@@ -81,8 +81,8 @@ check "on a phone the figures are one vertical stack, not side by side" 'grep -q
 check "the pillars are one height with their links on one line" 'grep -q "a.service-card{display:flex;flex-direction:column;" "$home" && grep -q "\.service-go{display:block;margin-top:auto;" "$home"'
 # The pillars were the one light section of the home page. The owner, 2026-11-27: "weirdly all
 # white in a sea of blue". Asked, with a picture of it in navy: "Yes, make it navy".
-check "no section of the home page is light: the pillars sit on the navy, each one the site panel" '! grep -q "class=\"section-light" "$home" && grep -q "<section class=\"section-dark section-pillars\" id=\"services\">" "$home" && grep -q "\.service-card{background:rgba(255,255,255,0.045);border:1px solid rgba(203,213,225,0.16);" "$home" && grep -q "\.service-card h3{font-size:1.25rem;font-weight:600;color:var(--white);" "$home" && grep -q "<h2 class=\"section-heading section-heading-dark\">Three pillars. One consultative engagement.</h2>" "$home"'
-check "and the Insights teaser, when the home page has one, sits on the navy too" 'grep -qF ".section-light.in-home{background:#0F1B2D}" "$site/css/insights.css" && grep -qF ".in-home .in-card h3{color:#FFFFFF}" "$site/css/insights.css" && grep -qF ".in-home .in-card{background:rgba(255,255,255,0.045);" "$site/css/insights.css"'
+check "no section of the home page is light: the pillars sit on the navy, each one the site panel" '! grep -q "class=\"section-light" "$home" && grep -q "<section class=\"section-dark section-pillars\" id=\"services\">" "$home" && grep -q "\.service-card{background:rgba(var(--lift),0.045);border:1px solid rgba(var(--line),0.16);" "$home" && grep -q "\.service-card h3{font-size:1.25rem;font-weight:600;color:var(--white);" "$home" && grep -q "<h2 class=\"section-heading section-heading-dark\">Three pillars. One consultative engagement.</h2>" "$home"'
+check "and the Insights teaser, when the home page has one, sits on the navy too" 'grep -qF ".section-light.in-home{background:var(--navy)}" "$site/css/insights.css" && grep -qF ".in-home .in-card h3{color:#FFFFFF}" "$site/css/insights.css" && grep -qF ".in-home .in-card{background:rgba(var(--lift),0.045);" "$site/css/insights.css"'
 check "there are three pillars and each is a link" '[ "$(grep -o "<a class=\"service-card " "$home" | wc -l)" = 3 ] && ! grep -q "<div class=\"service-card" "$home"'
 
 # --- every statistic carries its source
@@ -637,6 +637,12 @@ check "every size on the main pages, the scorer and the Insights pages is in rem
 check "the rule that grows them is the one written down, in the shared stylesheet and on the home page, which does not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -q "href=\"/css/shared.css?v=" "$site/tools/website-scorer/index.html"'
 check "on a phone no text is under 13px: the floor is set in the same two places" 'f="@media(max-width:760px){:root{--tfloor:0.8125rem}}"; grep -qF "$f" "$site/css/shared.css" && grep -qF "$f" "$home"'
 check "the Insights pages grow too, and a tool page built with the tools head does not until its own styles are in rem" 'grep -q "<html lang=\"en\" class=\"sa-scale\">" "$dist/insights/index.html" && ! grep -q "sa-scale" "$dist/tools/football/nfl-lines-tracker/index.html"'
+# --- the light and the dark version (scripts/theme_css.py, site/js/theme.js)
+# The owner, 2026-11-27: "Spatacco analytics should have a light/dark option ... sun/moon. I would like the sun to
+# have sunglasses on and be in the top right corner of the box".
+check "the colours of the main pages, the scorer and the Insights stylesheet are on the shared variables, so each has a light counterpart: $(python3 "$here/scripts/theme_css.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/theme_css.py" --check >/dev/null'
+check "every main page, and the Insights shell, sets the chosen version in its first line after body and loads the switch by its version; a tool page built with the tools head does neither" 'v=$(sha1sum "$site/js/theme.js" | cut -c1-8); for f in "$home" "$site/services/index.html" "$site/approach/index.html" "$site/about/index.html" "$site/contact/index.html" "$site/tools/index.html" "$site/tools/website-scorer/index.html" "$dist/insights/index.html"; do grep -A3 "^<body>" "$f" | grep -q "localStorage.getItem(\"sa_theme\")===\"light\"" && grep -q "<script src=\"/js/theme.js?v=$v\" defer></script>" "$f" || exit 1; done; ! grep -q "theme.js\|sa_theme" "$dist/tools/football/nfl-lines-tracker/index.html"'
+check "the two palettes are declared in the shared stylesheet and on the home page, which carries its own styles, and the menu, the footer and a section that was light from the start keep their first colours" 'for f in "$site/css/shared.css" "$home"; do grep -q "^:root\[data-theme=\"light\"\]{--navy:#F6F8FB;" "$f" && grep -q "^:root\[data-theme=\"light\"\] nav,:root\[data-theme=\"light\"\] footer,:root\[data-theme=\"light\"\] .sa-dark,:root\[data-theme=\"light\"\] .section-light{--navy:#0F1B2D;" "$f" || exit 1; done'
 if node -e "require('playwright')" 2>/dev/null; then
   (cd "$dist" && exec python3 -m http.server 18747 --bind 127.0.0.1 >/dev/null 2>&1) & lpid=$!
   for i in $(seq 1 50); do curl -s -o /dev/null "http://127.0.0.1:18747/" && break; sleep 0.1; done
@@ -644,6 +650,7 @@ if node -e "require('playwright')" 2>/dev/null; then
   hout=$(node "$here/tests/hero_browser.cjs" http://127.0.0.1:18747 2>&1); hcode=$?
   sout=$(node "$here/tests/scorer_browser.cjs" http://127.0.0.1:18747 2>&1); scode=$?
   zout=$(node "$here/tests/scale_browser.cjs" http://127.0.0.1:18747 2>&1); zcode=$?
+  tout=$(node "$here/tests/theme_browser.cjs" http://127.0.0.1:18747 2>&1); tcode=$?
   kill "$lpid" 2>/dev/null
   check "the logos show in a browser: $(printf '%s' "$lout" | tail -1)" '[ $lcode -eq 0 ]'
   [ $lcode -eq 0 ] || printf '%s\n' "$lout"
@@ -653,6 +660,8 @@ if node -e "require('playwright')" 2>/dev/null; then
   [ $scode -eq 0 ] || printf '%s\n' "$sout"
   check "the pages grow with the window, and a phone shows no text under 13px: $(printf '%s' "$zout" | tail -1)" '[ $zcode -eq 0 ]'
   [ $zcode -eq 0 ] || printf '%s\n' "$zout"
+  check "the light and the dark version, in a browser: $(printf '%s' "$tout" | tail -1)" '[ $tcode -eq 0 ]'
+  [ $tcode -eq 0 ] || printf '%s\n' "$tout"
 else
   echo "no browser here: the logos were not opened"
 fi

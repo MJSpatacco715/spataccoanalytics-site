@@ -32,6 +32,7 @@ ASSETS = {
     "/css/insights.css": "site/css/insights.css",
     "/css/ticker.css": "site/css/ticker.css",
     "/js/ticker.js": "site/js/ticker.js",
+    "/js/theme.js": "site/js/theme.js",
 }
 
 

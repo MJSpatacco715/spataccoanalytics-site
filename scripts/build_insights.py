@@ -154,11 +154,13 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {extra_head}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=1aff8a5d">
-<link rel="stylesheet" href="/css/cite.css?v=d9368be7">
-<link rel="stylesheet" href="/css/insights.css?v=36df3a69">
+<link rel="stylesheet" href="/css/shared.css?v=a0fa4f44">
+<link rel="stylesheet" href="/css/cite.css?v=91d0411c">
+<link rel="stylesheet" href="/css/insights.css?v=33cead62">
 </head>
 <body>
+<script>try{{if(localStorage.getItem("sa_theme")==="light")document.documentElement.setAttribute("data-theme","light")}}catch(e){{}}</script>
+<script src="/js/theme.js?v=2ab082d7" defer></script>
 <nav id="main-nav">
   <a href="/" class="brand"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="logo" width="520" height="163"></a>
   <div class="nav-links">
@@ -316,7 +318,7 @@ document.querySelectorAll('.in-filters button').forEach(function (b) {{
     s = home.read_text(encoding="utf-8")
     front = [p for p in posts if p["category"] == "practice"][:HOME_COUNT]
     if HOME_MARK in s and front:
-        teaser = ('<link rel="stylesheet" href="/css/insights.css?v=36df3a69"><section class="section-light in-home"><div class="section-inner">'
+        teaser = ('<link rel="stylesheet" href="/css/insights.css?v=33cead62"><section class="section-light in-home"><div class="section-inner">'
                   '<div class="section-tag">Insights</div><h2 class="section-heading section-heading-light">What the data says about practices like yours.</h2>'
                   f'<div class="accent-line"></div><div class="in-grid">{"".join(card(p) for p in front)}</div>'
                   '<p class="in-more"><a class="in-link" href="/insights/">All insights &rarr;</a></p></div></section>')

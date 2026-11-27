@@ -34,6 +34,50 @@ lives and says which pieces are not in this repo yet.
   Insights teaser, when a `practice` post puts one on the page, sits on the navy
   too (`.in-home` in `site/css/insights.css`). Do not put a light section on the
   home page. `tests/hero_browser.cjs` looks for one.
+- The site has a light version and a dark one. The owner, 2026-11-27: "Spatacco
+  analytics should have a light/dark option and should make mention somewhere of
+  my tendency to create both light/dark versions of the sites because it makes a
+  difference for different environments. sun/moon. I'd like the sun to have
+  sunglasses on and be in the top right corner of the box (can be taking up
+  majority of the box but justify top right".
+  It opens dark, as it always has, and every rule in this file about navy
+  ("navy from top to bottom", "no light section", "nothing is a light panel")
+  is about that dark version, which did not change: before and after the
+  colours moved to variables the pages were photographed and compared pixel for
+  pixel. The switch is one box at the end of the menu (top right of the first
+  row on a phone), drawn by `site/js/theme.js`: the sun in sunglasses fills
+  most of it from the top right corner, a small moon sits bottom left, and the
+  one in use is lit. A press turns the page and the choice is kept
+  (`localStorage` `sa_theme`); each page's first line after `<body>` sets it
+  before anything is drawn, so nothing flashes. Three drawings of the switch
+  were shown to the owner; this is the first, pending his pick.
+  How it works: the pages were drawn in a handful of colours (the navy, white
+  ink, four greys, cyan, blue, purple, and washes of them). Each is a variable,
+  and `scripts/theme_css.py` holds both palettes, writes them into
+  `site/css/shared.css` and the home page (which carries its own styles), and
+  rewrites a listed colour written out as its variable; with `--check` it fails
+  on one. On a page whose `<html>` carries `data-theme="light"` the ground is
+  near white, the ink is the navy and the cyan is a teal dark enough to read.
+  Note the names keep their first meaning only in the dark version: in light
+  `--navy` is the ground (near white) and `--white` is the ink. A colour that
+  must be the same in both (a white tile under a logo, the PDF's paper
+  colours) is written out, not a variable. The menu, the footer, the market
+  strip's own colours and a section that was light from the start
+  (`.section-light`, on Services) are drawn the same in both: inside them the
+  variables hold their first values (`KEEP_DARK`).
+  The scorer has its own named colours and so its own light block, and what
+  its script colours (`lit()`, `wash()`) is drawn again when the switch is
+  pressed (the `sa-theme` event).
+  Each tool's own page is not drawn for the light version yet: it does not
+  load `theme.js`, so it has no switch and stays navy whatever was chosen.
+  Convert its colours, then give it the two lines after `<body>`.
+  `tests/theme_browser.cjs` opens every main page in both versions on a desktop
+  and a phone: the switch and its drawing, the choice kept, and the contrast of
+  every piece of text against what is behind it (4.5 to 1; a short list of
+  labels that were a little under before is named in the test). New text on a
+  themed page has to pass in both.
+  Not done yet: the line on the site saying that we build both versions. Its
+  wording and place are the owner's to choose.
 - The pages grow with the window. The owner, 2026-11-27, with the site at 100%
   beside the same page zoomed to 150%: "the site looks better at 150% size than
   100%, there should be some adjustment. with a target market of 50-80 year olds
@@ -251,7 +295,7 @@ lives and says which pieces are not in this repo yet.
   `site/css/shared.css` and the link on every page (and in
   `scripts/build_insights.py`) must change with it. `scripts/asset_versions.py`
   writes the current version into every tag for the five shared files
-  (`shared.css`, `cite.css`, `insights.css`, `ticker.css`, `ticker.js`): run it
+  (`shared.css`, `cite.css`, `insights.css`, `ticker.css`, `ticker.js`, and `theme.js`): run it
   after changing one. `cite.css` and `insights.css` had no version at all until
   November 2026. `tests/pages_test.sh` runs its `--check`.
   Off the site the wordmark leads too (the owner, the same day: "can i make
@@ -608,6 +652,7 @@ lives and says which pieces are not in this repo yet.
 ```
 python3 scripts/validate_showcase.py showcase/tools.json
 python3 scripts/scale_css.py --check
+python3 scripts/theme_css.py --check
 python3 scripts/asset_versions.py --check
 python3 scripts/build_site.py --site site --out dist
 bash tests/remote_deploy_test.sh

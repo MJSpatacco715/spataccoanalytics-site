@@ -105,6 +105,8 @@ jobs:
           node --check worker/ria-scorer.js
           node --check site/js/ticker.js
           node --check tests/ticker_browser.cjs
+          node --check site/js/theme.js
+          node --check tests/theme_browser.cjs
           bash -n scripts/remote_deploy.sh scripts/ssh_key.sh
 
   # The working tools, built from the source platform's current code and
