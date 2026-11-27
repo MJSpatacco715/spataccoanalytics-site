@@ -1,7 +1,7 @@
 // The light and the dark version of every main page, in a browser.
 //   node tests/theme_browser.cjs http://127.0.0.1:PORT
 // The owner, 2026-11-27: "Spatacco analytics should have a light/dark option ... sun/moon. I'd like the sun to have
-// sunglasses on and be in the top right corner of the box". Held here: the switch is in the menu of every main page and
+// sunglasses on and be in the top right corner of the box". Held here: the switch is a small box at the bottom of the window on every main page and
 // of no tool's own page; a press turns the page, and the choice is kept from page to page with nothing flashing; the
 // ground is near white in one and navy in the other, the menu and the footer navy in both; and every piece of text
 // can be read against what is behind it, in both (scripts/theme_css.py keeps the colours on their variables).
@@ -60,7 +60,7 @@ const lum = (rgb) => { const p = rgb.match(/[\d.]+/g).map(Number); const f = (v)
     const look = () => page.evaluate(() => { const g = (el) => getComputedStyle(el).backgroundColor; const sw = document.getElementById('sa-switch'), r = sw ? sw.getBoundingClientRect() : null, nav = document.getElementById('main-nav').getBoundingClientRect();
       const sun = sw && sw.querySelector('.sun'), moon = sw && sw.querySelector('.moon'), sb = sun && sun.getBoundingClientRect(), mb = moon && moon.getBoundingClientRect();
       return { theme: document.documentElement.getAttribute('data-theme') || 'dark', body: g(document.body), nav: g(document.getElementById('main-nav')), foot: g(document.querySelector('footer')), ink: getComputedStyle(document.querySelector('h1')).color,
-        sw: !!sw && r.width >= 34 && r.height >= 34 && r.top >= nav.top && r.bottom <= nav.bottom && r.right <= window.innerWidth && r.left >= 0, pressed: sw && sw.getAttribute('aria-pressed'), label: sw && sw.getAttribute('aria-label'),
+        sw: !!sw && r.width >= 30 && r.height >= 30 && !document.getElementById('main-nav').contains(sw) && r.top >= window.innerHeight - 80 && r.bottom <= window.innerHeight && r.right <= window.innerWidth && r.left >= window.innerWidth - 80 && parseFloat(getComputedStyle(sw).opacity) < 0.7, pressed: sw && sw.getAttribute('aria-pressed'), label: sw && sw.getAttribute('aria-label'),
         // the sun fills most of the box and is set in its top right corner; the moon is the small one, bottom left
         sunBig: !!sb && sb.width >= r.width * 0.6 && sb.height >= r.height * 0.6, sunCorner: !!sb && (r.right - sb.right) <= r.width * 0.08 && (sb.top - r.top) <= r.height * 0.08 && (sb.left - r.left) >= r.width * 0.04,
         moonSmall: !!mb && mb.width <= r.width * 0.45 && mb.left - r.left <= r.width * 0.15 && r.bottom - mb.bottom <= r.height * 0.15, sunLit: sun && parseFloat(getComputedStyle(sun).opacity), moonLit: moon && parseFloat(getComputedStyle(moon).opacity),
@@ -72,7 +72,7 @@ const lum = (rgb) => { const p = rgb.match(/[\d.]+/g).map(Number); const f = (v)
       await page.reload({ waitUntil: 'load' }); await still(); await page.evaluate(() => document.querySelectorAll('.reveal').forEach((x) => x.classList.add('visible'))); await page.waitForTimeout(500);
       const d = await look();
       check(at + 'it opens dark, as it always has: navy ground, white headline', d.theme === 'dark' && lum(d.body) < 0.03 && lum(d.ink) > 0.8);
-      check(at + 'the switch is in the menu, inside it and on the screen, and says what a press will do (' + d.label + ')', d.sw && d.pressed === 'false' && /Switch to light/.test(d.label) && d.wide);
+      check(at + 'the switch is out of the menu: a small faint box in the bottom right corner of the window, and it says what a press will do (' + d.label + ')', d.sw && d.pressed === 'false' && /Switch to light/.test(d.label) && d.wide);
       check(at + 'in its box the sun fills most of it from the top right corner, the moon is small at the bottom left, and the moon is the one lit', d.sunBig && d.sunCorner && d.moonSmall && d.moonLit === 1 && d.sunLit < 0.5);
       const darkBad = (await page.evaluate(AUDIT)).filter((x) => x.ratio < 3.8 || !KNOWN.test(x.cls));
       check(at + 'dark: every piece of text can be read against its ground' + (darkBad.length ? ' (' + darkBad.slice(0, 3).map((x) => x.cls + ' ' + x.ratio + ' "' + x.text + '"').join('; ') + ')' : ''), darkBad.length === 0);

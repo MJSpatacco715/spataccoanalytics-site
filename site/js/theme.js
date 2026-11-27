@@ -4,20 +4,23 @@
    of the box, cut off by its edges, sunglasses on, its rays, long and short by turns, fanning down and to the left.
    So that is the box. In the dark version the sun is faint and a small moon is lit at the bottom left; in the light
    version the sun is lit and the moon is gone. A press swaps them, and the choice is kept.
+   It stood at the end of the menu for an hour, until the owner: "light dark pod too prominent. should be hidden(ish)
+   bottom of the screen, not confusing the value prop on the top main menu". So it is a small box in the bottom right
+   corner of the window, faint until the pointer or the keyboard reaches it.
    The page's own first line (after <body>) has already set data-theme, so nothing flashes; this file draws the box.
    Only a page that loads this file has the switch: each tool's own page does not, and stays navy. */
 (function () {
   var root = document.documentElement, KEY = 'sa_theme';
   function mode() { return root.getAttribute('data-theme') === 'light' ? 'light' : 'dark'; }
-  var css = '.sa-switch{flex:none;box-sizing:border-box;width:2.5rem;height:2.5rem;padding:0;margin:0 0 0 0.375rem;border:1px solid rgba(203,213,225,0.3);border-radius:0.375rem;background:rgba(255,255,255,0.04);cursor:pointer;line-height:0;transition:border-color .2s,background .2s}'
-    + '.sa-switch:hover{border-color:#3DD8D8;background:rgba(61,216,216,0.09)}'
+  var css = '.sa-switch{position:fixed;z-index:90;right:0.875rem;bottom:0.875rem;box-sizing:border-box;width:2rem;height:2rem;padding:0;margin:0;border:1px solid rgba(203,213,225,0.3);border-radius:0.375rem;background:#162640;cursor:pointer;line-height:0;opacity:.55;transition:opacity .2s,border-color .2s}'
+    + '.sa-switch:hover,.sa-switch:focus-visible{opacity:1;border-color:#3DD8D8}'
     + '.sa-switch:focus-visible{outline:0.125rem solid #9B82FF;outline-offset:0.125rem}'
     + '.sa-switch svg{display:block;width:100%;height:100%}'
     + '.sa-switch .sun,.sa-switch .moon{transition:opacity .25s}'
     + '.sa-switch .sun{opacity:.3}.sa-switch .moon{opacity:1}'
     + ':root[data-theme="light"] .sa-switch{background:#FFFFFF;border-color:#CBD5E1}'
     + ':root[data-theme="light"] .sa-switch .sun{opacity:1}:root[data-theme="light"] .sa-switch .moon{opacity:0}'
-    + '@media(max-width:560px){.sa-switch{position:absolute;top:0.875rem;right:1.5rem;width:2.25rem;height:2.25rem;margin:0}}';
+    + '@media(max-width:560px){.sa-switch{right:0.625rem;bottom:0.625rem}}';
   var svg = '<svg viewBox="0 0 44 44" aria-hidden="true"><defs>'
     + '<linearGradient id="sa-sun" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD866"/><stop offset="1" stop-color="#F5A623"/></linearGradient>'
     + '<linearGradient id="sa-moon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E6ECF7"/><stop offset="1" stop-color="#9B82FF"/></linearGradient><clipPath id="sa-box"><rect x="0.5" y="0.5" width="43" height="43" rx="5"/></clipPath></defs>'
@@ -25,7 +28,7 @@
     + '<g class="moon"><path d="M10.6 29.2a6.6 6.6 0 1 0 6 9.7a5.5 5.5 0 0 1-6-9.7z" fill="url(#sa-moon)"/><circle cx="4.6" cy="27.8" r="0.8" fill="#C7D0E0"/></g></svg>';
   function say(b) { var light = mode() === 'light'; b.setAttribute('aria-pressed', light ? 'true' : 'false'); b.setAttribute('aria-label', light ? 'Light version on. Switch to dark' : 'Dark version on. Switch to light'); b.title = (light ? 'Switch to dark' : 'Switch to light') + '. Every site we build comes in a light version and a dark one.'; }
   function start() {
-    var links = document.querySelector('#main-nav .nav-links'); if (!links || document.getElementById('sa-switch')) return;
+    if (!document.getElementById('main-nav') || document.getElementById('sa-switch')) return;
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     var b = document.createElement('button'); b.type = 'button'; b.id = 'sa-switch'; b.className = 'sa-switch'; b.innerHTML = svg; say(b);
     b.addEventListener('click', function () {
@@ -35,7 +38,7 @@
       say(b);
       document.dispatchEvent(new CustomEvent('sa-theme', { detail: next }));
     });
-    links.appendChild(b);
+    document.body.appendChild(b);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
