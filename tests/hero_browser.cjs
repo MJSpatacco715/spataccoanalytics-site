@@ -69,7 +69,7 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
   for (const [w, h, mobile] of [[1440, 900, false], [390, 844, true]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: mobile, isMobile: mobile });
     const page = await ctx.newPage();
-    for (const path of ['/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/website-scorer.html']) {
+    for (const path of ['/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/website-scorer/']) {
       await page.goto(base + path, { waitUntil: 'load' });
       await page.waitForTimeout(150);
       const b = await blueLine(page);
@@ -138,9 +138,9 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     const went = [];
     for (const part of ['.sv-name', '.sv-desc', '.sv-price', '.sv-go', '.sv-time']) {
       await open();
-      await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go ' + part)]);
+      await Promise.all([page.waitForURL(/\/tools\/website-scorer\//, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go ' + part)]);
       const u = new URL(page.url());
-      if (u.pathname === '/tools/website-scorer.html' && u.searchParams.get('scope') === 'website' && u.searchParams.get('utm_source') === 'services') went.push(part);
+      if (u.pathname === '/tools/website-scorer/' && u.searchParams.get('scope') === 'website' && u.searchParams.get('utm_source') === 'services') went.push(part);
     }
     check('/services/ at ' + w + ' by ' + h + ': the free Website Score opens the scorer wherever it is pressed but on its bundle button (' + went.length + ' of 5)', went.length === 5);
     check('and the scorer is what opens', /Website Score/.test(await page.title()) && (await page.locator('input').count()) > 0);
@@ -180,8 +180,8 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
     const both = await plan();
     check('/services/ at ' + w + ' by ' + h + ': bundled with a hosting plan it leads the plan, free, and can be taken out again', both.ticked && both.lines[0] === 'Website Score=Free' && both.lines.some((l) => /^Managed Hosting/.test(l)) && both.btn === 'In your plan: remove' && !both.off);
     // ticked, the card still opens the scorer
-    await Promise.all([page.waitForURL(/\/tools\/website-scorer\.html/, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go .sv-desc')]);
-    check('/services/ at ' + w + ' by ' + h + ': ticked, a tap on it still opens the scorer', new URL(page.url()).pathname === '/tools/website-scorer.html');
+    await Promise.all([page.waitForURL(/\/tools\/website-scorer\//, { timeout: 8000 }).catch(() => {}), press('.sv-opt-go .sv-desc')]);
+    check('/services/ at ' + w + ' by ' + h + ': ticked, a tap on it still opens the scorer', new URL(page.url()).pathname === '/tools/website-scorer/');
     await ctx.close();
   }
 

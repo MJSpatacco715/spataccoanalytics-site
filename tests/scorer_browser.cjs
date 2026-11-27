@@ -54,7 +54,7 @@ const FOUND = JSON.stringify({ candidates: [
     const runs = [], leads = [];
     await page.route(/\/score\/run\.php/, (r) => { try { runs.push(JSON.parse(r.request().postData() || '{}')); } catch (e) { runs.push({ kind: 'unreadable' }); } return r.fulfill(open.recorder ? open.recorder() : { status: 200, contentType: 'application/json', body: '{"ok":true}' }); });
     await page.route(/\/score\/lead\.php/, (r) => { try { leads.push(JSON.parse(r.request().postData() || '{}')); } catch (e) {} return r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }); });
-    await page.goto(base + '/tools/website-scorer.html?scope=website&utm_source=test', { waitUntil: 'load' });
+    await page.goto(base + '/tools/website-scorer/?scope=website&utm_source=test', { waitUntil: 'load' });
     return { ctx, page, sent, errors, runs, leads };
   };
   // The scorer wears the site's look (the owner, 2026-11-27: "scorer has a bland SA logo and all white
@@ -313,7 +313,7 @@ const FOUND = JSON.stringify({ candidates: [
       return route.fulfill(says(SCORED));
     });
     await page.route(/\/score\/lead\.php/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
-    await page.goto(base + '/tools/website-scorer.html?scope=website', { waitUntil: 'load' });
+    await page.goto(base + '/tools/website-scorer/?scope=website', { waitUntil: 'load' });
     await page.focus('#inp-website');
     await page.keyboard.type('Smith Wealth');
     await page.keyboard.press('Enter');
@@ -344,7 +344,7 @@ const FOUND = JSON.stringify({ candidates: [
     check('an address and Enter goes straight to the score', sent.length >= 1 && sent[0].text.startsWith(SCORE) && sent[0].text.includes('Website: https://example-advisors.com\n'));
     await ctx.close();
     const b = await open({ viewport: { width: 1255, height: 607 } }, () => says(FOUND));
-    await b.page.goto(base + '/tools/website-scorer.html', { waitUntil: 'load' });
+    await b.page.goto(base + '/tools/website-scorer/', { waitUntil: 'load' });
     await b.page.fill('#inp-website', 'example-advisors.com');
     await b.page.focus('#inp-linkedin');
     await b.page.keyboard.press('Enter');

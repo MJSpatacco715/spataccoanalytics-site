@@ -18,7 +18,7 @@ const base = process.argv[2];
 const fails = []; let n = 0;
 function check(name, pass) { n++; if (!pass) fails.push(name); }
 
-const PAGES = ['/', '/services/', '/approach/', '/about/', '/contact/', '/tools/', '/insights/', '/tools/website-scorer.html'];
+const PAGES = ['/', '/services/', '/approach/', '/about/', '/contact/', '/tools/', '/insights/', '/tools/website-scorer/'];
 const WAS = [1255, 607];                 // the window the pages were drawn for
 const rootFor = (w, h) => Math.min(28, Math.max(16, Math.min(w / 78.4375, h / 37.9375)));
 
@@ -96,7 +96,7 @@ const places = (page) => page.evaluate(() => {
   // --- the scorer's results are written by its script: they grow too
   {
     const run = async (w, h) => {
-      const { ctx, page } = await open(w, h, '/tools/website-scorer.html?scope=website');
+      const { ctx, page } = await open(w, h, '/tools/website-scorer/?scope=website');
       await page.fill('#inp-website', 'smithwealth.example');
       await page.click('#btn-analyze');
       await page.waitForFunction(() => { const g = document.getElementById('gate-modal') || document.querySelector('.modal-overlay'); return !!document.querySelector('.cat-card') || (g && !g.classList.contains('hidden')); }, null, { timeout: 8000 }).catch(() => {});

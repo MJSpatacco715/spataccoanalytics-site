@@ -7,7 +7,7 @@
  * Taccobox CRM in some fashion as well ... Though I absolutely want to maintain
  * getting an email when someone hits the button(s)".
  *
- * The scorer (tools/website-scorer.html) tells this file each thing a visitor
+ * The scorer (tools/website-scorer/index.html) tells this file each thing a visitor
  * does with it, whether or not they ever leave a name:
  *   lookup   a firm's name was typed and looked up: the name, and the firms offered
  *   choose   one of those was chosen, or none of them

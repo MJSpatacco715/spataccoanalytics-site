@@ -12,7 +12,7 @@ A post is one JSON file in content/posts/, named YYYY-MM-DD-slug.json:
       "source": {"name": "Cerulli", "year": "2026", "finding": "...", "sample": "...", "url": "https://..."}},
      {"type": "quote", "text": "...", "by": "Who said it"},
      {"type": "list", "items": ["...", "..."]},
-     {"type": "link", "text": "Score your website", "url": "/tools/website-scorer.html"},
+     {"type": "link", "text": "Score your website", "url": "/tools/website-scorer/"},
      {"type": "image", "src": "/img/insights/x.png", "alt": "...", "caption": "..."}],
    "linkedin": "Optional: the exact words for the LinkedIn post.",
    "card": "/img/insights/slug.png",
@@ -259,7 +259,7 @@ def build(out: Path, posts_dir: Path | None = None, drafts: bool = False) -> int
     {''.join(block(b, where) for b in p['blocks'])}
     <div class="in-end">
       <p>Spatacco Analytics builds and fixes the digital front office of independent advisory firms: websites, CRM, and data.</p>
-      <p><a class="btn-primary" href="/tools/website-scorer.html?scope=website&amp;utm_source=insights">Score your website, free</a> <a class="in-link" href="/services/?utm_source=insights">See services &rarr;</a></p>
+      <p><a class="btn-primary" href="/tools/website-scorer/?scope=website&amp;utm_source=insights">Score your website, free</a> <a class="in-link" href="/services/?utm_source=insights">See services &rarr;</a></p>
       {follow}
     </div>
   </article>

@@ -6,4 +6,4 @@
   {"type": "stat", "value": "12%", "label": "of made-up things", "source": {"name": "Test Bureau", "year": "2026", "finding": "Twelve percent of made-up things.", "sample": "A sample of none.", "url": "https://example.com/source"}},
   {"type": "quote", "text": "A quotation.", "by": "Someone"},
   {"type": "list", "items": ["one", "two"]},
-  {"type": "link", "text": "Score your website", "url": "/tools/website-scorer.html"}]}
+  {"type": "link", "text": "Score your website", "url": "/tools/website-scorer/"}]}

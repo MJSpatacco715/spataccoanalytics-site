@@ -44,7 +44,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 SHEETS = ["site/css/shared.css", "site/css/cite.css", "site/css/ticker.css", "site/css/insights.css"]
 PAGES = [
     "site/index.html", "site/services/index.html", "site/approach/index.html", "site/about/index.html",
-    "site/contact/index.html", "site/tools/index.html", "site/tools/website-scorer.html",
+    "site/contact/index.html", "site/tools/index.html", "site/tools/website-scorer/index.html",
 ]
 
 # A page grows only if it says so: its <html> carries class="sa-scale" (MARK). A page that
