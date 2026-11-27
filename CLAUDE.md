@@ -50,7 +50,7 @@ lives and says which pieces are not in this repo yet.
   one in use is lit. A press turns the page and the choice is kept
   (`localStorage` `sa_theme`); each page's first line after `<body>` sets it
   before anything is drawn, so nothing flashes. Three drawings of the switch
-  were shown to the owner; this is the first, pending his pick.
+  were shown to the owner; he kept this one, the first.
   How it works: the pages were drawn in a handful of colours (the navy, white
   ink, four greys, cyan, blue, purple, and washes of them). Each is a variable,
   and `scripts/theme_css.py` holds both palettes, writes them into
@@ -76,8 +76,13 @@ lives and says which pieces are not in this repo yet.
   every piece of text against what is behind it (4.5 to 1; a short list of
   labels that were a little under before is named in the test). New text on a
   themed page has to pass in both.
-  Not done yet: the line on the site saying that we build both versions. Its
-  wording and place are the owner's to choose.
+  The site says so in three places, the owner's choice of where and of three
+  wordings: "Every site we build comes in a light version and a dark one. A
+  screen in a bright office and a phone at night are different rooms. Try the
+  switch at the top of this page." under Website Design on the Services page
+  and in the Tools page's first section after the strip, and its first sentence
+  in the switch's hover text. Asked, he also kept the first drawing of the
+  switch and dark as what a first-time visitor sees.
 - The pages grow with the window. The owner, 2026-11-27, with the site at 100%
   beside the same page zoomed to 150%: "the site looks better at 150% size than
   100%, there should be some adjustment. with a target market of 50-80 year olds

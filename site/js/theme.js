@@ -26,7 +26,7 @@
     + '<path d="M20.6 14.8h1.6M30.1 14.8h1.6" stroke="#5EE4E4" stroke-width="1" stroke-linecap="round"/>'
     + '<path d="M23.6 22.1c1.2 1.5 6.6 1.5 7.8 0" fill="none" stroke="#0F1B2D" stroke-width="1.4" stroke-linecap="round"/></g>'
     + '<g class="moon"><path d="M13.6 28.2a7.6 7.6 0 1 0 6.9 11.2a6.3 6.3 0 0 1-6.9-11.2z" fill="url(#sa-moon)"/><circle cx="6.2" cy="27.6" r="0.9" fill="#C7D0E0"/><circle cx="19.4" cy="31.2" r="0.7" fill="#C7D0E0"/></g></svg>';
-  function say(b) { var light = mode() === 'light'; b.setAttribute('aria-pressed', light ? 'true' : 'false'); b.setAttribute('aria-label', light ? 'Light version on. Switch to dark' : 'Dark version on. Switch to light'); b.title = light ? 'Switch to dark' : 'Switch to light'; }
+  function say(b) { var light = mode() === 'light'; b.setAttribute('aria-pressed', light ? 'true' : 'false'); b.setAttribute('aria-label', light ? 'Light version on. Switch to dark' : 'Dark version on. Switch to light'); b.title = (light ? 'Switch to dark' : 'Switch to light') + '. Every site we build comes in a light version and a dark one.'; }
   function start() {
     var links = document.querySelector('#main-nav .nav-links'); if (!links || document.getElementById('sa-switch')) return;
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
