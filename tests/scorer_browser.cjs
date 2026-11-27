@@ -118,6 +118,64 @@ const FOUND = JSON.stringify({ candidates: [
     await ctx.close();
   }
 
+  // --- by keyboard alone. The owner, 2026-11-27: "when i type a firm in and hit enter nothing happens. I
+  // shouldn't ask people to click confirm with mouse if they prefer keyboard entry". And of the line
+  // shown while it looks: "looking for ... and will give you options to choose from (or something)".
+  {
+    let hold; const waited = new Promise((r) => { hold = r; });
+    const ctx = await browser.newContext({ viewport: { width: 1255, height: 607 } });
+    const page = await ctx.newPage();
+    const sent = [];
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+    await page.route(/ria-scorer\.[a-z-]+\.workers\.dev/, async (route) => {
+      const req = route.request();
+      if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS' } });
+      const c = (JSON.parse(req.postData() || '{}').messages || [{}])[0].content; const text = typeof c === 'string' ? c : '';
+      sent.push(text);
+      if (text.startsWith(FIND)) { await waited; return route.fulfill(says(FOUND)); }
+      return route.fulfill(says(SCORED));
+    });
+    await page.route(/\/score\/lead\.php/, (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{"ok":true}' }));
+    await page.goto(base + '/tools/website-scorer.html?scope=website', { waitUntil: 'load' });
+    await page.focus('#inp-website');
+    await page.keyboard.type('Smith Wealth');
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.getElementById('firm-matches').classList.contains('looking'), null, { timeout: 5000 });
+    const looking = await page.evaluate(() => ({ text: document.getElementById('firm-matches').textContent, off: document.getElementById('btn-analyze').disabled }));
+    check('Enter in the website field runs it, as the button does: the lookup starts', sent.length === 1 && sent[0].startsWith(FIND) && looking.off);
+    check('while it looks it says choices come next (' + looking.text + ')', /^Looking for “Smith Wealth”\./.test(looking.text) && /15 seconds/.test(looking.text) && /matches for you to choose from\.$/.test(looking.text));
+    await page.keyboard.press('Enter');             // a second Enter while it looks asks nothing twice
+    await page.waitForTimeout(150);
+    check('a second Enter while it is looking does not ask twice', sent.length === 1);
+    hold();
+    await page.waitForSelector('#firm-matches .match-card', { timeout: 8000 });
+    const on = await page.evaluate(() => { const a = document.activeElement; return { cls: a.className, first: a === document.querySelector('#firm-matches .match-go') }; });
+    check('the keyboard is on the likeliest match when the matches come', on.cls === 'match-go' && on.first);
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => document.getElementById('firm-matches').classList.contains('hidden'), null, { timeout: 5000 });
+    await page.waitForTimeout(400);
+    check('Enter there scores that site: typed, found, chosen and scored without the mouse', sent.length >= 2 && sent[1].startsWith(SCORE) && sent[1].includes('Website: https://www.smithwealth.example\n'));
+    await ctx.close();
+  }
+  // an address and Enter goes straight to the score; Enter in the LinkedIn field runs it too
+  {
+    const { ctx, page, sent } = await open({ viewport: { width: 1255, height: 607 } }, () => says(FOUND));
+    await page.focus('#inp-website');
+    await page.keyboard.type('example-advisors.com');
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(500);
+    check('an address and Enter goes straight to the score', sent.length >= 1 && sent[0].text.startsWith(SCORE) && sent[0].text.includes('Website: https://example-advisors.com\n'));
+    await ctx.close();
+    const b = await open({ viewport: { width: 1255, height: 607 } }, () => says(FOUND));
+    await b.page.goto(base + '/tools/website-scorer.html', { waitUntil: 'load' });
+    await b.page.fill('#inp-website', 'example-advisors.com');
+    await b.page.focus('#inp-linkedin');
+    await b.page.keyboard.press('Enter');
+    await b.page.waitForTimeout(500);
+    check('Enter in the LinkedIn field runs it too', b.sent.length >= 1 && b.sent[0].text.startsWith(SCORE));
+    await b.ctx.close();
+  }
+
   // --- when the lookup has nothing, or cannot run
   {
     let reply = () => says('{"candidates":[]}');
