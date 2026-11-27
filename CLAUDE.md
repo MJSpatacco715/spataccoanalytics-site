@@ -50,7 +50,12 @@ lives and says which pieces are not in this repo yet.
   one in use is lit. A press turns the page and the choice is kept
   (`localStorage` `sa_theme`); each page's first line after `<body>` sets it
   before anything is drawn, so nothing flashes. Three drawings of the switch
-  were shown to the owner; he kept this one, the first.
+  were shown to the owner; he kept the first, and the same evening sent a
+  pencil sketch of what he meant, which is what is drawn now: the sun is a
+  quarter disc set into the top right corner of the box, cut off by its edges,
+  sunglasses on, its rays (long and short by turns) fanning down and to the
+  left. Dark shows it faint with a small moon lit at the bottom left; light
+  shows it lit with no moon.
   How it works: the pages were drawn in a handful of colours (the navy, white
   ink, four greys, cyan, blue, purple, and washes of them). Each is a variable,
   and `scripts/theme_css.py` holds both palettes, writes them into
