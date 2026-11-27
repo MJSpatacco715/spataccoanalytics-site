@@ -39,7 +39,7 @@ function measure(page) {
 
 (async () => {
   const browser = await chromium.launch();
-  const pages = ['/', '/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/football/nfl-lines-tracker.html'];
+  const pages = ['/', '/services/', '/approach/', '/tools/', '/about/', '/contact/', '/insights/', '/tools/football/nfl-lines-tracker.html', '/tools/website-scorer.html'];
 
   // --- a desktop
   {
@@ -61,7 +61,7 @@ function measure(page) {
   for (const [w, h] of [[390, 844], [320, 640]]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, hasTouch: true, isMobile: true });
     const page = await ctx.newPage();
-    for (const path of ['/', '/tools/', '/insights/']) {
+    for (const path of ['/', '/tools/', '/insights/', '/tools/website-scorer.html']) {
       await page.goto(base + path, { waitUntil: 'load' });
       await page.waitForTimeout(150);
       const m = await measure(page);

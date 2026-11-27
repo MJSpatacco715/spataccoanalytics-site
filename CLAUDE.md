@@ -298,6 +298,24 @@ lives and says which pieces are not in this repo yet.
   Console and the sitemap, which only the owner's account can do.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
+- The scorer wears the site's own look. The owner, 2026-11-27: "scorer has a
+  bland SA logo and all white screen (like the one home/page scroll that's
+  weirdly all white in a sea of blue). it contrasts with the style and feel of
+  the site overall and feels imported, rather than in house. match the visual
+  style of the scorer to the overall site". So `site/tools/website-scorer.html`
+  uses the shared stylesheet, the site's menu (Tools lit) and footer, its navy
+  ground, its two typefaces and its cyan-to-purple buttons, and opens on the
+  site's page hero with the blue line of the headline on a line of its own.
+  Its own styles are only what no other page has (the form, the matches, the
+  results), drawn as the site draws a panel: a faint lift off the navy inside a
+  hairline. Nothing on it is a light panel, and nothing is dark words on the
+  dark ground: `tests/scorer_browser.cjs` looks, in each state (as it opens, the
+  matches, the score, the full breakdown), on a desktop and a phone.
+  The PDF scorecard is paper and keeps its paper colours: `getTier` and
+  `getScoreColor` give those, and `lit()` and `wash()` turn them into what is
+  drawn on the page. Change a colour for the page there, not in `getTier`.
+  The menu is fixed to the top of the window, so anything the page scrolls to
+  carries `scroll-margin-top`.
 - A field for a web address takes what people type. The owner, after the scorer
   turned away `www.` and a domain with no `https://`: "This cannot require https
   etc. too rigid". `tidyAddress` in `site/tools/website-scorer.html` makes a

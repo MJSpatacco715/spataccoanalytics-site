@@ -107,6 +107,7 @@ want="/services/,/approach/,/tools/,/about/,/contact/"
 for f in "$home" "$site/services/index.html" "$site/tools/index.html" "$site/contact/index.html" "$site/approach/index.html" "$site/about/index.html"; do
   check "the menu on ${f#$site} reaches all five pages" '[ "$(ask "$f" nav | sed "s#^/,##")" = "$want" ]'
 done
+check "the scorer carries the same menu, in the same order" '[ "$(ask "$site/tools/website-scorer.html" nav | sed "s#^/,##")" = "$want" ]'
 check "posts carry the same menu, in the same order" '[ "$(ask "$dist/insights/index.html" nav | sed "s#^/,##")" = "$want" ] && [ "$(ask "$dist/insights/most-firms-dont-need-more-software/index.html" nav | sed "s#^/,##")" = "$want" ]'
 check "and so does each tool page, which is built with the tools page menu" '[ "$(ask "$dist/tools/football/nfl-lines-tracker.html" nav | sed "s#^/,##")" = "$want" ]'
 check "nothing points at a section that left the home page" '! grep -rnE "/#(approach|about)|href=\"#(approach|about|contact)\"" "$site" "$here/scripts" --include=*.html --include=*.py --include=*.txt --include=.htaccess'
@@ -195,6 +196,13 @@ PY'
 
 # --- the scorer reads an address however it is typed
 scorer="$site/tools/website-scorer.html"
+# The scorer wears the site's own look. The owner, 2026-11-27: "scorer has a bland SA logo and
+# all white screen ... it contrasts with the style and feel of the site overall and feels
+# imported, rather than in house. match the visual style of the scorer to the overall site".
+check "the scorer is dressed by the site: the shared stylesheet, the site's two typefaces, its menu with Tools lit, its footer and its script" 'grep -q "<link rel=\"stylesheet\" href=\"/css/shared.css?v=[0-9a-f]\{8\}\">" "$scorer" && grep -q "family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" "$scorer" && grep -q "<a href=\"/tools/\" class=\"active\">Tools</a>" "$scorer" && grep -q "<div class=\"footer-text\">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC</div>" "$scorer" && grep -q "<script src=\"/js/shared.js\"></script>" "$scorer"'
+check "nothing of its old look is left: no SA box, no second footer, no white ground, none of its three old typefaces" '! grep -qE "masthead|class=\"footer\"|Built by|Lato|Courier Prime|--bg:|#F6F7F5|var\(--mono\)" "$scorer"'
+check "its headline is the site's: one h1 in the page hero, the blue line last and on a line of its own" 'grep -q "<section class=\"page-hero sc-hero\" id=\"screen-hero\">" "$scorer" && grep -q "<h1>See how your digital presence <em>actually stacks up.</em></h1>" "$scorer" && [ "$(grep -c "<h1" "$scorer")" = 1 ]'
+check "the PDF keeps its paper colours: only what is drawn on the page is lit for dark" 'grep -q "const LIT = {" "$scorer" && grep -q "hexToRgb(tier.color)" "$scorer" && grep -q "hexToRgb(meta.color)" "$scorer" && grep -q "label:\"Distinction\", color:\"#1A6B40\", bg:\"#EAF5EE\"" "$scorer"'
 check "the scorer takes an address with or without https://, and turns away what is not one" 'node - "$scorer" <<'"'"'JS'"'"'
 const fs = require("fs");
 const src = fs.readFileSync(process.argv[2], "utf8");
@@ -493,8 +501,8 @@ check "and the built pages carry those versions, the Insights pages and each too
 # better at 150% size than 100%, there should be some adjustment. with a target market of
 # 50-80 year olds I shouldn't ask people to squint". Chosen of three: match the 150% view.
 check "every size on the main pages, the scorer and the Insights pages is in rem, and each says it grows: $(python3 "$here/scripts/scale_css.py" --check 2>&1 | head -1)" 'python3 "$here/scripts/scale_css.py" --check >/dev/null'
-check "the rule that grows them is the one written down, in the shared stylesheet and on the two pages that do not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -qF "$r" "$site/tools/website-scorer.html"'
-check "on a phone no text is under 13px: the floor is set in the same three places" 'f="@media(max-width:760px){:root{--tfloor:0.8125rem}}"; grep -qF "$f" "$site/css/shared.css" && grep -qF "$f" "$home" && grep -qF "$f" "$site/tools/website-scorer.html"'
+check "the rule that grows them is the one written down, in the shared stylesheet and on the home page, which does not use it" 'r="html.sa-scale{font-size:clamp(16px,min(calc(100vw / 78.4375),calc(100vh / 37.9375)),28px)}"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && grep -q "href=\"/css/shared.css?v=" "$site/tools/website-scorer.html"'
+check "on a phone no text is under 13px: the floor is set in the same two places" 'f="@media(max-width:760px){:root{--tfloor:0.8125rem}}"; grep -qF "$f" "$site/css/shared.css" && grep -qF "$f" "$home"'
 check "the Insights pages grow too, and a tool page built with the tools head does not until its own styles are in rem" 'grep -q "<html lang=\"en\" class=\"sa-scale\">" "$dist/insights/index.html" && ! grep -q "sa-scale" "$dist/tools/football/nfl-lines-tracker.html"'
 if node -e "require('playwright')" 2>/dev/null; then
   (cd "$dist" && exec python3 -m http.server 18747 --bind 127.0.0.1 >/dev/null 2>&1) & lpid=$!
