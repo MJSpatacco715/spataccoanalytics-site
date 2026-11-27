@@ -879,12 +879,16 @@ function showMatches(name, found) {
     }
     const go = el("button", "match-go", "Yes, score this site"); go.type = "button";
     go.setAttribute("aria-label", `Yes, score ${c.host} (${c.name})`);
-    go.addEventListener("click", () => { $("inp-website").value = c.website; hideMatches(); $("btn-analyze").click(); });
+    go.addEventListener("click", () => {
+      runFound = "lookup";
+      track("choose", { chose:"match", website:c.website, name:c.name, confidence:c.confidence });
+      $("inp-website").value = c.website; hideMatches(); $("btn-analyze").click();
+    });
     card.appendChild(go);
     box.appendChild(card);
   });
   const none = el("button", "match-none", found.length === 1 ? "Not this one. Enter the website instead." : "None of these. Enter the website instead."); none.type = "button";
-  none.addEventListener("click", () => { hideMatches(); const i = $("inp-website"); i.value = ""; i.focus(); });
+  none.addEventListener("click", () => { track("choose", { chose:"none" }); hideMatches(); const i = $("inp-website"); i.value = ""; i.focus(); });
   box.appendChild(none);
   const first = box.querySelector(".match-go"); if (first) first.focus({ preventScroll:true });
   box.scrollIntoView({ block:"nearest", behavior:"smooth" });
@@ -900,11 +904,14 @@ async function lookUpFirm(name) {
   // says what comes next, so nobody waits thinking the score has started on a guess
   box.appendChild(el("div", "", `Looking for “${name}”. In about 15 seconds we will show the closest matches for you to choose from.`));
   const say = (msg) => { hideMatches(); errEl.textContent = msg; errEl.style.display = "block"; };
+  runTyped = name; runFound = "typed";
   try {
     const found = await findFirm(name);
+    track("lookup", { outcome: found.length ? "offered" : "none", matches: found.map(c => ({ name:c.name, website:c.website, place:c.location, confidence:c.confidence })) });
     if (found.length) showMatches(name, found);
     else say(`We could not find a website for “${name}”. Enter the website address instead, like yourfirm.com.`);
   } catch (e) {
+    track("lookup", { outcome:"failed", matches:[] });
     // The relay's own words when a daily limit is reached; otherwise the way on.
     say(e && e.status === 429 && e.message ? e.message : "We could not look that name up just now. Enter your website address instead, like yourfirm.com.");
   } finally {
@@ -1033,6 +1040,7 @@ $("btn-analyze").addEventListener("click", async () => {
   appState.websiteUrl  = website;
   appState.linkedinUrl = linkedin;
   appState.scope       = scope;
+  if (runFound !== "lookup") runTyped = typedSite || typedLi;      // the address itself began this run
 
   $("legend-bar").classList.add("hidden");
   $("screen-hero").classList.add("hidden");
@@ -1085,6 +1093,8 @@ $("btn-analyze").addEventListener("click", async () => {
     const known = knownLead();
     $("screen-results").classList.toggle("locked", !known);
     renderResults(result, scope, website);
+    track("score", { website, linkedin: result.linkedin_url || linkedin || "", found: runFound, firm_scored: result.firm_name || "",
+      score: appState.total, score_max: appState.totalMax, tier: appState.tier, scores: result.scores || {}, known: !!known });
     if (known) { appState.leadName=known.name; appState.leadEmail=known.email; appState.leadFirm=known.firm||""; sendLead(known.name, known.email, known.firm||""); }
     window.scrollTo({ top:0, behavior:"smooth" });
 
@@ -1095,6 +1105,7 @@ $("btn-analyze").addEventListener("click", async () => {
     const e=$("input-error");
     e.textContent = err.message || "Analysis failed. Please try again.";
     e.style.display = "block";
+    track("failed", { website, why: String(err && err.message || "Analysis failed").slice(0, 200) });
   }
 });
 
@@ -1251,13 +1262,33 @@ function generatePDF() {
   doc.save(fn);
 }
 
+// ── THE OWNER'S RECORD ───────────────────────────────────────────
+// Each thing a visitor does here is told to this site (score/run.php), which keeps it for
+// the owner alone: a firm's name looked up and what was offered, which one was chosen, a
+// score that finished or did not. The owner, 2026-11-27: "the scorer should also keep a
+// record for me and only me to see what has gone into the mechanism".
+// It never holds a visitor up and never shows: a record that cannot be kept changes nothing
+// for them. Events that share a run are one visit to the form.
+const RUN_URL = "/score/run.php";
+const newRun = () => { const b = new Uint8Array(12); crypto.getRandomValues(b); return Array.from(b, x => x.toString(16).padStart(2, "0")).join(""); };
+let runId = newRun();
+let runTyped = "";        // what was typed that began this run: a firm's name, or the address itself
+let runFound = "typed";   // "lookup" once a firm is chosen from the matches
+function track(kind, data) {
+  try {
+    const body = JSON.stringify({ kind, run: runId, scope: getScope(), typed: runTyped,
+      utm_source: ARRIVED.source, utm_medium: ARRIVED.medium, utm_campaign: ARRIVED.campaign, ...data });
+    fetch(RUN_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body, keepalive:true }).catch(() => {});
+  } catch (e) { /* the record is the owner's convenience, never the visitor's problem */ }
+}
+
 // ── LEAD CAPTURE ─────────────────────────────────────────────────
 // Records the lead on this site (score/lead.php). The visitor is never held
 // up by it: after eight seconds, or on any failure, the results open anyway.
 async function sendLead(name,email,firm) {
   const r = appState.result || {};
   const body = {
-    name, email, firm,
+    name, email, firm, run: runId,
     website: appState.websiteUrl, linkedin: r.linkedin_url || appState.linkedinUrl || "",
     scope: appState.scope, firm_scored: r.firm_name || "",
     score: appState.total, score_max: appState.totalMax, tier: appState.tier,
@@ -1275,6 +1306,7 @@ async function sendLead(name,email,firm) {
 
 $("btn-pdf").addEventListener("click", generatePDF);
 $("btn-restart").addEventListener("click", ()=>{
+  runId = newRun(); runTyped = ""; runFound = "typed";      // scoring another site is a run of its own
   appState={websiteUrl:"",linkedinUrl:"",scope:"both",result:null,leadName:"",leadEmail:"",leadFirm:""};
   ["inp-website","inp-linkedin","gate-name","gate-email","gate-firm","gate-website2"].forEach(id=>$(id).value="");
   $("screen-results").classList.remove("locked");

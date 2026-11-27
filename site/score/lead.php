@@ -23,7 +23,12 @@ if (is_array($in['scores'] ?? null)) {
     }
 }
 $scope = lead_text($in['scope'] ?? '', 12);
+// which visit to the form this was: the scorer's own record of its runs
+// (score/run.php) carries the same, so the two can be read together
+$run = strtolower(lead_text($in['run'] ?? '', 40));
 $lead = [
+    'id' => bin2hex(random_bytes(8)),
+    'run' => preg_match('/^[a-f0-9]{16,32}$/', $run) ? $run : '',
     'at' => $who['at'],
     'name' => $who['name'],
     'email' => $who['email'],

@@ -232,6 +232,32 @@ jobs:
                 "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
           echo "Market strip key written beside the web root."
 
+      - name: Scorer feed token
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          SCORER_FEED_TOKEN: ${{ secrets.SCORER_FEED_TOKEN }}
+        run: |
+          # Who may read the scorer's private record (score/feed.php): the
+          # owner's CRM, which sends this token. It is not in this repository:
+          # it comes from a secret and is written one level above the web
+          # root, where score/feed.php reads it and the web cannot. Sent on
+          # stdin; readable by this account alone. Without it the record is
+          # still kept, and the feed answers as if it were not there.
+          [ -n "$SCORER_FEED_TOKEN" ] || { echo "::notice::SCORER_FEED_TOKEN is not set; the scorer's record is kept and its feed stays closed."; exit 0; }
+          if ! printf '%s' "$SCORER_FEED_TOKEN" | grep -Eq '^[A-Za-z0-9_-]{24,120}$'; then
+            echo "::warning::SCORER_FEED_TOKEN is not in the form of a token (24 to 120 letters, digits, - or _); the scorer's feed stays closed."
+            exit 0
+          fi
+          HOST=$(jq -r .ssh.host config/hosting.json)
+          USER=$(jq -r .ssh.user config/hosting.json)
+          port=$(jq -r .ssh.port config/hosting.json)
+          web=$(jq -r .paths.web_root config/hosting.json)
+          cfg="$(dirname "$web")/sa-scorer.json"
+          jq -n --arg t "$SCORER_FEED_TOKEN" '{token: $t}' \
+            | ssh -o ConnectionAttempts=8 -o ConnectTimeout=25 -i ~/.ssh/deploy_key -p "$port" "$USER@$HOST" \
+                "umask 077 && cat > '$cfg.tmp' && mv '$cfg.tmp' '$cfg'"
+          echo "Scorer feed token written beside the web root."
+
       - name: Deploy
         if: steps.gate.outputs.skip != 'true'
         run: |

@@ -24,6 +24,8 @@ and one pull request at a time; merging to `main` is what publishes.
 | Resume Parser | `site/tools/resume-parser/index.html` | Public tool: a resume in, structured data out, as Excel or CSV. Two free reads per browser, then an invitation to get it for the visitor's firm. Holds no client's records or field names. |
 | Short address for print | `site/score/index.html` | `/score/` forwards to the scorer, website-only, tagged `utm_source=leave-behind&utm_medium=qr`. Printed codes point here, so the scorer can move without a reprint. |
 | Scorer leads | `site/score/lead.php` | Appends each lead to `sa-leads/scorer.jsonl` beside the web root on the host and mails a notice. The file is the record. |
+| The owner's record of the scorer | `site/score/run.php`, `sa-leads/scorer-runs.jsonl` on the host | Every lookup (what was typed, the firms offered), choice and score, whether or not a name is ever left, one line each, off the web. Lines that share a `run` are one visit; the lead carries the same run. A finished score mails a notice. No address of the visitor's is kept. |
+| The feed the CRM reads | `site/score/feed.php`, the `SCORER_FEED_TOKEN` secret | Hands the record and the leads to the owner's CRM, which sends the token in `X-Scorer-Token`. Publish writes the token to `sa-scorer.json` beside the web root. **The token is never in this repo.** With no secret set the feed answers 404. |
 | Services page | `site/services/index.html` | The first screen shows the four services themselves (beside the headline from 1000px wide, under it on a phone), each going to its own part of the page; `tests/hero_browser.cjs` holds that all four are in view at the owner's window size and on a phone. Public at `/services/`. Shows every service, level and timeline, and the hosting plans with their prices. Project prices are not in the page: each reads "Click to unveil". A visitor's first click shows that one price; any other click opens the pricing form with both ticked, the rest a click away under "Add other services", and an email brings every price onto the page. |
 | Project prices | The `SERVICE_PRICING` secret | **Never in this repo, which is public.** Publish writes them to `sa-pricing.json` beside the web root. `site/services/pricing.php` gives one free, with no email, once per browser (an HttpOnly cookie, 30 days) and at most two different ones a day per address: a soft limit that keeps a script from reading them all. It gives them all only after it has kept the visitor's name, email and the services they ticked in `sa-leads/pricing.jsonl`, and mailed the notice. |
 | What the lead forms and the contact form share | `site/lib/leads.php` | The checks, the storage and the notice mail. The notice is sent by the web host, From the firm's address. Two rules at Microsoft 365 decide whether it arrives: the envelope sender must NOT be at the firm's domain (Microsoft refuses that as Direct Send), and the host's DKIM key must be in the domain's DNS (`default._domainkey` in Cloudflare) or the domain's DMARC policy quarantines the notice. |
@@ -100,7 +102,7 @@ either page is not asked again on the other for 30 days.
 | `showcase/tools.json` | Each NFL tool's copy: name, tagline, summary, highlights, stack. Metrics with a `key` are filled with live numbers at build time. |
 | `showcase/img/` | Baseline screenshots, used when the live tools and a fresh capture both fail. |
 | `live/` | The working tools: `build.mjs` (public editions from the source), `shim.js` (stands in for the platform behind the pages), `feed.php` (the live data relay), `smoke.mjs` (the browser check). |
-| `site/score/` | The short address a printed QR code points at (`index.html`) and the scorer's lead endpoint (`lead.php`). |
+| `site/score/` | The short address a printed QR code points at (`index.html`), the scorer's lead endpoint (`lead.php`), the owner's record of what goes into the scorer (`run.php`) and the feed the CRM reads it from (`feed.php`). |
 | `menu/` | The QR code used on the service menu. |
 | `site-edits.json` | The approved copy edits and the card markers on `tools/index.html`. They are applied at build time and are safe to re-run. |
 | `scripts/build_site.py` | Builds `dist/`: site files, edits, NFL cards, tool pages, images. |
@@ -164,6 +166,7 @@ python3 scripts/build_site.py --site reference/live --out dist && \
 bash tests/remote_deploy_test.sh                            # the deploy never leaves its lane
 bash tests/feed_test.sh                                     # the relay passes on only what it should
 bash tests/lead_test.sh                                     # the lead endpoint keeps real leads and nothing else
+bash tests/run_test.sh                                      # the scorer's own record, its notice, and who may read it
 bash tests/contact_test.sh                                  # the contact form keeps real messages and nothing else
 bash tests/notice_test.sh                                   # the notice mail goes out as the firm, and a visitor cannot add to it
 bash tests/bank_test.sh                                     # the stat bank is private, and keeps only pictures, PDFs and text
