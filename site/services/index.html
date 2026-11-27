@@ -88,14 +88,28 @@
 .sv-tick{width:16px;height:16px;border:1.5px solid var(--navy);border-radius:50%;flex-shrink:0;background:var(--white)}
 .sv-opt:has(input:checked) .sv-tick{background:var(--purple);border-color:var(--purple);box-shadow:inset 0 0 0 3px var(--white)}
 .sv-desc{font-size:14px;line-height:1.55;color:var(--text)}
-/* the free level: a link to the scorer, with an arrow where the levels to choose have a tick */
-.sv-opt-go{text-decoration:none;color:inherit}
+/* The free level: a tap anywhere on it opens the scorer, and one button on it puts it in the plan.
+   "Score my site" is the link; its ::after is laid over the whole card, so the card is the link
+   too. "Bundle with other services" sits above that. An arrow where the levels to choose have a tick. */
 .sv-opt-go .sv-tick{width:16px;height:16px;border:none;background:none;font-size:17px;font-weight:700;line-height:16px;text-align:center;color:var(--purple)}
 .sv-opt-go .sv-tick::before{content:'\2192'}
-.sv-go{margin-right:auto;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);border:1px solid var(--purple);padding:6px 9px;white-space:nowrap;transition:background .15s,color .15s}
-.sv-opt-go:hover .sv-go,.sv-opt-go:focus-visible .sv-go{background:var(--purple);color:var(--white)}
-.sv-opt-go:hover{box-shadow:inset 0 0 0 3px var(--purple)}
-.sv-opt-go:focus-visible{outline:3px solid var(--purple);outline-offset:-3px}
+.sv-go{margin-right:auto;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:var(--purple);border:1px solid var(--purple);padding:6px 9px;white-space:nowrap;transition:background .15s,color .15s}
+.sv-go::after{content:'';position:absolute;inset:0}
+.sv-go:focus-visible{outline:none}
+.sv-opt-go:has(.sv-go:focus-visible){outline:3px solid var(--purple);outline-offset:-3px}
+.sv-opt-go:hover:not(:has(.sv-add:hover)) .sv-go,.sv-go:focus-visible{background:var(--purple);color:var(--white)}
+.sv-opt-go:hover:not(:has(.sv-add:hover)){box-shadow:inset 0 0 0 3px var(--purple)}
+.sv-add{position:relative;z-index:1;align-self:flex-start;margin-top:2px;font-family:inherit;font-size:11.5px;font-weight:600;letter-spacing:1.3px;text-transform:uppercase;line-height:1.3;text-align:left;color:var(--slate);background:var(--white);border:1px dashed var(--slate);padding:6px 9px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.sv-add::before{content:'+';margin-right:7px;font-weight:700}
+.sv-add:hover,.sv-add:focus-visible{color:var(--white);background:var(--navy);border-color:var(--navy);border-style:solid;outline:none}
+.sv-add[aria-pressed="true"]{color:var(--purple);border-color:var(--purple);border-style:solid}
+.sv-add[aria-pressed="true"]::before{content:'\2713'}
+.sv-add[aria-pressed="true"]:hover,.sv-add[aria-pressed="true"]:focus-visible{color:var(--white);background:var(--purple);border-color:var(--purple)}
+.sv-add:disabled{cursor:default;color:var(--purple);background:var(--white);border-color:var(--purple)}
+/* in the plan (bundled, or by itself with anything paid): it shows ticked, as a level chosen does */
+.sv-opt-go.inc{box-shadow:inset 0 0 0 3px var(--purple)}
+.sv-opt-go.inc .sv-tick{border:1.5px solid var(--purple);border-radius:50%;background:var(--purple);box-shadow:inset 0 0 0 3px var(--white)}
+.sv-opt-go.inc .sv-tick::before{content:none}
 .sv-foot{margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-top:12px}
 .sv-price{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;color:var(--navy);line-height:1;font-variant-numeric:lining-nums;white-space:nowrap}
 .sv-price small{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500}
@@ -133,7 +147,7 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
 .sv-sum h3,.sv-gate h3{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;color:var(--navy);margin-bottom:14px;line-height:1.2}
 .sv-line{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--text)}
 .sv-line span:last-child{font-weight:600;color:var(--navy);white-space:nowrap;font-variant-numeric:lining-nums}
-.sv-line.credit span:last-child{color:#0B7A5B}
+.sv-line.credit span:last-child,.sv-line.inc span:last-child{color:#0B7A5B}
 .sv-line.total{border-bottom:none;border-top:2px solid var(--navy);margin-top:6px;padding-top:12px;font-weight:600;color:var(--navy);font-size:16px}
 .sv-line.total span:last-child{font-family:'Cormorant Garamond',serif;font-size:26px}
 .sv-empty{font-size:15px;color:var(--slate);line-height:1.6}
@@ -241,14 +255,22 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
         <p>How your firm shows up on its own site, in search, and in AI answers, and what to fix first.</p>
       </div>
       <div class="sv-row">
-        <!-- The free level is the website scorer itself, so all of it is a link there. The owner,
-             2026-11-26, having tapped it and seen it only ticked: "This should (obviously) link
-             to the web scorer". It is not a level to put in the plan: there is nothing to price. -->
-        <a class="sv-opt sv-opt-go" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">
-          <span class="sv-name"><span class="sv-tick" aria-hidden="true"></span>Website Score<span class="sv-tier-tag">Essential</span></span>
-          <span class="sv-desc">Instant overall score for your site.</span>
-          <span class="sv-foot"><span class="sv-price">Free</span><span class="sv-go">Score my site</span><span class="sv-time">Instant</span></span>
-        </a>
+        <!-- The free level is the website scorer itself. The owner, 2026-11-26, having tapped it
+             and seen it only ticked: "This should (obviously) link to the web scorer"; then, of
+             its place in the plan: "Add it to the builder. Essentially will be auto-checked on
+             all paid engagements"; then: "Maybe an option to add/bundle with other services or
+             other option to go to the scorer", and of three ways to do that chose two buttons
+             with a tap anywhere else opening the scorer.
+             So: "Score my site" is a link whose own edge is stretched over the whole card (the
+             ::after in the styles), and "Bundle with other services" sits above that edge and
+             puts the score in the plan. The script below ticks it by itself once anything paid
+             is picked. -->
+        <div class="sv-opt sv-opt-go">
+          <span class="sv-name"><span class="sv-tick" aria-hidden="true"></span>Website Score<span class="sv-hp sv-in" hidden>, in your plan</span><span class="sv-tier-tag">Essential</span></span>
+          <span class="sv-desc">Instant overall score for your site. Included with every paid engagement.</span>
+          <button type="button" class="sv-add" id="sv-score-add" aria-pressed="false">Bundle with other services</button>
+          <span class="sv-foot"><span class="sv-price">Free</span><a class="sv-go" href="/tools/website-scorer.html?scope=website&amp;utm_source=services">Score my site</a><span class="sv-time">Instant</span></span>
+        </div>
         <label class="sv-opt rec"><input type="radio" name="audit" value="professional">
           <span class="sv-name"><span class="sv-tick"></span>Audit Report<span class="sv-tier-tag">Professional</span></span>
           <span class="sv-desc">Site, search, and AI-visibility review with prioritized fixes, about 5 pages.</span>
@@ -453,6 +475,7 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
   // this copy lets the page show the price again without asking. A soft limit.
   var look = null;
   var busy = false;
+  var bundled = false;    // the free Website Score, put in the plan by its own button
 
   var $ = function (id) { return document.getElementById(id); };
   var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
@@ -528,11 +551,23 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
     ['audit', 'design', 'crm', 'hosting'].forEach(function (n) {
       var b = document.querySelector('[data-clear="' + n + '"]'); if (b) b.hidden = !picked(n);
     });
-    if (!audit && !design && !crm && !host) {
+    // The free Website Score. It comes with every paid engagement, so once
+    // anything paid is picked it is in the plan by itself and its button only
+    // says so. With nothing paid picked, its button puts it in or takes it out.
+    // In the plan it shows ticked on its card, and leads the plan.
+    var paid = !!(audit || design || crm || host);
+    var score = document.querySelector('.sv-opt-go'), add = $('sv-score-add');
+    var inPlan = paid || bundled;
+    score.classList.toggle('inc', inPlan); score.querySelector('.sv-in').hidden = !inPlan;
+    add.disabled = paid; add.setAttribute('aria-pressed', inPlan ? 'true' : 'false');
+    add.textContent = paid ? 'Included in your plan' : (bundled ? 'In your plan: remove' : 'Bundle with other services');
+    if (!inPlan) {
       var p = document.createElement('p'); p.className = 'sv-empty';
       p.textContent = 'Nothing picked yet. Choose a level in any service above and it shows up here.';
       box.appendChild(p); $('sv-note').textContent = ''; return;
     }
+    box.appendChild(line(paid ? 'Website Score (included)' : 'Website Score', 'Free', 'inc'));
+    if (!paid) { $('sv-note').textContent = 'The Website Score is free. Choose a level in any service above to bundle it with.'; return; }
     var oneTime = 0, anyFrom = false, missing = false;
     function cost(service, tier) {
       if (service === 'audit' && tier === 'essential') return 0;
@@ -735,6 +770,7 @@ button.sv-price.locked:disabled{cursor:default;opacity:.7}
   });
 
   document.querySelectorAll('input[type="radio"]').forEach(function (el) { el.addEventListener('change', render); });
+  $('sv-score-add').addEventListener('click', function () { bundled = !bundled; render(); });
   document.querySelectorAll('[data-clear]').forEach(function (b) {
     b.addEventListener('click', function () {
       document.querySelectorAll('input[name="' + b.getAttribute('data-clear') + '"]').forEach(function (r) { r.checked = false; });
