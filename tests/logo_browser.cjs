@@ -32,6 +32,8 @@ function measure(page) {
       apart: links.every((x) => x.left >= l.right || x.top >= l.bottom || x.bottom <= l.top),
       pageWide: document.documentElement.scrollWidth <= window.innerWidth,
       mark: fm ? Object.assign(box(fm), { loaded: fm.naturalWidth > 0 }) : null,
+      footText: (() => { const t = document.querySelector('footer .footer-text'); return t ? box(t) : null; })(),
+      footRight: (() => { const f = document.querySelector('footer'); const r = f.getBoundingClientRect(); return Math.round(r.right - parseFloat(getComputedStyle(f).paddingRight)); })(),
       word: fl ? Object.assign(box(fl), { loaded: fl.naturalWidth > 0 }) : null,
     };
   });
@@ -52,7 +54,9 @@ function measure(page) {
       check(path + ': the menu shows the wordmark, loaded, at least 44px tall and 130px wide (it is ' + m.logo.w + ' by ' + m.logo.h + ')', m.loaded && m.logo.h >= 44 && m.logo.w >= 130);
       check(path + ': it is the wordmark alone on clear ground with light lettering, not a white square', /^\/img\/wordmark-on-dark\.png\?v=[0-9a-f]{8}$/.test(m.src || '') && m.corner === 0 && m.clearShare > 0.35 && m.lightShare > 0.6 && m.logo.w > m.logo.h * 2.5);
       check(path + ': the bar is no taller for it (' + m.nav + 'px, the page drawn at ' + m.grown.toFixed(2) + ') and the five links sit clear of it', m.nav <= 80 * m.grown + 1 && m.linksIn && m.apart);
-      check(path + ': the footer signs off with the SA mark and then the wordmark, both loaded', !!m.mark && !!m.word && m.mark.loaded && m.word.loaded && m.mark.w === m.mark.h && m.mark.h >= 36 && m.word.h >= 32 && m.mark.right <= m.word.left);
+      // The owner, 2026-11-27: "take the SA mark that's running at the bottom of the page and move it to the right side so
+      // it's more of a reference rather than competing". The wordmark signs off at the left; the mark is the last thing at the right.
+      check(path + ': the footer signs off with the wordmark at the left and the SA mark at the far right, after the line of text, both loaded', !!m.mark && !!m.word && !!m.footText && m.mark.loaded && m.word.loaded && m.mark.w === m.mark.h && m.mark.h >= 36 && m.word.h >= 32 && m.word.right <= m.footText.left && m.footText.right <= m.mark.left && Math.abs(m.footRight - m.mark.right) <= 1);
     }
     await ctx.close();
   }
@@ -66,7 +70,7 @@ function measure(page) {
       await page.waitForTimeout(150);
       const m = await measure(page);
       check(path + ' at ' + w + 'px: the wordmark is at least 36px tall, the five links are in view under it, and the page is no wider', m.loaded && m.logo.h >= 36 && m.logo.w >= 110 && m.linksIn && m.apart && m.pageWide);
-      check(path + ' at ' + w + 'px: the footer pair fits the screen', !!m.mark && !!m.word && m.mark.left >= 0 && m.word.right <= w);
+      check(path + ' at ' + w + 'px: in the footer the wordmark is at the left and the SA mark at the right of one row, the line of text under them, all on the screen', !!m.mark && !!m.word && !!m.footText && m.word.left >= 0 && m.word.right <= m.mark.left && m.mark.right <= w && Math.abs(m.mark.top - m.word.top) <= 2 && m.footText.top >= m.word.bottom && m.footText.left >= 0 && m.footText.right <= w);
       // the smallest text a phone shows is 13px; on a phone narrower than any sold now the five are set smaller, not wrapped
       check(path + ' at ' + w + 'px: the five links share one row, at ' + m.linkPx + 'px', m.rows === 1 && (w >= 360 ? m.linkPx >= 13 : m.linkPx >= 11));
     }

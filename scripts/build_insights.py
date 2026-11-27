@@ -154,7 +154,7 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 {extra_head}<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=6139e5c8">
+<link rel="stylesheet" href="/css/shared.css?v=1aff8a5d">
 <link rel="stylesheet" href="/css/cite.css?v=d9368be7">
 <link rel="stylesheet" href="/css/insights.css?v=36df3a69">
 </head>
@@ -171,8 +171,9 @@ def shell(title: str, desc: str, path: str, body: str, linkedin: str, extra_head
 </nav>
 {body}
 <footer>
-  <a href="/" class="footer-brand"><img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="footer-logo" width="520" height="163"></a>
+  <a href="/" class="footer-brand"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="footer-logo" width="520" height="163"></a>
   <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC &middot; {sign_off_link("/insights/", "Insights")}{follow}</div>
+  <img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512">
 </footer>
 <script src="/js/shared.js"></script>
 <script src="/js/cite.js"></script>

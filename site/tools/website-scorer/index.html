@@ -24,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/shared.css?v=6139e5c8">
+<link rel="stylesheet" href="/css/shared.css?v=1aff8a5d">
 <style>
   /* The scorer wears the site's own look: its menu and footer (css/shared.css), its navy
      ground, its two typefaces, its cyan-to-purple buttons. The owner, 2026-11-27: "scorer has
@@ -160,6 +160,7 @@
   /* the word stands over its five, on a line of its own: the five then fit one row on a desktop with room to spare, in
      whatever typeface the page is drawn (beside them, the last one sat on the edge of wrapping) */
   .legend-label { flex-basis: 100%; font-size: max(0.6875rem,var(--tfloor,0px)); color: var(--text-light); letter-spacing: 0.1875rem; text-transform: uppercase; font-weight: 600; }
+  .legend-note { flex-basis: 100%; font-size: max(0.8125rem,var(--tfloor,0px)); color: var(--text-light); }
   .legend-item { display: flex; align-items: center; gap: 0.375rem; padding: 0.3125rem 0.75rem; border-radius: 1.25rem; border: 1px solid; font-size: max(0.75rem,var(--tfloor,0px)); font-weight: 600; }
   .legend-dot { width: 0.4375rem; height: 0.4375rem; border-radius: 50%; }
 
@@ -250,6 +251,15 @@
   .score-big-num { font-family: var(--serif); font-size: 4.5rem; font-weight: 300; line-height: 1; margin-bottom: 0.25rem; font-variant-numeric: lining-nums; }
   .score-big-denom { font-size: 0.875rem; color: var(--text-light); }
   .score-big-tier { margin-top: 0.75rem; }
+  .score-side { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+  .score-side .lock-note { flex: none; align-self: stretch; }
+  .score-held { font-size: max(0.9375rem,var(--tfloor,0px)); line-height: 1.5; color: var(--gold); border-left: 0.1875rem solid var(--gold); padding: 0.125rem 0 0.125rem 0.75rem; }
+  .flag-list { list-style: none; margin: 0.625rem 0 0; padding: 0; display: grid; gap: 0.5rem; }
+  .flag-list li { font-size: max(0.875rem,var(--tfloor,0px)); line-height: 1.45; color: var(--text); }
+  .flag-list b { display: inline-block; margin-right: 0.375rem; padding: 0.0625rem 0.5rem; border-radius: 1.25rem; border: 1px solid; font-size: max(0.6875rem,var(--tfloor,0px)); font-weight: 600; letter-spacing: 0.0625rem; text-transform: uppercase; }
+  .flag-list .flag-serious b { color: var(--red); border-color: var(--red-border); background: var(--red-pale); }
+  .flag-list .flag-minor b { color: var(--gold); border-color: var(--gold-border); background: var(--gold-pale); }
+  .flag-caveat { margin-top: 0.625rem; font-size: max(0.8125rem,var(--tfloor,0px)); line-height: 1.45; color: var(--text-light); }
   .tier-badge { display: inline-block; max-width: 100%; text-align: center; padding: 0.25rem 0.875rem; border-radius: 1.25rem; border: 1px solid; font-size: max(0.6875rem,var(--tfloor,0px)); font-weight: 600; letter-spacing: 0.125rem; text-transform: uppercase; }
   .score-groups { display: flex; flex-direction: column; gap: 1.125rem; }
   .score-group-row { display: grid; grid-template-columns: 9.6875rem 1fr 4rem; align-items: center; gap: 0.875rem; }
@@ -420,6 +430,7 @@
     <span class="legend-item" style="background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold);"><span class="legend-dot" style="background:var(--gold);"></span>55–69 &nbsp;Adequate</span>
     <span class="legend-item" style="background:var(--amber-pale);border-color:var(--amber-border);color:var(--amber);"><span class="legend-dot" style="background:var(--amber);"></span>40–54 &nbsp;Needs Work</span>
     <span class="legend-item" style="background:var(--red-pale);border-color:var(--red-border);color:var(--red);"><span class="legend-dot" style="background:var(--red);"></span>&lt;40 &nbsp;Red Flags and Violations</span>
+    <span class="legend-note">A site with a serious compliance red flag is rated no higher than Adequate.</span>
   </div>
 
   <!-- INPUT FORM -->
@@ -521,8 +532,11 @@
           <div class="score-big-denom" id="score-big-denom">/100</div>
           <div class="score-big-tier" id="score-big-tier"></div>
         </div>
+        <div class="score-side">
+        <p class="score-held" id="score-held" hidden></p>
         <div class="score-groups gated" id="score-groups-wrap"></div>
         <div class="lock-note">This is your overall score. The score for each category, with what is working and what to fix, is ready below.</div>
+        </div>
       </div>
     </div>
 
@@ -585,14 +599,46 @@ const WORKER_URL = "https://ria-scorer.spatacco-analytics.workers.dev";
 const LEAD_URL = "/score/lead.php";
 
 // ── SCHEMA ──────────────────────────────────────────────────────
+// The website's fifty are five tens. The fifth is the owner's, 2026-11-27, of the breakdown's card: "this should have
+// compliance red flags (or something like it in the scoring rubric)". Asked how it should count, he chose a fifth
+// category worth 10 (Visual Design and Content & Messaging came down from 15 to 10) under the name Compliance Red Flags.
 const WEBSITE_CATS = [
-  { id:"visual_design",        label:"Visual Design",         group:"website", max:15 },
-  { id:"content_messaging",    label:"Content & Messaging",   group:"website", max:15 },
+  { id:"visual_design",        label:"Visual Design",         group:"website", max:10 },
+  { id:"content_messaging",    label:"Content & Messaging",   group:"website", max:10 },
   { id:"navigation_ux",        label:"Navigation & UX",       group:"website", max:10 },
   { id:"credibility_signals",  label:"Credibility Signals",   group:"website", max:10 },
+  { id:"compliance_red_flags", label:"Compliance Red Flags",  group:"website", max:10 },
   { id:"team_leadership",      label:"Advisor Profiles",      group:"contact", max:15 },
   { id:"contact_availability", label:"Contact Accessibility", group:"contact", max:15 },
 ];
+// What Compliance Red Flags looks for, and which of them hold a rating down. The checks are the owner's choice
+// (2026-11-27): testimonials and endorsements, Form CRS and disclosures, "CRS and ADV II not linking correctly or at
+// all", "Year in the footer off", "Bad / old / stale contact or firm info". Asked whether a serious one should hold
+// the overall rating down by itself: "Yes Cap at adequate, and tell as much". The two that are serious are the two a
+// rule speaks to directly: testimonials shown without the disclosures the SEC's marketing rule asks for, and an
+// SEC-registered firm with no working Form CRS on its site. Each is a possible red flag for the firm's compliance
+// officer, read off public pages: the scorer never calls one a violation.
+const FLAG_KINDS = {
+  testimonials: { label:"Testimonials and endorsements", serious:true },
+  form_crs:     { label:"Form CRS",                      serious:true },
+  adv:          { label:"Form ADV Part 2",               serious:false },
+  disclosures:  { label:"Disclosures",                   serious:false },
+  footer_year:  { label:"Footer year",                   serious:false },
+  stale_info:   { label:"Stale information",             serious:false },
+  other:        { label:"Other",                         serious:false },
+};
+const HELD_AT = "Adequate";      // the highest rating a site with a serious flag is given
+const FLAG_CAVEAT = "Possible red flags, read from the public pages. Not legal or compliance advice: review each with your compliance officer.";
+// One flag as the answer gave it, made safe: a kind this page knows, and a sentence of text.
+function readFlag(f) {
+  if (!f || typeof f !== "object") return null;
+  const text = String(f.text == null ? "" : f.text).replace(/\s+/g, " ").trim().slice(0, 300);
+  if (!text) return null;
+  const k = String(f.kind == null ? "" : f.kind).toLowerCase().replace(/[^a-z]+/g, "_");
+  const kind = FLAG_KINDS[k] ? k : /testimon|endors/.test(k) ? "testimonials" : /crs/.test(k) ? "form_crs" : /adv/.test(k) ? "adv"
+    : /disclos/.test(k) ? "disclosures" : /footer|year|copyright/.test(k) ? "footer_year" : /stale|old|contact/.test(k) ? "stale_info" : "other";
+  return { kind, label: FLAG_KINDS[kind].label, serious: FLAG_KINDS[kind].serious, text };
+}
 const LINKEDIN_CAT = { id:"linkedin_presence", label:"LinkedIn Presence", group:"linkedin", max:20 };
 
 const WEBSITE_GROUPS = {
@@ -612,6 +658,15 @@ function getTier(s, max) {
   if (pct >= 40) return { label:"Needs Work",  color:"#8C5A10", bg:"#FDF4E8", border:"#E0C090" };
   return               { label:"Red Flags and Violations", color:"#B83232", bg:"#FDF0F0", border:"#E8AAAA" };
 }
+// The rating a result is given. On points alone it is getTier's; with a serious compliance red flag it is no higher
+// than Adequate, and `held` names the rating the points alone would have earned, so the page and the PDF can say so.
+function ratingOf(total, max, flags) {
+  const tier = getTier(total, max);
+  const serious = (flags || []).some((f) => f && f.serious);
+  if (serious && (tier.label === "Excellent" || tier.label === "Strong")) return { ...getTier(55, 100), held: tier.label };
+  return { ...tier, held: "" };
+}
+const heldLine = (held) => `Held at ${HELD_AT}. On points alone this site would rate ${held}, but a possible compliance red flag was found, and a site with one is rated no higher than ${HELD_AT}.`;
 // On the page the ground is dark, and the PDF's is paper: the same reading, lit for the page.
 // (getTier and getScoreColor give the paper colours, which the PDF draws with.)
 const LIT = { "#1A6B40":"#4ADE80", "#2A9458":"#4ADE80", "#1FA8A8":"#3DD8D8", "#B8860B":"#F2C14E", "#8C5A10":"#FBA94C", "#B83232":"#F87171" };
@@ -633,7 +688,7 @@ const $ = id => document.getElementById(id);
 // list the scorer scores by, so the card and the scoring cannot differ. How each is judged is not said here.
 (function () {
   const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  [["sc-more-1", "Website", WEBSITE_CATS.filter((c) => c.group === "website"), ""],
+  [["sc-more-1", "Website", WEBSITE_CATS.filter((c) => c.group === "website"), `A serious compliance red flag holds a rating at ${HELD_AT}.`],
    ["sc-more-2", "Contact", WEBSITE_CATS.filter((c) => c.group === "contact"), ""],
    ["sc-more-3", "LinkedIn", [LINKEDIN_CAT], "Followers, how often the firm posts, and what it posts."]].forEach(([id, name, cats, more]) => {
     const sum = cats.reduce((t, c) => t + c.max, 0);
@@ -821,11 +876,12 @@ function extractJson(text) {
 const STR = { type:"string" };
 const STR_LIST = { type:"array", items:STR };
 const obj = (properties) => ({ type:"object", properties, required:Object.keys(properties), additionalProperties:false });
-const WEBSITE_KEYS = ["visual_design","content_messaging","navigation_ux","credibility_signals","team_leadership","contact_availability"];
+const WEBSITE_KEYS = ["visual_design","content_messaging","navigation_ux","credibility_signals","compliance_red_flags","team_leadership","contact_availability"];
 const WEBSITE_SCHEMA = obj({
   firm_name:STR, summary:STR, pros:STR_LIST, cons:STR_LIST,
   scores: obj(Object.fromEntries(WEBSITE_KEYS.map(k => [k, { type:"integer" }]))),
   notes:  obj(Object.fromEntries(WEBSITE_KEYS.map(k => [k, STR]))),
+  compliance_flags: { type:"array", items: obj({ kind:STR, text:STR }) },
 });
 const LINKEDIN_SCHEMA = obj({
   firm_name:STR, linkedin_url:{ anyOf:[STR, { type:"null" }] }, score:{ type:"integer" },
@@ -867,34 +923,46 @@ Website: ${url}
 Use web search to review this site thoroughly.
 
 CRITICAL SCORING RULES:
-- Use the FULL range. Many advisor websites are basic templates — reflect that honestly.
-- 0-3: Absent, broken, or non-functional
-- 4-6: Generic template, minimal customization
-- 7-9: Competent and professional
-- 10-12: Above average, clearly invested
-- 13-15: Exceptional — best-in-class (genuinely rare)
-- If all scores cluster within 4 points of each other, you are compressing — spread them.
+- Use the FULL range. Many advisor websites are basic templates: reflect that honestly.
+- A 15 point category has five steps. 0-3: absent, broken, or non-functional. 4-6: generic template, minimal customization. 7-9: competent and professional. 10-12: above average, clearly invested. 13-15: exceptional, best in class (genuinely rare).
+- A 10 point category has the same five steps: 0-2, 3-4, 5-6, 7-8, 9-10.
+- If every score lands on the same step, you are compressing: spread them.
 
-CREDIBILITY SIGNALS (do NOT mention AUM — advisors almost never disclose this):
+CREDIBILITY SIGNALS (do NOT mention AUM, advisors almost never disclose this):
 - Named client testimonials, professional designations (CFP, CFA, etc.)
 - Awards, media coverage, published thought leadership
 - Years of experience, NAPFA/FPA affiliations, educational content
 
-Return ONLY valid JSON — no markdown, no backticks:
-{"firm_name":"string","summary":"2 sentences: clearest strength AND single biggest improvement opportunity","pros":["strength 1","strength 2","strength 3"],"cons":["opportunity 1","opportunity 2","opportunity 3"],"scores":{"visual_design":<0-15>,"content_messaging":<0-15>,"navigation_ux":<0-10>,"credibility_signals":<0-10>,"team_leadership":<0-15>,"contact_availability":<0-15>},"notes":{"visual_design":"observation","content_messaging":"observation","navigation_ux":"observation","credibility_signals":"observation (no AUM)","team_leadership":"observation","contact_availability":"observation"}}
+COMPLIANCE RED FLAGS (compliance_red_flags, where 10 means none were found). Look on the public pages for these six things and nothing else:
+- testimonials: client testimonials, reviews, star ratings or endorsements shown with no clear, prominent disclosure of whether the person is a client, whether they were paid, and any conflict of interest.
+- form_crs: the site says the firm is registered with the SEC, and no link to its Form CRS (the relationship summary, Form ADV Part 3) can be found, or the link is broken or opens the wrong document.
+- adv: no link to the firm's Form ADV Part 2 brochure, or the link is broken or opens the wrong document.
+- disclosures: no disclosure page or footer disclosure saying who advisory services are offered through and how the firm is registered. Use this kind, not form_crs, when no Form CRS is found and you cannot tell that the firm is SEC registered.
+- footer_year: the copyright year in the footer is earlier than ${new Date().getFullYear()}.
+- stale_info: contact or firm details that are out of date or contradict each other: an old address, a dead phone number or email, people shown who have left, dated events or news presented as current, pages that say coming soon.
+Report only what you saw. If you could not open a page or a document, say so in the note and do not flag it. Each is a possible red flag for the firm's compliance officer to review, never a finding of a violation: word each one that way, in one plain sentence that says what was seen and where.
+
+Return ONLY valid JSON, no markdown, no backticks:
+{"firm_name":"string","summary":"2 sentences: clearest strength AND single biggest improvement opportunity","pros":["strength 1","strength 2","strength 3"],"cons":["opportunity 1","opportunity 2","opportunity 3"],"scores":{"visual_design":<0-10>,"content_messaging":<0-10>,"navigation_ux":<0-10>,"credibility_signals":<0-10>,"compliance_red_flags":<0-10>,"team_leadership":<0-15>,"contact_availability":<0-15>},"notes":{"visual_design":"observation","content_messaging":"observation","navigation_ux":"observation","credibility_signals":"observation (no AUM)","compliance_red_flags":"observation","team_leadership":"observation","contact_availability":"observation"},"compliance_flags":[{"kind":"testimonials, form_crs, adv, disclosures, footer_year or stale_info","text":"what was seen and where"}]}
+compliance_flags is an empty list when none of the six was found.
 
 Rubrics:
-- visual_design: 0-3=broken, 4-6=bare template, 7-9=clean but generic, 10-12=polished branded, 13-15=distinctive memorable
-- content_messaging: 0-3=placeholder, 4-6=generic boilerplate, 7-9=clear with personality, 10-12=well-defined niche, 13-15=sharp value prop with proof
+- visual_design: 0-2=broken, 3-4=bare template, 5-6=clean but generic, 7-8=polished branded, 9-10=distinctive memorable
+- content_messaging: 0-2=placeholder, 3-4=generic boilerplate, 5-6=clear with personality, 7-8=well-defined niche, 9-10=sharp value prop with proof
 - navigation_ux: 0-2=broken, 3-4=confusing, 5-6=functional, 7-8=intuitive, 9-10=seamless mobile-optimized
 - credibility_signals: 0-2=none, 3-4=vague, 5-6=minimal, 7-8=several strong signals, 9-10=comprehensive
+- compliance_red_flags: 0-2=testimonials and form_crs both, or one of them with several others, 3-4=testimonials or form_crs, 5-6=several of the other four, 7-8=one of the other four, 9-10=none found
 - team_leadership: 0-3=no bio, 4-6=names+titles, 7-9=brief bios, 10-12=full bios+photos, 13-15=rich narrative+LinkedIn
 - contact_availability: 0-3=nothing, 4-6=form only, 7-9=form+phone, 10-12=direct contacts prominent, 13-15=multiple easy options throughout`);
   const parsed = await readAnswer(text, WEBSITE_SCHEMA);
   if (!parsed || typeof parsed.scores !== "object" || !parsed.scores) throw new Error("We could not read the analysis for this site. Please check the URL and try again.");
   const scores = {}, notes = {};
   WEBSITE_CATS.forEach(c => { scores[c.id] = clampScore(parsed.scores[c.id], c.max); notes[c.id] = textOf(parsed.notes?.[c.id]); });
-  return { firm_name:textOf(parsed.firm_name), summary:textOf(parsed.summary), pros:listOf(parsed.pros), cons:listOf(parsed.cons), scores, notes };
+  // The red flags it named. A serious one and a high score for the category cannot both stand: the rubric gives a
+  // site with a serious flag 4 at most, so the number is brought down to what was reported.
+  const flags = (Array.isArray(parsed.compliance_flags) ? parsed.compliance_flags : []).map(readFlag).filter(Boolean).slice(0, 8);
+  if (flags.some(f => f.serious)) scores.compliance_red_flags = Math.min(scores.compliance_red_flags, 4);
+  return { firm_name:textOf(parsed.firm_name), summary:textOf(parsed.summary), pros:listOf(parsed.pros), cons:listOf(parsed.cons), scores, notes, flags };
 }
 
 async function scoreLinkedin(linkedinUrl, firmName) {
@@ -1062,7 +1130,8 @@ function renderResults(result, scope, websiteUrl) {
   if (isLI)  { activeCats = [...activeCats, LINKEDIN_CAT]; activeGroups = {...activeGroups, ...LINKEDIN_GROUP}; totalMax += 20; }
 
   const total = activeCats.reduce((s,c)=>s+(scores[c.id]||0),0);
-  const tier  = getTier(total, totalMax);
+  const flags = isWeb ? (result.flags || []) : [];
+  const tier  = ratingOf(total, totalMax, flags);
 
   $("res-firm-name").textContent = result.firm_name || "Your Firm";
   $("res-firm-url").textContent  = websiteUrl || result.linkedin_url || "";
@@ -1075,6 +1144,10 @@ function renderResults(result, scope, websiteUrl) {
   const bw = $("score-big-wrap");
   bw.style.background = wash(tier.color, 0.07); bw.style.borderColor = wash(tier.color, 0.45);
   $("score-big-tier").innerHTML = `<span class="tier-badge" style="color:${lit(tier.color)};background:${wash(tier.color, 0.12)};border-color:${wash(tier.color, 0.5)};">${tier.label}</span>`;
+  // a rating a red flag held down says so, beside the score, before anything is unlocked
+  const held = $("score-held");
+  held.textContent = tier.held ? heldLine(tier.held) : "";
+  held.hidden = !tier.held;
 
   const gw = $("score-groups-wrap");
   gw.innerHTML = "";
@@ -1118,6 +1191,11 @@ function renderResults(result, scope, websiteUrl) {
       const card = document.createElement("div");
       card.className = "cat-card"; card.style.borderTopColor = sc;
       card.innerHTML = `<div class="cat-card-header"><span class="cat-card-name">${cat.label}</span><span class="cat-card-score" style="color:${sc};">${val}<span style="color:var(--text-faint);font-size:max(0.6875rem,var(--tfloor,0px));font-weight:400;">/${cat.max}</span></span></div><div class="score-bar-track"><div class="score-bar-fill" style="width:${pct}%;background:${sc};"></div></div>${note?`<div class="cat-card-note" style="color:${noteCol};">${esc(note)}</div>`:""}`;
+      // the red flags it named, each as the search worded it (shown as text, never as markup), and what they are
+      if (cat.id === "compliance_red_flags") {
+        card.innerHTML += (flags.length ? `<ul class="flag-list">${flags.map(f => `<li class="${f.serious ? "flag-serious" : "flag-minor"}"><b>${esc(f.label)}</b>${esc(f.text)}</li>`).join("")}</ul>` : "")
+          + `<p class="flag-caveat">${FLAG_CAVEAT}</p>`;
+      }
       grid.appendChild(card);
     });
     sec.appendChild(grid);
@@ -1132,7 +1210,7 @@ function renderResults(result, scope, websiteUrl) {
     $("linkedin-link").rel = "noopener";
     $("linkedin-link").textContent = liUrl;
   }
-  appState.total = total; appState.totalMax = totalMax; appState.tier = tier.label;
+  appState.total = total; appState.totalMax = totalMax; appState.tier = tier.label; appState.held = tier.held;
   showOnly("screen-results");
 }
 
@@ -1221,7 +1299,8 @@ $("btn-analyze").addEventListener("click", async () => {
     $("screen-results").classList.toggle("locked", !known);
     renderResults(result, scope, website);
     track("score", { website, linkedin: result.linkedin_url || linkedin || "", found: runFound, firm_scored: result.firm_name || "",
-      score: appState.total, score_max: appState.totalMax, tier: appState.tier, scores: result.scores || {}, known: !!known });
+      score: appState.total, score_max: appState.totalMax, tier: appState.tier, held_from: appState.held || "",
+      flags: (result.flags || []).map(f => ({ kind:f.kind, text:f.text })), scores: result.scores || {}, known: !!known });
     if (known) { appState.leadName=known.name; appState.leadEmail=known.email; appState.leadFirm=known.firm||""; sendLead(known.name, known.email, known.firm||""); }
     window.scrollTo({ top:0, behavior:"smooth" });
 
@@ -1275,7 +1354,8 @@ function generatePDF() {
   if (isLI)  activeCats = [...activeCats, LINKEDIN_CAT];
   const totalMax = (isWeb?80:0)+(isLI?20:0);
   const total = activeCats.reduce((s,c)=>s+(scores[c.id]||0),0);
-  const tier  = getTier(total, totalMax);
+  const flags = isWeb ? (result.flags || []) : [];
+  const tier  = ratingOf(total, totalMax, flags);
   const W=612,ML=48,MR=48,CW=W-ML-MR;
   let y=0;
 
@@ -1334,6 +1414,11 @@ function generatePDF() {
     by+=22;
   });
   y+=bH+18;
+  // a rating a red flag held down says so, under the score
+  if (tier.held) {
+    doc.setFontSize(8.5); doc.setFont("helvetica","italic"); doc.setTextColor(140,90,16);
+    const hl = doc.splitTextToSize(heldLine(tier.held), CW); doc.text(hl, ML, y-4); y += hl.length*11 + 4;
+  }
 
   doc.setDrawColor(226,228,222); doc.setLineWidth(0.5); doc.line(ML,y,W-MR,y); y+=12;
 
@@ -1377,6 +1462,17 @@ function generatePDF() {
     doc.setFillColor(scr,scg,scb); doc.rect(ML,y,(CW-46)*pct,5,"F");
     y+=9;
     if(note){ doc.setFontSize(8.5); doc.setFont("helvetica","italic"); doc.setTextColor(pct<0.4?184:122,pct<0.4?50:128,pct<0.4?50:144); const nl=doc.splitTextToSize(note,CW); doc.text(nl,ML,y); y+=nl.length*11+3; } else y+=4;
+    // the red flags named, and what they are: possible flags off public pages, never a finding
+    if (cat.id === "compliance_red_flags") {
+      flags.forEach(f => {
+        if(y>716){doc.addPage();y=48;}
+        doc.setFontSize(8.5); doc.setFont("helvetica","bold"); doc.setTextColor(f.serious?184:140, f.serious?50:90, f.serious?50:16);
+        const fl = doc.splitTextToSize(`${f.label}: ${f.text}`, CW-10); doc.text(fl, ML+10, y); y += fl.length*11 + 2;
+      });
+      if(y>716){doc.addPage();y=48;}
+      doc.setFontSize(7.5); doc.setFont("helvetica","normal"); doc.setTextColor(122,128,144);
+      const cl = doc.splitTextToSize(FLAG_CAVEAT, CW); doc.text(cl, ML, y); y += cl.length*10 + 5;
+    }
   });
 
   // Footer
@@ -1386,7 +1482,7 @@ function generatePDF() {
   doc.setFillColor(184,134,11); doc.rect(W/2,758,W/2,2,"F");
   doc.setFontSize(8); doc.setFont("helvetica","bold"); doc.setTextColor(12,31,63); doc.text("SPATACCO ANALYTICS LLC",ML,774);
   doc.setFont("helvetica","normal"); doc.setTextColor(168,175,188); doc.text("spataccoanalytics.com  ·  CRM · DATA · WEB · STRATEGY",ML,786);
-  doc.setTextColor(200,204,210); doc.text("For informational purposes only.",W-MR,774,{align:"right"});
+  doc.setTextColor(200,204,210); doc.text("For informational purposes only. Not legal or compliance advice.",W-MR,774,{align:"right"});
 
   const fn=`${(result.firm_name||"Digital-Presence").replace(/[^a-z0-9]/gi,"-")}_Scorecard_${new Date().toISOString().slice(0,10)}.pdf`;
   doc.save(fn);
@@ -1421,7 +1517,8 @@ async function sendLead(name,email,firm) {
     name, email, firm, run: runId,
     website: appState.websiteUrl, linkedin: r.linkedin_url || appState.linkedinUrl || "",
     scope: appState.scope, firm_scored: r.firm_name || "",
-    score: appState.total, score_max: appState.totalMax, tier: appState.tier,
+    score: appState.total, score_max: appState.totalMax, tier: appState.tier, held_from: appState.held || "",
+    flags: (r.flags || []).map(f => ({ kind:f.kind, text:f.text })),
     scores: r.scores || {},
     utm_source: ARRIVED.source, utm_medium: ARRIVED.medium, utm_campaign: ARRIVED.campaign,
     company: $("gate-website2").value,
@@ -1458,8 +1555,9 @@ $("btn-restart").addEventListener("click", ()=>{
 }); });
 </script>
 <footer>
-  <a href="/" class="footer-brand"><img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="footer-logo" width="520" height="163"></a>
+  <a href="/" class="footer-brand"><img src="/img/wordmark-on-dark.png?v=da9b4528" alt="Spatacco Analytics" class="footer-logo" width="520" height="163"></a>
   <div class="footer-text">Bala Cynwyd, PA &middot; &copy; 2026 Spatacco Analytics LLC</div>
+  <img src="/img/logo-square.png" alt="" class="footer-mark" width="512" height="512">
 </footer>
 <script src="/js/shared.js"></script>
 </body>

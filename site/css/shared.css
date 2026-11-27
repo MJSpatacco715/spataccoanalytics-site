@@ -78,11 +78,13 @@ nav .nav-links a.unleash-link:hover{color:#FF1744;text-shadow:0 0 1rem rgba(200,
 
 /* ===== FOOTER ===== */
 footer{background:var(--navy);border-top:1px solid rgba(61,216,216,0.1);padding:2.5rem 3rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
-/* The footer signs off with both: the SA mark on its white tile, then the wordmark. */
-footer .footer-brand{display:flex;align-items:center;gap:0.875rem;line-height:0}
-footer .footer-mark{width:2.5rem;height:2.5rem;border-radius:0.5rem;display:block}
+/* The footer signs off with the wordmark. The SA mark on its white tile stands at the far right, after the line of
+   text, as a reference: beside the wordmark the two competed (the owner, 2026-11-27: "move it to the right side so
+   it's more of a reference"). */
+footer .footer-brand{display:flex;align-items:center;line-height:0}
+footer .footer-mark{width:2.25rem;height:2.25rem;border-radius:0.5rem;display:block;flex:none}
 footer .footer-logo{height:2.25rem;width:auto;display:block}
-footer .footer-text{font-size:0.8125rem;color:var(--text-light);letter-spacing:0.5px}
+footer .footer-text{font-size:0.8125rem;color:var(--text-light);letter-spacing:0.5px;margin-left:auto}
 footer a{color:var(--text-light);text-decoration:none;transition:color .3s}
 footer a:hover{color:var(--cyan)}
 
@@ -108,7 +110,10 @@ footer a:hover{color:var(--cyan)}
   nav .nav-links a{font-size:0.8125rem;letter-spacing:0.09375rem}
   .section-dark,.section-light{padding:4rem 1.5rem}
   .page-hero{padding:7.5rem 1.5rem 3.75rem}
-  footer{padding:2rem 1.5rem;flex-direction:column;text-align:center}
+  /* the wordmark at the left and the SA mark at the right share the first row; the line of text is under them */
+  footer{padding:2rem 1.5rem}
+  footer .footer-mark{order:2}
+  footer .footer-text{order:3;flex-basis:100%;margin-left:0;text-align:center}
 }
 /* Phones: the links are a second row under the logo, every one in view,
    rather than shrunk to 9px. */

@@ -46,7 +46,7 @@ const FOUND = JSON.stringify({ candidates: [
       const text = typeof c === 'string' ? c : '';
       sent.push({ text, body });
       if (text.startsWith(FIND)) return route.fulfill(answer());
-      if (text.startsWith(SCORE)) return route.fulfill(says(SCORED));
+      if (text.startsWith(SCORE)) return route.fulfill(says(open.scored || SCORED));
       return route.fulfill(refuses(400, 'This relay only serves the Spatacco Analytics tools.'));
     });
     // The owner's record (score/run.php) and the lead (score/lead.php) are stood in for: what the page
@@ -402,6 +402,81 @@ const FOUND = JSON.stringify({ candidates: [
     const f = await b.page.evaluate(() => { const i = document.getElementById('inp-website'); return { ph: i.placeholder, mode: i.getAttribute('inputmode'), label: document.querySelector('#field-website label').textContent.replace(/\s+/g, ' ').trim() }; });
     check('the field says a name will do, and a phone gives it a keyboard with a space bar', f.ph === "yourfirm.com or your firm's name" && f.mode === null && /or your firm's name/.test(f.label) && !/https/i.test(f.ph + f.label));
     await b.ctx.close();
+  }
+
+  // --- Compliance Red Flags. The owner, 2026-11-27, of the breakdown's card: "this should have compliance red flags (or
+  // something like it in the scoring rubric)". A fifth website category worth 10; asked whether a serious flag should
+  // hold the rating down by itself: "Yes Cap at adequate, and tell as much".
+  {
+    const NOTES = { visual_design: 'x', content_messaging: 'x', navigation_ux: 'x', credibility_signals: 'x', team_leadership: 'x', contact_availability: 'x' };
+    const HIGH = { visual_design: 9, content_messaging: 9, navigation_ux: 9, credibility_signals: 9, team_leadership: 14, contact_availability: 14 };
+    const a = await open({ viewport: { width: 1255, height: 900 } }, () => says(FOUND));
+    const said = await a.page.evaluate(() => ({
+      head: document.querySelector('#sc-more-1 strong').textContent,
+      rows: [...document.querySelectorAll('#sc-more-1 li')].map((li) => li.querySelector('span').textContent + ':' + li.querySelector('b').textContent),
+      rule: (document.querySelector('#sc-more-1 p') || {}).textContent || '',
+      legend: (document.querySelector('#legend-bar .legend-note') || {}).textContent || '',
+    }));
+    check('the Website fifty is five tens, the fifth of them Compliance Red Flags (' + said.rows.join(', ') + ')', said.head === 'Website: 50 of the 100' && said.rows.join('|') === 'Visual Design:10|Content & Messaging:10|Navigation & UX:10|Credibility Signals:10|Compliance Red Flags:10');
+    check('the card and the line under the ratings both say a serious red flag holds a rating at Adequate', /serious compliance red flag holds a rating at Adequate/.test(said.rule) && /serious compliance red flag is rated no higher than Adequate/.test(said.legend));
+
+    // a polished site showing testimonials with no disclosure: Excellent on points, held at Adequate
+    open.scored = JSON.stringify({ firm_name: 'Polished Advisors', summary: 'Strong site.', pros: ['a'], cons: ['b'],
+      scores: Object.assign({ compliance_red_flags: 9 }, HIGH), notes: Object.assign({ compliance_red_flags: 'Client quotes appear with no disclosure.' }, NOTES),
+      compliance_flags: [{ kind: 'testimonials', text: 'The home page shows client quotes <img src=x onerror="window.__hit=1"> with no disclosure.' },
+        { kind: 'footer_year', text: 'The footer reads 2023.' }, { kind: 'something_new', text: 'A thing this page has no name for.' }, { kind: 'adv', text: '   ' }] });
+    await type(a.page, 'polished.example');
+    await a.page.waitForSelector('#screen-results:not(.hidden)', { timeout: 15000 }).catch(() => {});
+    await a.page.waitForTimeout(300);
+    const r = await a.page.evaluate(() => { const h = document.getElementById('score-held'), hb = h.getBoundingClientRect(); return {
+      num: document.getElementById('score-big-num').textContent, denom: document.getElementById('score-big-denom').textContent,
+      tier: document.getElementById('score-big-tier').textContent.trim(), held: h.textContent, heldShown: !h.hidden && hb.width > 0 && hb.height > 0,
+      locked: document.getElementById('screen-results').classList.contains('locked'), heldSize: parseFloat(getComputedStyle(h).fontSize) }; });
+    // 9 + 9 + 9 + 9, the category brought down from 9 to 4 by the serious flag, 14 + 14: 68 of 80, which is Excellent on points
+    check('a site with a serious red flag is rated Adequate, whatever its points (' + r.num + r.denom + ' ' + r.tier + ')', r.num === '68' && r.denom === '/80' && r.tier === 'Adequate');
+    check('and it is told so beside the score, before anything is unlocked: what it would have rated, and why', r.locked && r.heldShown && r.heldSize >= 13 && /^Held at Adequate\. On points alone this site would rate Excellent, but a possible compliance red flag was found/.test(r.held));
+    const sc = a.runs.filter((x) => x.kind === 'score')[0] || {};
+    check('the record has the rating given, the one it was held from, the flags by kind, and the category at what was reported', sc.tier === 'Adequate' && sc.held_from === 'Excellent' && sc.score === 68 && sc.scores && sc.scores.compliance_red_flags === 4
+      && Array.isArray(sc.flags) && sc.flags.map((f) => f.kind).join(',') === 'testimonials,footer_year,other' && /client quotes/.test(sc.flags[0].text));
+    await a.page.fill('#gate-name', 'Test Visitor'); await a.page.fill('#gate-email', 'visitor@example.com');
+    await a.page.click('#btn-gate-submit');
+    await a.page.waitForSelector('#screen-results:not(.locked)', { timeout: 15000 }).catch(() => {});
+    await a.page.waitForTimeout(300);
+    const card = await a.page.evaluate(() => {
+      const c = [...document.querySelectorAll('.cat-card')].find((x) => x.querySelector('.cat-card-name').textContent === 'Compliance Red Flags');
+      if (!c) return null;
+      const lis = [...c.querySelectorAll('.flag-list li')];
+      const light = (e) => { const m = getComputedStyle(e).color.match(/[\d.]+/g).map(Number); return (m[0] + m[1] + m[2]) / 3; };
+      return { score: c.querySelector('.cat-card-score').textContent, kinds: lis.map((li) => li.className + ':' + li.querySelector('b').textContent), text: lis.map((li) => li.textContent).join(' | '),
+        imgs: c.querySelectorAll('img').length, hit: window.__hit === 1, caveat: (c.querySelector('.flag-caveat') || {}).textContent || '',
+        readable: lis.every((li) => light(li) > 150 && parseFloat(getComputedStyle(li).fontSize) >= 13), wide: document.documentElement.scrollWidth <= window.innerWidth };
+    });
+    check('its card lists each flag by kind, the serious one marked apart, and an empty one is left out (' + (card ? card.kinds.join(', ') : 'no card') + ')', !!card && card.score === '4/10'
+      && card.kinds.join('|') === 'flag-serious:Testimonials and endorsements|flag-minor:Footer year|flag-minor:Other');
+    check('what the search wrote about a flag is shown as text, never as markup', !!card && card.imgs === 0 && !card.hit && card.text.includes('<img src=x onerror="window.__hit=1">'));
+    check('the card says what the flags are: possible, read from public pages, not advice, for a compliance officer', !!card && /Possible red flags, read from the public pages\. Not legal or compliance advice: review each with your compliance officer\./.test(card.caveat) && card.readable && card.wide);
+    const lead = a.leads[0] || {};
+    check('the lead carries the same: the rating, what it was held from and the flags', lead.tier === 'Adequate' && lead.held_from === 'Excellent' && Array.isArray(lead.flags) && lead.flags.length === 3);
+    const told = (a.sent.find((x) => x.text.startsWith(SCORE)) || { text: '' }).text;
+    check('the scorer is told the six things to look for, to word each as a possible flag, and to name them by kind, inside the relay\'s size (' + told.length + ' characters)',
+      ['testimonials:', 'form_crs:', 'adv:', 'disclosures:', 'footer_year:', 'stale_info:'].every((k) => told.includes('- ' + k)) && told.includes('"compliance_flags":[') && told.includes('"compliance_red_flags":<0-10>')
+      && told.includes('never a finding of a violation') && told.includes('earlier than ' + new Date().getFullYear() + '.') && told.length < 12000 && !told.includes('\u2014'));
+    await a.ctx.close();
+
+    // only small things found: the rating is the points' own, and nothing says held
+    open.scored = JSON.stringify({ firm_name: 'Tidy Advisors', summary: 'Strong site.', pros: ['a'], cons: ['b'],
+      scores: Object.assign({ compliance_red_flags: 8 }, HIGH), notes: Object.assign({ compliance_red_flags: 'One dated detail.' }, NOTES),
+      compliance_flags: [{ kind: 'footer_year', text: 'The footer reads 2024.' }, { kind: 'adv', text: 'No link to the Form ADV brochure was found.' }] });
+    const b = await open({ viewport: { width: 390, height: 664 }, hasTouch: true, isMobile: true }, () => says(FOUND));
+    await type(b.page, 'tidy.example');
+    await b.page.waitForSelector('#screen-results:not(.hidden)', { timeout: 15000 }).catch(() => {});
+    await b.page.waitForTimeout(300);
+    const t = await b.page.evaluate(() => ({ num: document.getElementById('score-big-num').textContent, tier: document.getElementById('score-big-tier').textContent.trim(), heldHidden: document.getElementById('score-held').hidden, wide: document.documentElement.scrollWidth <= window.innerWidth }));
+    const sb = b.runs.filter((x) => x.kind === 'score')[0] || {};
+    // 36 + 8 + 28: 72 of 80
+    check('small things found do not hold a rating: ' + t.num + ' is ' + t.tier + ', and nothing says held', t.num === '72' && t.tier === 'Excellent' && t.heldHidden && t.wide && sb.tier === 'Excellent' && sb.held_from === '' && sb.scores.compliance_red_flags === 8 && sb.flags.length === 2);
+    await b.ctx.close();
+    open.scored = null;
   }
 
   await browser.close();
