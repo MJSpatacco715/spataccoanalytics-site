@@ -93,6 +93,23 @@ const FOUND = JSON.stringify({ candidates: [
     check(name + ': no light panel anywhere (not: ' + l.light.join(', ') + ')', l.light.length === 0);
     check(name + ': no dark words on the dark ground (not: ' + l.dim.slice(0, 5).join(', ') + ')', l.dim.length === 0);
   };
+  // The hundred first, then where it goes (the owner, 2026-11-27: "this 100 breakdown should have 100 at the top and
+  // trickle down to the breakdown 50 / 30 / 20 with a look more like the logo"): what the opening's breakdown shows,
+  // which of its two drawings is on the page, and where each trace ends beside its figure.
+  const points = (page) => page.evaluate(() => {
+    const r = (e) => e.getBoundingClientRect();
+    const box = document.querySelector('.sc-points');
+    const drawn = [...box.querySelectorAll('svg.sc-trace')].filter((v) => getComputedStyle(v).display !== 'none');
+    const words = (e) => { const g = document.createRange(); g.selectNodeContents(e); return g.getBoundingClientRect(); };
+    const rows = [...box.querySelectorAll('.sc-point')].map((e) => {
+      const fig = e.querySelector('b'), b = r(fig), d = words(fig), w = words(e.querySelector('span'));
+      return { n: fig.textContent, word: e.querySelector('span').textContent, top: b.top, cy: b.top + b.height / 2, left: d.left, size: parseFloat(getComputedStyle(fig).fontSize), wordRight: w.right };
+    });
+    const nodes = drawn[0] ? [...drawn[0].querySelectorAll('.hex, .n')].map((e) => { const x = r(e); return { cx: x.left + x.width / 2, cy: x.top + x.height / 2, left: x.left, right: x.right, fill: getComputedStyle(e).fill }; }) : [];
+    const trunk = drawn[0] && drawn[0].querySelector('.trunk');
+    return { drawings: drawn.length, which: drawn[0] ? drawn[0].getAttribute('class').replace('sc-trace ', '') : '', rows, nodes, trunk: trunk ? getComputedStyle(trunk).stroke : '',
+      label: box.getAttribute('aria-label'), wide: document.documentElement.scrollWidth <= window.innerWidth && r(box).right <= window.innerWidth + 1 };
+  });
   const type = async (page, text) => { await page.fill('#inp-website', text); await page.click('#btn-analyze'); };
   const cards = (page) => page.evaluate(() => {
     const box = document.getElementById('firm-matches'), b = box.getBoundingClientRect();
@@ -116,6 +133,100 @@ const FOUND = JSON.stringify({ candidates: [
     const l0 = await look(page);
     dressed(at + 'as it opens', l0);
     check(at + 'the form starts on the first screen, under the menu (at ' + l0.formTop + ' of ' + l0.vh + ')', l0.formTop > 0 && l0.formTop < l0.vh - 40 || mobile);
+    const pt = await points(page), [hundred, ...parts] = pt.rows;
+    check(at + 'the breakdown says the hundred first, then the three it is made of (' + pt.rows.map((x) => x.n + ' ' + x.word).join(', ') + ')',
+      pt.rows.map((x) => x.n + ' ' + x.word).join(', ') === '100 Total, 50 Website, 30 Contact, 20 LinkedIn' && parts.reduce((t, x) => t + Number(x.n), 0) === 100 && /100 points/.test(pt.label));
+    check(at + 'the hundred is at the top and is the largest figure', parts.every((x) => hundred.cy < x.top && hundred.size > x.size));
+    check(at + (mobile ? 'on a phone the three stand side by side under it, left to right' : 'the three stand one under another beneath it'),
+      mobile ? pt.which === 'h' && Math.abs(parts[0].cy - parts[1].cy) < 1 && Math.abs(parts[1].cy - parts[2].cy) < 1 && parts[0].left < parts[1].left && parts[1].left < parts[2].left
+        : pt.which === 'v' && parts[0].cy < parts[1].cy && parts[1].cy < parts[2].cy && Math.abs(parts[0].left - parts[2].left) < 1);
+    check(at + 'one drawing of the traces is on the page, with a mark for each figure', pt.drawings === 1 && pt.nodes.length === 4);
+    check(at + 'each trace ends level with its figure and just before it (off by ' + pt.nodes.map((n, i) => (n.cy - pt.rows[i].cy).toFixed(1)).join(', ') + ')',
+      pt.nodes.length === 4 && pt.nodes.every((n, i) => Math.abs(n.cy - pt.rows[i].cy) <= 1.5 && n.right <= pt.rows[i].left + 1 && pt.rows[i].left - n.right < 40));
+    check(at + 'the traces wear the logo\'s colours: cyan, blue, purple, and a line that runs through all three (' + pt.nodes.map((n) => n.fill).join(' | ') + ')',
+      /url\(/.test(pt.trunk) && pt.nodes.map((n) => n.fill).join('|') === 'rgb(61, 216, 216)|rgb(61, 216, 216)|rgb(91, 141, 239)|rgb(155, 130, 255)');
+    check(at + 'no word of it runs into the next figure or off the page', pt.wide && (!mobile || (parts[0].wordRight < pt.nodes[2].left - 4 && parts[1].wordRight < pt.nodes[3].left - 4)));
+
+    // What each of the three is made of, on a card beside it (the owner, 2026-11-27: "if there is a more granular
+    // underpinning to the components I wouldn't mind them being shown on a hover (without giving the secret sauce
+    // away)"): the names and the points, from the scorer's own list. A pointer has to rest for it to open, as on
+    // every hover card of the site; a click, a tap and the keyboard open it at once; and it always shows whole.
+    const more = (i) => page.evaluate((i) => {
+      const c = document.getElementById('sc-more-' + i), st = getComputedStyle(c), r = c.getBoundingClientRect(), h = document.getElementById('screen-hero').getBoundingClientRect();
+      const d = [...document.querySelectorAll('svg.sc-trace')].find((v) => getComputedStyle(v).display !== 'none').getBoundingClientRect();
+      return { open: st.display !== 'none' && st.visibility === 'visible' && Number(st.opacity) > 0.95, head: (c.querySelector('strong') || {}).textContent || '', text: c.textContent,
+        rows: [...c.querySelectorAll('li')].map((l) => l.querySelector('span').textContent + ' ' + l.querySelector('b').textContent),
+        whole: r.left >= 0 && r.right <= window.innerWidth && r.top >= Math.max(h.top, document.getElementById('main-nav').getBoundingClientRect().bottom) && r.bottom <= h.bottom,
+        clear: r.right <= d.left || r.top >= d.bottom, expanded: document.querySelector('.sc-point.p' + i).getAttribute('aria-expanded') };
+    }, i);
+    const schema = await page.evaluate(() => [WEBSITE_CATS.filter((c) => c.group === 'website'), WEBSITE_CATS.filter((c) => c.group === 'contact'), [LINKEDIN_CAT]].map((g) => g.map((c) => c.label + ' ' + c.max)));
+    const m0 = [await more(1), await more(2), await more(3)];
+    check(at + 'each of the three says what it is made of, from the scorer\'s own list, and its parts add up to it (' + m0.map((m) => m.rows.join(', ')).join(' / ') + ')',
+      m0.every((m, i) => m.rows.join('|') === schema[i].join('|') && m.rows.reduce((t, x) => t + Number(x.split(' ').pop()), 0) === [50, 30, 20][i] && new RegExp(': ' + [50, 30, 20][i] + ' of the 100$').test(m.head)));
+    check(at + 'the cards give names and points only: nothing of how each is judged', m0.every((m) => m.text.length < 190 && !/rubric|criteria|prompt|instruction|deduct|penal/i.test(m.text)));
+    check(at + 'no card is open until one is asked for', m0.every((m) => !m.open && m.expanded === 'false'));
+    if (!mobile) {
+      await page.waitForTimeout(700);          // the opening has finished arriving
+      const mid = async (i) => { const b = await page.locator('.sc-point.p' + i).boundingBox(); return [b.x + 12, b.y + b.height / 2]; };
+      await page.mouse.move(...await mid(1));
+      await page.waitForTimeout(120);
+      const glance = await more(1);
+      await page.waitForTimeout(520);
+      const rest = await more(1);
+      check(at + 'a pointer passing over a figure opens nothing; resting on it opens its card', !glance.open && rest.open);
+      check(at + 'the card shows whole inside the opening, and stands clear of the traces', rest.whole && rest.clear);
+      await page.mouse.move(...await mid(3));
+      await page.waitForTimeout(700);
+      const [left1, on3] = [await more(1), await more(3)];
+      check(at + 'moving on to another figure closes the first card and opens the other, whole', !left1.open && on3.open && on3.whole && on3.clear);
+      await page.mouse.move(5, 5);
+      await page.waitForTimeout(400);
+      check(at + 'and it closes when the pointer leaves', !(await more(3)).open);
+      await page.click('.sc-point.p2');
+      await page.waitForTimeout(260);          // its fade; a hover alone would still be waiting
+      const clicked = await more(2);
+      check(at + 'a click opens a card at once, whole, and says so to assistive technology', clicked.open && clicked.whole && clicked.expanded === 'true');
+      await page.keyboard.press('Escape');
+      await page.mouse.move(5, 5);
+      await page.waitForTimeout(400);
+      const shut2 = await more(2);
+      check(at + 'Escape closes it', !shut2.open && shut2.expanded === 'false');
+      await page.focus('.sc-point.p3');
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(260);
+      const keyed = await more(3);
+      check(at + 'the keyboard opens one at once too', keyed.open && keyed.expanded === 'true' && keyed.whole);
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(300);
+    } else {
+      await page.tap('.sc-point.p1');
+      await page.waitForTimeout(200);
+      const tapped = await more(1);
+      check(at + 'on a phone a tap opens the card in place, under the three, whole and inside the page', tapped.open && tapped.expanded === 'true' && tapped.whole && tapped.clear && await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+      await page.tap('.sc-point.p2');
+      await page.waitForTimeout(200);
+      check(at + 'a tap on another opens that one and closes the first', !(await more(1)).open && (await more(2)).open);
+      await page.tap('.sc-point.p2');
+      await page.waitForTimeout(200);
+      check(at + 'and a second tap closes it', !(await more(2)).open && (await more(2)).expanded === 'false');
+    }
+
+    // The five ratings, and the page's two marks (the owner, 2026-11-27: "I don't love the category titles
+    // Distinction ...Poor", naming "Excellent, Strong, Adequate, Needs Work, Red Flags and Violations"; and "use the
+    // Linkedin Logo on the page where appropriate instead of a briefcase").
+    const named = await page.evaluate(() => ({
+      legend: [...document.querySelectorAll('#legend-bar .legend-item')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+      tiers: [100, 85, 84, 70, 69, 55, 54, 40, 39, 0].map((n) => getTier(n, 100).label),
+      emoji: /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(document.getElementById('screen-hero').innerText + document.querySelector('.main').innerText),
+      marks: [...document.querySelectorAll('.scope-option label')].map((l) => [...l.querySelectorAll('use')].map((u) => u.getAttribute('href')).join('+')),
+      drawn: [...document.querySelectorAll('.scope-icon svg')].every((v) => { const r = v.getBoundingClientRect(); return r.width >= 20 && r.height >= 20; }),
+      blue: (document.querySelector('#i-linkedin path') || document.body).getAttribute('fill'), onField: !!document.querySelector('label[for="inp-linkedin"] use[href="#i-linkedin"]'),
+    }));
+    check(at + 'the five ratings are named as the owner named them (' + named.legend.join(' | ') + ')',
+      named.legend.join(' | ') === '85–100 Excellent | 70–84 Strong | 55–69 Adequate | 40–54 Needs Work | <40 Red Flags and Violations'
+      && named.tiers.join(',') === 'Excellent,Excellent,Strong,Strong,Adequate,Adequate,Needs Work,Needs Work,Red Flags and Violations,Red Flags and Violations');
+    check(at + 'a website is a drawn globe and LinkedIn wears LinkedIn\'s own mark, in its blue; no emoji stands in for either (' + named.marks.join(' | ') + ')',
+      !named.emoji && named.drawn && named.marks.join(' | ') === '#i-web+#i-linkedin | #i-web | #i-linkedin' && named.blue === '#0A66C2' && named.onField);
     await type(page, '  Smith "Wealth"\n<b>Management</b>  ');
     await page.waitForSelector('#firm-matches .match-card', { timeout: 8000 });
     const c = await cards(page);
