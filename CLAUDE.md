@@ -518,6 +518,29 @@ lives and says which pieces are not in this repo yet.
   must be loaded only inside `if (!navigator.globalPrivacyControl) { ... }`,
   because the policy says a browser sending Global Privacy Control does not
   get it; or that line comes out of the policy.
+- The business card's QR code reads `HTTPS://SPATACCOANALYTICS.COM/C`, in
+  capitals on purpose (a smaller code), and is in print: that address is for
+  good. The page is `site/C/index.php` (the owner's brief, 2026-11-27): one
+  white screen on a phone with no site menu, his name and title, and four
+  buttons in his order: Connect on LinkedIn (his own profile), Save Contact
+  (`/C/mike.vcf`, drawn by `C/vcard.php`), Email Me, and Score Your Firm's
+  Website (the scorer's folder address with `?src=qr-<source>`). `/c` forwards
+  to `/C/`. `?s=<slug>` says which printing a scan came from: none is the card,
+  and anything that is not lower-case letters, digits and hyphens is kept as
+  "unknown" and never drawn.
+  Each scan and each press is one line in `sa-leads/qr-events.jsonl`, off the
+  web (`site/lib/qr.php`): when, the source, what happened, the kind of device,
+  the site it came from, and a salted hash of the address. The address itself
+  is never kept. The page and the recorder are sent `no-store`, and the owner's
+  Cloudflare rule bypasses `/C`: a scan that does not reach the page is not
+  counted. The brief asked for MySQL and a stats page behind a login; asked,
+  the owner chose files like the scorer's and to see the counts inside
+  TaccoBox, so `score/feed.php` hands the lines to the CRM with its token
+  (`qr` in its answer) and there is no stats page on this site.
+  "Book a Call" is not on the page yet: set `QR_BOOKING_URL` in `C/index.php`
+  to the owner's Microsoft Bookings address and the third button opens to Book
+  a Call and Email Me. The email address is put together by script; no plain
+  `mailto:` and no tracker of anyone else is on the page. `tests/qr_test.sh`.
 - Printed material points at `/score/`, never at the scorer's own address.
   If the scorer moves, change `site/score/index.html`, not the print.
 - The scorer wears the site's own look. The owner, 2026-11-27: "scorer has a
@@ -715,6 +738,7 @@ bash tests/remote_deploy_test.sh
 bash tests/feed_test.sh
 bash tests/lead_test.sh
 bash tests/run_test.sh
+bash tests/qr_test.sh
 bash tests/contact_test.sh
 bash tests/notice_test.sh
 bash tests/bank_test.sh
@@ -724,5 +748,5 @@ bash tests/pages_test.sh
 bash tests/pricing_test.sh
 node tests/worker_test.mjs
 bash tests/insights_test.sh
-for f in site/score/lead.php site/score/run.php site/score/feed.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/bank/api.php site/lib/bank.php site/market/feed.php site/lib/market.php; do php -l "$f"; done
+for f in site/score/lead.php site/score/run.php site/score/feed.php site/contact/submit.php site/lib/leads.php site/services/pricing.php site/C/index.php site/C/log.php site/C/vcard.php site/lib/qr.php site/bank/api.php site/lib/bank.php site/market/feed.php site/lib/market.php; do php -l "$f"; done
 ```

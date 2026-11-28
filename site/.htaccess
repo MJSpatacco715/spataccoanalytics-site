@@ -44,4 +44,9 @@ RewriteRule ^tools/(afi-tracker|card-evaluator|cricket-explainer|curling-explain
 RewriteRule ^tools/football/(nfl-lines-tracker|nfl-injury-tracker|nfl-depth-charts)\.html$ https://spataccoanalytics.com/tools/football/$1/ [R=301,L]
 RewriteRule ^unleash/kraken\.html$ https://spataccoanalytics.com/unleash/kraken/ [R=301,L]
 
+# The business card's QR code (2026-11-27) reads /C, in capitals, and is in print. The lower-case spelling goes to it,
+# and the contact card it offers is drawn by a script so that it is never kept and always the right type.
+RewriteRule ^c/?$ https://spataccoanalytics.com/C/ [R=301,QSA,L]
+RewriteRule ^C/mike\.vcf$ C/vcard.php [L]
+
 RewriteRule ^_(header|footer)\.php$ https://spataccoanalytics.com/ [R=301,L]
