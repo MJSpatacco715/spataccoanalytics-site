@@ -20,7 +20,7 @@ Project pricing is given on request at https://spataccoanalytics.com/services/.
 
 ## Tools
 
-- [Free Website Score](https://spataccoanalytics.com/tools/website-scorer/): scores an advisory firm's website on design, content, navigation, credibility, team, and contact.
+- [Free Website Score](https://spataccoanalytics.com/tools/website-scorer/): scores an advisory firm's website on design, content, navigation, credibility, compliance red flags, team, and contact.
 - [Resume Parser](https://spataccoanalytics.com/tools/resume-parser/): turns a resume (PDF, Word, photos or pasted text) into structured data, downloadable as Excel or CSV. Two reads free.
 - [All tools](https://spataccoanalytics.com/tools/)
 
@@ -28,3 +28,4 @@ Project pricing is given on request at https://spataccoanalytics.com/services/.
 
 - [Contact form](https://spataccoanalytics.com/contact/)
 - Email: mike@spataccoanalytics.com
+- Phone: 484 278 1697
