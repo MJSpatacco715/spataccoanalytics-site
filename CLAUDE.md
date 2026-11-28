@@ -537,7 +537,10 @@ lives and says which pieces are not in this repo yet.
   good. The page is `site/C/index.php` (the owner's brief, 2026-11-27): one
   white screen on a phone with no site menu, his name and title, and its
   buttons in his order: Connect on LinkedIn (his own profile), Save Contact
-  (`/C/mike.vcf`, drawn by `C/vcard.php`), Email Me, and Score Your Firm's
+  (`/C/mike.vcf`, drawn by `C/vcard.php`, with his picture inside it:
+  `C/contact-photo.jpg`, the tab icon's SA on navy, so a phone that saves the
+  card shows it beside his name and his texts and not the grey building an
+  iPhone draws for a contact with none), Email Me, and Score Your Firm's
   Website (the scorer's folder address with `?src=qr-<source>`). Text a Question stands
   second, under LinkedIn (the owner, 2026-11-28: "a text a question option,
   where someone can hit me via text and i text them back ... that's where

@@ -10,7 +10,7 @@ t=$(mktemp -d); pid=
 cleanup() { [ -n "$pid" ] && kill "$pid" 2>/dev/null; rm -rf "$t"; }
 trap cleanup EXIT
 mkdir -p "$t/home/public_html/C" "$t/home/public_html/lib" "$t/home/public_html/score"
-cp "$here"/site/C/*.php "$t/home/public_html/C/"; cp "$here/site/lib/qr.php" "$t/home/public_html/lib/"; cp "$here/site/score/feed.php" "$t/home/public_html/score/"
+cp "$here"/site/C/*.php "$here"/site/C/*.jpg "$t/home/public_html/C/"; cp "$here/site/lib/qr.php" "$t/home/public_html/lib/"; cp "$here/site/score/feed.php" "$t/home/public_html/score/"
 php -S 127.0.0.1:18749 -t "$t/home/public_html" >/dev/null 2>&1 & pid=$!
 base=http://127.0.0.1:18749
 for i in $(seq 1 50); do curl -s -o /dev/null "$base/C/vcard.php" && break; sleep 0.1; done
@@ -45,6 +45,7 @@ check "a text, opening Other Tools, and each tool chosen from it, is a line of i
 check "the recorder answers nothing to a GET" '[ "$(curl -s -o /dev/null -w "%{http_code}" "$base/C/log.php")" = 405 ]'
 vc=$(curl -s -D "$t/h2" "$base/C/vcard.php")
 check "the contact card is a vCard, offered as mike.vcf, with the owner's details" 'grep -qi "^Content-Type: text/vcard" "$t/h2" && grep -qi "filename=\"mike.vcf\"" "$t/h2" && grep -q "^FN:Michael J. Spatacco" <<<"$vc" && grep -q "^TEL;TYPE=WORK,VOICE:+14842781697" <<<"$vc" && grep -q "^EMAIL;TYPE=WORK:Mike@SpataccoAnalytics.com" <<<"$vc" && grep -q "^END:VCARD" <<<"$vc"'
+check "the contact card carries his picture: a JPEG inside it, folded as a vCard asks, that decodes to the file" '[ "$(printf "%s" "$vc" | tr -d "\r" | awk "/^PHOTO;ENCODING=b;TYPE=JPEG:/{p=1; sub(/^PHOTO[^:]*:/,\"\"); printf \"%s\", \$0; next} p&&/^ /{printf \"%s\", substr(\$0,2); next} {p=0}" | base64 -d | sha1sum | cut -c1-40)" = "$(sha1sum "$here/site/C/contact-photo.jpg" | cut -c1-40)" ] && ! printf "%s" "$vc" | tr -d "\r" | awk "length(\$0)>75{f=1} END{exit !f}"'
 check "the lower-case address goes to the page and the contact card has its printed address" 'grep -q "^RewriteRule \^c/?\$ https://spataccoanalytics.com/C/ \[R=301,QSA,L\]" "$here/site/.htaccess" && grep -q "^RewriteRule \^C/mike\\\\.vcf\$ C/vcard.php \[L\]" "$here/site/.htaccess"'
 check "nobody reads the record without the CRM token: with none set the feed is not there" '[ "$(curl -s -o /dev/null -w "%{http_code}" "$base/score/feed.php")" = 404 ]'
 printf '{"token":"test-token-test-token-test-token"}' > "$t/home/sa-scorer.json"
