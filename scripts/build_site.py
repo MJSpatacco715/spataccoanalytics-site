@@ -230,6 +230,12 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
     head = re.sub(r"(?is)<title>.*?</title>", f"<title>{esc(tool['name'])} | Spatacco Analytics</title>", head, count=1)
     head = re.sub(r'(?is)<meta name="description" content="[^"]*">',
                   f'<meta name="description" content="{esc(tool["tagline"])}">', head, count=1)
+    # the page's own address, for search engines and for sharing: the head came from the tools page, which named its own
+    here_url = f"https://spataccoanalytics.com/tools/football/{tool['id']}/"
+    head = re.sub(r'(?is)<link rel="canonical" href="[^"]*">', f'<link rel="canonical" href="{here_url}">', head, count=1)
+    head = re.sub(r'(?is)<meta property="og:url" content="[^"]*">', f'<meta property="og:url" content="{here_url}">', head, count=1)
+    head = re.sub(r'(?is)<meta property="og:title" content="[^"]*">', f'<meta property="og:title" content="{esc(tool["name"])} | Spatacco Analytics">', head, count=1)
+    head = re.sub(r'(?is)<meta property="og:description" content="[^"]*">', f'<meta property="og:description" content="{esc(tool["tagline"])}">', head, count=1)
     head = head.replace("</style>", PAGE_CSS + "</style>", 1)
 
     stamp = []

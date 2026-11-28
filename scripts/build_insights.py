@@ -303,7 +303,7 @@ document.querySelectorAll('.in-filters button').forEach(function (b) {{
   }});
 }});
 </script>"""
-    (root / "index.html").write_text(shell("Insights", "Short, sourced observations on advisory practices, markets, business and sports from Spatacco Analytics.", "/insights/", feed_body, linkedin), encoding="utf-8")
+    (root / "index.html").write_text(shell("Insights for Independent Advisors", "Short, sourced observations on advisory practices, markets, business and sports from Spatacco Analytics.", "/insights/", feed_body, linkedin), encoding="utf-8")
 
     items = "".join(
         f"<item><title>{esc(p['title'])}</title><link>{BASE}{p['url']}</link><guid>{BASE}{p['url']}</guid>"

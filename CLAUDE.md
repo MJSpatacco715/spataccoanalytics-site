@@ -492,6 +492,20 @@ lives and says which pieces are not in this repo yet.
   Bing. Its key is the 32-character `.txt` file in `site/`, public by design:
   do not treat it as a secret or delete it. Google is reached through Search
   Console and the sitemap, which only the owner's account can do.
+  An audit on 2026-11-27 found no AI crawler blocked and the basics in place,
+  and the owner said go on what needed no decision: `robots.txt` asks no crawl
+  delay; About, Tools, Contact, Approach and Insights have titles that say what
+  the page does; the Contact page, the scorer and the resume parser carry
+  structured data; every tool page with a page of its own has a title, a
+  description, its own canonical address and share tags, and is in the sitemap.
+  The phone number, 484 278 1697, is on the Contact page, in the home page's
+  structured data and in `llms.txt` (the owner: "add phone number").
+  Structured data is not put in the Tools page's head: each NFL tool's page is
+  built with that head and would claim it.
+  Still open from that audit: a founder page (the owner will build it), an FAQ
+  (he wants one; wording is his to approve), breadcrumbs, and dates in the
+  sitemap. Cloudflare keeps `robots.txt`, `sitemap.xml` and `llms.txt` for
+  months unless the owner's cache rule bypasses them.
 - The privacy policy is `site/privacy/index.html`, published 2026-11-27 from
   the owner's draft; its wording is his and is not edited here. Every page's
   footer links to it: `scripts/build_insights.py` adds "Privacy" after LinkedIn
