@@ -375,7 +375,11 @@ lives and says which pieces are not in this repo yet.
   the football folder's own `.htaccess` marks "ask before reuse" and the host
   hands out for months all the same. The page that frames one names it by its
   whole address with the file's version (`?v=`, `scripts/build_site.py`), so
-  a tool that changes is fetched afresh; its scripts are not versioned yet.
+  a tool that changes is fetched afresh. Its scripts are named by version too
+  (`live/build.mjs`, `?v=` on every script tag a page carries): on 2026-11-28
+  a changed `shim.js` was still the day-old copy at its bare address, kept for
+  a year by the host and Cloudflare. A script another script loads later by
+  itself (the player card) is still asked for by its bare name.
   Turning NGINX Direct Delivery off for the site (Site Tools > Speed >
   Caching) would put every address under the site's rules; that is the
   owner's setting, and before it is turned off the long life of scripts,
