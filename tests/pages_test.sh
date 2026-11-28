@@ -82,7 +82,7 @@ check "the pillars are one height with their links on one line" 'grep -q "a.serv
 # The pillars were the one light section of the home page. The owner, 2026-11-27: "weirdly all
 # white in a sea of blue". Asked, with a picture of it in navy: "Yes, make it navy".
 check "no section of the home page is light: the pillars sit on the navy, each one the site panel" '! grep -q "class=\"section-light" "$home" && grep -q "<section class=\"section-dark section-pillars\" id=\"services\">" "$home" && grep -q "\.service-card{background:rgba(var(--lift),0.045);border:1px solid rgba(var(--line),0.16);" "$home" && grep -q "\.service-card h3{font-size:1.25rem;font-weight:600;color:var(--white);" "$home" && grep -q "<h2 class=\"section-heading section-heading-dark\">Three pillars. One consultative engagement.</h2>" "$home"'
-check "and the Insights teaser, when the home page has one, sits on the navy too" 'grep -qF ".section-light.in-home{background:var(--navy)}" "$site/css/insights.css" && grep -qF ".in-home .in-card h3{color:#FFFFFF}" "$site/css/insights.css" && grep -qF ".in-home .in-card{background:rgba(var(--lift),0.045);" "$site/css/insights.css"'
+check "and the Insights teaser, like every section that was light, is navy in the dark version by the palette rules" 'r=":root:not([data-theme=\"light\"]) .section-light{--off-white:#0F1B2D;"; grep -qF "$r" "$site/css/shared.css" && grep -qF "$r" "$home" && ! grep -q "in-home{background" "$site/css/insights.css"'
 check "there are three pillars and each is a link" '[ "$(grep -o "<a class=\"service-card " "$home" | wc -l)" = 3 ] && ! grep -q "<div class=\"service-card" "$home"'
 
 # --- every statistic carries its source

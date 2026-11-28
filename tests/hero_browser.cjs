@@ -147,7 +147,7 @@ const FEED = { ok: true, at: '2026-11-25T14:25:00Z', items: ['US 30-Yr', 'US 10-
 
     const plan = () => page.evaluate(() => {
       const o = document.querySelector('.sv-opt-go'), a = document.getElementById('sv-score-add'), t = getComputedStyle(o.querySelector('.sv-tick'));
-      return { ticked: o.classList.contains('inc') && t.backgroundColor === 'rgb(123, 92, 255)', said: !o.querySelector('.sv-in').hidden, btn: a.textContent, pressed: a.getAttribute('aria-pressed') === 'true', off: a.disabled,
+      return { ticked: o.classList.contains('inc') && /* purple: lighter inside the section in the dark version */ ['rgb(123, 92, 255)', 'rgb(169, 148, 255)'].includes(t.backgroundColor), said: !o.querySelector('.sv-in').hidden, btn: a.textContent, pressed: a.getAttribute('aria-pressed') === 'true', off: a.disabled,
         lines: [...document.querySelectorAll('#sv-lines .sv-line')].map((l) => l.children[0].textContent + '=' + l.children[1].textContent), empty: !!document.querySelector('#sv-lines .sv-empty'), path: location.pathname,
         picked: (document.querySelector('input[name="audit"]:checked') || {}).value || '' };
     });

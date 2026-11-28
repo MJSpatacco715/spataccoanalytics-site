@@ -74,6 +74,19 @@ lives and says which pieces are not in this repo yet.
   strip's own colours and a section that was light from the start
   (`.section-light`, on Services) are drawn the same in both: inside them the
   variables hold their first values (`KEEP_DARK`).
+  No page mixes the two. A section that was light from the start
+  (`.section-light`: the Services pricing, the About page's body, the Insights
+  pages, the privacy policy) is navy in the dark version and light in the light
+  one. The owner, 2026-11-27, of the white panel on the Services page: "lets
+  keep the dark theme dark ... instead of having contrasting/intermittent/random
+  panels". Those sections were written for a white ground with the same names
+  (`--white` for a card, `--navy` for ink), so in the dark version the names
+  turn about inside them (`INSIDE_LIGHT_SECTION_WHEN_DARK` in
+  `scripts/theme_css.py`): a card is a lifted navy, the ink is near white. Where
+  a rule inside one really means navy or white whichever version (a band, the
+  lettering on a cyan button) it reads `--band`, `--band-ink` or `--on-accent`
+  with the old name as its fallback. Do not add a panel that stays light in the
+  dark version.
   The scorer has its own named colours and so its own light block, and what
   its script colours (`lit()`, `wash()`) is drawn again when the switch is
   pressed (the `sa-theme` event).
