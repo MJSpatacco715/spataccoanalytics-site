@@ -109,7 +109,10 @@ async function minJs(code, where) {
 async function minCss(code, where) {
   try {
     const r = await transform(code, { loader: 'css', minifyWhitespace: true, legalComments: 'none', charset: 'utf8' });
-    return r.code.trim();
+    // The source letters its filled buttons white on its green. This site's accent is its cyan, which wants navy
+    // letters, so where a rule fills with the accent its white becomes a variable the shim sets (white if it does not).
+    return r.code.trim().replace(/\{[^{}]*\}/g, (rule) => (/background(-color)?:var\(--accent\)/.test(rule)
+      ? rule.replace(/([;{])color:#fff(?=[;}])/g, '$1color:var(--on-accent,#fff)') : rule));
   } catch (e) { fail('could not minify ' + where + ': ' + e.message); }
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
