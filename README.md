@@ -67,7 +67,7 @@ either page is not asked again on the other for 30 days.
 ```
 
 - **The tools work, they are not pictures.** Each tool page carries the
-  platform's own page for it, running, with an "Open full screen" view. The
+  platform's own page for it, running, on the first screen, with a link to open it in a tab of its own. The
   build (`live/build.mjs`) copies the pages and the scripts they load, strips
   comments, renames the platform, swaps its site script for the few drawing
   helpers the tools use, and writes the depth chart and Madden ratings beside

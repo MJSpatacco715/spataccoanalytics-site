@@ -399,6 +399,20 @@ lives and says which pieces are not in this repo yet.
   loads first and the pages last (`scripts/remote_deploy.sh`,
   `tests/remote_deploy_test.sh`), so no page names an address before its file
   is there. Keep that order.
+- An NFL tool's page opens on the tool. The owner, 2026-11-28, of the Lines
+  Tracker's page, which put a tall headline, the Sports Desk tabs and a bar
+  with "Open full screen" above a frame that began below the first screen:
+  "the NFL lines tracker is a marquis accomplishment ... the 'click here to
+  fullscreen' kinda thing is me dead in the water before i even get the boat
+  floating". So where a tool runs live (`scripts/build_site.py`, `.nfl-top`)
+  there is no hero: under the menu come one slim line (the tool's name, how to
+  use it, a quiet "Own tab" link), the Sports Desk tabs, and the frame, edge to
+  edge, filling the rest of the first screen (its height is the screen less
+  where it starts, `--nfl-at`, measured by the page). What it does and how it
+  is built follow below. Nothing goes between the tabs and the frame, and no
+  button stands between a visitor and the tool. A build with no live tools
+  still draws the old page with a screenshot. `tests/pages_test.sh` holds the
+  order.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.
@@ -524,7 +538,12 @@ lives and says which pieces are not in this repo yet.
   white screen on a phone with no site menu, his name and title, and four
   buttons in his order: Connect on LinkedIn (his own profile), Save Contact
   (`/C/mike.vcf`, drawn by `C/vcard.php`), Email Me, and Score Your Firm's
-  Website (the scorer's folder address with `?src=qr-<source>`). `/c` forwards
+  Website (the scorer's folder address with `?src=qr-<source>`). A fifth, Other
+  Tools, opens under itself to the NFL Lines Tracker, the Resume Parser and All
+  Tools (the owner, 2026-11-28, after trying the page on his phone: "it might be
+  cool to have 'other tools' on there and send to the tools page or even
+  clamshell open to the full tool menu"); opening it and each choice is counted
+  (`tools`, `lines`, `resume`, `alltools`). `/c` forwards
   to `/C/`. `?s=<slug>` says which printing a scan came from: none is the card,
   and anything that is not lower-case letters, digits and hyphens is kept as
   "unknown" and never drawn.

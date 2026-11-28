@@ -36,6 +36,8 @@ h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:2rem;line-he
 .act{display:flex;align-items:center;justify-content:center;width:100%;min-height:3.25rem;padding:0.75rem 1rem;font:inherit;font-size:1.0625rem;font-weight:600;color:var(--navy);background:#FFFFFF;border:0.125rem solid var(--navy);border-radius:0.375rem;text-decoration:none;cursor:pointer;text-align:center}
 .act.first{min-height:4rem;font-size:1.1875rem;color:#FFFFFF;background:var(--navy)}
 .act:focus-visible{outline:0.1875rem solid var(--cyan);outline-offset:0.125rem}
+.act[data-open]::after{content:"";margin-left:0.625rem;width:0.5rem;height:0.5rem;border:solid currentColor;border-width:0 0.125rem 0.125rem 0;transform:translateY(-0.125rem) rotate(45deg)}
+.act[data-open][aria-expanded="true"]::after{transform:translateY(0.125rem) rotate(225deg)}
 .more{display:grid;gap:0.625rem;padding:0.125rem 0 0.25rem 1rem;border-left:0.1875rem solid var(--cyan)}
 .more[hidden]{display:none}
 .more .act{min-height:3rem;font-size:1rem;border-width:1px}
@@ -53,7 +55,7 @@ footer a{color:inherit;text-underline-offset:0.1875rem}
     <a class="act first" data-event="linkedin" href="https://www.linkedin.com/in/mjspatacco/" rel="noopener">Connect on LinkedIn</a>
     <a class="act" data-event="vcard" href="/C/mike.vcf">Save Contact</a>
 <?php if (QR_BOOKING_URL !== '') { ?>
-    <button class="act" type="button" id="more-btn" aria-expanded="false" aria-controls="more">Book a Call / Email Me</button>
+    <button class="act" type="button" data-open="more" aria-expanded="false" aria-controls="more">Book a Call / Email Me</button>
     <div class="more" id="more" hidden>
       <a class="act" data-event="book" href="<?= htmlspecialchars(QR_BOOKING_URL, ENT_QUOTES, 'UTF-8') ?>" rel="noopener">Book a Call</a>
       <a class="act" data-event="email" data-mail href="#">Email Me</a>
@@ -62,6 +64,12 @@ footer a{color:inherit;text-underline-offset:0.1875rem}
     <a class="act" data-event="email" data-mail href="#">Email Me</a>
 <?php } ?>
     <a class="act" data-event="scorer" href="/tools/website-scorer/?src=qr-<?= $src ?>">Score Your Firm&rsquo;s Website</a>
+    <button class="act" type="button" data-open="tools" data-opens="tools" aria-expanded="false" aria-controls="tools">Other Tools</button>
+    <div class="more" id="tools" hidden>
+      <a class="act" data-event="lines" href="/tools/football/nfl-lines-tracker/">NFL Lines Tracker</a>
+      <a class="act" data-event="resume" href="/tools/resume-parser/">Resume Parser</a>
+      <a class="act" data-event="alltools" href="/tools/">All Tools</a>
+    </div>
   </div>
 </main>
 <footer>Bala Cynwyd, PA &middot; <a href="/privacy/">Privacy</a></footer>
@@ -71,12 +79,20 @@ footer a{color:inherit;text-underline-offset:0.1875rem}
   // the address is put together here, never written in the page
   var u = 'Mike', d = 'SpataccoAnalytics.com';
   [].forEach.call(document.querySelectorAll('[data-mail]'), function (a) { a.href = 'mai' + 'lto:' + u + '@' + d; });
-  var b = document.getElementById('more-btn'), more = document.getElementById('more');
-  if (b) b.addEventListener('click', function () { var open = more.hidden; more.hidden = !open; b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+  function count(ev) {
+    try { navigator.sendBeacon('/C/log.php', new Blob([JSON.stringify({ event: ev, source: source })], { type: 'application/json' })); } catch (x) {}
+  }
   // each press is counted before it goes anywhere; a count that fails never stops the press
   box.addEventListener('click', function (e) {
-    var a = e.target.closest ? e.target.closest('[data-event]') : null; if (!a) return;
-    try { navigator.sendBeacon('/C/log.php', new Blob([JSON.stringify({ event: a.getAttribute('data-event'), source: source })], { type: 'application/json' })); } catch (x) {}
+    var t = e.target.closest ? e.target : null; if (!t) return;
+    var b = t.closest('[data-open]');
+    if (b) {                                   // a button that opens what is under it: the tools are counted when opened
+      var more = document.getElementById(b.getAttribute('data-open')), open = more.hidden;
+      more.hidden = !open; b.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open && b.getAttribute('data-opens')) count(b.getAttribute('data-opens'));
+      return;
+    }
+    var a = t.closest('[data-event]'); if (a) count(a.getAttribute('data-event'));
   });
 })();
 </script>

@@ -202,7 +202,8 @@
     + 'width:34px;height:30px;cursor:pointer;font-size:14px;padding:0}'
     + '@media (max-width:560px){#sa-bar{padding:6px 8px;gap:6px}#sa-bar a{padding:5px 8px;font-size:12px}}'
     + '.sa-embed #sa-bar{display:none}'
-    + '.sa-embed .wrap > h1:first-child{display:none}';
+    + '.sa-embed .wrap > h1:first-child{display:none}'
+    + '.sa-embed body{padding-top:10px}';
   var st = document.createElement('style');
   st.id = 'sa-css';
   st.textContent = CSS;
