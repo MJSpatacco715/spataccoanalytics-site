@@ -61,6 +61,10 @@
 .thank-you h2{font-family:'Cormorant Garamond',serif;font-size:2.25rem;font-weight:400;color:var(--white);margin-bottom:1rem}
 .thank-you p{font-size:1rem;color:var(--text-light);line-height:1.7}
 
+.text-first{display:none}
+@media(max-width:700px){.text-first{display:block;margin:1.5rem 0 0;padding:1.125rem 1.25rem;border:1px solid rgba(var(--cy),0.35);border-radius:0.5rem;background:rgba(var(--lift),0.04);text-align:center}
+.text-first p{font-size:0.9375rem;line-height:1.5;color:var(--g2);margin:0 0 0.875rem}
+.text-first a{display:block;padding:0.875rem 1rem;border-radius:0.375rem;background:linear-gradient(135deg,var(--cyan),var(--blue));color:var(--navy);font-weight:700;font-size:1.0625rem;text-decoration:none}}
 .form-note{font-size:max(0.75rem,var(--tfloor,0px));color:var(--text-light);margin-top:1.5rem;line-height:1.6;text-align:center}
 .form-error{font-size:0.875rem;color:#FFB4A8;margin:1.25rem auto 0;line-height:1.6;text-align:center;max-width:32.5rem}
 .form-submit[disabled]{opacity:.6;cursor:default;transform:none;box-shadow:none}
@@ -89,6 +93,11 @@
     <h1>Tell us where you are. <em>We&rsquo;ll meet you there.</em></h1>
     <p class="page-hero-sub">No pitch deck. No pressure. No judgment about how you&rsquo;re managing things today. Answer a few questions so we come to the conversation prepared, not asking you to explain things we should already know.</p>
     <p class="page-hero-sub" id="about-note" hidden style="margin-top:0.875rem;color:var(--cyan)"></p>
+    <!-- on a phone the quickest way comes first (the owner, 2026-11-28: "that's where people communicate these days") -->
+    <div class="text-first">
+      <p>Short on time? Text Mike a question and he will text you back.</p>
+      <a href="sms:+14842781697?&amp;body=Hi%20Mike%2C%20I%20have%20a%20question%3A%20">Text a Question</a>
+    </div>
     <div class="hero-stat sa-cite" tabindex="0"><div class="stat-num">3%</div><div class="stat-label">of advisors say their firm&rsquo;s data is fully unified</div><span class="sa-cite-src">Source: Orion, 2026</span><span class="sa-cite-card" role="note"><strong>Only 3% of advisors said their firm&rsquo;s data is fully unified and flows freely across its systems.</strong>Another 60% said it is mostly unified but still takes manual steps.<span>Orion Advisor Wealthtech Survey, February 2026: 571 advisors, surveyed in December 2025. Orion sells technology to advisors.</span><a href="https://www.businesswire.com/news/home/20260225383902/en/Orion-Reveals-Advisor-Wealthtech-Survey-Insights-at-Ascent-Conference" target="_blank" rel="noopener">Read Orion&rsquo;s release</a></span></div>
   </div>
 </section>
@@ -198,7 +207,7 @@
         <button class="form-submit" id="form-send" onclick="submitForm()">Send It Over</button>
         <div class="form-error" id="form-error" role="alert" hidden></div>
         <div class="form-note">We&rsquo;ll respond within one business day. Your information stays between us.</div>
-        <div class="form-note">Prefer to talk? Call <a href="tel:+14842781697" style="color:inherit;text-decoration:underline;text-underline-offset:0.1875rem">484 278 1697</a>.</div>
+        <div class="form-note">Prefer to talk? <a href="tel:+14842781697" style="color:inherit;text-decoration:underline;text-underline-offset:0.1875rem">Call</a> or <a href="sms:+14842781697?&amp;body=Hi%20Mike%2C%20I%20have%20a%20question%3A%20" style="color:inherit;text-decoration:underline;text-underline-offset:0.1875rem">text</a> 484 278 1697.</div>
       </div>
 
     </div>
