@@ -94,6 +94,10 @@ def block() -> str:
         ":root,.sa-dark{" + decls(DARK) + "}",
         ':root[data-theme="light"]{' + decls(LIGHT) + "}",
         light + "{" + decls(DARK) + "}",
+        # A section that was light from the start is navy in the dark version (the owner, 2026-11-27, of the Services
+        # page: "lets keep the dark theme dark ... instead of having contrasting/intermittent/random panels"). Its rules
+        # were written for a white ground with these same names, so in the dark version the names turn about inside it.
+        ':root:not([data-theme="light"]) .section-light{' + decls(INSIDE_LIGHT_SECTION_WHEN_DARK) + "}",
         # the menu is a little see-through: over a light page that reads as grey, so there it is all but solid
         ':root[data-theme="light"] nav{background:rgba(15,27,45,0.97)}',
         END,
@@ -110,6 +114,12 @@ def palettes(text: str) -> str:
         raise SystemExit("a stylesheet that should hold the palettes no longer declares its colours in a :root rule")
     return text[:m.end()] + "\n" + block() + "\n" + text[m.end():]
 
+
+INSIDE_LIGHT_SECTION_WHEN_DARK = {
+    "--off-white": "#0F1B2D", "--white": "#16243B", "--navy": "#E8EEF6", "--charcoal": "#FFFFFF", "--text": "#CBD5E1",
+    "--slate": "#A3B1C6", "--border": "rgba(203,213,225,0.2)", "--purple": "#A994FF", "--rec": "rgba(61,216,216,0.1)",
+    "--band": "rgba(255,255,255,0.07)", "--band-ink": "#FFFFFF", "--on-accent": "#0F1B2D", "--tag": "#3DD8D8",
+}
 
 COMMENT = re.compile(r"/\*.*?\*/", re.S)
 RULE = re.compile(r"([^{}]*)\{([^{}]*)\}")

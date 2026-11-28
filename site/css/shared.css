@@ -23,6 +23,7 @@ body { font-family:'DM Sans',sans-serif; color:#334155; background:var(--navy); 
 :root,.sa-dark{--navy:#0F1B2D;--navy-light:#162640;--navy-mid:#1C3352;--cyan:#3DD8D8;--cyan-light:#5EE4E4;--purple:#7B5CFF;--purple-light:#9B82FF;--blue:#5B8DEF;--white:#FFFFFF;--text-light:#94A3B8;--g1:#E2E8F0;--g2:#CBD5E1;--g3:#A9B8CC;--g4:#8FA0B8;--cy:61,216,216;--lift:255,255,255;--line:203,213,225;--nv:15,27,45;--pu:123,92,255;--bl:91,141,239}
 :root[data-theme="light"]{--navy:#F6F8FB;--navy-light:#FFFFFF;--navy-mid:#E9EEF5;--cyan:#006E7C;--cyan-light:#005A66;--purple:#5B3FE0;--purple-light:#6A4DF0;--blue:#2A5BC7;--white:#0F1B2D;--text-light:#52627A;--g1:#1E293B;--g2:#334155;--g3:#475569;--g4:#52627A;--cy:0,110,124;--lift:15,27,45;--line:15,27,45;--nv:246,248,251;--pu:91,63,224;--bl:42,91,199}
 :root[data-theme="light"] nav,:root[data-theme="light"] footer,:root[data-theme="light"] .sa-dark,:root[data-theme="light"] .section-light{--navy:#0F1B2D;--navy-light:#162640;--navy-mid:#1C3352;--cyan:#3DD8D8;--cyan-light:#5EE4E4;--purple:#7B5CFF;--purple-light:#9B82FF;--blue:#5B8DEF;--white:#FFFFFF;--text-light:#94A3B8;--g1:#E2E8F0;--g2:#CBD5E1;--g3:#A9B8CC;--g4:#8FA0B8;--cy:61,216,216;--lift:255,255,255;--line:203,213,225;--nv:15,27,45;--pu:123,92,255;--bl:91,141,239}
+:root:not([data-theme="light"]) .section-light{--off-white:#0F1B2D;--white:#16243B;--navy:#E8EEF6;--charcoal:#FFFFFF;--text:#CBD5E1;--slate:#A3B1C6;--border:rgba(203,213,225,0.2);--purple:#A994FF;--rec:rgba(61,216,216,0.1);--band:rgba(255,255,255,0.07);--band-ink:#FFFFFF;--on-accent:#0F1B2D;--tag:#3DD8D8}
 :root[data-theme="light"] nav{background:rgba(15,27,45,0.97)}
 /* theme:end */
 
@@ -79,7 +80,7 @@ nav .nav-links a.unleash-link:hover{color:#FF1744;text-shadow:0 0 1rem rgba(200,
 .section-inner{max-width:68.75rem;margin:0 auto}
 .section-tag{font-size:max(0.6875rem,var(--tfloor,0px));letter-spacing:0.1875rem;text-transform:uppercase;color:var(--cyan);font-weight:600;margin-bottom:1rem}
 /* (on a light section the bright cyan cannot be read: a teal) */
-.section-light .section-tag{color:#007482}
+.section-light .section-tag{color:var(--tag,#007482)}
 .section-heading{font-family:'Cormorant Garamond',serif;font-weight:400;line-height:1.25;margin-bottom:1.25rem}
 .section-heading-dark{color:var(--white);font-size:clamp(1.75rem,3.5vw,2.625rem)}
 .section-heading-light{color:var(--charcoal);font-size:clamp(1.75rem,3.5vw,2.625rem)}
@@ -109,6 +110,8 @@ footer a:hover{color:var(--cyan)}
 
 /* ===== BUTTONS ===== */
 .btn-primary{display:inline-block;font-size:max(0.75rem,var(--tfloor,0px));letter-spacing:0.15625rem;text-transform:uppercase;color:var(--navy);font-weight:600;text-decoration:none;background:linear-gradient(135deg,var(--cyan) 0%,var(--blue) 50%,var(--purple) 100%);padding:1.125rem 3rem;transition:all .3s}
+/* (inside a section whose colour names are turned about for the dark version, the button keeps its navy lettering) */
+.section-light .btn-primary{color:var(--on-accent,var(--navy))}
 .btn-primary:hover{transform:translateY(-0.125rem);box-shadow:0 0.5rem 1.5rem rgba(var(--cy),0.25)}
 
 /* ===== RESPONSIVE ===== */
