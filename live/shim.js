@@ -116,14 +116,15 @@
       + '&tbs=cdr:1,cd_min:' + fmt(min) + ',cd_max:' + fmt(max);
   };
 
-  // ---- theme: the reader's last choice, else light, as on the source -------
+  // ---- theme: this site's navy, as its pages open. Inside a tool page's frame it is always that (the page round it
+  // is navy and has no switch); full screen it is the reader's last choice.
   var THEME = 'wwff_theme';
   function paint(t) {
     root.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
     var b = document.getElementById('themebtn');
     if (b) { b.textContent = t === 'dark' ? '☀' : '☾'; }
   }
-  paint((function () { try { return localStorage.getItem(THEME); } catch (e) { return null; } })() || 'light');
+  paint(EMBED ? 'dark' : ((function () { try { return localStorage.getItem(THEME); } catch (e) { return null; } })() || 'dark'));
   // a page with its own toggle replaces this one; the Lines Tracker has none
   window.toggleTheme = function () {
     var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
@@ -202,11 +203,43 @@
     + 'width:34px;height:30px;cursor:pointer;font-size:14px;padding:0}'
     + '@media (max-width:560px){#sa-bar{padding:6px 8px;gap:6px}#sa-bar a{padding:5px 8px;font-size:12px}}'
     + '.sa-embed #sa-bar{display:none}'
-    + '.sa-embed .wrap > h1:first-child{display:none}'
-    + '.sa-embed body{padding-top:10px}';
+    + '.sa-embed body > .wrap > h1:first-child{display:none}'
+    + '.sa-embed body{padding-top:10px}'
+    // ---- this site's colours and type (the owner, 2026-11-28, of the tool in its page: "it could still feel more
+    // on-brand"). The source names its colours as variables; here they hold the site's navy, cyan and greys, and its
+    // light version's for a full-screen reader who chooses light. Written after the page's own, so html:root wins.
+    + 'html:root,html:root[data-theme=dark],html.sa-embed:root[data-theme]{--bg:#0F1B2D;--panel:#162640;--panel2:#1C3352;'
+    + '--text:#E8EEF6;--muted:#A9B8CC;--accent:#3DD8D8;--accent2:#E8B84A;--line:rgba(203,213,225,.2);--bad:#FF8A80;'
+    + '--good:#5EE4A0;--lock:#8FA0B8;--on-accent:#0F1B2D;--s1:#5B8DEF;--s3:#3DD8D8;color-scheme:dark}'
+    + 'html:root[data-theme=light]:not(.sa-embed){--bg:#F6F8FB;--panel:#FFFFFF;--panel2:#E9EEF5;--text:#0F1B2D;'
+    + '--muted:#52627A;--accent:#006E7C;--accent2:#8A5E00;--line:#D5DCE6;--bad:#B23B34;--good:#1E7D45;--lock:#52627A;'
+    + '--on-accent:#FFFFFF;--s1:#2A5BC7;--s3:#006E7C;color-scheme:light}'
+    + 'html:root body{font-family:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}'
+    + 'html:root .card,html:root .asofbar{box-shadow:none}'
+    // ---- inside a tool page the tool leads (the owner, the same message, of a phone: "the meat is almost a full
+    // screen of scrolls down"). The page round the frame already says what it is, so the opening words, the "as of"
+    // bar and the season's summary go under the table, and the week strip and the games come first.
+    + '.sa-embed body > .wrap{display:flex;flex-direction:column}'
+    + '.sa-embed body > .wrap > *{order:5;min-width:0}'
+    + '.sa-embed body > .wrap > .mkts,.sa-embed body > .wrap > #bar{order:1}'
+    + '.sa-embed body > .wrap > #pane-games,.sa-embed body > .wrap > #pane-futures,.sa-embed body > .wrap > #meta{order:2}'
+    + '.sa-embed body > .wrap > #out{order:3}'
+    + '.sa-embed body > .wrap > .asofbar{order:4;margin-top:14px}'
+    + '.sa-embed body > .wrap > .lede,.sa-embed body > .wrap > .sub{order:6;margin-top:16px}'
+    + '.sa-embed body > .wrap > .mkts{margin:0 0 8px}'
+    + '.sa-embed #pane-games{display:flex;flex-direction:column}'
+    + '.sa-embed #pane-games > *{order:2;min-width:0}'
+    + '.sa-embed #pane-games > .strip{order:1;margin-top:0}'
+    + '.sa-embed #pane-games > .filters{order:1;margin-bottom:8px}'
+    + '.sa-embed #pane-games > .card:first-child{order:3;margin-top:14px}';
   var st = document.createElement('style');
   st.id = 'sa-css';
   st.textContent = CSS;
   (document.head || root).appendChild(st);
+  // the site's own typeface, from where its pages get it
+  var ft = document.createElement('link');
+  ft.rel = 'stylesheet';
+  ft.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap';
+  (document.head || root).appendChild(ft);
   document.addEventListener('DOMContentLoaded', function () { paint(root.getAttribute('data-theme')); });
 })();

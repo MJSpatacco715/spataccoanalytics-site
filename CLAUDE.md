@@ -413,6 +413,19 @@ lives and says which pieces are not in this repo yet.
   button stands between a visitor and the tool. A build with no live tools
   still draws the old page with a screenshot. `tests/pages_test.sh` holds the
   order.
+  Inside the frame the tool wears the site's colours and leads with its table.
+  The owner, the same day, of the Lines Tracker on his phone, light grey and
+  green with a summary, an "as of" bar and tiles above the games: "the meat is
+  almost a full screen of scrolls down and it could still feel more on-brand".
+  The source names its colours as variables, so `live/shim.js` gives them the
+  site's navy, cyan and greys (and its light palette for a full-screen reader
+  who picks light; inside a tool page it is always navy, like the page round
+  it), sets DM Sans, and, framed, reorders the page: the tabs, the week strip,
+  the filters and the games first, the season's summary, the "as of" bar and
+  the opening words under them. `live/build.mjs` turns the white lettering on
+  an accent fill into `--on-accent`, navy on the cyan. Nothing in the source
+  is edited; a new block in the source lands after the table until it is
+  placed.
 - No em dashes in anything written to the site, the docs or commit messages.
 - Private names stay private: the denylist in `config/hosting.json` applies
   to every built file.
