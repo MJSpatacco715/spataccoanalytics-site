@@ -27,12 +27,12 @@ const QR_BOOKING_URL = '';
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{--navy:#0F1B2D;--cyan:#3DD8D8}
 body{font-family:'DM Sans',sans-serif;color:var(--navy);background:#FFFFFF;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column;align-items:center}
-main{width:100%;max-width:26rem;padding:2rem 1.25rem 1rem;display:flex;flex-direction:column;align-items:center;flex:1}
-.mark{width:4rem;height:4rem;border-radius:0.75rem}
+main{width:100%;max-width:26rem;padding:1.25rem 1.25rem 0.75rem;display:flex;flex-direction:column;align-items:center;flex:1}
+.mark{width:3.5rem;height:3.5rem;border-radius:0.75rem}
 h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:2rem;line-height:1.15;margin-top:1rem;text-align:center}
 .role{font-size:1rem;margin-top:0.375rem;text-align:center}
 .firm{font-size:0.9375rem;letter-spacing:0.125rem;text-transform:uppercase;font-weight:600;color:#00707E;margin-top:0.25rem;text-align:center}
-.acts{width:100%;margin-top:1.75rem;display:grid;gap:0.75rem}
+.acts{width:100%;margin-top:1.25rem;display:grid;gap:0.625rem}
 .act{display:flex;align-items:center;justify-content:center;width:100%;min-height:3.25rem;padding:0.75rem 1rem;font:inherit;font-size:1.0625rem;font-weight:600;color:var(--navy);background:#FFFFFF;border:0.125rem solid var(--navy);border-radius:0.375rem;text-decoration:none;cursor:pointer;text-align:center}
 .act.first{min-height:4rem;font-size:1.1875rem;color:#FFFFFF;background:var(--navy)}
 .act:focus-visible{outline:0.1875rem solid var(--cyan);outline-offset:0.125rem}
@@ -53,6 +53,7 @@ footer a{color:inherit;text-underline-offset:0.1875rem}
   <p class="firm">Spatacco Analytics</p>
   <div class="acts" data-source="<?= $src ?>">
     <a class="act first" data-event="linkedin" href="https://www.linkedin.com/in/mjspatacco/" rel="noopener">Connect on LinkedIn</a>
+    <a class="act" data-event="text" href="sms:+14842781697?&amp;body=Hi%20Mike%2C%20I%20have%20a%20question%3A%20">Text a Question</a>
     <a class="act" data-event="vcard" href="/C/mike.vcf">Save Contact</a>
 <?php if (QR_BOOKING_URL !== '') { ?>
     <button class="act" type="button" data-open="more" aria-expanded="false" aria-controls="more">Book a Call / Email Me</button>

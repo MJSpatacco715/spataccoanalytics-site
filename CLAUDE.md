@@ -535,10 +535,20 @@ lives and says which pieces are not in this repo yet.
 - The business card's QR code reads `HTTPS://SPATACCOANALYTICS.COM/C`, in
   capitals on purpose (a smaller code), and is in print: that address is for
   good. The page is `site/C/index.php` (the owner's brief, 2026-11-27): one
-  white screen on a phone with no site menu, his name and title, and four
+  white screen on a phone with no site menu, his name and title, and its
   buttons in his order: Connect on LinkedIn (his own profile), Save Contact
   (`/C/mike.vcf`, drawn by `C/vcard.php`), Email Me, and Score Your Firm's
-  Website (the scorer's folder address with `?src=qr-<source>`). A fifth, Other
+  Website (the scorer's folder address with `?src=qr-<source>`). Text a Question stands
+  second, under LinkedIn (the owner, 2026-11-28: "a text a question option,
+  where someone can hit me via text and i text them back ... that's where
+  people communicate these days"; asked where: "put it second"). It opens the
+  visitor's texting app to 484 278 1697 with "Hi Mike, I have a question: "
+  begun (`sms:` with `?&body=`, the form both iPhones and Androids read), and
+  is counted as `text`. The owner tested that the number takes and sends texts.
+  The Contact page offers the same: on a phone a Text a Question box stands
+  in the opening, under the first paragraph (`.text-first`, shown to 700px only, his "higher
+  preference / priority for on phone"), and the note under the form reads Call
+  or text. Last, Other
   Tools, opens under itself to the NFL Lines Tracker, the Resume Parser and All
   Tools (the owner, 2026-11-28, after trying the page on his phone: "it might be
   cool to have 'other tools' on there and send to the tools page or even

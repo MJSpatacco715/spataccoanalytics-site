@@ -12,7 +12,7 @@
  */
 declare(strict_types=1);
 
-const QR_EVENTS = ['scan', 'linkedin', 'vcard', 'book', 'email', 'scorer', 'tools', 'lines', 'resume', 'alltools'];
+const QR_EVENTS = ['scan', 'linkedin', 'vcard', 'book', 'email', 'scorer', 'text', 'tools', 'lines', 'resume', 'alltools'];
 const QR_FILE = 'qr-events.jsonl';
 const QR_PER_HOUR = 120;   // from one address: a card passed round a table is a dozen, not hundreds
 

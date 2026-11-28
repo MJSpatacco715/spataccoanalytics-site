@@ -667,6 +667,7 @@ else
   echo "no browser here: the logos were not opened"
 fi
 
+check "the Contact page offers a text: in the opening, above the figure, on a phone only, and beside the call in the note under it" 'c="$site/contact/index.html"; grep -q "^\.text-first{display:none}" "$c" && grep -q "@media(max-width:700px){\.text-first{display:block" "$c" && [ "$(grep -c "href=\"sms:+14842781697?&amp;body=Hi%20Mike%2C%20I%20have%20a%20question%3A%20\"" "$c")" = 2 ] && [ "$(awk "/class=\"text-first\"/{a=NR} /class=\"hero-stat /{b=NR} END{print (a&&b&&a<b)}" "$c")" = 1 ] && grep -q ">Call</a> or <a href=\"sms:" "$c"'
 # --- house rules
 check "no long dash on the home page or the two new pages" '! grep -lE "&mdash;|"$'"'"'\xe2\x80\x94'"'"' "$home" "$site/approach/index.html" "$site/about/index.html"'
 check "no project price on any of them" '! grep -nE "\\\$[0-9][0-9,]{3,}" "$site/approach/index.html" "$site/about/index.html"'
