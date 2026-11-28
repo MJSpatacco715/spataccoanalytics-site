@@ -24,6 +24,7 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { transform } from 'esbuild';
 import * as acorn from 'acorn';
 import * as walk from 'acorn-walk';
@@ -90,11 +91,25 @@ const ASSETS = ['assets/refs/vinovich.jpg', 'assets/refs/torbert.jpg'];
 
 // ---- helpers -----------------------------------------------------------------
 const read = (p) => readFileSync(p, 'utf8');
+// The host and Cloudflare keep a script for a year under its address, whatever this folder's own rules ask (found
+// 2026-11-28: a changed shim.js was still the day-old copy). So a page names each script by its version, the first
+// eight characters of its SHA-1, and a script that changes has a new address. A script one script loads by itself
+// later (the player card) is still asked for by its bare name.
+const VERSIONS = {};
 function put(rel, text) {
   const p = join(OUT, rel);
   mkdirSync(dirname(p), { recursive: true });
+  if (/^[\w.-]+\.js$/.test(rel)) {
+    // a script that looks for another's tag by the end of its address finds it with a version on it too
+    text = text.replace(/script\[src\$=(["'])([\w.-]+\.js)\1\]/g, 'script[src*=$1$2$1]');
+    VERSIONS[rel] = createHash('sha1').update(text).digest('hex').slice(0, 8);
+  }
   writeFileSync(p, text);
 }
+const versioned = (html) => html.replace(/<script src="([\w.-]+\.js)"><\/script>/g, (all, f) => {
+  if (!VERSIONS[f]) { fail('a page loads ' + f + ', which was not built before it'); }
+  return '<script src="' + f + '?v=' + VERSIONS[f] + '"></script>';
+});
 function readJson(p) {
   try { return JSON.parse(read(p)); } catch (e) { fail('cannot read ' + relative(SOURCE, p) + ': ' + e.message); }
 }
@@ -246,7 +261,7 @@ async function page(p) {
     + '<link rel="canonical" href="https://spataccoanalytics.com' + p.home + '">\n'
     + '<link rel="icon" href="/favicon.ico">\n'
     + '<script src="shim.js"></script>\n<style>' + css + '</style>\n</head>\n<body>';
-  return rename(head + out.trim() + '\n</body></html>\n');
+  return versioned(rename(head + out.trim() + '\n</body></html>\n'));
 }
 
 // ---- data --------------------------------------------------------------------
