@@ -49,6 +49,8 @@ jobs:
 
       - name: The scorer's own record is kept for the owner, and only the CRM can read it
         run: bash tests/run_test.sh
+      - name: The business card's QR page
+        run: bash tests/qr_test.sh
 
       - name: The contact form keeps real messages and nothing else
         run: bash tests/contact_test.sh
@@ -98,6 +100,10 @@ jobs:
           php -l site/lib/market.php
           php -l site/market/feed.php
           php -l site/services/pricing.php
+          php -l site/lib/qr.php
+          php -l site/C/index.php
+          php -l site/C/log.php
+          php -l site/C/vcard.php
           node --check capture/capture.mjs
           node --check live/build.mjs
           node --check live/smoke.mjs

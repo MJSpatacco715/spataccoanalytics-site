@@ -107,4 +107,5 @@ $ends = array_filter([$last($runs), $last($leads)]);
 $cut = array_filter([count($runs) === FEED_MAX ? $last($runs) : '', count($leads) === FEED_MAX ? $last($leads) : '']);
 $next = $cut ? min($cut) : ($ends ? max($ends) : ($since !== '' ? $since : ''));
 
-feed_out(200, ['ok' => true, 'runs' => $runs, 'leads' => $leads, 'next' => $next, 'more' => (bool)$cut]);
+// The business card's scans and presses ride along (lib/qr.php): every line at or after ?since=, for the CRM to count.
+feed_out(200, ['ok' => true, 'runs' => $runs, 'leads' => $leads, 'qr' => $read('qr-events.jsonl'), 'next' => $next, 'more' => (bool)$cut]);
