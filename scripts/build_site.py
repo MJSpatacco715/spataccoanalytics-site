@@ -176,15 +176,18 @@ PAGE_CSS = """
 .nfl-shot::before{content:"";display:block;height:6px;background:repeating-linear-gradient(90deg,#1A4D3A 0,#1A4D3A 14px,#235847 14px,#235847 28px)}
 .nfl-shot img{display:block;width:100%;height:auto}
 .nfl-shot figcaption{font-size:12px;color:#4A5060;padding:10px 16px;border-top:1px solid #E5E7E0}
-.nfl-app{margin:0 0 40px;border-radius:8px;overflow:hidden;border:1px solid #D4D6CE;background:#fff;box-shadow:0 18px 40px rgba(12,31,63,.12)}
-.nfl-app-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 14px;background:#0C1F3F;border-bottom:3px solid #1A4D3A}
-.nfl-app-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Courier Prime',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#F4D744;white-space:nowrap}
-.nfl-app-tag::before{content:"";width:8px;height:8px;border-radius:50%;background:#1A9D5B;box-shadow:0 0 0 3px rgba(26,157,91,.3)}
-.nfl-app-try{flex:1 1 280px;font-size:13px;line-height:1.5;color:#E2E8F0}
-.nfl-app-full{flex:none;font-size:13px;font-weight:700;color:#0C1F3F;background:#3DD8D8;text-decoration:none;padding:8px 14px;border-radius:4px;white-space:nowrap}
-.nfl-app-full:hover{background:#fff}
-.nfl-app iframe{display:block;width:100%;height:min(900px,82vh);min-height:480px;border:0;background:#f4f6f9}
-@media (max-width:700px){.nfl-app-bar{padding:9px 10px}.nfl-app-try{flex-basis:100%;order:3;font-size:12.5px}.nfl-app iframe{height:78vh}}
+.nfl-top{padding-top:var(--navh,76px);background:#0C1F3F}
+.nfl-head{max-width:1240px;margin:0 auto;padding:9px 24px 3px;display:flex;align-items:baseline;gap:4px 16px}
+.nfl-head h1{flex:0 1 auto;min-width:0;font-family:'DM Sans',sans-serif;font-size:18px;line-height:1.3;font-weight:700;letter-spacing:0;color:#fff;margin:0;display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.nfl-head h1::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;background:#1A9D5B;box-shadow:0 0 0 3px rgba(26,157,91,.3)}
+.nfl-head p{flex:1 1 0;min-width:0;font-size:13px;line-height:1.5;color:#CBD5E1;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nfl-head a{flex:none;font-size:12px;color:#A9B8CC;text-decoration:none;border-bottom:1px solid rgba(169,184,204,.4);white-space:nowrap}
+.nfl-head a:hover{color:#fff;border-color:#fff}
+.nfl-top .nfl-desk{box-shadow:none}
+.nfl-app{background:#f4f6f9}
+.nfl-app iframe{display:block;width:100%;height:calc(100vh - var(--nfl-at,170px));height:calc(100svh - var(--nfl-at,170px));min-height:380px;border:0;background:#f4f6f9}
+.nfl-lead{font-size:17px;line-height:1.7;color:var(--text);max-width:820px;margin:0 0 26px}
+@media (max-width:700px){.nfl-head{padding:7px 12px 2px}.nfl-head h1{font-size:16px;white-space:normal}.nfl-head p{display:none}.nfl-head a{margin-left:auto}}
 .nfl-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:0 0 40px}
 .nfl-metric{background:linear-gradient(170deg,#0C1F3F 0%,#0A1626 100%);border-radius:6px;padding:18px 20px;position:relative;overflow:hidden}
 .nfl-metric::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#3DD8D8 0%,#F4D744 100%)}
@@ -255,12 +258,15 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
         # its address carries the file's own version: when the tool changes, so does the address this
         # page (always read afresh) frames. The page sits in a folder of its own now, so the address is whole.
         src = f"/tools/football/live/{app}" + (f"?v={app_v}" if app_v else "")
-        figure = (f'<div class="nfl-app"><div class="nfl-app-bar"><span class="nfl-app-tag">Live &middot; try it</span>'
-                  f'<span class="nfl-app-try">{esc(tool.get("try", ""))}</span>'
-                  f'<a class="nfl-app-full" id="nfl-app-full" href="{esc(src)}">Open full screen &#8599;</a></div>'
-                  f'<iframe id="nfl-app" src="{esc(src)}" title="{esc(tool["name"])}, live" loading="eager"></iframe></div>'
-                  f'<script>(function(){{var s={json.dumps(src)},q=location.search,h=location.hash;if(!q&&!h)return;'
-                  f'var u=s+(q?(s.indexOf("?")<0?q:"&"+q.slice(1)):"")+h;document.getElementById("nfl-app").src=u;document.getElementById("nfl-app-full").href=u}})();</script>')
+        # The tool is the page (the owner, 2026-11-28, of the tool sitting below the first screen behind an "Open full
+        # screen" button: "dead in the water before i even get the boat floating"). The frame starts right under the
+        # menu, the tool's name and the Sports Desk tabs, and fills the rest of the first screen, edge to edge.
+        figure = (f'<div class="nfl-app"><iframe id="nfl-app" src="{esc(src)}" title="{esc(tool["name"])}, live" loading="eager"></iframe></div>'
+                  f'<script>(function(){{var f=document.getElementById("nfl-app"),a=document.getElementById("nfl-app-full");'
+                  f'function at(){{document.documentElement.style.setProperty("--nfl-at",Math.round(f.getBoundingClientRect().top+(window.scrollY||0))+"px")}}'
+                  f'at();addEventListener("resize",at);addEventListener("load",at);'
+                  f'var s={json.dumps(src)},q=location.search,h=location.hash;if(!q&&!h)return;'
+                  f'var u=s+(q?(s.indexOf("?")<0?q:"&"+q.slice(1)):"")+h;f.src=u;if(a)a.href=u}})();</script>')
     elif img:
         figure = (f'<figure class="nfl-shot reveal"><img src="{esc(img)}" alt="{esc(tool["image_alt"])}" loading="eager">'
                   f"<figcaption>Screenshot of the running tool, refreshed automatically.</figcaption></figure>")
@@ -286,11 +292,27 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
         for c in desk)
     more = "\n".join(c["html"] for c in desk if c["href"] != here)
 
-    body = f"""<body>
-
-{nav}
-
-<section class="page-hero">
+    desk_bar = f"""<div class="nfl-desk" role="navigation" aria-label="Sports Desk">
+  <div class="nfl-desk-in">
+    <a class="nfl-desk-back" href="/tools/">&larr; All tools</a>
+    <span class="nfl-desk-label">Sports Desk</span>
+    <div class="nfl-desk-tabs">{tabs}</div>
+  </div>
+</div>"""
+    if app:
+        top = f"""<div class="nfl-top">
+  <div class="nfl-head">
+    <h1>{esc(tool['name'])}</h1>
+    <p>{esc(tool.get('try') or tool['tagline'])}</p>
+    <a id="nfl-app-full" href="{esc(src)}" target="_blank" rel="noopener">Own tab &#8599;</a>
+  </div>
+  {desk_bar}
+  {NAVH_JS}
+  {figure}
+</div>"""
+        lead, figure = f'<p class="nfl-lead">{esc(tool["tagline"])}</p>', ""
+    else:
+        top = f"""<section class="page-hero">
   <div class="page-hero-inner">
     <div class="nfl-crumbs" role="navigation" aria-label="You are here"><a href="/tools/">Tools</a><span class="sep" aria-hidden="true">&rsaquo;</span><a href="/tools/#sports-desk">Sports Desk</a><span class="sep" aria-hidden="true">&rsaquo;</span><span aria-current="page">{esc(tool.get('short') or tool['name'])}</span></div>
     <h1>{esc(tool['name'])}</h1>
@@ -298,16 +320,18 @@ def page(tool: dict, live: dict, img: str | None, desk: list[dict], head: str, n
   </div>
 </section>
 
-<div class="nfl-desk" role="navigation" aria-label="Sports Desk">
-  <div class="nfl-desk-in">
-    <a class="nfl-desk-back" href="/tools/">&larr; All tools</a>
-    <span class="nfl-desk-label">Sports Desk</span>
-    <div class="nfl-desk-tabs">{tabs}</div>
-  </div>
-</div>
+{desk_bar}"""
+        lead = ""
+
+    body = f"""<body>
+
+{nav}
+
+{top}
 
 <section class="section-light">
   <div class="nfl-wrap">
+    {lead}
     <div class="nfl-stamp">{''.join(stamp)}</div>
     {figure}
     {metrics}
